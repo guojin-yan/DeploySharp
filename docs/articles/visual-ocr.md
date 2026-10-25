@@ -944,7 +944,7 @@ OpenCV DNN 只对两个分类图和两张印章图完成本轮动态 Batch 执�
 
 ### PaddleOCR-VL 是否已经可用于模型推理
 
-PaddleOCR-VL-1.6 已加入 `DeploySharp.Visual`，固定四图 Bundle 已在 ONNX Runtime CPU 和 OpenVINO CPU 完成实验性六任务生成验证，并可接入现有区域和页面编排。当前提供 `PaddleOcrVlInputPlanning` 的任务 Prompt、动态尺寸/图像 Token 数量规划、`PaddleOcrVlTokenizer` 的精确分词和单图 Prompt 展开，以及 `PaddleOcrVlOnnxSession` 的四图动态 Bundle 生成。Tokenizer 在 `net8.0/net9.0/net10.0` 可用，加载时校验官方 `tokenizer.model`、`tokenizer.json`、`tokenizer_config.json` 和 `chat_template.jinja`，保留空格、数字、表格/定位结构标记与字节回退；其它目标框架调用该内置 Tokenizer 会返回明确的能力不可用错误。[Tokenizer 合同验证](../../eng/models/paddle-ocr/verification/paddleocr-vl-tokenizer-contract-20261023.md)覆盖六类任务、全部 1,041 个新增 Token、103,424 个词表槽位和并发请求。
+PaddleOCR-VL-1.6 已加入 `DeploySharp.Visual`，固定四图 Bundle 已在 Windows/Linux 的 ONNX Runtime CPU 和 Linux 的 OpenVINO CPU 完成实验性六任务生成验证，并可接入现有区域和页面编排。当前提供 `PaddleOcrVlInputPlanning` 的任务 Prompt、动态尺寸/图像 Token 数量规划、`PaddleOcrVlTokenizer` 的精确分词和单图 Prompt 展开，以及 `PaddleOcrVlOnnxSession` 的四图动态 Bundle 生成。Tokenizer 在 `net8.0/net9.0/net10.0` 可用，加载时校验官方 `tokenizer.model`、`tokenizer.json`、`tokenizer_config.json` 和 `chat_template.jinja`，保留空格、数字、表格/定位结构标记与字节回退；其它目标框架调用该内置 Tokenizer 会返回明确的能力不可用错误。[Tokenizer 合同验证](../../eng/models/paddle-ocr/verification/paddleocr-vl-tokenizer-contract-20261023.md)覆盖六类任务、全部 1,041 个新增 Token、103,424 个词表槽位和并发请求。
 
 ```csharp
 using JYPPX.DeploySharp.Visual;
@@ -994,7 +994,9 @@ PaddleOcrVlGenerationResult openVinoResult = await openVinoVl.GenerateAsync(
     cancellationToken);
 ```
 
-该配置在 Ubuntu 22.04 x64 / OpenVINO 2026.3.1 上完成六任务真实生成，全部 `765` 个 Token/文本与官方和 ORT 参考一致；首次零长度 KV、随后逐 Token 增长及每图只运行一次视觉编码均有逐步记录。验证使用 native 默认计算精度，不把 Float32 端口等同于所有内部运算均为 FP32。依赖为现有 `JYPPX.DeploySharp.Backend.OpenVINO` 和匹配的 OpenVINO 2026.x native runtime，没有新增 VL 包。完整协议、设备、输入/模型/程序集 SHA 和复现入口见 [OpenVINO 六任务验证](../../eng/models/paddle-ocr/verification/paddleocr-vl-openvino-linux-20261024.md)。这不代表 Windows VL、OpenVINO 页面联合质量或正式性能已经验证。
+该配置在 Ubuntu 22.04 x64 / OpenVINO 2026.3.1 上完成六任务真实生成，全部 `765` 个 Token/文本与官方和 ORT 参考一致；首次零长度 KV、随后逐 Token 增长及每图只运行一次视觉编码均有逐步记录。验证使用 native 默认计算精度，不把 Float32 端口等同于所有内部运算均为 FP32。依赖为现有 `JYPPX.DeploySharp.Backend.OpenVINO` 和匹配的 OpenVINO 2026.x native runtime，没有新增 VL 包。完整协议、设备、输入/模型/程序集 SHA 和复现入口见 [OpenVINO 六任务验证](../../eng/models/paddle-ocr/verification/paddleocr-vl-openvino-linux-20261024.md)。这不代表 Windows OpenVINO、OpenVINO 页面联合质量或正式性能已经验证。
+
+Windows 10.0.26200 上的 ONNX Runtime CPU 也完成了相同六任务的托管 RGB 生成，六项均 EOS，Token/Text `6/6` 与官方参考一致；见 [Windows ORT 证据](../../eng/models/paddle-ocr/verification/paddleocr-vl-windows-ort-20261025.md)。每项只运行一次，耗时只是观察值，不是 P50/P95；RGB fixture 来自固定的上游/Pillow 路径，因此不代表 OpenCV 解码 parity。
 
 该 16 GB、无 Swap 的 Linux 主机，异步复测仅限制托管堆仍出现 OOM；最终通过的进程同时设置了 `MALLOC_ARENA_MAX=2` 和 `DOTNET_GCHeapHardLimit=0x40000000`，进程峰值 RSS 约 `12.05 GiB`。复现时在启动命令上设置，按自己的主机与负载调整；1 GiB 是托管堆预算，不包括模型和 OpenVINO 原生内存，也不是进程总内存上限：
 
@@ -1006,9 +1008,9 @@ MALLOC_ARENA_MAX=2 DOTNET_GCHeapHardLimit=0x40000000 dotnet YourApplication.dll
 
 表格输出可以继续转换为逻辑单元格和 HTML：`PaddleOcrVlTableParser.Parse(result.Text, result.FinishReason)`。文档阶段返回的 `PaddleDocumentVisionLanguageResult.Table` 已自动执行同一默认严格解析。支持横向、纵向和矩形合并，保留原文/Token，生成未到 EOS、结构非法或超预算时明确失败；官方行宽修复需显式启用。使用方式、默认预算、修复影响及 JSON/Markdown 格式见[VL 表格解析](visual-paddle-structure.md#vl-表格otsl合并单元格与-html)。逻辑行列不是单元格像素框，转换成功也不等于文字或表格识别准确。
 
-如果 Bundle 来自 Release 或共享缓存，建议先调用 `PaddleOcrVlBundleManifest.LoadFromDirectory(bundleDirectory).VerifyFiles(bundleDirectory)`，再创建会话。`PaddleOcrVlOnnxSession.CreateVerified` 会在创建四个后端 Session 前校验固定 revision、四图和四个 tokenizer sidecar 的文件名、格式、大小与 SHA-256；`PaddleOcrReleaseClient.GetBundleAsync("paddleocr-vl/1.6")` 会按九个独立资产下载同一 Bundle。仓库内的 `Write-PaddleOcrVlBundleManifest.py` 可在真实图目录和官方 tokenizer 目录存在时生成本地 Bundle 与 manifest；当前九个资产已在 `models-paddleocr` Release 中按需提供。
+如果 Bundle 来自 Release 或共享缓存，建议先调用 `PaddleOcrVlBundleManifest.LoadFromDirectory(bundleDirectory).VerifyFiles(bundleDirectory)`，再创建会话。`PaddleOcrVlOnnxSession.CreateVerified` 会在创建四个后端 Session 前校验固定 revision、四图和四个 tokenizer sidecar 的文件名、格式、大小与 SHA-256；`PaddleOcrReleaseClient.GetBundleAsync("paddleocr-vl/1.6")` 会按九个独立资产下载同一 Bundle。仓库内的 `Write-PaddleOcrVlBundleManifest.py` 可在真实图目录和官方 tokenizer 目录存在时生成本地 Bundle 与 manifest；九个资产已准备进入 `models-paddleocr` Release，远端上传仍等待写权限账户完成。
 
-Linux 上生产 C# ORT CPU 已对 OCR、Table、Formula、Chart、Spotting、Seal 六张真实图片完成生成：分别为 `162/71/80/137/286/29` Token，全部 EOS，Token 和文本与官方参考精确一致。对应证据见[托管 C# ORT 报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-managed-csharp-ort-linux-20261024.json)及[运行日志](../../eng/models/paddle-ocr/verification/paddleocr-vl-managed-csharp-ort-linux-20261024.log)。四图导出元数据和 SHA 见 [vision](../../eng/models/paddle-ocr/verification/paddleocr-vl-vision-export-20261023.json)、[embedding](../../eng/models/paddle-ocr/verification/paddleocr-vl-embedding-export-20261023.json)、[decoder](../../eng/models/paddle-ocr/verification/paddleocr-vl-decoder-export-20261023.json) 和 [head](../../eng/models/paddle-ocr/verification/paddleocr-vl-head-export-20261023.json)。
+Linux 上生产 C# ORT CPU 已对 OCR、Table、Formula、Chart、Spotting、Seal 六张真实图片完成生成：分别为 `162/71/80/137/286/29` Token，全部 EOS，Token 和文本与官方参考精确一致。Windows 10.0.26200 上使用同一四图 Bundle 和托管 RGB 处理再次完成六项，结果同样为 `6/6` 精确一致；见[Windows ORT 证据](../../eng/models/paddle-ocr/verification/paddleocr-vl-windows-ort-20261025.md)。Linux 对应证据见[托管 C# ORT 报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-managed-csharp-ort-linux-20261024.json)及[运行日志](../../eng/models/paddle-ocr/verification/paddleocr-vl-managed-csharp-ort-linux-20261024.log)。四图导出元数据和 SHA 见 [vision](../../eng/models/paddle-ocr/verification/paddleocr-vl-vision-export-20261023.json)、[embedding](../../eng/models/paddle-ocr/verification/paddleocr-vl-embedding-export-20261023.json)、[decoder](../../eng/models/paddle-ocr/verification/paddleocr-vl-decoder-export-20261023.json) 和 [head](../../eng/models/paddle-ocr/verification/paddleocr-vl-head-export-20261023.json)。
 
 图像准备也已补充真实对照：`PaddleOcrVlImageProcessor` 对同组六任务的 `6,818,448` 个 Patch 数值与固定官方 Processor 逐值一致，包含 Spotting 的 Lanczos → Bicubic 双重缩放。Linux C# ORT 随后从原始 RGB 运行该处理器，六任务的全部 `765` 个 Token 和文本仍与官方参考一致并正常 EOS；[详细结果与复现步骤](../../eng/models/paddle-ocr/verification/paddleocr-vl-managed-processor-parity-20261024.md)说明了图像 SHA、环境和测试入口。该六任务对照使用上游 Pillow 解码的 RGB；OpenCV 的 PNG 页面区域另有独立验证，JPEG 解码差异仍需单独检查。
 
