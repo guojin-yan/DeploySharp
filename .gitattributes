@@ -16,4 +16,5 @@ eng/models/paddle-ocr/scripts/*PaddleOcrVl*.py text eol=lf
 eng/models/paddle-ocr/scripts/paddleocr-vl-reference.requirements.txt text eol=lf
 eng/models/paddle-ocr/scripts/paddleocr-vl-export.requirements.txt text eol=lf
 eng/models/paddle-ocr/scripts/tests/test_paddleocr_vl_reference_summary.py text eol=lf
+eng/models/paddle-ocr/scripts/Run-PaddleOcrVlRealFormulaShards.sh text eol=lf
 eng/models/paddle-ocr/verification/paddleocr-vl-*.json text eol=lf

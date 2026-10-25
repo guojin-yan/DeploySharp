@@ -59,9 +59,8 @@ public sealed class PaddleOcrVlRealFormulaQualityIntegrationTests
         string[] unknownImages = selectedImages.Where(image => allRows.All(row => !string.Equals(row.Image, image, StringComparison.OrdinalIgnoreCase))).ToArray();
         Assert.AreEqual(0, unknownImages.Length, "Unknown realFormula images: " + string.Join(", ", unknownImages));
         int limit = ReadLimit();
-        List<RealFormulaRow> filtered = selectedImages.Count == 0 ? allRows
-            : allRows.Where(row => selectedImages.Contains(row.Image)).ToList();
-        List<RealFormulaRow> selected = limit == 0 ? filtered : filtered.Take(limit).ToList();
+        int offset = ReadOffset();
+        List<RealFormulaRow> selected = SelectRows(allRows, selectedImages, offset, limit);
 
         string bundleRoot = Required("DEPLOYSHARP_PADDLEOCR_VL_BUNDLE_ROOT");
         string modelRoot = Required("DEPLOYSHARP_PADDLEOCR_VL_MODEL_ROOT");
@@ -140,7 +139,7 @@ public sealed class PaddleOcrVlRealFormulaQualityIntegrationTests
                     doi = "10.5281/zenodo.11296815", license = "CC-BY-4.0",
                     csvSha256, manifestSha256,
                     annotatedCount = allRows.Count, selectedCount = selected.Count,
-                    selectedImages = selectedImages.OrderBy(value => value, StringComparer.Ordinal).ToArray(), limit
+                    selectedImages = selectedImages.OrderBy(value => value, StringComparer.Ordinal).ToArray(), offset, limit
                 },
                 model = new
                 {
@@ -233,6 +232,22 @@ public sealed class PaddleOcrVlRealFormulaQualityIntegrationTests
         Assert.AreEqual(1, EditDistance("", "x"));
     }
 
+    [TestMethod]
+    public void OffsetAndLimitSelectDisjointManifestShards()
+    {
+        List<RealFormulaRow> rows = Enumerable.Range(0, 11)
+            .Select(index => new RealFormulaRow(index + ".png", "img/" + index + ".png", index.ToString(), "x"))
+            .ToList();
+        var noFilter = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        CollectionAssert.AreEqual(rows.Take(5).ToList(), SelectRows(rows, noFilter, 0, 5));
+        CollectionAssert.AreEqual(rows.Skip(5).Take(5).ToList(), SelectRows(rows, noFilter, 5, 5));
+        CollectionAssert.AreEqual(rows.Skip(10).ToList(), SelectRows(rows, noFilter, 10, 5));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => SelectRows(rows, noFilter, 11, 5));
+        Assert.ThrowsExactly<ArgumentException>(() => SelectRows(rows, noFilter, 5, 0));
+        Assert.ThrowsExactly<ArgumentException>(() => SelectRows(rows,
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "3.png" }, 1, 5));
+    }
+
     private static string WithoutWhitespace(string value) => string.Concat(value.Where(character => !char.IsWhiteSpace(character)));
 
     private static int EditDistance(string expected, string actual)
@@ -257,6 +272,30 @@ public sealed class PaddleOcrVlRealFormulaQualityIntegrationTests
         if (!int.TryParse(value, out int limit) || limit < 1 || limit > 121)
             throw new ArgumentException("DEPLOYSHARP_PADDLEOCR_VL_REAL_FORMULA_LIMIT must be between 1 and 121.");
         return limit;
+    }
+
+    private static int ReadOffset()
+    {
+        string? value = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_VL_REAL_FORMULA_OFFSET");
+        if (string.IsNullOrWhiteSpace(value)) return 0;
+        if (!int.TryParse(value, out int offset) || offset < 0 || offset >= 121)
+            throw new ArgumentException("DEPLOYSHARP_PADDLEOCR_VL_REAL_FORMULA_OFFSET must be between 0 and 120.");
+        return offset;
+    }
+
+    private static List<RealFormulaRow> SelectRows(List<RealFormulaRow> allRows, HashSet<string> selectedImages,
+        int offset, int limit)
+    {
+        if (selectedImages.Count != 0 && offset != 0)
+            throw new ArgumentException("Image-name filtering and a nonzero manifest offset cannot be combined.");
+        if (offset != 0 && limit == 0)
+            throw new ArgumentException("A nonzero manifest offset requires a bounded image limit.");
+        List<RealFormulaRow> filtered = selectedImages.Count == 0 ? allRows
+            : allRows.Where(row => selectedImages.Contains(row.Image)).ToList();
+        if (offset < 0 || offset >= filtered.Count)
+            throw new ArgumentOutOfRangeException(nameof(offset));
+        IEnumerable<RealFormulaRow> remaining = filtered.Skip(offset);
+        return (limit == 0 ? remaining : remaining.Take(limit)).ToList();
     }
 
     private static string Required(string name)

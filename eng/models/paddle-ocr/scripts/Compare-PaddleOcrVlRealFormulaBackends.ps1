@@ -38,6 +38,14 @@ foreach ($field in @('name', 'version', 'csvSha256', 'manifestSha256', 'annotate
     Assert-Same $reference.dataset.$field $candidate.dataset.$field "dataset/$field"
 }
 Assert-Same @($reference.dataset.selectedImages) @($candidate.dataset.selectedImages) 'selected images'
+$referenceOffset = $reference.dataset.PSObject.Properties['offset']
+$candidateOffset = $candidate.dataset.PSObject.Properties['offset']
+if (($null -eq $referenceOffset) -ne ($null -eq $candidateOffset)) {
+    throw 'Incomparable PaddleOCR-VL reports: dataset/offset availability'
+}
+if ($null -ne $referenceOffset) {
+    Assert-Same $referenceOffset.Value $candidateOffset.Value 'dataset/offset'
+}
 foreach ($field in @('id', 'checkpointRevision', 'tokenizerSha256', 'graphs')) {
     Assert-Same $reference.model.$field $candidate.model.$field "model/$field"
 }
