@@ -1,0 +1,1720 @@
+{
+  "run_id": "2026-10-25T13:16:12.0682536+00:00",
+  "model": {
+    "name": "DeploySharp PaddleOCR",
+    "version": "v6/tiny",
+    "detector_sha256": "193bab7a04fca699a6c82e6abb5b81bdb28177f0abd4062552b04908dafb19f8",
+    "recognizer_sha256": "9ef676d6ed3c88256a2d92c640c44f25b0c40947e111b14b8be8f594091563e6",
+    "classifier_sha256": null
+  },
+  "normalization": {
+    "unicode_form": "NFC",
+    "case_sensitive": true,
+    "ignore_whitespace": false,
+    "ignore_punctuation": false
+  },
+  "images": {
+    "expected": 10,
+    "predicted": 10,
+    "errors": 0,
+    "empty_outputs": 0,
+    "missing_predictions": 0,
+    "unknown_predictions": 0,
+    "duplicate_prediction_ids": 0
+  },
+  "det": {
+    "0.5": {
+      "tp": 115,
+      "fp": 191,
+      "fn": 422,
+      "precision": 0.3758169934640523,
+      "recall": 0.21415270018621974,
+      "f1_hmean": 0.27283511269276395
+    },
+    "0.75": {
+      "tp": 20,
+      "fp": 286,
+      "fn": 517,
+      "precision": 0.06535947712418301,
+      "recall": 0.037243947858473,
+      "f1_hmean": 0.047449584816132866
+    }
+  },
+  "rec": {
+    "matched_regions": 115,
+    "exact_match_count": 51,
+    "exact_match_rate": 0.4434782608695652,
+    "cer": 0.22538860103626943,
+    "edit_distance": 174,
+    "ground_truth_characters": 772,
+    "evaluation_context": "detected_crops",
+    "slices": {
+      "length": {
+        "short": {
+          "cer": 0.21710526315789475,
+          "exact_match_rate": 0.5333333333333333,
+          "instances": 45
+        },
+        "medium": {
+          "cer": 0.2017353579175705,
+          "exact_match_rate": 0.43333333333333335,
+          "instances": 60
+        },
+        "long": {
+          "cer": 0.3018867924528302,
+          "exact_match_rate": 0.1,
+          "instances": 10
+        }
+      },
+      "character_type": {
+        "numeric": {
+          "cer": 0.20454545454545456,
+          "exact_match_rate": 0.5294117647058824,
+          "instances": 17
+        },
+        "mixed_alphanumeric": {
+          "cer": 0.1488095238095238,
+          "exact_match_rate": 0.5428571428571428,
+          "instances": 35
+        },
+        "Latin": {
+          "cer": 0.2509727626459144,
+          "exact_match_rate": 0.3709677419354839,
+          "instances": 62
+        },
+        "other": {
+          "cer": 1.0,
+          "exact_match_rate": 0.0,
+          "instances": 1
+        }
+      }
+    },
+    "matched_region_wer": 0.5570469798657718,
+    "matched_reference_words": 149,
+    "matched_word_edit_distance": 83
+  },
+  "pipeline": {
+    "end_to_end_correct_regions": 51,
+    "ground_truth_regions": 537,
+    "end_to_end_accuracy": 0.09497206703910614,
+    "end_to_end_cer": 1.1332863187588151,
+    "edit_distance": 3214,
+    "ground_truth_characters": 2836,
+    "iou_threshold": 0.5,
+    "end_to_end_wer": 1.2649842271293374,
+    "reference_words": 634,
+    "word_edit_distance": 802
+  },
+  "cls": {
+    "scored_instances": 0,
+    "unscored_direction_labels": 537,
+    "accuracy": null,
+    "macro_f1": null,
+    "direction_correction_rate": null,
+    "direction_correction_scored_instances": 0,
+    "confusion_matrix": {},
+    "evaluation_context": "detected_crops",
+    "status_counts": {
+      "supported": 306
+    }
+  },
+  "latency_ms": {
+    "det": {
+      "count": 10,
+      "mean": 77.8805,
+      "p50": 78.8715,
+      "p90": 89.4699,
+      "p95": 92.56094999999999,
+      "p99": 95.03379,
+      "throughput_per_second": 12.840184641855151
+    },
+    "cls": {
+      "count": 10,
+      "mean": 0.0,
+      "p50": 0.0,
+      "p90": 0.0,
+      "p95": 0.0,
+      "p99": 0.0,
+      "throughput_per_second": null
+    },
+    "rec": {
+      "count": 10,
+      "mean": 108.7663,
+      "p50": 87.7245,
+      "p90": 183.41869999999994,
+      "p95": 222.3873499999999,
+      "p99": 253.56226999999998,
+      "throughput_per_second": 9.194024251997172
+    },
+    "total": {
+      "count": 10,
+      "mean": 229.7705,
+      "p50": 222.1755,
+      "p90": 295.75190000000003,
+      "p95": 328.3989499999999,
+      "p99": 354.51659,
+      "throughput_per_second": 4.352168794514527
+    }
+  },
+  "slices": {
+    "source_dataset": {
+      "google-research-datasets/hiertext": {
+        "images": 10,
+        "det": {
+          "tp": 115,
+          "fp": 191,
+          "fn": 422,
+          "precision": 0.3758169934640523,
+          "recall": 0.21415270018621974,
+          "f1_hmean": 0.27283511269276395
+        },
+        "matched_region_cer": 0.22538860103626943,
+        "matched_region_exact_rate": 0.4434782608695652,
+        "latency_ms": {
+          "det": {
+            "count": 10,
+            "mean": 77.8805,
+            "p50": 78.8715,
+            "p90": 89.4699,
+            "p95": 92.56094999999999,
+            "p99": 95.03379,
+            "throughput_per_second": 12.840184641855151
+          },
+          "cls": {
+            "count": 10,
+            "mean": 0.0,
+            "p50": 0.0,
+            "p90": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "throughput_per_second": null
+          },
+          "rec": {
+            "count": 10,
+            "mean": 108.7663,
+            "p50": 87.7245,
+            "p90": 183.41869999999994,
+            "p95": 222.3873499999999,
+            "p99": 253.56226999999998,
+            "throughput_per_second": 9.194024251997172
+          },
+          "total": {
+            "count": 10,
+            "mean": 229.7705,
+            "p50": 222.1755,
+            "p90": 295.75190000000003,
+            "p95": 328.3989499999999,
+            "p99": 354.51659,
+            "throughput_per_second": 4.352168794514527
+          }
+        }
+      }
+    },
+    "source_split": {
+      "validation": {
+        "images": 10,
+        "det": {
+          "tp": 115,
+          "fp": 191,
+          "fn": 422,
+          "precision": 0.3758169934640523,
+          "recall": 0.21415270018621974,
+          "f1_hmean": 0.27283511269276395
+        },
+        "matched_region_cer": 0.22538860103626943,
+        "matched_region_exact_rate": 0.4434782608695652,
+        "latency_ms": {
+          "det": {
+            "count": 10,
+            "mean": 77.8805,
+            "p50": 78.8715,
+            "p90": 89.4699,
+            "p95": 92.56094999999999,
+            "p99": 95.03379,
+            "throughput_per_second": 12.840184641855151
+          },
+          "cls": {
+            "count": 10,
+            "mean": 0.0,
+            "p50": 0.0,
+            "p90": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "throughput_per_second": null
+          },
+          "rec": {
+            "count": 10,
+            "mean": 108.7663,
+            "p50": 87.7245,
+            "p90": 183.41869999999994,
+            "p95": 222.3873499999999,
+            "p99": 253.56226999999998,
+            "throughput_per_second": 9.194024251997172
+          },
+          "total": {
+            "count": 10,
+            "mean": 229.7705,
+            "p50": 222.1755,
+            "p90": 295.75190000000003,
+            "p95": 328.3989499999999,
+            "p99": 354.51659,
+            "throughput_per_second": 4.352168794514527
+          }
+        }
+      }
+    },
+    "language": {
+      "und": {
+        "images": 10,
+        "det": {
+          "tp": 115,
+          "fp": 191,
+          "fn": 422,
+          "precision": 0.3758169934640523,
+          "recall": 0.21415270018621974,
+          "f1_hmean": 0.27283511269276395
+        },
+        "matched_region_cer": 0.22538860103626943,
+        "matched_region_exact_rate": 0.4434782608695652,
+        "latency_ms": {
+          "det": {
+            "count": 10,
+            "mean": 77.8805,
+            "p50": 78.8715,
+            "p90": 89.4699,
+            "p95": 92.56094999999999,
+            "p99": 95.03379,
+            "throughput_per_second": 12.840184641855151
+          },
+          "cls": {
+            "count": 10,
+            "mean": 0.0,
+            "p50": 0.0,
+            "p90": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "throughput_per_second": null
+          },
+          "rec": {
+            "count": 10,
+            "mean": 108.7663,
+            "p50": 87.7245,
+            "p90": 183.41869999999994,
+            "p95": 222.3873499999999,
+            "p99": 253.56226999999998,
+            "throughput_per_second": 9.194024251997172
+          },
+          "total": {
+            "count": 10,
+            "mean": 229.7705,
+            "p50": 222.1755,
+            "p90": 295.75190000000003,
+            "p95": 328.3989499999999,
+            "p99": 354.51659,
+            "throughput_per_second": 4.352168794514527
+          }
+        }
+      }
+    },
+    "scene_type": {
+      "sportswear": {
+        "images": 1,
+        "det": {
+          "tp": 4,
+          "fp": 8,
+          "fn": 8,
+          "precision": 0.3333333333333333,
+          "recall": 0.3333333333333333,
+          "f1_hmean": 0.3333333333333333
+        },
+        "matched_region_cer": 0.20689655172413793,
+        "matched_region_exact_rate": 0.25,
+        "latency_ms": {
+          "det": {
+            "count": 1,
+            "mean": 95.652,
+            "p50": 95.652,
+            "p90": 95.652,
+            "p95": 95.652,
+            "p99": 95.652,
+            "throughput_per_second": 10.454564462844477
+          },
+          "cls": {
+            "count": 1,
+            "mean": 0.0,
+            "p50": 0.0,
+            "p90": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "throughput_per_second": null
+          },
+          "rec": {
+            "count": 1,
+            "mean": 66.526,
+            "p50": 66.526,
+            "p90": 66.526,
+            "p95": 66.526,
+            "p99": 66.526,
+            "throughput_per_second": 15.031716922706913
+          },
+          "total": {
+            "count": 1,
+            "mean": 224.911,
+            "p50": 224.911,
+            "p90": 224.911,
+            "p95": 224.911,
+            "p99": 224.911,
+            "throughput_per_second": 4.446203164807413
+          }
+        }
+      },
+      "handwritten_body_text": {
+        "images": 1,
+        "det": {
+          "tp": 19,
+          "fp": 3,
+          "fn": 13,
+          "precision": 0.8636363636363636,
+          "recall": 0.59375,
+          "f1_hmean": 0.7037037037037037
+        },
+        "matched_region_cer": 0.09782608695652174,
+        "matched_region_exact_rate": 0.5789473684210527,
+        "latency_ms": {
+          "det": {
+            "count": 1,
+            "mean": 83.536,
+            "p50": 83.536,
+            "p90": 83.536,
+            "p95": 83.536,
+            "p99": 83.536,
+            "throughput_per_second": 11.970886803294388
+          },
+          "cls": {
+            "count": 1,
+            "mean": 0.0,
+            "p50": 0.0,
+            "p90": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "throughput_per_second": null
+          },
+          "rec": {
+            "count": 1,
+            "mean": 94.725,
+            "p50": 94.725,
+            "p90": 94.725,
+            "p95": 94.725,
+            "p99": 94.725,
+            "throughput_per_second": 10.556875164951174
+          },
+          "total": {
+            "count": 1,
+            "mean": 227.238,
+            "p50": 227.238,
+            "p90": 227.238,
+            "p95": 227.238,
+            "p99": 227.238,
+            "throughput_per_second": 4.4006724227461955
+          }
+        }
+      },
+      "vehicle_branding": {
+        "images": 2,
+        "det": {
+          "tp": 15,
+          "fp": 14,
+          "fn": 37,
+          "precision": 0.5172413793103449,
+          "recall": 0.28846153846153844,
+          "f1_hmean": 0.3703703703703704
+        },
+        "matched_region_cer": 0.22033898305084745,
+        "matched_region_exact_rate": 0.3333333333333333,
+        "latency_ms": {
+          "det": {
+            "count": 2,
+            "mean": 74.36449999999999,
+            "p50": 74.36449999999999,
+            "p90": 76.3249,
+            "p95": 76.56995,
+            "p99": 76.76598999999999,
+            "throughput_per_second": 13.44727659030855
+          },
+          "cls": {
+            "count": 2,
+            "mean": 0.0,
+            "p50": 0.0,
+            "p90": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "throughput_per_second": null
+          },
+          "rec": {
+            "count": 2,
+            "mean": 120.73349999999999,
+            "p50": 120.73349999999999,
+            "p90": 163.95389999999998,
+            "p95": 169.35644999999997,
+            "p99": 173.67848999999998,
+            "throughput_per_second": 8.282705297204174
+          },
+          "total": {
+            "count": 2,
+            "mean": 237.691,
+            "p50": 237.691,
+            "p90": 278.3358,
+            "p95": 283.4164,
+            "p99": 287.48088,
+            "throughput_per_second": 4.207142887193878
+          }
+        }
+      },
+      "storefront_signage": {
+        "images": 1,
+        "det": {
+          "tp": 12,
+          "fp": 11,
+          "fn": 91,
+          "precision": 0.5217391304347826,
+          "recall": 0.11650485436893204,
+          "f1_hmean": 0.19047619047619047
+        },
+        "matched_region_cer": 0.41935483870967744,
+        "matched_region_exact_rate": 0.5,
+        "latency_ms": {
+          "det": {
+            "count": 1,
+            "mean": 60.338,
+            "p50": 60.338,
+            "p90": 60.338,
+            "p95": 60.338,
+            "p99": 60.338,
+            "throughput_per_second": 16.573303722364017
+          },
+          "cls": {
+            "count": 1,
+            "mean": 0.0,
+            "p50": 0.0,
+            "p90": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "throughput_per_second": null
+          },
+          "rec": {
+            "count": 1,
+            "mean": 69.356,
+            "p50": 69.356,
+            "p90": 69.356,
+            "p95": 69.356,
+            "p99": 69.356,
+            "throughput_per_second": 14.418363227406426
+          },
+          "total": {
+            "count": 1,
+            "mean": 168.433,
+            "p50": 168.433,
+            "p90": 168.433,
+            "p95": 168.433,
+            "p99": 168.433,
+            "throughput_per_second": 5.937078838469897
+          }
+        }
+      },
+      "technical_drawing": {
+        "images": 1,
+        "det": {
+          "tp": 2,
+          "fp": 23,
+          "fn": 21,
+          "precision": 0.08,
+          "recall": 0.08695652173913043,
+          "f1_hmean": 0.08333333333333333
+        },
+        "matched_region_cer": 0.42857142857142855,
+        "matched_region_exact_rate": 0.5,
+        "latency_ms": {
+          "det": {
+            "count": 1,
+            "mean": 80.928,
+            "p50": 80.928,
+            "p90": 80.928,
+            "p95": 80.928,
+            "p99": 80.928,
+            "throughput_per_second": 12.356662712534598
+          },
+          "cls": {
+            "count": 1,
+            "mean": 0.0,
+            "p50": 0.0,
+            "p90": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "throughput_per_second": null
+          },
+          "rec": {
+            "count": 1,
+            "mean": 46.094,
+            "p50": 46.094,
+            "p90": 46.094,
+            "p95": 46.094,
+            "p99": 46.094,
+            "throughput_per_second": 21.694797587538506
+          },
+          "total": {
+            "count": 1,
+            "mean": 157.689,
+            "p50": 157.689,
+            "p90": 157.689,
+            "p95": 157.689,
+            "p99": 157.689,
+            "throughput_per_second": 6.341596433486166
+          }
+        }
+      },
+      "electronics_parts": {
+        "images": 1,
+        "det": {
+          "tp": 28,
+          "fp": 7,
+          "fn": 106,
+          "precision": 0.8,
+          "recall": 0.208955223880597,
+          "f1_hmean": 0.33136094674556216
+        },
+        "matched_region_cer": 0.125,
+        "matched_region_exact_rate": 0.6428571428571429,
+        "latency_ms": {
+          "det": {
+            "count": 1,
+            "mean": 85.687,
+            "p50": 85.687,
+            "p90": 85.687,
+            "p95": 85.687,
+            "p99": 85.687,
+            "throughput_per_second": 11.670381738186656
+          },
+          "cls": {
+            "count": 1,
+            "mean": 0.0,
+            "p50": 0.0,
+            "p90": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "throughput_per_second": null
+          },
+          "rec": {
+            "count": 1,
+            "mean": 80.724,
+            "p50": 80.724,
+            "p90": 80.724,
+            "p95": 80.724,
+            "p99": 80.724,
+            "throughput_per_second": 12.387889599127892
+          },
+          "total": {
+            "count": 1,
+            "mean": 211.457,
+            "p50": 211.457,
+            "p90": 211.457,
+            "p95": 211.457,
+            "p99": 211.457,
+            "throughput_per_second": 4.729093858325807
+          }
+        }
+      },
+      "printed_circuit_board": {
+        "images": 1,
+        "det": {
+          "tp": 3,
+          "fp": 13,
+          "fn": 18,
+          "precision": 0.1875,
+          "recall": 0.14285714285714285,
+          "f1_hmean": 0.16216216216216214
+        },
+        "matched_region_cer": 0.5,
+        "matched_region_exact_rate": 0.0,
+        "latency_ms": {
+          "det": {
+            "count": 1,
+            "mean": 88.783,
+            "p50": 88.783,
+            "p90": 88.783,
+            "p95": 88.783,
+            "p99": 88.783,
+            "throughput_per_second": 11.263417546151853
+          },
+          "cls": {
+            "count": 1,
+            "mean": 0.0,
+            "p50": 0.0,
+            "p90": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "throughput_per_second": null
+          },
+          "rec": {
+            "count": 1,
+            "mean": 130.215,
+            "p50": 130.215,
+            "p90": 130.215,
+            "p95": 130.215,
+            "p99": 130.215,
+            "throughput_per_second": 7.6796068041316286
+          },
+          "total": {
+            "count": 1,
+            "mean": 252.109,
+            "p50": 252.109,
+            "p90": 252.109,
+            "p95": 252.109,
+            "p99": 252.109,
+            "throughput_per_second": 3.9665382830442386
+          }
+        }
+      },
+      "food_retail_packaging": {
+        "images": 1,
+        "det": {
+          "tp": 13,
+          "fp": 3,
+          "fn": 15,
+          "precision": 0.8125,
+          "recall": 0.4642857142857143,
+          "f1_hmean": 0.5909090909090908
+        },
+        "matched_region_cer": 0.2564102564102564,
+        "matched_region_exact_rate": 0.6153846153846154,
+        "latency_ms": {
+          "det": {
+            "count": 1,
+            "mean": 71.028,
+            "p50": 71.028,
+            "p90": 71.028,
+            "p95": 71.028,
+            "p99": 71.028,
+            "throughput_per_second": 14.07895477839725
+          },
+          "cls": {
+            "count": 1,
+            "mean": 0.0,
+            "p50": 0.0,
+            "p90": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "throughput_per_second": null
+          },
+          "rec": {
+            "count": 1,
+            "mean": 97.2,
+            "p50": 97.2,
+            "p90": 97.2,
+            "p95": 97.2,
+            "p99": 97.2,
+            "throughput_per_second": 10.288065843621398
+          },
+          "total": {
+            "count": 1,
+            "mean": 219.44,
+            "p50": 219.44,
+            "p90": 219.44,
+            "p95": 219.44,
+            "p99": 219.44,
+            "throughput_per_second": 4.557054320087495
+          }
+        }
+      },
+      "camera_product_label": {
+        "images": 1,
+        "det": {
+          "tp": 19,
+          "fp": 109,
+          "fn": 113,
+          "precision": 0.1484375,
+          "recall": 0.14393939393939395,
+          "f1_hmean": 0.14615384615384616
+        },
+        "matched_region_cer": 0.2163265306122449,
+        "matched_region_exact_rate": 0.05263157894736842,
+        "latency_ms": {
+          "det": {
+            "count": 1,
+            "mean": 64.124,
+            "p50": 64.124,
+            "p90": 64.124,
+            "p95": 64.124,
+            "p99": 64.124,
+            "throughput_per_second": 15.59478510386127
+          },
+          "cls": {
+            "count": 1,
+            "mean": 0.0,
+            "p50": 0.0,
+            "p90": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "throughput_per_second": null
+          },
+          "rec": {
+            "count": 1,
+            "mean": 261.356,
+            "p50": 261.356,
+            "p90": 261.356,
+            "p95": 261.356,
+            "p99": 261.356,
+            "throughput_per_second": 3.8261987480677697
+          },
+          "total": {
+            "count": 1,
+            "mean": 361.046,
+            "p50": 361.046,
+            "p90": 361.046,
+            "p95": 361.046,
+            "p99": 361.046,
+            "throughput_per_second": 2.7697301728865575
+          }
+        }
+      }
+    },
+    "layout_type": {
+      "scene_distributed_text": {
+        "images": 10,
+        "det": {
+          "tp": 115,
+          "fp": 191,
+          "fn": 422,
+          "precision": 0.3758169934640523,
+          "recall": 0.21415270018621974,
+          "f1_hmean": 0.27283511269276395
+        },
+        "matched_region_cer": 0.22538860103626943,
+        "matched_region_exact_rate": 0.4434782608695652,
+        "latency_ms": {
+          "det": {
+            "count": 10,
+            "mean": 77.8805,
+            "p50": 78.8715,
+            "p90": 89.4699,
+            "p95": 92.56094999999999,
+            "p99": 95.03379,
+            "throughput_per_second": 12.840184641855151
+          },
+          "cls": {
+            "count": 10,
+            "mean": 0.0,
+            "p50": 0.0,
+            "p90": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "throughput_per_second": null
+          },
+          "rec": {
+            "count": 10,
+            "mean": 108.7663,
+            "p50": 87.7245,
+            "p90": 183.41869999999994,
+            "p95": 222.3873499999999,
+            "p99": 253.56226999999998,
+            "throughput_per_second": 9.194024251997172
+          },
+          "total": {
+            "count": 10,
+            "mean": 229.7705,
+            "p50": 222.1755,
+            "p90": 295.75190000000003,
+            "p95": 328.3989499999999,
+            "p99": 354.51659,
+            "throughput_per_second": 4.352168794514527
+          }
+        }
+      }
+    },
+    "density_bin": {
+      "unknown": {
+        "images": 10,
+        "det": {
+          "tp": 115,
+          "fp": 191,
+          "fn": 422,
+          "precision": 0.3758169934640523,
+          "recall": 0.21415270018621974,
+          "f1_hmean": 0.27283511269276395
+        },
+        "matched_region_cer": 0.22538860103626943,
+        "matched_region_exact_rate": 0.4434782608695652,
+        "latency_ms": {
+          "det": {
+            "count": 10,
+            "mean": 77.8805,
+            "p50": 78.8715,
+            "p90": 89.4699,
+            "p95": 92.56094999999999,
+            "p99": 95.03379,
+            "throughput_per_second": 12.840184641855151
+          },
+          "cls": {
+            "count": 10,
+            "mean": 0.0,
+            "p50": 0.0,
+            "p90": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "throughput_per_second": null
+          },
+          "rec": {
+            "count": 10,
+            "mean": 108.7663,
+            "p50": 87.7245,
+            "p90": 183.41869999999994,
+            "p95": 222.3873499999999,
+            "p99": 253.56226999999998,
+            "throughput_per_second": 9.194024251997172
+          },
+          "total": {
+            "count": 10,
+            "mean": 229.7705,
+            "p50": 222.1755,
+            "p90": 295.75190000000003,
+            "p95": 328.3989499999999,
+            "p99": 354.51659,
+            "throughput_per_second": 4.352168794514527
+          }
+        }
+      }
+    },
+    "orientation": {
+      "horizontal_or_mixed": {
+        "images": 4,
+        "det": {
+          "tp": 50,
+          "fp": 126,
+          "fn": 155,
+          "precision": 0.2840909090909091,
+          "recall": 0.24390243902439024,
+          "f1_hmean": 0.2624671916010498
+        },
+        "matched_region_cer": 0.1876484560570071,
+        "matched_region_exact_rate": 0.32,
+        "latency_ms": {
+          "det": {
+            "count": 4,
+            "mean": 78.8065,
+            "p50": 77.725,
+            "p90": 92.0172,
+            "p95": 93.8346,
+            "p99": 95.28852,
+            "throughput_per_second": 12.689308623019675
+          },
+          "cls": {
+            "count": 4,
+            "mean": 0.0,
+            "p50": 0.0,
+            "p90": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "throughput_per_second": null
+          },
+          "rec": {
+            "count": 4,
+            "mean": 122.32875,
+            "p50": 80.7165,
+            "p90": 211.36670000000004,
+            "p95": 236.36134999999993,
+            "p99": 256.35706999999996,
+            "throughput_per_second": 8.17469319354608
+          },
+          "total": {
+            "count": 4,
+            "mean": 250.01999999999998,
+            "p50": 226.0745,
+            "p90": 320.90360000000004,
+            "p95": 340.97479999999996,
+            "p99": 357.03175999999996,
+            "throughput_per_second": 3.9996800255979523
+          }
+        }
+      },
+      "vertical_present": {
+        "images": 6,
+        "det": {
+          "tp": 65,
+          "fp": 65,
+          "fn": 267,
+          "precision": 0.5,
+          "recall": 0.19578313253012047,
+          "f1_hmean": 0.28138528138528135
+        },
+        "matched_region_cer": 0.2706552706552707,
+        "matched_region_exact_rate": 0.5384615384615384,
+        "latency_ms": {
+          "det": {
+            "count": 6,
+            "mean": 77.26316666666666,
+            "p50": 78.8715,
+            "p90": 87.235,
+            "p95": 88.009,
+            "p99": 88.6282,
+            "throughput_per_second": 12.942777822118776
+          },
+          "cls": {
+            "count": 6,
+            "mean": 0.0,
+            "p50": 0.0,
+            "p90": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "throughput_per_second": null
+          },
+          "rec": {
+            "count": 6,
+            "mean": 99.72466666666666,
+            "p50": 88.962,
+            "p90": 152.487,
+            "p95": 163.623,
+            "p99": 172.5318,
+            "throughput_per_second": 10.027609351079974
+          },
+          "total": {
+            "count": 6,
+            "mean": 216.27083333333334,
+            "p50": 215.4485,
+            "p90": 270.303,
+            "p95": 279.4,
+            "p99": 286.67760000000004,
+            "throughput_per_second": 4.623832000770639
+          }
+        }
+      }
+    },
+    "scene_tags": {
+      "sportswear": {
+        "images": 1,
+        "det": {
+          "tp": 4,
+          "fp": 8,
+          "fn": 8,
+          "precision": 0.3333333333333333,
+          "recall": 0.3333333333333333,
+          "f1_hmean": 0.3333333333333333
+        },
+        "matched_region_cer": 0.20689655172413793,
+        "matched_region_exact_rate": 0.25,
+        "latency_ms": {
+          "det": {
+            "count": 1,
+            "mean": 95.652,
+            "p50": 95.652,
+            "p90": 95.652,
+            "p95": 95.652,
+            "p99": 95.652,
+            "throughput_per_second": 10.454564462844477
+          },
+          "cls": {
+            "count": 1,
+            "mean": 0.0,
+            "p50": 0.0,
+            "p90": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "throughput_per_second": null
+          },
+          "rec": {
+            "count": 1,
+            "mean": 66.526,
+            "p50": 66.526,
+            "p90": 66.526,
+            "p95": 66.526,
+            "p99": 66.526,
+            "throughput_per_second": 15.031716922706913
+          },
+          "total": {
+            "count": 1,
+            "mean": 224.911,
+            "p50": 224.911,
+            "p90": 224.911,
+            "p95": 224.911,
+            "p99": 224.911,
+            "throughput_per_second": 4.446203164807413
+          }
+        }
+      },
+      "sports_event": {
+        "images": 1,
+        "det": {
+          "tp": 4,
+          "fp": 8,
+          "fn": 8,
+          "precision": 0.3333333333333333,
+          "recall": 0.3333333333333333,
+          "f1_hmean": 0.3333333333333333
+        },
+        "matched_region_cer": 0.20689655172413793,
+        "matched_region_exact_rate": 0.25,
+        "latency_ms": {
+          "det": {
+            "count": 1,
+            "mean": 95.652,
+            "p50": 95.652,
+            "p90": 95.652,
+            "p95": 95.652,
+            "p99": 95.652,
+            "throughput_per_second": 10.454564462844477
+          },
+          "cls": {
+            "count": 1,
+            "mean": 0.0,
+            "p50": 0.0,
+            "p90": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "throughput_per_second": null
+          },
+          "rec": {
+            "count": 1,
+            "mean": 66.526,
+            "p50": 66.526,
+            "p90": 66.526,
+            "p95": 66.526,
+            "p99": 66.526,
+            "throughput_per_second": 15.031716922706913
+          },
+          "total": {
+            "count": 1,
+            "mean": 224.911,
+            "p50": 224.911,
+            "p90": 224.911,
+            "p95": 224.911,
+            "p99": 224.911,
+            "throughput_per_second": 4.446203164807413
+          }
+        }
+      },
+      "handwritten_body_text": {
+        "images": 1,
+        "det": {
+          "tp": 19,
+          "fp": 3,
+          "fn": 13,
+          "precision": 0.8636363636363636,
+          "recall": 0.59375,
+          "f1_hmean": 0.7037037037037037
+        },
+        "matched_region_cer": 0.09782608695652174,
+        "matched_region_exact_rate": 0.5789473684210527,
+        "latency_ms": {
+          "det": {
+            "count": 1,
+            "mean": 83.536,
+            "p50": 83.536,
+            "p90": 83.536,
+            "p95": 83.536,
+            "p99": 83.536,
+            "throughput_per_second": 11.970886803294388
+          },
+          "cls": {
+            "count": 1,
+            "mean": 0.0,
+            "p50": 0.0,
+            "p90": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "throughput_per_second": null
+          },
+          "rec": {
+            "count": 1,
+            "mean": 94.725,
+            "p50": 94.725,
+            "p90": 94.725,
+            "p95": 94.725,
+            "p99": 94.725,
+            "throughput_per_second": 10.556875164951174
+          },
+          "total": {
+            "count": 1,
+            "mean": 227.238,
+            "p50": 227.238,
+            "p90": 227.238,
+            "p95": 227.238,
+            "p99": 227.238,
+            "throughput_per_second": 4.4006724227461955
+          }
+        }
+      },
+      "vehicle_branding": {
+        "images": 2,
+        "det": {
+          "tp": 15,
+          "fp": 14,
+          "fn": 37,
+          "precision": 0.5172413793103449,
+          "recall": 0.28846153846153844,
+          "f1_hmean": 0.3703703703703704
+        },
+        "matched_region_cer": 0.22033898305084745,
+        "matched_region_exact_rate": 0.3333333333333333,
+        "latency_ms": {
+          "det": {
+            "count": 2,
+            "mean": 74.36449999999999,
+            "p50": 74.36449999999999,
+            "p90": 76.3249,
+            "p95": 76.56995,
+            "p99": 76.76598999999999,
+            "throughput_per_second": 13.44727659030855
+          },
+          "cls": {
+            "count": 2,
+            "mean": 0.0,
+            "p50": 0.0,
+            "p90": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "throughput_per_second": null
+          },
+          "rec": {
+            "count": 2,
+            "mean": 120.73349999999999,
+            "p50": 120.73349999999999,
+            "p90": 163.95389999999998,
+            "p95": 169.35644999999997,
+            "p99": 173.67848999999998,
+            "throughput_per_second": 8.282705297204174
+          },
+          "total": {
+            "count": 2,
+            "mean": 237.691,
+            "p50": 237.691,
+            "p90": 278.3358,
+            "p95": 283.4164,
+            "p99": 287.48088,
+            "throughput_per_second": 4.207142887193878
+          }
+        }
+      },
+      "storefront_signage": {
+        "images": 1,
+        "det": {
+          "tp": 12,
+          "fp": 11,
+          "fn": 91,
+          "precision": 0.5217391304347826,
+          "recall": 0.11650485436893204,
+          "f1_hmean": 0.19047619047619047
+        },
+        "matched_region_cer": 0.41935483870967744,
+        "matched_region_exact_rate": 0.5,
+        "latency_ms": {
+          "det": {
+            "count": 1,
+            "mean": 60.338,
+            "p50": 60.338,
+            "p90": 60.338,
+            "p95": 60.338,
+            "p99": 60.338,
+            "throughput_per_second": 16.573303722364017
+          },
+          "cls": {
+            "count": 1,
+            "mean": 0.0,
+            "p50": 0.0,
+            "p90": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "throughput_per_second": null
+          },
+          "rec": {
+            "count": 1,
+            "mean": 69.356,
+            "p50": 69.356,
+            "p90": 69.356,
+            "p95": 69.356,
+            "p99": 69.356,
+            "throughput_per_second": 14.418363227406426
+          },
+          "total": {
+            "count": 1,
+            "mean": 168.433,
+            "p50": 168.433,
+            "p90": 168.433,
+            "p95": 168.433,
+            "p99": 168.433,
+            "throughput_per_second": 5.937078838469897
+          }
+        }
+      },
+      "technical_drawing": {
+        "images": 1,
+        "det": {
+          "tp": 2,
+          "fp": 23,
+          "fn": 21,
+          "precision": 0.08,
+          "recall": 0.08695652173913043,
+          "f1_hmean": 0.08333333333333333
+        },
+        "matched_region_cer": 0.42857142857142855,
+        "matched_region_exact_rate": 0.5,
+        "latency_ms": {
+          "det": {
+            "count": 1,
+            "mean": 80.928,
+            "p50": 80.928,
+            "p90": 80.928,
+            "p95": 80.928,
+            "p99": 80.928,
+            "throughput_per_second": 12.356662712534598
+          },
+          "cls": {
+            "count": 1,
+            "mean": 0.0,
+            "p50": 0.0,
+            "p90": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "throughput_per_second": null
+          },
+          "rec": {
+            "count": 1,
+            "mean": 46.094,
+            "p50": 46.094,
+            "p90": 46.094,
+            "p95": 46.094,
+            "p99": 46.094,
+            "throughput_per_second": 21.694797587538506
+          },
+          "total": {
+            "count": 1,
+            "mean": 157.689,
+            "p50": 157.689,
+            "p90": 157.689,
+            "p95": 157.689,
+            "p99": 157.689,
+            "throughput_per_second": 6.341596433486166
+          }
+        }
+      },
+      "electronics_parts": {
+        "images": 1,
+        "det": {
+          "tp": 28,
+          "fp": 7,
+          "fn": 106,
+          "precision": 0.8,
+          "recall": 0.208955223880597,
+          "f1_hmean": 0.33136094674556216
+        },
+        "matched_region_cer": 0.125,
+        "matched_region_exact_rate": 0.6428571428571429,
+        "latency_ms": {
+          "det": {
+            "count": 1,
+            "mean": 85.687,
+            "p50": 85.687,
+            "p90": 85.687,
+            "p95": 85.687,
+            "p99": 85.687,
+            "throughput_per_second": 11.670381738186656
+          },
+          "cls": {
+            "count": 1,
+            "mean": 0.0,
+            "p50": 0.0,
+            "p90": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "throughput_per_second": null
+          },
+          "rec": {
+            "count": 1,
+            "mean": 80.724,
+            "p50": 80.724,
+            "p90": 80.724,
+            "p95": 80.724,
+            "p99": 80.724,
+            "throughput_per_second": 12.387889599127892
+          },
+          "total": {
+            "count": 1,
+            "mean": 211.457,
+            "p50": 211.457,
+            "p90": 211.457,
+            "p95": 211.457,
+            "p99": 211.457,
+            "throughput_per_second": 4.729093858325807
+          }
+        }
+      },
+      "printed_circuit_board": {
+        "images": 1,
+        "det": {
+          "tp": 3,
+          "fp": 13,
+          "fn": 18,
+          "precision": 0.1875,
+          "recall": 0.14285714285714285,
+          "f1_hmean": 0.16216216216216214
+        },
+        "matched_region_cer": 0.5,
+        "matched_region_exact_rate": 0.0,
+        "latency_ms": {
+          "det": {
+            "count": 1,
+            "mean": 88.783,
+            "p50": 88.783,
+            "p90": 88.783,
+            "p95": 88.783,
+            "p99": 88.783,
+            "throughput_per_second": 11.263417546151853
+          },
+          "cls": {
+            "count": 1,
+            "mean": 0.0,
+            "p50": 0.0,
+            "p90": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "throughput_per_second": null
+          },
+          "rec": {
+            "count": 1,
+            "mean": 130.215,
+            "p50": 130.215,
+            "p90": 130.215,
+            "p95": 130.215,
+            "p99": 130.215,
+            "throughput_per_second": 7.6796068041316286
+          },
+          "total": {
+            "count": 1,
+            "mean": 252.109,
+            "p50": 252.109,
+            "p90": 252.109,
+            "p95": 252.109,
+            "p99": 252.109,
+            "throughput_per_second": 3.9665382830442386
+          }
+        }
+      },
+      "food_retail_packaging": {
+        "images": 1,
+        "det": {
+          "tp": 13,
+          "fp": 3,
+          "fn": 15,
+          "precision": 0.8125,
+          "recall": 0.4642857142857143,
+          "f1_hmean": 0.5909090909090908
+        },
+        "matched_region_cer": 0.2564102564102564,
+        "matched_region_exact_rate": 0.6153846153846154,
+        "latency_ms": {
+          "det": {
+            "count": 1,
+            "mean": 71.028,
+            "p50": 71.028,
+            "p90": 71.028,
+            "p95": 71.028,
+            "p99": 71.028,
+            "throughput_per_second": 14.07895477839725
+          },
+          "cls": {
+            "count": 1,
+            "mean": 0.0,
+            "p50": 0.0,
+            "p90": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "throughput_per_second": null
+          },
+          "rec": {
+            "count": 1,
+            "mean": 97.2,
+            "p50": 97.2,
+            "p90": 97.2,
+            "p95": 97.2,
+            "p99": 97.2,
+            "throughput_per_second": 10.288065843621398
+          },
+          "total": {
+            "count": 1,
+            "mean": 219.44,
+            "p50": 219.44,
+            "p90": 219.44,
+            "p95": 219.44,
+            "p99": 219.44,
+            "throughput_per_second": 4.557054320087495
+          }
+        }
+      },
+      "camera_product_label": {
+        "images": 1,
+        "det": {
+          "tp": 19,
+          "fp": 109,
+          "fn": 113,
+          "precision": 0.1484375,
+          "recall": 0.14393939393939395,
+          "f1_hmean": 0.14615384615384616
+        },
+        "matched_region_cer": 0.2163265306122449,
+        "matched_region_exact_rate": 0.05263157894736842,
+        "latency_ms": {
+          "det": {
+            "count": 1,
+            "mean": 64.124,
+            "p50": 64.124,
+            "p90": 64.124,
+            "p95": 64.124,
+            "p99": 64.124,
+            "throughput_per_second": 15.59478510386127
+          },
+          "cls": {
+            "count": 1,
+            "mean": 0.0,
+            "p50": 0.0,
+            "p90": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "throughput_per_second": null
+          },
+          "rec": {
+            "count": 1,
+            "mean": 261.356,
+            "p50": 261.356,
+            "p90": 261.356,
+            "p95": 261.356,
+            "p99": 261.356,
+            "throughput_per_second": 3.8261987480677697
+          },
+          "total": {
+            "count": 1,
+            "mean": 361.046,
+            "p50": 361.046,
+            "p90": 361.046,
+            "p95": 361.046,
+            "p99": 361.046,
+            "throughput_per_second": 2.7697301728865575
+          }
+        }
+      }
+    }
+  },
+  "region_slices": {
+    "length_bucket": {
+      "short": {
+        "det_tp": 45,
+        "det_fn": 259,
+        "rec_cer_on_matched_regions": 0.21710526315789475,
+        "rec_exact_match_rate_on_matched_regions": 0.5333333333333333,
+        "ground_truth_regions": 304,
+        "matched_regions": 45
+      },
+      "medium": {
+        "det_tp": 60,
+        "det_fn": 151,
+        "rec_cer_on_matched_regions": 0.2017353579175705,
+        "rec_exact_match_rate_on_matched_regions": 0.43333333333333335,
+        "ground_truth_regions": 211,
+        "matched_regions": 60
+      },
+      "long": {
+        "det_tp": 10,
+        "det_fn": 12,
+        "rec_cer_on_matched_regions": 0.3018867924528302,
+        "rec_exact_match_rate_on_matched_regions": 0.1,
+        "ground_truth_regions": 22,
+        "matched_regions": 10
+      }
+    },
+    "character_type": {
+      "numeric": {
+        "det_tp": 17,
+        "det_fn": 50,
+        "rec_cer_on_matched_regions": 0.20454545454545456,
+        "rec_exact_match_rate_on_matched_regions": 0.5294117647058824,
+        "ground_truth_regions": 67,
+        "matched_regions": 17
+      },
+      "Latin": {
+        "det_tp": 62,
+        "det_fn": 248,
+        "rec_cer_on_matched_regions": 0.2509727626459144,
+        "rec_exact_match_rate_on_matched_regions": 0.3709677419354839,
+        "ground_truth_regions": 310,
+        "matched_regions": 62
+      },
+      "mixed_alphanumeric": {
+        "det_tp": 35,
+        "det_fn": 122,
+        "rec_cer_on_matched_regions": 0.1488095238095238,
+        "rec_exact_match_rate_on_matched_regions": 0.5428571428571428,
+        "ground_truth_regions": 157,
+        "matched_regions": 35
+      },
+      "other": {
+        "det_tp": 1,
+        "det_fn": 1,
+        "rec_cer_on_matched_regions": 1.0,
+        "rec_exact_match_rate_on_matched_regions": 0.0,
+        "ground_truth_regions": 2,
+        "matched_regions": 1
+      },
+      "punctuation": {
+        "det_tp": 0,
+        "det_fn": 1,
+        "rec_cer_on_matched_regions": null,
+        "rec_exact_match_rate_on_matched_regions": null,
+        "ground_truth_regions": 1,
+        "matched_regions": 0
+      }
+    },
+    "handwriting": {
+      "true": {
+        "det_tp": 24,
+        "det_fn": 22,
+        "rec_cer_on_matched_regions": 0.13709677419354838,
+        "rec_exact_match_rate_on_matched_regions": 0.5,
+        "ground_truth_regions": 46,
+        "matched_regions": 24
+      },
+      "false": {
+        "det_tp": 91,
+        "det_fn": 400,
+        "rec_cer_on_matched_regions": 0.24228395061728394,
+        "rec_exact_match_rate_on_matched_regions": 0.42857142857142855,
+        "ground_truth_regions": 491,
+        "matched_regions": 91
+      }
+    },
+    "text_direction": {
+      "False": {
+        "det_tp": 115,
+        "det_fn": 405,
+        "rec_cer_on_matched_regions": 0.22538860103626943,
+        "rec_exact_match_rate_on_matched_regions": 0.4434782608695652,
+        "ground_truth_regions": 520,
+        "matched_regions": 115
+      },
+      "True": {
+        "det_tp": 0,
+        "det_fn": 17,
+        "rec_cer_on_matched_regions": null,
+        "rec_exact_match_rate_on_matched_regions": null,
+        "ground_truth_regions": 17,
+        "matched_regions": 0
+      }
+    },
+    "region_area": {
+      "large": {
+        "det_tp": 53,
+        "det_fn": 59,
+        "rec_cer_on_matched_regions": 0.18159203980099503,
+        "rec_exact_match_rate_on_matched_regions": 0.4716981132075472,
+        "ground_truth_regions": 112,
+        "matched_regions": 53
+      },
+      "medium": {
+        "det_tp": 43,
+        "det_fn": 242,
+        "rec_cer_on_matched_regions": 0.2779552715654952,
+        "rec_exact_match_rate_on_matched_regions": 0.3953488372093023,
+        "ground_truth_regions": 285,
+        "matched_regions": 43
+      },
+      "small": {
+        "det_tp": 19,
+        "det_fn": 121,
+        "rec_cer_on_matched_regions": 0.24561403508771928,
+        "rec_exact_match_rate_on_matched_regions": 0.47368421052631576,
+        "ground_truth_regions": 140,
+        "matched_regions": 19
+      }
+    },
+    "region_aspect": {
+      "regular": {
+        "det_tp": 99,
+        "det_fn": 379,
+        "rec_cer_on_matched_regions": 0.22882882882882882,
+        "rec_exact_match_rate_on_matched_regions": 0.48484848484848486,
+        "ground_truth_regions": 478,
+        "matched_regions": 99
+      },
+      "thin": {
+        "det_tp": 16,
+        "det_fn": 43,
+        "rec_cer_on_matched_regions": 0.21658986175115208,
+        "rec_exact_match_rate_on_matched_regions": 0.1875,
+        "ground_truth_regions": 59,
+        "matched_regions": 16
+      }
+    },
+    "geometry": {
+      "quadrilateral": {
+        "det_tp": 115,
+        "det_fn": 422,
+        "rec_cer_on_matched_regions": 0.22538860103626943,
+        "rec_exact_match_rate_on_matched_regions": 0.4434782608695652,
+        "ground_truth_regions": 537,
+        "matched_regions": 115
+      }
+    },
+    "language": {
+      "und": {
+        "det_tp": 115,
+        "det_fn": 422,
+        "rec_cer_on_matched_regions": 0.22538860103626943,
+        "rec_exact_match_rate_on_matched_regions": 0.4434782608695652,
+        "ground_truth_regions": 537,
+        "matched_regions": 115
+      }
+    }
+  },
+  "long_text_regions": {
+    "gt_chars_ge_32": {
+      "regions": 0,
+      "characters": 0,
+      "end_to_end_edits": 0,
+      "matched_regions": 0,
+      "end_to_end_cer": null
+    },
+    "gt_chars_ge_128": {
+      "regions": 0,
+      "characters": 0,
+      "end_to_end_edits": 0,
+      "matched_regions": 0,
+      "end_to_end_cer": null
+    },
+    "gt_chars_ge_3200": {
+      "regions": 0,
+      "characters": 0,
+      "end_to_end_edits": 0,
+      "matched_regions": 0,
+      "end_to_end_cer": null
+    }
+  },
+  "long_text_examples": [],
+  "evaluation_provenance": {
+    "manifest_path": "E:\\DeploySharpEvidence\\paddleocr-hiertext-v6-tiny-10page-20261025-ort\\selected-manifest.jsonl",
+    "manifest_sha256": "5f334b20afbdc9303c3bb9426867fa3087c19bb45f78c889d612b4d2ae10512c",
+    "source_manifest_path": "F:\\OCRBenchmarkTesting\\data\\annotations\\manifests\\hiertext-validation-sample-002.jsonl",
+    "source_manifest_sha256": "e74145b9a86ceca9bb386ab91eb8c07fdb8c1eb6e1f052580d2a2494167207b7",
+    "selected_manifest_sha256": "5f334b20afbdc9303c3bb9426867fa3087c19bb45f78c889d612b4d2ae10512c",
+    "dataset_root": "F:\\OCRBenchmarkTesting",
+    "source_datasets": [
+      "google-research-datasets/hiertext"
+    ],
+    "licenses": [
+      "CC-BY-2.0 (image); CC-BY-SA-4.0 (annotations)"
+    ],
+    "benchmark_eligibility": [
+      "smoke_only_until_each_image_landing_page_and_redistribution_reviewed"
+    ],
+    "license_scope": "Follow the source-specific image and annotation terms recorded in each manifest. This report does not grant redistribution rights.",
+    "benchmark_source_revision": "aa64a4f6c22ce2410c4c7f86d3324df73eb7f347",
+    "source_working_tree_dirty": true,
+    "source_working_tree_status_sha256": "f4f12788d46b54bf45f62dc1ff93ffb0a0bb9d30bc7c854d059a8272a900f31e",
+    "benchmark_assembly_sha256": "a313933801f03b7895cba4d01d7b1d623252f45ec667fc36f79eecaada199cd0",
+    "metric_notes": "CER/WER are case-sensitive NFC metrics. Matched-region metrics require IoU >= 0.5; end-to-end metrics count missed GT regions as deletions and unmatched detections as insertions."
+  }
+}
