@@ -17,5 +17,6 @@
     <ProjectReference Include="..\..\src\DeploySharp.Backend.TensorRT\DeploySharp.Backend.TensorRT.csproj" />
     <ProjectReference Include="..\..\src\DeploySharp.Backend.OnnxRuntime\DeploySharp.Backend.OnnxRuntime.csproj" />
     <ProjectReference Include="..\..\src\DeploySharp.Visual\DeploySharp.Visual.csproj" />
+    <ProjectReference Include="..\..\src\DeploySharp.Visual.TensorRT\DeploySharp.Visual.TensorRT.csproj" />
   </ItemGroup>
 </Project>

@@ -2,7 +2,7 @@
 
 本文只记录具名设备、明确模型制品和固定测试口径下的推理结果。数字是特定设备上的观测值，不构成其他硬件、模型版本或运行时配置的性能承诺。
 
-PaddleOCR-VL 的 [TensorRT 五图六任务验证](../../eng/models/paddle-ocr/verification/paddleocr-vl-tensorrt-five-graph-20261026.md)记录了单次生成耗时及精确 Token/文本结果，但尚无预热和重复采样，因此不填入本页的正式 P50/P95 表格，也不用于与 ORT/OpenVINO 排名。
+PaddleOCR-VL 的 [TensorRT 五图六任务验证](../../eng/models/paddle-ocr/verification/paddleocr-vl-tensorrt-five-graph-20261026.md)记录了单次生成耗时及精确 Token/文本结果；后续仅对固定 Table 输入补充了 [TensorRT 原路径与设备端 KV 的重复延迟记录](../../eng/models/paddle-ocr/verification/paddleocr-vl-tensorrt-device-kv-20261026.md)。其它五项没有 TensorRT 正式 P50/P95；不同后端的分开运行也不构成受控性能排名。
 
 ## 统一口径
 
@@ -13,6 +13,18 @@ PaddleOCR-VL 的 [TensorRT 五图六任务验证](../../eng/models/paddle-ocr/ve
 - PaddleOCR 只记录完整 `det -> crop -> cls/orientation -> rec -> merge` 流水线；不会将单独的检测、分类或识别耗时当作完整 OCR 结果。
 - `通过` 表示本轮结果合同通过；“历史均值”只表示旧报告曾通过，不代表满足当前分位数协议。
 - 模型/后端是否支持、未测试或当前不支持的状态以[模型与后端验证矩阵](../model-backend-verification-matrix.md)为准；本页只列出已经得到有效耗时的组合。
+
+## Windows 10.0.26200 / RTX 3060 Laptop / PaddleOCR-VL-1.6 Table TensorRT（2026-10-26）
+
+固定官方 Table 输入、同一组五图 Engine 和一个 Session；每次生成均达到 EOS，71 个 Token 和文本逐项与参考相同。两条 5+50 路径均不计 Engine/Session 加载、调用方图像准备和报告落盘；GPU 未锁频，运行顺序和程序集版本不同。逐次样本、Engine/Input SHA 与最终构建短复测见 [设备端 KV 验证报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-tensorrt-device-kv-20261026.md)。
+
+| 路径 | Wall P50（ms） | Wall P95（ms） | Session P50（ms） | Session P95（ms） | 预热 / 测量 | 状态 |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| TensorRT，主机 KV | 20,360.0165 | 23,810.9774 | 20,359.5002 | 23,809.9229 | 5 / 50 | 通过 |
+| TensorRT，设备端 KV（最终守卫修正前构建） | 9,329.2314 | 9,650.9849 | 9,324.0775 | 9,645.9727 | 5 / 50 | 通过 |
+| TensorRT，设备端 KV（最终构建短复测） | 9,106.1978 | 9,150.6258 | 9,102.0617 | 9,145.4740 | 1 / 5 | 通过，不等同 5+50 |
+
+这只是固定 1.6 表格任务的两组观测，不能把差值作为严格加速比，也不能外推到其它任务、输入尺寸、显卡、完整页面或模型精度；其它后端的数字在各自章节独立记录。
 
 ## Windows 10.0.26200 / PaddleOCR-VL-1.6 Table CPU 切片（2026-10-25）
 

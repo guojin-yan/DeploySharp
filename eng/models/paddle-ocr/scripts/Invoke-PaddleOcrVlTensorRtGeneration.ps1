@@ -11,6 +11,10 @@ param(
     [ValidateSet('ocr-demo-1', 'table-official-example', 'formula-official-example', 'chart-official-example', 'spotting-demo-1', 'seal-official-example')]
     [string[]] $CaseId = @('ocr-demo-1', 'table-official-example', 'formula-official-example', 'chart-official-example', 'seal-official-example'),
     [ValidateRange(1, 512)] [int] $MaximumNewTokens = 512,
+    [switch] $Latency,
+    [switch] $DeviceKv,
+    [ValidateRange(1, 100)] [int] $Warmups = 5,
+    [ValidateRange(1, 200)] [int] $Measurements = 50,
     [Parameter(Mandatory)] [string] $TensorRtRoot,
     [Parameter(Mandatory)] [string] $CudaRoot,
     [Parameter(Mandatory)] [string] $CudnnRoot,
@@ -33,10 +37,21 @@ $env:JYPPX_CUDNN_ROOT = (Resolve-Path -LiteralPath $CudnnRoot).Path
 $env:JYPPX_NATIVE_BRIDGE_PATH = (Resolve-Path -LiteralPath $NativeBridgePath).Path
 $env:DEPLOYSHARP_PADDLEOCR_VL_RUN_TENSORRT = '1'
 $env:DEPLOYSHARP_PADDLEOCR_VL_TENSORRT_MAX_TOKENS = [string]$MaximumNewTokens
+if ($Latency) {
+    $env:DEPLOYSHARP_PADDLEOCR_VL_TENSORRT_LATENCY_RUN = '1'
+    $env:DEPLOYSHARP_PADDLEOCR_VL_TENSORRT_LATENCY_WARMUPS = [string]$Warmups
+    $env:DEPLOYSHARP_PADDLEOCR_VL_TENSORRT_LATENCY_MEASUREMENTS = [string]$Measurements
+} else {
+    Remove-Item Env:DEPLOYSHARP_PADDLEOCR_VL_TENSORRT_LATENCY_RUN -ErrorAction SilentlyContinue
+}
+if ($DeviceKv) { $env:DEPLOYSHARP_PADDLEOCR_VL_TENSORRT_DEVICE_KV = '1' }
+else { Remove-Item Env:DEPLOYSHARP_PADDLEOCR_VL_TENSORRT_DEVICE_KV -ErrorAction SilentlyContinue }
 $env:DEPLOYSHARP_PADDLEOCR_VL_SOURCE_COMMIT = (& git -C $repoRoot rev-parse HEAD).Trim()
 if ($LASTEXITCODE -ne 0) { throw 'Cannot identify the source commit.' }
 $testSource = Join-Path $repoRoot 'tests\DeploySharp.Backend.TensorRT.Tests\PaddleOcrVlFiveGraphIntegrationTests.cs'
 $env:DEPLOYSHARP_PADDLEOCR_VL_TEST_SOURCE_SHA256 = (Get-FileHash -LiteralPath $testSource -Algorithm SHA256).Hash.ToLowerInvariant()
+$deviceSource = Join-Path $repoRoot 'src\DeploySharp.Visual.TensorRT\PaddleOcrVlTensorRtDeviceSession.cs'
+$env:DEPLOYSHARP_PADDLEOCR_VL_DEVICE_SOURCE_SHA256 = (Get-FileHash -LiteralPath $deviceSource -Algorithm SHA256).Hash.ToLowerInvariant()
 $output = [IO.Path]::GetFullPath($OutputRoot)
 New-Item -ItemType Directory -Path $output -Force | Out-Null
 $project = Join-Path $repoRoot 'tests\DeploySharp.Backend.TensorRT.Tests\DeploySharp.Backend.TensorRT.Tests.csproj'
@@ -67,7 +82,12 @@ $summary = [ordered]@{
     generatedUtc = [DateTimeOffset]::UtcNow.ToString('o')
     sourceCommit = $env:DEPLOYSHARP_PADDLEOCR_VL_SOURCE_COMMIT
     testSourceSha256 = $env:DEPLOYSHARP_PADDLEOCR_VL_TEST_SOURCE_SHA256
+    deviceSessionSourceSha256 = $env:DEPLOYSHARP_PADDLEOCR_VL_DEVICE_SOURCE_SHA256
     maximumNewTokens = $MaximumNewTokens
+    latency = [bool]$Latency
+    deviceKv = [bool]$DeviceKv
+    warmups = if ($Latency) { $Warmups } else { $null }
+    measurements = if ($Latency) { $Measurements } else { $null }
     cases = @($rows)
 }
 $summary | ConvertTo-Json -Depth 10 | Set-Content -LiteralPath (Join-Path $output 'summary.json') -Encoding utf8

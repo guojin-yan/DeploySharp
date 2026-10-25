@@ -1,0 +1,71 @@
+{
+  "schemaVersion": "deploysharp-paddleocr-vl-tensorrt-device-kv-summary-v1",
+  "modelId": "paddleocr-vl/1.6",
+  "date": "2026-10-26",
+  "host": "Windows 10.0.26200; RTX 3060 Laptop 6144 MiB; TensorRT 10.11.0.33; CUDA 12.9; cuDNN 9.22; .NET 10.0.12",
+  "scope": "Fixed official single-image fixtures and device-specific five-graph TensorRT engines. No clock lock or competing-load control.",
+  "reportSha256Semantics": "reportSha256 is the original Windows CRLF report byte hash; repositoryLfSha256 is the Git-normalized LF blob byte hash.",
+  "referenceSha256": "aaa5ace39098c307e27107562045994aabdd952fcf8dc1cb388be87e6f58eb79",
+  "tablePatchSha256": "c66c539dd3c39ceab0c5eea3613091c099853d3396a689227e13a6e5e94dbcbb",
+  "tableEngineSha256": {
+    "vision": "d0d8c1ddf9eb5dd451444d3b65084e42ef20a38bb807d9802f441b5061e2214f",
+    "embedding": "cf9f4cd171addd4735b207293e08656d7b22162204322cbc21ead6198245e2f9",
+    "decoder": "928fbbfa54686a8f3a0b7f830a08c009dedd64041f20e83c0e8f23862b50e9db",
+    "head": "4478473aae4fea9a9a3f72f06da30979fa0f9dab4ca49de08794b048a02e103d",
+    "prefill": "7d2630c9802a7fbc8c11f8cbaa8cb8641e03e7047419d1051a20ba320d802034"
+  },
+  "singleImageDeviceKvParity": [
+    { "task": "OCR", "tokens": 162, "status": "eos-token-text-exact", "report": "paddleocr-vl-tensorrt-device-ocr-20261026.json", "reportSha256": "b96fa5738d4888de0978cdb4f76c4b0f2d64d3dc0dffda62ed97df4d1b969dc2", "repositoryLfSha256": "d39b9362a08330792c0f2740169645d9117531dea8d29a2b612a0b4068431966" },
+    { "task": "Table", "tokens": 71, "status": "eos-token-text-exact", "report": "paddleocr-vl-tensorrt-table-device-kv-final-short-20261026.json", "reportSha256": "b9c39df6835b54db484d465ca9a50018ca356dbd30bcaf39c99761d542714da9", "repositoryLfSha256": "56eeb9e2468bc68df70a8879a19a9e55fd7fd74ddce203bcaf7647ebfb2660d0" },
+    { "task": "Formula", "tokens": 80, "status": "eos-token-text-exact", "report": "paddleocr-vl-tensorrt-device-formula-20261026.json", "reportSha256": "abdb376c85a8e62f617240139403cca77c1acce55c4bc202e52b720063ab2145", "repositoryLfSha256": "132ccb96bbc33bd6f5d00f4261f9fc9b29eb3bad953d209511a35fdd991d9688" },
+    { "task": "Chart", "tokens": 137, "status": "eos-token-text-exact", "report": "paddleocr-vl-tensorrt-device-chart-20261026.json", "reportSha256": "2d76ea36a8e25795ebdbd46f25411e7cb6cd28cb85feb04cf923a2072bad7c80", "repositoryLfSha256": "77c19d2346e47790b0e5dbe30d7514c612975a6ee1f4a11885ad0b753ffa895f" },
+    { "task": "Spotting", "tokens": 286, "status": "eos-token-text-exact", "report": "paddleocr-vl-tensorrt-device-spotting-20261026.json", "reportSha256": "e413ce1c4d8290c6e4fbaefc44ccd12acb9ebf236f6c79582cb3a49806165714", "repositoryLfSha256": "ce094262c6b85f427d27c15f801db4a394d646fd47598eb533bcc0c7fe3a2e95" },
+    { "task": "Seal", "tokens": 29, "status": "eos-token-text-exact", "report": "paddleocr-vl-tensorrt-device-seal-20261026.json", "reportSha256": "5237fe43ff26a91dd9eda28df9923251ddd5820cd6a2c578e34c83ede35b816b", "repositoryLfSha256": "1733e96e8cb9352253e1c4bee4951f10e9bc5a14eebf95237a5948434835cacb" }
+  ],
+  "tableLatency": [
+    {
+      "mode": "host-kv",
+      "warmups": 5,
+      "measurements": 50,
+      "wallP50Milliseconds": 20360.0165,
+      "wallP95Milliseconds": 23810.9774,
+      "sessionP50Milliseconds": 20359.5002,
+      "sessionP95Milliseconds": 23809.9229,
+      "report": "paddleocr-vl-tensorrt-table-host-kv-20261026.json",
+      "reportSha256": "d08706afdeb5504bdcba1670f0db705a3cf2c2ba42324cce8ce1d2048be687ac",
+      "repositoryLfSha256": "3b7f0448a9a406e7294af7abc2422d072e769040cc2d83bef4e7d9d11c94a2e9"
+    },
+    {
+      "mode": "device-kv-pre-final-build",
+      "warmups": 5,
+      "measurements": 50,
+      "wallP50Milliseconds": 9329.2314,
+      "wallP95Milliseconds": 9650.9849,
+      "sessionP50Milliseconds": 9324.0775,
+      "sessionP95Milliseconds": 9645.9727,
+      "report": "paddleocr-vl-tensorrt-table-device-kv-20261026.json",
+      "reportSha256": "33d740db36f039d722e25865a811718f3d3c5a076c473d899d1ed59de13848eb",
+      "repositoryLfSha256": "7eb72e656b51aa054a59e6eb9e81d789cb62dfad5edab614a2b9d2be7fc14a03"
+    },
+    {
+      "mode": "device-kv-final-build-short-recheck",
+      "warmups": 1,
+      "measurements": 5,
+      "wallP50Milliseconds": 9106.1978,
+      "wallP95Milliseconds": 9150.6258,
+      "sessionP50Milliseconds": 9102.0617,
+      "sessionP95Milliseconds": 9145.474,
+      "visualTensorRtAssemblySha256": "b056fb5fa96c4800dc3965ee01fb1dc24e4818e7c0f825e8a465e6c6c2280f76",
+      "deviceSessionSourceSha256": "361e404497c91186c52c0ac48b92f6dc278623dd57bf486278117900fca8c99e",
+      "report": "paddleocr-vl-tensorrt-table-device-kv-final-short-20261026.json",
+      "reportSha256": "b9c39df6835b54db484d465ca9a50018ca356dbd30bcaf39c99761d542714da9",
+      "repositoryLfSha256": "56eeb9e2468bc68df70a8879a19a9e55fd7fd74ddce203bcaf7647ebfb2660d0"
+    }
+  ],
+  "limitations": [
+    "The two 5+50 runs used different test/device assemblies and sequential unlocked-clock execution; their difference is not a controlled speedup estimate.",
+    "The final-build 1+5 recheck confirms the final code but is not a replacement for 5+50.",
+    "Device KV and decoder-to-head hidden state stay on CUDA; vision, prefill, token embedding and full logits still cross the host.",
+    "Arbitrary profiles, labelled quality, multi-page execution, Release download, other GPUs and long-running memory stability remain unverified."
+  ]
+}

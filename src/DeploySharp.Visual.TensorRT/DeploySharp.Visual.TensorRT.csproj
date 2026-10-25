@@ -5,8 +5,8 @@
     <RootNamespace>JYPPX.DeploySharp.Visual.TensorRT</RootNamespace>
     <PackageId>JYPPX.DeploySharp.Visual.TensorRT</PackageId>
     <Title>DeploySharp Visual TensorRT</Title>
-    <Description>Device-resident CUDA preprocessing and TensorRT visual inference for DeploySharp classification, detection, segmentation, pose, OBB, anomaly, and matting pipelines.</Description>
-    <PackageTags>DeploySharp;Visual;TensorRT;CUDA;GPU;Preprocessing;Inference;CSharp</PackageTags>
+    <Description>CUDA preprocessing and TensorRT visual inference for classification, detection, segmentation, pose, OBB, anomaly, matting, and PaddleOCR-VL device-resident decoding.</Description>
+    <PackageTags>DeploySharp;Visual;TensorRT;CUDA;GPU;Preprocessing;Inference;PaddleOCR-VL;CSharp</PackageTags>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <IsPackable>true</IsPackable>

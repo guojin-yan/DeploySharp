@@ -952,6 +952,20 @@ PaddleOCR-VL-1.6 已加入 `DeploySharp.Visual`，固定四图 Bundle 已在 Win
 
 TensorRT 10.11 另有实验性五图路径：从固定 decoder 派生双输入 `prefill.onnx`，首步不传空 KV，后续沿用原 decoder。`PaddleOcrVlOnnxSession` 的五 Session 构造器接受单独的 prefill Session；`CreateWithPrefill` 可从调用方已核对的本地五图 ONNX 目录创建 Session。现在 `CreateVerified` 也能根据 manifest v1/v2 在创建后端 Session 前校验四图或五图 Bundle 的全部文件；五图本地打包及 SHA 见[完整性记录](../../eng/models/paddle-ocr/verification/paddleocr-vl-five-graph-bundle-20261026.md)。ONNX Bundle 不包含设备专用 TensorRT Engine，也尚未上传 Release。六任务的真实 TensorRT EOS/Token/文本对照、Engine profile、SHA 与复现步骤见[五图验证报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-tensorrt-five-graph-20261026.md)。
 
+`JYPPX.DeploySharp.Visual.TensorRT` 的 `PaddleOcrVlTensorRtDeviceSession` 可复用同五个 Engine Session：Vision 和首轮 Prefill 仍使用主机输出，后续 Decoder 的 36 路 KV 在两组 CUDA 缓冲区之间轮换，Decoder 的隐藏状态在同一 CUDA stream 上直接送入 Head，每步仅回读 logits 选 Token。它不改变 `PaddleOcrVlOnnxSession` 的 CPU/ORT/OpenVINO 路径，且只在 `net8.0` 的 TensorRT 包中提供。调用方需先按本机 GPU 和任务图像尺寸构建 Engine、校验图与 tokenizer 的同批身份，再创建独立的五个 Session；设备端对象不接管 Session 所有权：
+
+```csharp
+using JYPPX.DeploySharp.Visual.TensorRT;
+
+// vision、embedding、decoder、head、prefill 为调用方持有的五个 TensorRT Session。
+using var deviceVl = new PaddleOcrVlTensorRtDeviceSession(
+    vision, embedding, decoder, head, prefill);
+PaddleOcrVlGenerationResult generated = deviceVl.Generate(
+    prepared, tokenizer, new PaddleOcrVlGenerationOptions(maximumNewTokens: 512));
+```
+
+这条路径目前仍是固定 1.6 的实验能力；设备 KV 驻留不代表图像预处理、Prefill、Token Embedding、logits argmax 都在 GPU，也不保证任意 Engine profile、页面质量或其它显卡可用。完整调用入口与 Engine 身份见 `Invoke-PaddleOcrVlTensorRtGeneration.ps1` 的 `-DeviceKv` 选项；固定 Table 输入的原路径、设备端 KV 两组 5+50 和最终构建短复测见[验证报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-tensorrt-device-kv-20261026.md)，不能外推为全任务或跨设备加速比。
+
 ```csharp
 using JYPPX.DeploySharp.Visual;
 using JYPPX.DeploySharp.Visual.Models.PaddleOcr;
