@@ -29,7 +29,7 @@ public sealed class PaddleOcrVlComponentInferenceProbeTests
             Assert.Inconclusive("Run Invoke-PaddleOcrVlBackendProbe.ps1 to isolate native failures.");
 
         string graph = Required("DEPLOYSHARP_PADDLEOCR_VL_PROBE_GRAPH");
-        Assert.IsTrue(graph is "embedding" or "head" or "vision" or "decoder", "Unknown PaddleOCR-VL graph role.");
+        Assert.IsTrue(graph is "embedding" or "head" or "vision" or "decoder" or "prefill", "Unknown PaddleOCR-VL graph role.");
         string engine = Path.GetFullPath(Required("DEPLOYSHARP_PADDLEOCR_VL_PROBE_ENGINE"));
         string onnx = Path.Combine(Required("DEPLOYSHARP_PADDLEOCR_VL_BUNDLE_ROOT"), graph + ".onnx");
         string expectedHash = Required("DEPLOYSHARP_PADDLEOCR_VL_PROBE_ENGINE_SHA256");
@@ -55,7 +55,7 @@ public sealed class PaddleOcrVlComponentInferenceProbeTests
             ["os"] = RuntimeInformation.OSDescription, ["framework"] = RuntimeInformation.FrameworkDescription,
             ["backend"] = "tensorrt", ["api"] = api.ToString(),
             ["status"] = "probing", ["phase"] = "session-load",
-            ["boundary"] = "One component input compared to ONNX Runtime CPU. Decoder uses positive-length synthetic KV, not the zero-length prefill required for generation. Component parity is not token, generation or Bundle parity."
+            ["boundary"] = "One component input compared to ONNX Runtime CPU. Decoder uses positive-length synthetic KV; prefill is a derived no-past graph. Component parity is not token, generation or Bundle parity."
         };
         void Save() => File.WriteAllText(reportPath, JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true }) + "\n");
         Save();
@@ -69,6 +69,7 @@ public sealed class PaddleOcrVlComponentInferenceProbeTests
                 "head" => InferenceInputs.Create("last_hidden_state", new Tensor<float>(new TensorShape(1, 1, 1024),
                     Enumerable.Range(0, 1024).Select(index => (index % 31 - 15) / 1000f).ToArray())),
                 "vision" => CreateVisionInput(report),
+                "prefill" => CreatePrefillInput(report),
                 _ => CreateDecoderInput(report)
             };
             string outputName = graph switch { "embedding" => "inputs_embeds", "head" => "logits", "vision" => "image_features", _ => "last_hidden_state" };
@@ -93,9 +94,9 @@ public sealed class PaddleOcrVlComponentInferenceProbeTests
                 Assert.AreEqual(TensorElementType.Float32, tensor.ElementType);
                 Assert.AreEqual(expectedShape, tensor.Shape);
                 values = (float[])tensor.Buffer;
-                if (graph == "decoder")
+                if (graph is "decoder" or "prefill")
                 {
-                    TensorShape presentShape = new TensorShape(1, 2, 2, 128);
+                    TensorShape presentShape = new TensorShape(1, 2, graph == "prefill" ? 7 : 2, 128);
                     for (int layer = 0; layer < 18; layer++)
                         foreach (string kind in new[] { "key", "value" })
                         {
@@ -146,11 +147,11 @@ public sealed class PaddleOcrVlComponentInferenceProbeTests
                 if (mismatch) mismatchedOutputs.Add(name);
             }
             Compare(outputName, values, reference);
-            if (graph == "decoder")
+            if (graph is "decoder" or "prefill")
                 foreach ((string name, float[] actual) in present)
                 {
                     ITensor referenceCache = referenceOutputs.GetRequired(name);
-                    Assert.AreEqual(new TensorShape(1, 2, 2, 128), referenceCache.Shape, name);
+                    Assert.AreEqual(new TensorShape(1, 2, graph == "prefill" ? 7 : 2, 128), referenceCache.Shape, name);
                     float[] expected = (float[])referenceCache.Buffer;
                     Assert.IsTrue(expected.All(float.IsFinite) && actual.All(float.IsFinite), "Non-finite decoder cache: " + name);
                     Compare(name, actual, expected);
@@ -233,6 +234,22 @@ public sealed class PaddleOcrVlComponentInferenceProbeTests
         report["fixtureCase"] = "synthetic-positive-kv-1";
         report["fixtureInputShape"] = "inputs_embeds=[1,1,1024];position_ids=[3,1,1];past_key/value_0..17=[1,2,1,128]";
         return new InferenceInputs(inputs);
+    }
+
+    private static InferenceInputs CreatePrefillInput(Dictionary<string, object?> report)
+    {
+        const int tokens = 7;
+        float[] embeddings = Enumerable.Range(0, tokens * 1024)
+            .Select(index => (index % 53 - 26) / 1000f).ToArray();
+        long[] positions = Enumerable.Range(0, 3)
+            .SelectMany(_ => Enumerable.Range(0, tokens).Select(index => (long)index)).ToArray();
+        report["fixtureCase"] = "synthetic-prefill-7";
+        report["fixtureInputShape"] = "inputs_embeds=[1,7,1024];position_ids=[3,1,7]";
+        return new InferenceInputs(new[]
+        {
+            new NamedTensor("inputs_embeds", new Tensor<float>(new TensorShape(1, tokens, 1024), embeddings, TensorBufferOwnership.Transfer)),
+            new NamedTensor("position_ids", new Tensor<long>(new TensorShape(3, 1, tokens), positions, TensorBufferOwnership.Transfer))
+        });
     }
 
     private static string Hash(string path)

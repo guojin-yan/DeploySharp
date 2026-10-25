@@ -50,6 +50,78 @@ public sealed class PaddleOcrVlOnnxSessionTests
     }
 
     [TestMethod]
+    public async Task FiveGraphsPrefillWithoutPastThenDecodeWithItsUnclonedKv()
+    {
+        using var graphs = new Graphs();
+        using var session = graphs.CreateWithPrefill();
+        PaddleOcrVlGenerationResult result = await session.GenerateAsync(Input(), Tokenizer.Value);
+        CollectionAssert.AreEqual(new[] { 65, 66, 2 }, result.TokenIds.ToArray());
+        Assert.AreEqual(1, graphs.Vision.Calls);
+        Assert.AreEqual(1, graphs.Prefill.Calls);
+        Assert.AreEqual(2, graphs.Decoder.Calls);
+        Assert.AreEqual(3, graphs.Head.Calls);
+        CollectionAssert.AreEqual(new[] { 0, 157, 158 }, graphs.PastLengths.ToArray());
+        CollectionAssert.AreEqual(new[] { 157, 1, 1 }, graphs.QueryLengths.ToArray());
+        Assert.AreEqual(GenerationFinishReason.EndOfSequence, result.FinishReason);
+    }
+
+    [TestMethod]
+    public void FiveGraphOutputLimitAvoidsUnneededDecodeAndRejectsInvalidPrefillPorts()
+    {
+        using var graphs = new Graphs();
+        using (var session = graphs.CreateWithPrefill())
+            CollectionAssert.AreEqual(new[] { 65 }, session.Generate(Input(), Tokenizer.Value,
+                new PaddleOcrVlGenerationOptions(1)).TokenIds.ToArray());
+        Assert.AreEqual(1, graphs.Prefill.Calls);
+        Assert.AreEqual(0, graphs.Decoder.Calls);
+        graphs.Prefill.Metadata = new ModelMetadata(new ModelId("test/prefill"), "onnx",
+            graphs.Prefill.Metadata.Inputs.Append(new TensorDescriptor("past_key_0", TensorElementType.Float32, new TensorShape(1, 2, -1, 128))),
+            graphs.Prefill.Metadata.Outputs);
+        Assert.ThrowsExactly<VisualException>(() => graphs.CreateWithPrefill(owns: true));
+        Assert.AreEqual(0, graphs.Prefill.Disposals);
+    }
+
+    [TestMethod]
+    public void FixedVisionGridIsAcceptedOnlyForMatchingPreparedInput()
+    {
+        using var graphs = new Graphs();
+        PaddleOcrVlPreparedInput input = Input();
+        graphs.Vision.Metadata = new ModelMetadata(new ModelId("test/vision"), "tensorrt-engine",
+            new[] { new TensorDescriptor("pixel_patches", TensorElementType.Float32,
+                new TensorShape(input.ImagePlan.GridHeight, input.ImagePlan.GridWidth, 3, 14, 14)) },
+            new[] { new TensorDescriptor("image_features", TensorElementType.Float32, new TensorShape(144, 1024)) });
+        using (var matching = graphs.CreateWithPrefill())
+            CollectionAssert.AreEqual(new[] { 65 }, matching.Generate(input, Tokenizer.Value,
+                new PaddleOcrVlGenerationOptions(1)).TokenIds.ToArray());
+        graphs.Vision.Metadata = new ModelMetadata(new ModelId("test/vision"), "tensorrt-engine",
+            new[] { new TensorDescriptor("pixel_patches", TensorElementType.Float32, new TensorShape(72, 72, 3, 14, 14)) },
+            new[] { new TensorDescriptor("image_features", TensorElementType.Float32, new TensorShape(1296, 1024)) });
+        using var mismatched = graphs.CreateWithPrefill();
+        int calls = graphs.Vision.Calls;
+        Assert.ThrowsExactly<VisualException>(() => mismatched.Generate(input, Tokenizer.Value));
+        Assert.AreEqual(calls, graphs.Vision.Calls);
+    }
+
+    [TestMethod]
+    public async Task FiveGraphsCancelQueuedWorkAndDisposeOwnedPrefillOnce()
+    {
+        using var graphs = new Graphs { BlockVision = true };
+        var session = graphs.CreateWithPrefill(owns: true);
+        Task<PaddleOcrVlGenerationResult> active = session.GenerateAsync(Input(), Tokenizer.Value);
+        await graphs.Entered.Task;
+        using var cancellation = new CancellationTokenSource();
+        Task<PaddleOcrVlGenerationResult> queued = session.GenerateAsync(Input(), Tokenizer.Value, cancellationToken: cancellation.Token);
+        cancellation.Cancel();
+        await Assert.ThrowsAsync<OperationCanceledException>(async () => await queued);
+        Assert.AreEqual(0, graphs.Prefill.Calls);
+        graphs.Release.TrySetResult(true);
+        await active;
+        await Task.Run(session.Dispose);
+        session.Dispose();
+        Assert.IsTrue(graphs.AllWithPrefill.All(value => value.Disposals == 1));
+    }
+
+    [TestMethod]
     public void OutputLimitAndGreedyTiesHaveExplicitTerminationWithoutAnExtraDecode()
     {
         using var graphs = new Graphs { Tie = true };
@@ -142,8 +214,9 @@ public sealed class PaddleOcrVlOnnxSessionTests
 
     private sealed class Graphs : IDisposable
     {
-        internal readonly Fake Vision, Embedding, Decoder, Head;
+        internal readonly Fake Vision, Embedding, Decoder, Head, Prefill;
         internal IEnumerable<Fake> All => new[] { Vision, Embedding, Decoder, Head };
+        internal IEnumerable<Fake> AllWithPrefill => All.Append(Prefill);
         internal readonly List<int> PastLengths = new(), QueryLengths = new();
         internal readonly TaskCompletionSource<bool> Entered = new(TaskCreationOptions.RunContinuationsAsynchronously);
         internal readonly TaskCompletionSource<bool> Release = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -209,6 +282,29 @@ public sealed class PaddleOcrVlOnnxSessionTests
                 _previous = cache;
                 return new InferenceOutputs(result);
             });
+            Prefill = new Fake("prefill", inputs.Take(2), outputs, input =>
+            {
+                Assert.AreEqual(2, input.Count());
+                Assert.AreEqual(0, _step);
+                int query = (int)input.GetRequired("inputs_embeds").Shape[1];
+                PastLengths.Add(0); QueryLengths.Add(query);
+                float[] embedding = (float[])input.GetRequired("inputs_embeds").Buffer;
+                Assert.IsTrue(_imageOffset > 0);
+                Assert.AreEqual(.1f, embedding[(_imageOffset - 1) * 1024]);
+                Assert.AreEqual(.25f, embedding[_imageOffset * 1024]);
+                Assert.AreEqual(.25f, embedding[(_imageOffset + 143) * 1024 + 1023]);
+                Assert.AreEqual(.1f, embedding[(_imageOffset + 144) * 1024]);
+                var result = new List<NamedTensor> { new("last_hidden_state", F(new TensorShape(1, 1, 1024), .5f)) };
+                _previous = new ITensor[36];
+                for (int i = 0; i < 36; i++)
+                {
+                    string kind = i % 2 == 0 ? "key_" : "value_";
+                    ITensor cache = F(new TensorShape(1, 2, query, 128), .125f);
+                    _previous[i] = cache;
+                    result.Add(new NamedTensor("present_" + kind + i / 2, cache));
+                }
+                return new InferenceOutputs(result);
+            });
             Head = new Fake("head", new[] { P("last_hidden_state", TensorElementType.Float32, 1, 1, 1024) },
                 new[] { P("logits", TensorElementType.Float32, 1, 1, 103424) }, _ =>
                 {
@@ -221,6 +317,7 @@ public sealed class PaddleOcrVlOnnxSessionTests
                 });
         }
         internal PaddleOcrVlOnnxSession Create(bool owns = false) => new(Vision, Embedding, Decoder, Head, owns);
+        internal PaddleOcrVlOnnxSession CreateWithPrefill(bool owns = false) => new(Vision, Embedding, Decoder, Head, Prefill, owns);
         public void Dispose() { }
         private static TensorDescriptor P(string name, TensorElementType type, params long[] dimensions) => new(name, type, new TensorShape(dimensions));
         private static Tensor<float> F(TensorShape shape, float value) => new(shape, Enumerable.Repeat(value, checked((int)shape.GetElementCount())).ToArray(), TensorBufferOwnership.Transfer);

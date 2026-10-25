@@ -118,11 +118,12 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
         public TimeSpan Elapsed { get; }
     }
 
-    /// <summary>Runs experimental PaddleOCR-VL-1.6 four-graph greedy generation from exact prepared patches. / 从精确已准备 Patch 执行实验性 PaddleOCR-VL-1.6 四图 Greedy 生成。</summary>
-    /// <remarks>One unpadded image per request. Concurrent callers queue; each generation owns its positions and KV. The dynamic decoder must support zero-length KV on prefill. Cross-backend and complete image-processor validation remain separate requirements. / 每请求为一张无填充图像，并发调用排队；每次生成独立持有位置和 KV。动态 Decoder 必须支持预填充零长度 KV。跨后端与完整图像 Processor 验证须单独进行。</remarks>
+    /// <summary>Runs experimental PaddleOCR-VL-1.6 greedy generation from exact prepared patches. / 从精确已准备 Patch 执行实验性 PaddleOCR-VL-1.6 Greedy 生成。</summary>
+    /// <remarks>One unpadded image per request. Concurrent callers queue; each generation owns its positions and KV. Four-graph sessions require zero-length decoder KV on the first step; an optional fifth prefill graph avoids that runtime input. / 每请求为一张无填充图像，并发调用排队；每次生成独立持有位置和 KV。四图 Session 首步要求 Decoder 接受零长度 KV；可选的第五张 Prefill 图避免该运行时输入。</remarks>
     public sealed class PaddleOcrVlOnnxSession : IDisposable
     {
         private readonly IInferenceSession _vision, _embedding, _decoder, _head;
+        private readonly IInferenceSession? _prefill;
         private readonly bool _ownsSessions;
         private readonly object _lifecycle = new object();
         private readonly SemaphoreSlim _execution = new SemaphoreSlim(1, 1);
@@ -134,15 +135,26 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
         /// <summary>Binds and validates four distinct backend sessions; ownership transfers only after successful validation. / 绑定并验证四条独立后端 Session，仅在验证成功后转移所有权。</summary>
         public PaddleOcrVlOnnxSession(IInferenceSession vision, IInferenceSession embedding, IInferenceSession decoder,
             IInferenceSession languageHead, bool ownsSessions = false)
+            : this(vision, embedding, decoder, languageHead, ownsSessions, null) { }
+
+        /// <summary>Binds a separate no-past prefill graph for backends that cannot accept empty KV tensors. / 为不接受空 KV 张量的后端绑定独立的无 Past 预填充图。</summary>
+        public PaddleOcrVlOnnxSession(IInferenceSession vision, IInferenceSession embedding, IInferenceSession decoder,
+            IInferenceSession languageHead, IInferenceSession prefill, bool ownsSessions = false)
+            : this(vision, embedding, decoder, languageHead, ownsSessions, prefill ?? throw new ArgumentNullException(nameof(prefill))) { }
+
+        private PaddleOcrVlOnnxSession(IInferenceSession vision, IInferenceSession embedding, IInferenceSession decoder,
+            IInferenceSession languageHead, bool ownsSessions, IInferenceSession? prefill)
         {
             _vision = vision ?? throw new ArgumentNullException(nameof(vision));
             _embedding = embedding ?? throw new ArgumentNullException(nameof(embedding));
             _decoder = decoder ?? throw new ArgumentNullException(nameof(decoder));
             _head = languageHead ?? throw new ArgumentNullException(nameof(languageHead));
-            var sessions = new[] { _vision, _embedding, _decoder, _head };
-            if (sessions.Distinct().Count() != 4) throw new ArgumentException("Each PaddleOCR-VL graph requires its own session.");
+            _prefill = prefill;
+            IInferenceSession[] sessions = _prefill == null ? new[] { _vision, _embedding, _decoder, _head }
+                : new[] { _vision, _embedding, _decoder, _head, _prefill };
+            if (sessions.Distinct().Count() != sessions.Length) throw new ArgumentException("Each PaddleOCR-VL graph requires its own session.");
             ValidatePorts(_vision.Metadata, new[] { Port("pixel_patches", TensorElementType.Float32, -1, -1, 3, 14, 14) },
-                new[] { Port("image_features", TensorElementType.Float32, -1, 1024) });
+                new[] { Port("image_features", TensorElementType.Float32, -1, 1024) }, allowFixedVisionAxes: true);
             ValidatePorts(_embedding.Metadata, new[] { Port("input_ids", TensorElementType.Int64, 1, -1) },
                 new[] { Port("inputs_embeds", TensorElementType.Float32, 1, -1, 1024) });
             var decoderInputs = new List<TensorDescriptor> { Port("inputs_embeds", TensorElementType.Float32, 1, -1, 1024), Port("position_ids", TensorElementType.Int64, 3, 1, -1) };
@@ -154,6 +166,8 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
                     decoderOutputs.Add(Port("present_" + kind + "_" + layer, TensorElementType.Float32, 1, 2, -1, 128));
                 }
             ValidatePorts(_decoder.Metadata, decoderInputs, decoderOutputs);
+            if (_prefill != null)
+                ValidatePorts(_prefill.Metadata, decoderInputs.Take(2), decoderOutputs);
             ValidatePorts(_head.Metadata, new[] { Port("last_hidden_state", TensorElementType.Float32, 1, 1, 1024) },
                 new[] { Port("logits", TensorElementType.Float32, 1, 1, 103424) });
             _ownsSessions = ownsSessions;
@@ -162,6 +176,15 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
         /// <summary>Creates sessions for vision.onnx, embedding.onnx, decoder.onnx and head.onnx with explicit graph hashes. / 为四个具名 ONNX 图创建 Session，显式计算图 Hash。</summary>
         /// <remarks>Use only graphs produced and checked together by the pinned exporter. This factory does not promote failed component parity or verify the checkpoint provenance of arbitrary user graphs. / 仅使用固定导出器同时产出并验证的图。本工厂不会将失败的组件对照改为通过，也不验证任意用户图的 Checkpoint 来源。</remarks>
         public static PaddleOcrVlOnnxSession Create(BackendRegistry registry, string bundleDirectory, BackendRequest request, SessionOptions? options = null)
+            => CreateGraphs(registry, bundleDirectory, request, options, withPrefill: false);
+
+        /// <summary>Creates five ONNX sessions from a local export containing a separately derived prefill.onnx. / 从含有独立派生 prefill.onnx 的本地导出目录创建五图 Session。</summary>
+        /// <remarks>This factory hashes local files but does not verify a pinned Bundle manifest. Use only with a prefill graph derived from the matching decoder. / 本工厂计算本地文件 Hash，但不校验固定 Bundle manifest；仅用于与 Decoder 匹配的派生 Prefill 图。</remarks>
+        public static PaddleOcrVlOnnxSession CreateWithPrefill(BackendRegistry registry, string bundleDirectory, BackendRequest request, SessionOptions? options = null)
+            => CreateGraphs(registry, bundleDirectory, request, options, withPrefill: true);
+
+        private static PaddleOcrVlOnnxSession CreateGraphs(BackendRegistry registry, string bundleDirectory, BackendRequest request,
+            SessionOptions? options, bool withPrefill)
         {
             if (registry == null) throw new ArgumentNullException(nameof(registry));
             if (string.IsNullOrWhiteSpace(bundleDirectory)) throw new ArgumentException("An exported bundle directory is required.", nameof(bundleDirectory));
@@ -169,7 +192,9 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
             var created = new List<IInferenceSession>();
             try
             {
-                foreach (string role in new[] { "vision", "embedding", "decoder", "head" })
+                IEnumerable<string> roles = withPrefill ? new[] { "vision", "embedding", "decoder", "head", "prefill" }
+                    : new[] { "vision", "embedding", "decoder", "head" };
+                foreach (string role in roles)
                 {
                     string path = Path.GetFullPath(Path.Combine(bundleDirectory, role + ".onnx"));
                     string hash;
@@ -177,7 +202,9 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
                     var artifact = new ModelArtifact(new ModelId("paddleocr-vl/1.6/" + role), "onnx", path, hash, request.BackendId);
                     created.Add(registry.CreateSession(artifact, request, options ?? SessionOptions.Default));
                 }
-                return new PaddleOcrVlOnnxSession(created[0], created[1], created[2], created[3], true);
+                return withPrefill
+                    ? new PaddleOcrVlOnnxSession(created[0], created[1], created[2], created[3], created[4], true)
+                    : new PaddleOcrVlOnnxSession(created[0], created[1], created[2], created[3], true);
             }
             catch { foreach (IInferenceSession session in created) { try { session.Dispose(); } catch { } } throw; }
         }
@@ -234,7 +261,9 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
             try
             {
                 if (_ownsSessions)
-                    foreach (IInferenceSession session in new[] { _head, _decoder, _embedding, _vision })
+                    foreach (IInferenceSession session in _prefill == null
+                        ? new[] { _head, _decoder, _embedding, _vision }
+                        : new[] { _head, _decoder, _prefill, _embedding, _vision })
                         try { session.Dispose(); } catch { /* Dispose all remaining owned sessions. */ }
             }
             finally { _execution.Dispose(); _dispose.Dispose(); _idle.Dispose(); }
@@ -267,6 +296,10 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
                 const long pairBytesPerToken = 18L * 2 * 2 * 128 * sizeof(float);
                 if (checked(maximumPast * pairBytesPerToken * 2) > options.MaximumCacheBytes)
                     throw new ArgumentOutOfRangeException(nameof(options), "The reserved generation exceeds the old-plus-new KV memory budget.");
+                TensorShape visionShape = _vision.Metadata.Inputs.Single(port => port.Name == "pixel_patches").Shape;
+                if (visionShape[0] > 0 && visionShape[0] != input.ImagePlan.GridHeight
+                    || visionShape[1] > 0 && visionShape[1] != input.ImagePlan.GridWidth)
+                    throw Invalid("The prepared image grid is outside the vision graph's fixed input shape.");
                 foreach (float pixel in (float[])input.PixelPatches.Buffer)
                     if (float.IsNaN(pixel) || float.IsInfinity(pixel) || pixel < -1.000001f || pixel > 1.000001f)
                         throw Invalid("PaddleOCR-VL patches must contain finite official [-1,1] normalization values.");
@@ -282,7 +315,8 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
                 float[] merged = (float[])rawEmbeddings.Clone();
                 Array.Copy(features, 0, merged, checked(prompt.ImageTokenOffset * 1024), features.Length);
                 var cache = new ITensor[36];
-                for (int i = 0; i < cache.Length; i++) cache[i] = new Tensor<float>(new TensorShape(1, 2, 0, 128), Array.Empty<float>(), TensorBufferOwnership.Transfer);
+                if (_prefill == null)
+                    for (int i = 0; i < cache.Length; i++) cache[i] = new Tensor<float>(new TensorShape(1, 2, 0, 128), Array.Empty<float>(), TensorBufferOwnership.Transfer);
                 var completions = new List<int>(options.MaximumNewTokens);
                 Tensor<float> currentEmbedding = new Tensor<float>(new TensorShape(1, prompt.Count, 1024), merged, TensorBufferOwnership.Transfer);
                 long[] decodePositions = new long[3];
@@ -300,18 +334,20 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
                         currentEmbedding = new Tensor<float>(new TensorShape(1, 1, 1024), value, TensorBufferOwnership.Borrow);
                         positionPlan.WriteDecodePositionIds(prompt.Count + step - 1, 1, decodePositions);
                     }
-                    var inputs = new List<NamedTensor>(38)
+                    var inputs = new List<NamedTensor>(step == 0 && _prefill != null ? 2 : 38)
                     {
                         new NamedTensor("inputs_embeds", currentEmbedding),
                         new NamedTensor("position_ids", new Tensor<long>(new TensorShape(3, 1, step == 0 ? prompt.Count : 1),
                             step == 0 ? positionPlan.CopyPositionIds() : decodePositions, TensorBufferOwnership.Borrow))
                     };
-                    for (int layer = 0; layer < 18; layer++)
-                    {
-                        inputs.Add(new NamedTensor("past_key_" + layer, cache[layer * 2]));
-                        inputs.Add(new NamedTensor("past_value_" + layer, cache[layer * 2 + 1]));
-                    }
-                    InferenceOutputs decoded = await Run(_decoder, new InferenceInputs(inputs), asynchronous, token).ConfigureAwait(false);
+                    if (step > 0 || _prefill == null)
+                        for (int layer = 0; layer < 18; layer++)
+                        {
+                            inputs.Add(new NamedTensor("past_key_" + layer, cache[layer * 2]));
+                            inputs.Add(new NamedTensor("past_value_" + layer, cache[layer * 2 + 1]));
+                        }
+                    IInferenceSession graph = step == 0 && _prefill != null ? _prefill : _decoder;
+                    InferenceOutputs decoded = await Run(graph, new InferenceInputs(inputs), asynchronous, token).ConfigureAwait(false);
                     for (int layer = 0; layer < 18; layer++)
                         foreach (int kind in new[] { 0, 1 })
                         {
@@ -357,11 +393,13 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
         }
         private static TensorDescriptor Port(string name, TensorElementType type, params long[] dimensions)
             => new TensorDescriptor(name, type, new TensorShape(dimensions));
-        private static void ValidatePorts(ModelMetadata actual, IEnumerable<TensorDescriptor> inputs, IEnumerable<TensorDescriptor> outputs)
+        private static void ValidatePorts(ModelMetadata actual, IEnumerable<TensorDescriptor> inputs, IEnumerable<TensorDescriptor> outputs,
+            bool allowFixedVisionAxes = false)
         {
-            ValidatePortSet(actual.Inputs, inputs); ValidatePortSet(actual.Outputs, outputs);
+            ValidatePortSet(actual.Inputs, inputs, allowFixedVisionAxes); ValidatePortSet(actual.Outputs, outputs, allowFixedVisionAxes);
         }
-        private static void ValidatePortSet(IReadOnlyList<TensorDescriptor> actual, IEnumerable<TensorDescriptor> expected)
+        private static void ValidatePortSet(IReadOnlyList<TensorDescriptor> actual, IEnumerable<TensorDescriptor> expected,
+            bool allowFixedVisionAxes)
         {
             TensorDescriptor[] ports = expected.ToArray();
             if (actual.Count != ports.Length) throw Invalid("An ONNX component has an unexpected number of ports.");
@@ -371,7 +409,9 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr
                 if (found == null || found.ElementType != wanted.ElementType || found.Shape.Rank != wanted.Shape.Rank)
                     throw Invalid("An ONNX component has an invalid port: " + wanted.Name);
                 for (int axis = 0; axis < found.Shape.Rank; axis++)
-                    if (wanted.Shape[axis] < 0 ? found.Shape[axis] >= 0 : found.Shape[axis] >= 0 && wanted.Shape[axis] != found.Shape[axis])
+                    if (wanted.Shape[axis] < 0
+                        ? found.Shape[axis] >= 0 && !(allowFixedVisionAxes && axis < (wanted.Name == "pixel_patches" ? 2 : 1) && found.Shape[axis] > 0)
+                        : found.Shape[axis] >= 0 && wanted.Shape[axis] != found.Shape[axis])
                         throw Invalid("An ONNX component has an invalid static/dynamic axis: " + wanted.Name);
             }
         }

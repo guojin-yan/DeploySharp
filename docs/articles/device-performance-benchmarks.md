@@ -2,6 +2,8 @@
 
 本文只记录具名设备、明确模型制品和固定测试口径下的推理结果。数字是特定设备上的观测值，不构成其他硬件、模型版本或运行时配置的性能承诺。
 
+PaddleOCR-VL 的 [TensorRT 五图六任务验证](../../eng/models/paddle-ocr/verification/paddleocr-vl-tensorrt-five-graph-20261026.md)记录了单次生成耗时及精确 Token/文本结果，但尚无预热和重复采样，因此不填入本页的正式 P50/P95 表格，也不用于与 ORT/OpenVINO 排名。
+
 ## 统一口径
 
 - 视觉模型的 `steady` 结果复用已解码、已准备的输入，包含后端执行与 DeploySharp 后处理，不包含模型加载、OpenVINO 编译、TensorRT engine 构建和 CUDA 初始化。`cold` 结果才包含一次输入解码和预处理。

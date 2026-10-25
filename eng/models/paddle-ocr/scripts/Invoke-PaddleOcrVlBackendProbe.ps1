@@ -3,12 +3,15 @@ param(
     [Parameter(Mandatory)] [string] $BundleRoot,
     [Parameter(Mandatory)] [string] $OutputRoot,
     [ValidateSet('OpenCV', 'TensorRT')] [string[]] $Backend = @('OpenCV', 'TensorRT'),
-    [ValidateSet('embedding', 'head', 'vision', 'decoder')] [string[]] $Graph = @('embedding', 'head', 'vision', 'decoder'),
+    [ValidateSet('embedding', 'head', 'vision', 'decoder', 'prefill')] [string[]] $Graph = @('embedding', 'head', 'vision', 'decoder'),
     [ValidateRange(10, 3600)] [int] $TimeoutSeconds = 300,
     [ValidateSet('ImporterOrBuilder', 'ComponentInference')] [string] $ProbeMode = 'ImporterOrBuilder',
     [string] $EngineRoot,
     [string] $FixtureRoot,
     [ValidateSet('10', '11')] [string] $TensorRtApi = '10',
+    [ValidateSet('baseline', 'compact-official-tasks', 'all-official-tasks', 'spotting-fixed')] [string] $ProfilePreset = 'baseline',
+    [ValidateSet('Float32', 'Float16')] [string] $Precision = 'Float32',
+    [ValidateRange(1, 4)] [int] $WorkspaceGiB = 1,
     [string] $TensorRtRoot,
     [string] $CudaRoot,
     [string] $CudnnRoot,
@@ -41,6 +44,9 @@ if ($NativeBridgeRoot) { $env:JYPPX_NATIVE_BRIDGE_PATH = (Resolve-Path -LiteralP
 $env:DEPLOYSHARP_PADDLEOCR_VL_BACKEND_PROBE = '1'
 $env:DEPLOYSHARP_PADDLEOCR_VL_BUNDLE_ROOT = $bundle
 $env:DEPLOYSHARP_PADDLEOCR_VL_PROBE_TENSORRT_API = $TensorRtApi
+$env:DEPLOYSHARP_PADDLEOCR_VL_PROBE_PROFILE = $ProfilePreset
+$env:DEPLOYSHARP_PADDLEOCR_VL_PROBE_PRECISION = $Precision
+$env:DEPLOYSHARP_PADDLEOCR_VL_PROBE_WORKSPACE_GIB = [string]$WorkspaceGiB
 $env:DEPLOYSHARP_PADDLEOCR_VL_SOURCE_COMMIT = (& git -C $repoRoot rev-parse HEAD).Trim()
 if ($LASTEXITCODE -ne 0) { throw 'Cannot record source commit.' }
 $rows = [Collections.Generic.List[object]]::new()
