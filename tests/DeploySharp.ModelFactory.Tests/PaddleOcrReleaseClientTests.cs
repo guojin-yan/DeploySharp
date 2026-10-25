@@ -145,6 +145,83 @@ namespace DeploySharp.ModelFactory.Tests
             }
         }
 
+        [TestMethod]
+        public async Task IsolatesGenericTokenizerFilenamesAcrossChartAndVlBundles()
+        {
+            var chartRows = new[]
+            {
+                (Role: "vision-projector", ModelId: "paddle-chart/pp-chart2table/vision-projector", Name: "chart-vision.onnx", LocalName: "chart-vision.onnx", Format: "onnx", Bytes: Encoding.UTF8.GetBytes("chart-vision")),
+                (Role: "token-embedding", ModelId: "paddle-chart/pp-chart2table/token-embedding", Name: "chart-embedding.onnx", LocalName: "chart-embedding.onnx", Format: "onnx", Bytes: Encoding.UTF8.GetBytes("chart-embedding")),
+                (Role: "text-prefill", ModelId: "paddle-chart/pp-chart2table/text-prefill", Name: "chart-prefill.onnx", LocalName: "chart-prefill.onnx", Format: "onnx", Bytes: Encoding.UTF8.GetBytes("chart-prefill")),
+                (Role: "text-decode-with-past", ModelId: "paddle-chart/pp-chart2table/text-decode-with-past", Name: "chart-decode.onnx", LocalName: "chart-decode.onnx", Format: "onnx", Bytes: Encoding.UTF8.GetBytes("chart-decode")),
+                (Role: "qwen-tokenizer", ModelId: "paddle-chart/pp-chart2table", Name: "chart-qwen.tiktoken", LocalName: "qwen.tiktoken", Format: "tiktoken", Bytes: Encoding.UTF8.GetBytes("chart-tokenizer")),
+                (Role: "tokenizer-config", ModelId: "paddle-chart/pp-chart2table", Name: "chart-tokenizer-config.json", LocalName: "tokenizer_config.json", Format: "json", Bytes: Encoding.UTF8.GetBytes("{\"bundle\":\"chart\"}")),
+                (Role: "added-tokens", ModelId: "paddle-chart/pp-chart2table", Name: "chart-added-tokens.json", LocalName: "added_tokens.json", Format: "json", Bytes: Encoding.UTF8.GetBytes("[\"chart\"]"))
+            };
+            var vlRows = new[]
+            {
+                (Role: "vision", ModelId: "paddleocr-vl/1.6/vision", Name: "paddleocr-vl-1.6-vision.onnx", LocalName: "vision.onnx", Format: "onnx", Bytes: Encoding.UTF8.GetBytes("vl-vision")),
+                (Role: "embedding", ModelId: "paddleocr-vl/1.6/embedding", Name: "paddleocr-vl-1.6-embedding.onnx", LocalName: "embedding.onnx", Format: "onnx", Bytes: Encoding.UTF8.GetBytes("vl-embedding")),
+                (Role: "decoder", ModelId: "paddleocr-vl/1.6/decoder", Name: "paddleocr-vl-1.6-decoder.onnx", LocalName: "decoder.onnx", Format: "onnx", Bytes: Encoding.UTF8.GetBytes("vl-decoder")),
+                (Role: "head", ModelId: "paddleocr-vl/1.6/head", Name: "paddleocr-vl-1.6-head.onnx", LocalName: "head.onnx", Format: "onnx", Bytes: Encoding.UTF8.GetBytes("vl-head")),
+                (Role: "tokenizer-model", ModelId: "paddleocr-vl-1.6", Name: "paddleocr-vl-1.6-tokenizer.model", LocalName: "tokenizer.model", Format: "sentencepiece", Bytes: Encoding.UTF8.GetBytes("vl-model")),
+                (Role: "tokenizer-json", ModelId: "paddleocr-vl/1.6", Name: "paddleocr-vl-1.6-tokenizer.json", LocalName: "tokenizer.json", Format: "json", Bytes: Encoding.UTF8.GetBytes("{\"bundle\":\"vl\"}")),
+                (Role: "tokenizer-config", ModelId: "paddleocr-vl/1.6", Name: "paddleocr-vl-1.6-tokenizer-config.json", LocalName: "tokenizer_config.json", Format: "json", Bytes: Encoding.UTF8.GetBytes("{\"bundle\":\"vl\"}")),
+                (Role: "chat-template", ModelId: "paddleocr-vl/1.6", Name: "paddleocr-vl-1.6-chat-template.jinja", LocalName: "chat_template.jinja", Format: "jinja", Bytes: Encoding.UTF8.GetBytes("vl-template")),
+                (Role: "manifest", ModelId: "paddleocr-vl/1.6", Name: "paddleocr-vl-1.6-bundle.json", LocalName: "paddleocr-vl-bundle.json", Format: "json", Bytes: Encoding.UTF8.GetBytes("{\"bundle\":\"vl\"}"))
+            };
+            string BundleRows(IEnumerable<(string Role, string ModelId, string Name, string LocalName, string Format, byte[] Bytes)> rows)
+            {
+                return string.Join(",", rows.Select(value =>
+                    "{\"role\":\"" + value.Role + "\",\"modelId\":\"" + value.ModelId + "\",\"assetName\":\"" + value.Name + "\",\"localName\":\"" + value.LocalName + "\",\"format\":\"" + value.Format + "\",\"size\":" + value.Bytes.Length + ",\"sha256\":\"" + Hash(value.Bytes) + "\"}"));
+            }
+            string catalog = "{\"corePaddleOcr\":[],\"ppStructure\":[],\"bundles\":["
+                + "{\"bundleId\":\"paddle-chart/pp-chart2table\",\"modelId\":\"paddle-chart/pp-chart2table\",\"artifacts\":[" + BundleRows(chartRows) + "]},"
+                + "{\"bundleId\":\"paddleocr-vl/1.6\",\"modelId\":\"paddleocr-vl/1.6\",\"artifacts\":[" + BundleRows(vlRows) + "]}]}";
+            var responses = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["paddleocr-release-catalog.json"] = Encoding.UTF8.GetBytes(catalog)
+            };
+            foreach (var row in chartRows) responses.Add(row.Name, row.Bytes);
+            foreach (var row in vlRows) responses.Add(row.Name, row.Bytes);
+            using var directory = new TestDirectory();
+            using (var client = new PaddleOcrReleaseClient(new PaddleOcrReleaseClientOptions(directory.Path), new HttpClient(new StaticHandler(responses))))
+            {
+                PaddleOcrReleaseBundleMaterialization chart = await client.GetBundleAsync("paddle-chart/pp-chart2table");
+                PaddleOcrReleaseBundleMaterialization vl = await client.GetBundleAsync("paddleocr-vl/1.6");
+                Assert.AreNotEqual(chart.TokenizerDirectoryPath, vl.TokenizerDirectoryPath);
+                Assert.AreNotEqual(Path.GetDirectoryName(chart.GetRequiredPath("tokenizer-config")), Path.GetDirectoryName(vl.GetRequiredPath("tokenizer-config")));
+                CollectionAssert.AreEqual(chartRows[5].Bytes, File.ReadAllBytes(chart.GetRequiredPath("tokenizer-config")));
+                CollectionAssert.AreEqual(vlRows[6].Bytes, File.ReadAllBytes(vl.GetRequiredPath("tokenizer-config")));
+            }
+            using (var offline = new PaddleOcrReleaseClient(new PaddleOcrReleaseClientOptions(directory.Path, offline: true), new HttpClient(new StaticHandler(new Dictionary<string, byte[]>()))))
+            {
+                PaddleOcrReleaseBundleMaterialization chart = await offline.GetBundleAsync("paddle-chart/pp-chart2table");
+                PaddleOcrReleaseBundleMaterialization vl = await offline.GetBundleAsync("paddleocr-vl/1.6");
+                CollectionAssert.AreEqual(chartRows[5].Bytes, File.ReadAllBytes(chart.GetRequiredPath("tokenizer-config")));
+                CollectionAssert.AreEqual(vlRows[6].Bytes, File.ReadAllBytes(vl.GetRequiredPath("tokenizer-config")));
+            }
+        }
+
+        [TestMethod]
+        public async Task RejectsConflictingRemoteAssetNameAcrossBundlesBeforeCachingEitherBundle()
+        {
+            byte[] first = Encoding.UTF8.GetBytes("first");
+            byte[] second = Encoding.UTF8.GetBytes("different");
+            string CatalogArtifact(byte[] bytes) => "{\"role\":\"shared\",\"modelId\":\"bundle/model\",\"assetName\":\"shared.json\",\"size\":" + bytes.Length + ",\"sha256\":\"" + Hash(bytes) + "\",\"format\":\"json\"}";
+            string catalog = "{\"corePaddleOcr\":[],\"ppStructure\":[],\"bundles\":["
+                + "{\"bundleId\":\"bundle/one\",\"modelId\":\"bundle\",\"artifacts\":[" + CatalogArtifact(first) + "]},"
+                + "{\"bundleId\":\"bundle/two\",\"modelId\":\"bundle\",\"artifacts\":[" + CatalogArtifact(second) + "]}]}";
+            var responses = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["paddleocr-release-catalog.json"] = Encoding.UTF8.GetBytes(catalog)
+            };
+            using var directory = new TestDirectory();
+            using var client = new PaddleOcrReleaseClient(new PaddleOcrReleaseClientOptions(directory.Path), new HttpClient(new StaticHandler(responses)));
+            await Assert.ThrowsExactlyAsync<FormatException>(() => client.GetBundleAsync("bundle/one"));
+            Assert.IsFalse(Directory.Exists(Path.Combine(directory.Path, ".deploysharp-paddleocr", "models-paddleocr", "bundles")));
+        }
+
         private static string Hash(byte[] bytes)
         {
             using var sha = SHA256.Create();

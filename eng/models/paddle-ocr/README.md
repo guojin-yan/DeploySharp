@@ -57,7 +57,7 @@ The independent release publisher maintains one stable release named **DeploySha
 
 ## Runtime download and deployment
 
-`JYPPX.DeploySharp.ModelFactory` now includes `PaddleOcrReleaseClient`. It reads `paddleocr-release-catalog.json`, downloads only the selected ONNX asset (and its recognition dictionary when required), verifies the catalog size/SHA-256, and stores the result in an owned cache. The client accepts both the Release IDs and the code-facing aliases such as `paddleocr/ppocrv5/mobile-rec` and `paddle-doc/pp-doclayout-s`:
+`JYPPX.DeploySharp.ModelFactory` now includes `PaddleOcrReleaseClient`. It reads `paddleocr-release-catalog.json`, downloads only the selected ONNX asset (and its recognition dictionary when required), verifies the catalog size/SHA-256, and stores the result in an owned cache. Multi-file generation Bundles are stored below a deterministic Bundle-specific directory. A Release may use a globally unique `assetName` such as `paddleocr-vl-1.6-tokenizer-config.json` and declare the logical local filename as `localName: tokenizer_config.json`; the returned `GetRequiredPath(role)` uses that isolated local name. This prevents Chart2Table and PaddleOCR-VL tokenizer sidecars from overwriting one another, including in offline mode. The client rejects a catalog that reuses one Release filename with different size/SHA content. The client accepts both the Release IDs and the code-facing aliases such as `paddleocr/ppocrv5/mobile-rec` and `paddle-doc/pp-doclayout-s`:
 
 ```csharp
 using System.IO;

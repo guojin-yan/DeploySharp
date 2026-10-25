@@ -80,17 +80,19 @@ namespace JYPPX.DeploySharp.ModelFactory
     /// <summary>Describes one independently downloadable artifact in a multi-file PaddleOCR generation bundle. / 描述 PaddleOCR 多文件生成 Bundle 中一个可独立下载的工件。</summary>
     public sealed class PaddleOcrReleaseBundleArtifact
     {
-        internal PaddleOcrReleaseBundleArtifact(string role, string modelId, string assetName, string format, long size, string sha256)
+        internal PaddleOcrReleaseBundleArtifact(string role, string modelId, string assetName, string localName, string format, long size, string sha256)
         {
-            Role = role; ModelId = modelId; AssetName = assetName; Format = format; Size = size; Sha256 = sha256;
+            Role = role; ModelId = modelId; AssetName = assetName; LocalName = localName; Format = format; Size = size; Sha256 = sha256;
         }
 
         /// <summary>Gets the bundle role, such as vision-projector or qwen-tokenizer. / 获取 Bundle 角色。</summary>
         public string Role { get; }
         /// <summary>Gets the stable code-facing model ID. / 获取稳定的代码侧模型 ID。</summary>
         public string ModelId { get; }
-        /// <summary>Gets the simple GitHub Release asset filename. / 获取 GitHub Release 资产文件名。</summary>
+        /// <summary>Gets the simple GitHub Release asset filename used for the download URL. / 获取下载 URL 使用的 GitHub Release 资产文件名。</summary>
         public string AssetName { get; }
+        /// <summary>Gets the local filename inside this isolated Bundle cache. It may be the logical generic name even when the Release asset is prefixed for global uniqueness. / 获取 Bundle 隔离缓存中的本地文件名；Release 资产可使用带前缀的全局唯一名称。</summary>
+        public string LocalName { get; }
         /// <summary>Gets the artifact format, such as onnx or tiktoken. / 获取工件格式。</summary>
         public string Format { get; }
         /// <summary>Gets the expected byte size. / 获取预期文件大小。</summary>
@@ -127,7 +129,7 @@ namespace JYPPX.DeploySharp.ModelFactory
 
         /// <summary>Gets bundle metadata from the release catalog. / 获取 Release 目录中的 Bundle 元数据。</summary>
         public PaddleOcrReleaseBundle Bundle { get; }
-        /// <summary>Gets the cache directory containing verified qwen.tiktoken, tokenizer_config.json, and added_tokens.json. / 获取包含已校验 Tokenizer 文件的缓存目录。</summary>
+        /// <summary>Gets the bundle-specific cache directory containing verified tokenizer files. Each Bundle ID has an isolated directory, so generic names such as tokenizer_config.json cannot collide across models. / 获取 Bundle 专属缓存目录；每个 Bundle ID 使用独立目录，避免不同模型的 tokenizer_config.json 等通用文件名冲突。</summary>
         public string TokenizerDirectoryPath { get; }
         /// <summary>Gets a verified local path by bundle role. / 按 Bundle 角色获取已校验的本地路径。</summary>
         public string GetRequiredPath(string role) => _paths.TryGetValue(role ?? string.Empty, out string? path) ? path : throw new KeyNotFoundException("The downloaded bundle does not contain artifact role: " + role);
@@ -244,15 +246,16 @@ namespace JYPPX.DeploySharp.ModelFactory
             await GetCatalogAsync(cancellationToken).ConfigureAwait(false);
             string catalogPath = Path.Combine(_root, "paddleocr-release-catalog.json");
             PaddleOcrReleaseBundle bundle = ParseBundleCatalog(File.ReadAllText(catalogPath), bundleId.Trim());
+            string bundleRoot = GetBundleCacheRoot(bundle.BundleId);
             var paths = new Dictionary<string, string>(StringComparer.Ordinal);
             foreach (PaddleOcrReleaseBundleArtifact artifact in bundle.Artifacts)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                paths.Add(artifact.Role, await GetAssetAsync(artifact.AssetName, artifact.Size, artifact.Sha256, progress, cancellationToken).ConfigureAwait(false));
+                paths.Add(artifact.Role, await GetAssetAsync(artifact.AssetName, artifact.Size, artifact.Sha256, progress, cancellationToken, bundleRoot, artifact.LocalName).ConfigureAwait(false));
             }
             ValidateChart2TableBundle(bundle);
             ValidatePaddleOcrVlBundle(bundle);
-            return new PaddleOcrReleaseBundleMaterialization(bundle, paths, _root);
+            return new PaddleOcrReleaseBundleMaterialization(bundle, paths, bundleRoot);
         }
 
         /// <summary>Downloads an individual release asset. Expected size/hash are taken from the catalog for model assets and from SHA256SUMS when available for dictionaries. / 下载一个独立 Release 资产。</summary>
@@ -271,11 +274,21 @@ namespace JYPPX.DeploySharp.ModelFactory
                     if (checksums.TryGetValue(assetName, out string? hash)) expectedSha256 ??= hash;
                 }
             }
-            string destination = Path.Combine(_root, assetName);
+            return await GetAssetAsync(assetName, expectedSize, expectedSha256, progress, cancellationToken, _root, assetName).ConfigureAwait(false);
+        }
+
+        private async Task<string> GetAssetAsync(string assetName, long? expectedSize, string? expectedSha256,
+            IProgress<ModelDownloadProgress>? progress, CancellationToken cancellationToken, string destinationRoot, string destinationName)
+        {
+            EnsureUsable();
+            ValidateAssetName(assetName);
+            ValidateAssetName(destinationName);
+            if (string.IsNullOrWhiteSpace(destinationRoot)) throw new ArgumentException("An asset cache directory is required.", nameof(destinationRoot));
+            string destination = Path.Combine(destinationRoot, destinationName);
             if (Validate(destination, expectedSize, expectedSha256, cancellationToken)) return destination;
             if (_options.Offline) throw new ModelFactoryException("Offline mode requires a verified PaddleOCR release asset cache entry.", new[] { new ModelFactoryDiagnostic(ModelFactoryDiagnosticCodes.OfflineCacheMiss, "The requested PaddleOCR release asset is not cached.", assetId: assetName, filePath: destination) });
             string temporary = destination + ".download." + Guid.NewGuid().ToString("N") + ".tmp";
-            Directory.CreateDirectory(_root);
+            Directory.CreateDirectory(destinationRoot);
             try
             {
                 using (var timeout = new CancellationTokenSource(_options.RequestTimeout))
@@ -304,19 +317,43 @@ namespace JYPPX.DeploySharp.ModelFactory
             finally { if (File.Exists(temporary)) File.Delete(temporary); }
         }
 
+        private string GetBundleCacheRoot(string bundleId)
+        {
+            if (string.IsNullOrWhiteSpace(bundleId)) throw new ArgumentException("A Bundle ID is required.", nameof(bundleId));
+            ValidateBundleId(bundleId);
+            using (SHA256 sha = SHA256.Create())
+            {
+                byte[] digest = sha.ComputeHash(Encoding.UTF8.GetBytes(bundleId));
+                var suffix = new StringBuilder(8);
+                for (int index = 0; index < 4; index++) suffix.Append(digest[index].ToString("x2"));
+                var safe = new StringBuilder(bundleId.Length);
+                foreach (char value in bundleId)
+                    safe.Append(char.IsLetterOrDigit(value) || value == '.' || value == '-' || value == '_' ? value : '_');
+                return Path.Combine(_root, "bundles", safe.ToString() + "-" + suffix);
+            }
+        }
+
+        private static void ValidateBundleId(string bundleId)
+        {
+            if (bundleId.IndexOf('\0') >= 0) throw new ArgumentException("A Bundle ID cannot contain a null character.", nameof(bundleId));
+        }
+
         private async Task<IReadOnlyList<PaddleOcrReleaseModel>> LoadCatalogAsync()
         {
             string cachedCatalog = Path.Combine(_root, "paddleocr-release-catalog.json");
             if (_options.Offline)
             {
                 if (!File.Exists(cachedCatalog)) throw new ModelFactoryException("Offline mode requires a cached PaddleOCR release catalog.", new[] { new ModelFactoryDiagnostic(ModelFactoryDiagnosticCodes.OfflineCacheMiss, "The PaddleOCR release catalog is not cached.", filePath: cachedCatalog) });
-                return ParseCatalog(File.ReadAllText(cachedCatalog));
+                string cached = File.ReadAllText(cachedCatalog);
+                ValidateCatalogBundleAssetNames(cached);
+                return ParseCatalog(cached);
             }
             using (var timeout = new CancellationTokenSource(_options.RequestTimeout))
             using (HttpResponseMessage response = await SendAsync(CatalogUri, timeout.Token).ConfigureAwait(false))
             {
                 if (!response.IsSuccessStatusCode) throw new ModelFactoryException("PaddleOCR release catalog download failed.", new[] { new ModelFactoryDiagnostic(ModelFactoryDiagnosticCodes.HttpFailure, "The release catalog request failed.", statusCode: response.StatusCode) });
                 string json = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                ValidateCatalogBundleAssetNames(json);
                 File.WriteAllText(cachedCatalog, json, new UTF8Encoding(false));
                 return ParseCatalog(json);
             }
@@ -372,20 +409,23 @@ namespace JYPPX.DeploySharp.ModelFactory
                     var parsed = new List<PaddleOcrReleaseBundleArtifact>();
                     var roles = new HashSet<string>(StringComparer.Ordinal);
                     var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    var localNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                     foreach (JsonElement artifact in artifacts.EnumerateArray())
                     {
                         string role = Required(artifact, "role");
                         string assetName = Required(artifact, "assetName");
                         ValidateAssetName(assetName);
+                        string localName = Optional(artifact, "localName") ?? assetName;
+                        ValidateAssetName(localName);
                         string assetModelId = Required(artifact, "modelId");
                         string format = Required(artifact, "format").ToLowerInvariant();
                         long size = artifact.GetProperty("size").GetInt64();
                         string sha = Required(artifact, "sha256").ToLowerInvariant();
-                        if (!roles.Add(role) || !names.Add(assetName)) throw new FormatException("Bundle artifact roles and asset filenames must be unique.");
+                        if (!roles.Add(role) || !names.Add(assetName) || !localNames.Add(localName)) throw new FormatException("Bundle artifact roles, release asset filenames, and local filenames must be unique.");
                         if (size <= 0 || sha.Length != 64 || !sha.All(Uri.IsHexDigit)) throw new FormatException("A bundle artifact must declare a positive size and valid SHA-256.");
                         if (format != "onnx" && format != "tiktoken" && format != "json" && format != "sentencepiece" && format != "jinja") throw new FormatException("The release bundle declares an unsupported artifact format: " + format);
                         if (format == "onnx" && !assetModelId.StartsWith(modelId + "/", StringComparison.Ordinal)) throw new FormatException("ONNX graph model IDs must be nested below the bundle model ID.");
-                        parsed.Add(new PaddleOcrReleaseBundleArtifact(role, assetModelId, assetName, format, size, sha));
+                        parsed.Add(new PaddleOcrReleaseBundleArtifact(role, assetModelId, assetName, localName, format, size, sha));
                     }
                     var result = new PaddleOcrReleaseBundle(bundleId, modelId, parsed);
                     ValidateChart2TableBundle(result);
@@ -415,7 +455,7 @@ namespace JYPPX.DeploySharp.ModelFactory
             foreach (string role in new[] { "vision", "embedding", "decoder", "head" })
             {
                 PaddleOcrReleaseBundleArtifact artifact = bundle.Artifacts.First(value => value.Role == role);
-                if (artifact.Format != "onnx" || !string.Equals(artifact.AssetName, role + ".onnx", StringComparison.Ordinal)) throw new FormatException("PaddleOCR-VL graph role has an invalid file or format: " + role);
+                if (artifact.Format != "onnx" || !string.Equals(artifact.LocalName, role + ".onnx", StringComparison.Ordinal)) throw new FormatException("PaddleOCR-VL graph role has an invalid local file or format: " + role);
             }
             CheckPaddleOcrVlArtifact(bundle, "tokenizer-model", "tokenizer.model", "sentencepiece");
             CheckPaddleOcrVlArtifact(bundle, "tokenizer-json", "tokenizer.json", "json");
@@ -427,8 +467,31 @@ namespace JYPPX.DeploySharp.ModelFactory
         private static void CheckPaddleOcrVlArtifact(PaddleOcrReleaseBundle bundle, string role, string assetName, string format)
         {
             PaddleOcrReleaseBundleArtifact artifact = bundle.Artifacts.First(value => value.Role == role);
-            if (!string.Equals(artifact.AssetName, assetName, StringComparison.Ordinal) || !string.Equals(artifact.Format, format, StringComparison.Ordinal))
-                throw new FormatException("PaddleOCR-VL role has an invalid file or format: " + role);
+            if (!string.Equals(artifact.LocalName, assetName, StringComparison.Ordinal) || !string.Equals(artifact.Format, format, StringComparison.Ordinal))
+                throw new FormatException("PaddleOCR-VL role has an invalid local file or format: " + role);
+        }
+
+        private static void ValidateCatalogBundleAssetNames(string json)
+        {
+            using (JsonDocument document = JsonDocument.Parse(json))
+            {
+                if (!document.RootElement.TryGetProperty("bundles", out JsonElement bundles) || bundles.ValueKind != JsonValueKind.Array) return;
+                var assets = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                foreach (JsonElement bundle in bundles.EnumerateArray())
+                {
+                    if (!bundle.TryGetProperty("artifacts", out JsonElement artifacts) || artifacts.ValueKind != JsonValueKind.Array) continue;
+                    foreach (JsonElement artifact in artifacts.EnumerateArray())
+                    {
+                        string assetName = Required(artifact, "assetName");
+                        if (!artifact.TryGetProperty("size", out JsonElement sizeValue) || sizeValue.ValueKind != JsonValueKind.Number || !sizeValue.TryGetInt64(out long size) || size <= 0)
+                            throw new FormatException("A release bundle artifact must declare a positive numeric size.");
+                        string identity = size.ToString(System.Globalization.CultureInfo.InvariantCulture) + ":" + Required(artifact, "sha256").ToLowerInvariant();
+                        if (assets.TryGetValue(assetName, out string? existing) && !string.Equals(existing, identity, StringComparison.Ordinal))
+                            throw new FormatException("The release reuses an asset filename with different content across Bundles: " + assetName + ". Use a Bundle-specific Release filename and localName.");
+                        assets[assetName] = identity;
+                    }
+                }
+            }
         }
 
         private static void AddRows(JsonElement root, string property, string family, List<PaddleOcrReleaseModel> result)
