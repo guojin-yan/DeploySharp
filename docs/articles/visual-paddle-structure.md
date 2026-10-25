@@ -298,6 +298,8 @@ PaddleOCR-VL-1.6 的六类任务可以作为页面阶段接入同一个编排器
 
 四图 Session 已在 Linux 的 ONNX Runtime CPU 和 OpenVINO CPU 上分别完成六任务单图生成对照。[OpenVINO 配置](visual-ocr.md#paddleocr-vl-是否已经可用于模型推理)复用同一 API 和图文件；下方使用 `onnxruntime-cpu` 的页面/版面联合案例仍是 ORT 的实测范围，不据此宣称 OpenVINO 多页联合质量已通过。
 
+在带人工公式标注的 realFormula 数据上，当前有 [121 图 ORT CUDA 字符质量诊断](../../eng/models/paddle-ocr/verification/paddleocr-vl-realformula-ort-cuda-20261026.md)及[同构建 CPU/CUDA 前五图对照](../../eng/models/paddle-ocr/verification/paddleocr-vl-realformula-ort-cpu-cuda-five-20261026.md)。五图的生成文本一致只表示后端结果一致，不代表完整语料跨后端质量或公式数学语义正确；调用方仍应针对自己的文档数据验收。
+
 ```csharp
 var vlModel = new PaddleDocumentModelDescriptor(
     "application/paddleocr-vl/1.6", "PaddleOCR-VL 1.6",
