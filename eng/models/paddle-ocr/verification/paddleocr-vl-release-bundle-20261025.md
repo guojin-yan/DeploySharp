@@ -4,7 +4,7 @@ Date: 2026-10-25
 Release: [models-paddleocr](https://github.com/guojin-yan/DeploySharp/releases/tag/models-paddleocr)
 Bundle ID: `paddleocr-vl/1.6`
 
-Publication status: the nine VL assets are staged and catalogued locally; remote upload to `models-paddleocr` is pending a GitHub account with Release write permission.
+Publication status: the nine VL assets are staged and catalogued locally; remote upload to `models-paddleocr` is still pending. The current GitHub CLI account has repository `pull` permission only (`push=false`); an upload attempt returned HTTP `404`, and the remote asset list contains no `paddleocr-vl-1.6-*` files.
 
 ## What was published
 
@@ -37,7 +37,7 @@ The cache isolation regression covers online download, offline reuse and conflic
 
 ## Runtime evidence and support boundary
 
-The fixed bundle has production C# generation evidence on Linux x64 and Windows x64 with ONNX Runtime CPU, and with OpenVINO CPU. OCR, table, formula, chart, spotting and seal prompts reached EOS and matched the pinned official reference tokens/text. The OpenCV adapter can decode an image once, prepare the official RGB patch tensor, and feed the same session; page/region and bounded multi-page orchestration are covered by the linked examples.
+The fixed bundle has production C# generation evidence on Linux x64 and Windows x64 with ONNX Runtime CPU, Linux/Windows OpenVINO CPU, and Windows RTX 3060 Laptop ONNX Runtime CUDA. OCR, table, formula, chart, spotting and seal prompts reached EOS and matched the pinned official reference tokens/text; the CUDA run retains CPU-owned KV/logits and unlocked-clock boundaries. The OpenCV adapter can decode an image once, prepare the official RGB patch tensor, and feed the same session; page/region and bounded multi-page orchestration are covered by the linked examples.
 
 The support matrix remains deliberately narrower than the download catalog:
 
@@ -45,10 +45,12 @@ The support matrix remains deliberately narrower than the download catalog:
 | --- | --- | --- |
 | ONNX Runtime CPU | `✓` | Linux x64 six-task generation and exact token/text comparison |
 | OpenVINO CPU | `✓` | Linux x64 six-task generation and exact token/text comparison |
-| ONNX Runtime CUDA | `△` | RTX2060 6 GB partial memory experiment; Spotting allocation still fails |
+| ONNX Runtime CUDA | `✓*` | Windows RTX 3060 fixed four-graph six-task generation and token/text parity; not a device-resident or cross-device performance claim. The earlier RTX2060 allocation experiment remains historical |
 | TensorRT | `△` | No complete four-graph real-model run |
 | OpenCV DNN | `△` | No complete four-graph real-model run |
 | Windows OpenVINO CPU | `✓` | Windows 10.0.26200 six-task generation and exact token/text comparison; see the [Windows report](paddleocr-vl-windows-openvino-20261025.md) |
+
+`✓*` means the fixed Bundle completed generation and reference parity on the named host; it does not imply a complete performance matrix, device-resident KV/logits, locked clocks, quality benchmark or long-running stability.
 
 The export also retains a known boundary: one intermediate Spotting vision feature comparison exceeded the strict elementwise threshold, while the production greedy tokens/text matched. The release must therefore be described as an experimental PaddleOCR-VL ONNX generation path, not as universal multi-backend or intermediate-tensor parity.
 
@@ -57,6 +59,6 @@ The export also retains a known boundary: one intermediate Spotting vision featu
 1. After the pending upload completes, download the catalog and the nine assets listed under `paddleocr-vl/1.6` from the stable release.
 2. Let `PaddleOcrReleaseClient` verify and materialize the bundle, or place the files in a local bundle directory with the manifest.
 3. Run `samples/02-visual/paddleocr-vl-onnx` for a single prepared patch, or `samples/02-visual/paddleocr-vl-document` for decoded pages, region routing and JSON/Markdown export.
-4. Select ONNX Runtime CPU or OpenVINO CPU until an additional backend has its own real-model evidence.
+4. Select ONNX Runtime CPU, OpenVINO CPU, or Windows ONNX Runtime CUDA on the named fixed Bundle. TensorRT and OpenCV DNN remain unavailable for this Bundle until each has a complete real-model run.
 
 This report records asset publication and client reproducibility. It does not convert experimental status into a general quality, latency or backend-support claim.
