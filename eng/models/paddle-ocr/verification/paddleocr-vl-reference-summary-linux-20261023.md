@@ -73,4 +73,4 @@ Generate the pixel report with `Compare-PaddleOcrVlProcessors.py --model-root ..
 
 ## Remaining work
 
-Next acceptance items are original-model/position comparison, .NET pixel/patch execution, dynamic vision/projector/prefill/decode ONNX graphs, C# generation with independent request state, then ORT/OpenVINO/TensorRT validation and labeled quality/formal performance. ROI/layout/multi-page integration, runtime model catalog entries and downloadable Bundle assets are not yet complete. No supported-backend checkmark or software release is added by these Python reference results.
+At the time of this Python reference report, the next acceptance items were original-model/position comparison, .NET pixel/patch execution, dynamic vision/projector/prefill/decode ONNX graphs, C# generation with independent request state, then ORT/OpenVINO/TensorRT validation and labeled quality/formal performance. Those later implementation steps and the downloadable Bundle are documented by the dated follow-up reports; this Python reference still provides no backend checkmark, quality result or software release by itself.

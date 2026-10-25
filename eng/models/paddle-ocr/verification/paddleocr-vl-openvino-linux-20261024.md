@@ -94,4 +94,4 @@ dotnet test tests/DeploySharp.Backend.OpenVINO.Tests/DeploySharp.Backend.OpenVIN
   -c Release --filter FullyQualifiedName~FourDynamicGraphsGenerateAllSixRealTasksWithGrowingKvAndExactReferenceTokens
 ```
 
-缺少必要环境变量时测试明确跳过，不会伪造后端勾号。实际应用注册 OpenVINO 后复用相同 Session API，见[用户用法](../../../../docs/articles/visual-ocr.md#paddleocr-vl-是否已经可用于模型推理)。图文件仍未进入下载 catalog/Release；本次不把验证成功写成模型已经可下载。
+缺少必要环境变量时测试明确跳过，不会伪造后端勾号。实际应用注册 OpenVINO 后复用相同 Session API，见[用户用法](../../../../docs/articles/visual-ocr.md#paddleocr-vl-是否已经可用于模型推理)。本报告生成时图文件尚未进入下载 catalog/Release；随后固定九资产 Bundle 已发布，但本次仍不把单次验证成功外推为其它后端或质量结论。

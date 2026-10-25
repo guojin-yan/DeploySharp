@@ -73,6 +73,7 @@ $documents = @(
     'eng/models/paddle-ocr/verification/paddleocr-vl-openvino-source-model-memory-20261024.md',
     'eng/models/paddle-ocr/verification/paddleocr-vl-cuda-head-group-20261024.md',
     'eng/models/paddle-ocr/verification/paddleocr-release-bundle-cache-isolation-20261025.md',
+    'eng/models/paddle-ocr/verification/paddleocr-vl-release-bundle-20261025.md',
     'eng/models/paddle-ocr/verification/paddleocr-vl-reading-order-20261025.md',
     'docs/articles/model-support.md',
     'samples/02-visual/paddleocr-vl-document/README.md',

@@ -1,6 +1,6 @@
 # PaddleOCR-VL-1.6 official asset and input-contract inspection (2026-10-23)
 
-Status: **input preparation foundations only; model inference not yet supported**. This records actual official assets and scalar/tokenizer checks. It is not an exported ONNX Bundle, a model download/release announcement, a .NET generation test or a new supported-backend row.
+Historical status at the time of this 2026-10-23 inspection: **input preparation foundations only; model inference had not yet been integrated**. This report records the official source assets and scalar/tokenizer checks before the later ONNX export and C# generation work. It is not itself an exported ONNX Bundle or a backend result; the current implementation and downloadable Bundle status are documented in the PaddleOCR README and current VL verification reports.
 
 ## Exact source and acquisition
 

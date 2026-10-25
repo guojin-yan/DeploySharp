@@ -50,7 +50,7 @@
 - YOLO-World、Grounding DINO、YOLOE：提示词/词表/完整导出工件尚未形成统一发布包；
 - SigLIP：本地双编码器合同存在，当前公开目录只收录 CLIP Preview。
 
-PaddleOCR-VL 的本地 Bundle 校验和按需下载接口已经实现；实际四张 ONNX 图和 tokenizer 资产加入 `models-paddleocr` Release 后，才会把下载状态从“待加入 Release”更新为可下载。RGB/图像文件可自动准备官方 Patch。表格 OTSL 已支持逻辑单元格/HTML，Spotting 已支持严格标记解析、源裁剪像素与显式页面像素映射；其它任务的语义结构及跨后端支持不能据此外推。使用方式和各自边界见[VL 用法](visual-ocr.md#paddleocr-vl-是否已经可用于模型推理)及[表格与 Spotting 教程](visual-paddle-structure.md#vl-spotting文字四边形与页面坐标)。
+PaddleOCR-VL 的本地 Bundle 校验和按需下载接口已经实现；固定 1.6 的四张 ONNX 图、四个 tokenizer 文件和 manifest 已加入 `models-paddleocr` Release，下载客户端按九个独立资产校验并隔离缓存。RGB/图像文件可自动准备官方 Patch。表格 OTSL 已支持逻辑单元格/HTML，Spotting 已支持严格标记解析、源裁剪像素与显式页面像素映射；其它任务的语义结构及跨后端支持不能据此外推。使用方式和各自边界见[VL 用法](visual-ocr.md#paddleocr-vl-是否已经可用于模型推理)及[表格与 Spotting 教程](visual-paddle-structure.md#vl-spotting文字四边形与页面坐标)。
 
 ## 暂不支持的模型族
 

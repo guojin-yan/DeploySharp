@@ -4,7 +4,7 @@
 
 ## 准备模型和页面
 
-模型使用固定 revision `c5630abae1d940eafe0697512a0325494b02ab42`。`tokenizer-root` 包含官方 tokenizer/template 文件，`bundle-root` 包含同一批次的 `vision.onnx`、`embedding.onnx`、`decoder.onnx`、`head.onnx`。Bundle 的来源、验证工厂和下载状态见 [VL 使用说明](../../../docs/articles/visual-ocr.md#paddleocr-vl-是否已经可用于模型推理)；目前尚未提供可下载的 VL Release 二进制。
+模型使用固定 revision `c5630abae1d940eafe0697512a0325494b02ab42`。`tokenizer-root` 包含官方 tokenizer/template 文件，`bundle-root` 包含同一批次的 `vision.onnx`、`embedding.onnx`、`decoder.onnx`、`head.onnx`。Bundle 的来源、验证工厂和下载状态见 [VL 使用说明](../../../docs/articles/visual-ocr.md#paddleocr-vl-是否已经可用于模型推理)；`models-paddleocr` Release 已提供九个独立资产，可用 `PaddleOcrReleaseClient.GetBundleAsync("paddleocr-vl/1.6")` 按需下载并校验。
 
 新建 `pages.json`，为每页指定图片、解码后尺寸、唯一页码和已知区域。例如两页各有一块表格：
 

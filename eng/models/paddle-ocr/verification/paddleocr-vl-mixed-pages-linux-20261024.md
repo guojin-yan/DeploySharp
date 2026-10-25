@@ -58,4 +58,4 @@ dotnet vstest /path/to/DeploySharp.Visual.OpenCV.Tests.dll \
 
 仍未验证真实版面检测模型→VL 的联合质量、自动阅读顺序、独立标注集、JPEG Decoder parity、HTML/表格单元格/公式/图表/Spotting 结构化归一，或 CUDA/OpenVINO/TensorRT/OpenCV DNN 的 VL 推理。源框只是输入来源，`CoordinatesAvailable=false`；所有结果均保留原始 VL 文本。
 
-模型二进制还没有进入 VL 下载 catalog 或 Release；本记录不将混合路由结果外推到其它权重、后端或完整 PP-Structure 支持。
+本记录生成时模型二进制还没有进入 VL 下载 catalog 或 Release；随后固定 Bundle 已按九个独立资产加入 `models-paddleocr`。本记录仍不将混合路由结果外推到其它权重、后端或完整 PP-Structure 支持。
