@@ -33,12 +33,20 @@ public sealed class PaddleOcrVlFormalLatencyIntegrationTests
 
     [TestMethod]
     [DataRow("onnxruntime")]
+    [DataRow("onnxruntime-cuda")]
     [DataRow("openvino")]
     [TestCategory("ExternalModels")]
     public async Task FixedTaskRecordsFiveWarmupsAndFiftyMeasuredGenerations(string backend)
     {
         if (!string.Equals(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_VL_FORMAL_LATENCY_RUN"), "1", StringComparison.Ordinal))
             Assert.Inconclusive("Set DEPLOYSHARP_PADDLEOCR_VL_FORMAL_LATENCY_RUN=1 to run the opt-in PaddleOCR-VL latency protocol.");
+        string? selectedBackend = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_VL_FORMAL_LATENCY_BACKEND");
+        if (!string.IsNullOrWhiteSpace(selectedBackend) &&
+            !string.Equals(selectedBackend.Trim(), backend, StringComparison.OrdinalIgnoreCase))
+            Assert.Inconclusive("Selected backend is '" + selectedBackend + "'; skipping '" + backend + "'.");
+        bool cuda = string.Equals(backend, "onnxruntime-cuda", StringComparison.Ordinal);
+        if (cuda && !string.Equals(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_VL_FORMAL_LATENCY_CUDA_RUN"), "1", StringComparison.Ordinal))
+            Assert.Inconclusive("Set DEPLOYSHARP_PADDLEOCR_VL_FORMAL_LATENCY_CUDA_RUN=1 to run the opt-in PaddleOCR-VL ORT CUDA latency protocol.");
 
         string bundle = Required("DEPLOYSHARP_PADDLEOCR_VL_BUNDLE_ROOT");
         string model = Required("DEPLOYSHARP_PADDLEOCR_VL_MODEL_ROOT");
@@ -78,6 +86,13 @@ public sealed class PaddleOcrVlFormalLatencyIntegrationTests
             registry.UseOpenVino(new OpenVinoOptions(performanceHint: OpenVinoPerformanceHint.Latency, streams: 1, inferenceThreads: 4, requestCount: 1));
             backendId = OpenVinoBackendProvider.BackendId;
             device = "CPU";
+        }
+        else if (cuda)
+        {
+            registry.UseOnnxRuntime(new OnnxRuntimeOptions(executionProvider: OnnxRuntimeExecutionProvider.Cuda,
+                intraOpThreads: 4, interOpThreads: 1, enableMemoryPattern: false, enableCpuMemoryArena: false));
+            backendId = OnnxRuntimeBackendProvider.BackendId;
+            device = "cuda";
         }
         else
         {
