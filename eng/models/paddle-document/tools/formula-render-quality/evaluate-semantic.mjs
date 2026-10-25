@@ -26,22 +26,39 @@ const mathJax = await initializeMathJax();
 const mathMlCache = new Map();
 const modelResults = [];
 try {
-  for (const model of models) {
-    const sourceName = `formula-realformula-${model}-ort-20261007.json`;
-    const sourcePath = path.join(options.verificationRoot, sourceName);
+  for (const model of options.vlReport ? ['paddleocr-vl/1.6'] : models) {
+    const sourceName = options.vlReport ? path.basename(options.vlReport) : `formula-realformula-${model}-ort-20261007.json`;
+    const sourcePath = options.vlReport ?? path.join(options.verificationRoot, sourceName);
     const sourceBytes = await readFile(sourcePath);
     const source = JSON.parse(sourceBytes.toString('utf8').replace(/^\uFEFF/, ''));
-    const samples = source?.modelResults?.[0]?.results;
+    const samples = options.vlReport ? source?.results : source?.modelResults?.[0]?.results;
     if (!Array.isArray(samples) || samples.length !== manifest.size) {
       throw new Error(`Expected ${manifest.size} result rows in ${sourcePath}.`);
     }
+    if (options.vlReport && (source.schemaVersion !== 'deploysharp-paddleocr-vl-realformula-quality-v1'
+        || source.status !== 'completed' || source.model?.id !== model
+        || source.dataset?.manifestSha256 !== sha256Bytes(manifestBytes)
+        || source.dataset?.selectedCount !== 121
+        || source.summary?.endOfSequenceCount !== 121)) {
+      throw new Error('The PaddleOCR-VL source is not a completed, pinned 121-image evaluation.');
+    }
 
     const results = [];
+    const seenImages = new Set();
     for (const sample of samples) {
       const truth = manifest.get(sample.image);
       if (!truth) throw new Error(`Missing reference row for ${sample.image}.`);
+      if (seenImages.has(sample.image)) throw new Error(`Duplicate prediction row for ${sample.image}.`);
+      seenImages.add(sample.image);
       const reference = String(truth.ReferenceLatex ?? '');
-      const prediction = String(sample.prediction ?? '');
+      if (options.vlReport && sample.referenceLatex !== reference)
+        throw new Error(`Reference text mismatch for ${sample.image}.`);
+      const rawPrediction = String(sample.prediction ?? '');
+      const prediction = options.vlReport ? stripDisplayDelimiters(rawPrediction) : rawPrediction;
+      if (options.vlReport && sample.finishReason !== 'EndOfSequence')
+        throw new Error(`Non-terminal PaddleOCR-VL prediction for ${sample.image}.`);
+      if (options.vlReport && typeof sample.imageSha256 !== 'string')
+        throw new Error(`Missing image SHA for ${sample.image}.`);
       if (sample.imageSha256 && sample.imageSha256.toLowerCase() !== String(truth.ImageSha256).toLowerCase()) {
         throw new Error(`Image SHA mismatch for ${sample.image}.`);
       }
@@ -59,6 +76,7 @@ try {
         imageSha256: truth.ImageSha256,
         referenceSha256: sha256Text(reference),
         predictionSha256: sha256Text(prediction),
+        ...(options.vlReport ? {rawPredictionSha256: sha256Text(rawPrediction)} : {}),
         ...diagnostic
       });
     }
@@ -66,8 +84,8 @@ try {
     const counts = Object.fromEntries(['sampled-equivalent', 'sampled-different', 'not-assessable']
       .map((status) => [status, results.filter((row) => row.status === status).length]));
     modelResults.push({
-      model: `paddle-formula/${model}`,
-      backend: 'onnxruntime-cpu',
+      model: options.vlReport ? model : `paddle-formula/${model}`,
+      backend: options.vlReport ? source.environment.backend : 'onnxruntime-cpu',
       sourceReport: sourceName,
       sourceReportSha256: sha256Bytes(sourceBytes),
       sampleCount: results.length,
@@ -121,9 +139,11 @@ async function cachedMathMl(formula) {
 
 function markdown(report) {
   const lines = [
-    '# realFormula restricted numeric-equivalence diagnostic (2026-10-18)',
+    options.vlReport ? '# PaddleOCR-VL realFormula restricted numeric-equivalence diagnostic' : '# realFormula restricted numeric-equivalence diagnostic (2026-10-18)',
     '',
-    'This is an exploratory, fail-closed diagnostic over the existing 121 MathNet realFormula labels and six checked-in ORT CPU prediction sets. “Sampled-equivalent” is not a proof of mathematical equivalence and is not a release-quality score.',
+    options.vlReport
+      ? 'This is an exploratory, fail-closed diagnostic over 121 MathNet realFormula labels and one external PaddleOCR-VL prediction set. Only outer display delimiters are removed. “Sampled-equivalent” is neither a proof of mathematical equivalence nor a release-quality score.'
+      : 'This is an exploratory, fail-closed diagnostic over the existing 121 MathNet realFormula labels and six checked-in ORT CPU prediction sets. “Sampled-equivalent” is not a proof of mathematical equivalence and is not a release-quality score.',
     '',
     '| Model | Samples | Sampled-equivalent | Sampled-different | Not assessable | Assessed coverage | Numeric agreement among assessed |',
     '|---|---:|---:|---:|---:|---:|---:|'
@@ -145,7 +165,9 @@ function markdown(report) {
     '- Numerical agreement on a finite set of values is not a symbolic proof and can miss counterexamples; real-only evaluation omits complex semantics, binding, units, sets, matrices, summations, integrals, piecewise expressions and many other constructs.',
     '- Unsupported or insufficient-coverage pairs are `not-assessable`, never counted as equivalent.',
     '- The 121-sample dataset is legally attributed as CC-BY-4.0, but overlap with model training is unknown. This diagnostic does not close the independent semantic evaluator or release-quality gate.',
-    '- Only the checked-in ONNX Runtime CPU predictions are evaluated; no other backend quality is inferred.'
+    options.vlReport
+      ? '- Only the external PaddleOCR-VL report identified by SHA-256 is evaluated; no other backend quality is inferred.'
+      : '- Only the checked-in ONNX Runtime CPU predictions are evaluated; no other backend quality is inferred.'
   );
   return lines.join('\n') + '\n';
 }
@@ -156,7 +178,8 @@ function parseArguments(args) {
     verificationRoot: path.join(repositoryRoot, 'eng', 'models', 'paddle-document', 'verification'),
     outputJson: path.join(repositoryRoot, 'eng', 'models', 'paddle-document', 'verification', 'formula-realformula-numeric-equivalence-20261018.json'),
     outputMarkdown: path.join(repositoryRoot, 'eng', 'models', 'paddle-document', 'verification', 'formula-realformula-numeric-equivalence-20261018.md'),
-    sampleCount: 24
+    sampleCount: 24,
+    vlReport: null
   };
   for (let index = 0; index < args.length; index++) {
     const key = args[index];
@@ -166,6 +189,7 @@ function parseArguments(args) {
     else if (key === '--verification-root') options.verificationRoot = value;
     else if (key === '--output-json') options.outputJson = value;
     else if (key === '--output-markdown') options.outputMarkdown = value;
+    else if (key === '--vl-report') options.vlReport = path.resolve(value);
     else if (key === '--samples') {
       options.sampleCount = Number(value);
       if (!Number.isInteger(options.sampleCount) || options.sampleCount < 12 || options.sampleCount > 256) {
@@ -176,6 +200,11 @@ function parseArguments(args) {
     }
   }
   return options;
+}
+
+function stripDisplayDelimiters(value) {
+  const trimmed = value.trim();
+  return trimmed.startsWith('\\[') && trimmed.endsWith('\\]') ? trimmed.slice(2, -2).trim() : trimmed;
 }
 
 function sha256Text(value) { return createHash('sha256').update(String(value), 'utf8').digest('hex'); }

@@ -39,22 +39,39 @@ if (manifest.size !== 121) throw new Error(`Expected 121 manifest rows, found ${
 const renderCache = new Map();
 const modelResults = [];
 try {
-  for (const model of models) {
-    const sourceName = `formula-realformula-${model}-ort-20261007.json`;
-    const sourcePath = path.join(options.verificationRoot, sourceName);
+  for (const model of options.vlReport ? ['paddleocr-vl/1.6'] : models) {
+    const sourceName = options.vlReport ? path.basename(options.vlReport) : `formula-realformula-${model}-ort-20261007.json`;
+    const sourcePath = options.vlReport ?? path.join(options.verificationRoot, sourceName);
     const sourceBytes = await readFile(sourcePath);
     const source = JSON.parse(sourceBytes.toString('utf8').replace(/^\uFEFF/, ''));
-    const samples = source?.modelResults?.[0]?.results;
+    const samples = options.vlReport ? source?.results : source?.modelResults?.[0]?.results;
     if (!Array.isArray(samples) || samples.length !== 121) {
       throw new Error(`Expected 121 result rows in ${sourcePath}.`);
     }
+    if (options.vlReport && (source.schemaVersion !== 'deploysharp-paddleocr-vl-realformula-quality-v1'
+        || source.status !== 'completed' || source.model?.id !== model
+        || source.dataset?.manifestSha256 !== sha256Bytes(manifestBytes)
+        || source.dataset?.selectedCount !== 121
+        || source.summary?.endOfSequenceCount !== 121)) {
+      throw new Error('The PaddleOCR-VL source is not a completed, pinned 121-image evaluation.');
+    }
 
     const rows = [];
+    const seenImages = new Set();
     for (const sample of samples) {
       const truth = manifest.get(sample.image);
       if (!truth) throw new Error(`Missing reference row for ${sample.image}.`);
+      if (seenImages.has(sample.image)) throw new Error(`Duplicate prediction row for ${sample.image}.`);
+      seenImages.add(sample.image);
       const reference = String(truth.ReferenceLatex ?? '');
-      const prediction = String(sample.prediction ?? '');
+      if (options.vlReport && sample.referenceLatex !== reference)
+        throw new Error(`Reference text mismatch for ${sample.image}.`);
+      if (options.vlReport && sample.finishReason !== 'EndOfSequence')
+        throw new Error(`Non-terminal PaddleOCR-VL prediction for ${sample.image}.`);
+      const rawPrediction = String(sample.prediction ?? '');
+      const prediction = options.vlReport ? stripDisplayDelimiters(rawPrediction) : rawPrediction;
+      if (options.vlReport && typeof sample.imageSha256 !== 'string')
+        throw new Error(`Missing image SHA for ${sample.image}.`);
       if (sample.imageSha256 && sample.imageSha256.toLowerCase() !== String(truth.ImageSha256).toLowerCase()) {
         throw new Error(`Image SHA mismatch for ${sample.image}.`);
       }
@@ -72,6 +89,7 @@ try {
         imageSha256: truth.ImageSha256,
         referenceSha256: sha256Text(reference),
         predictionSha256: sha256Text(prediction),
+        ...(options.vlReport ? {rawPredictionSha256: sha256Text(rawPrediction)} : {}),
         referenceRenderSucceeded: expected.succeeded,
         predictionRenderSucceeded: actual.succeeded,
         referenceRenderError: expected.error,
@@ -86,8 +104,8 @@ try {
 
     const comparable = rows.filter((row) => row.visualForegroundIou !== null);
     modelResults.push({
-      model: `paddle-formula/${model}`,
-      backend: 'onnxruntime-cpu',
+      model: options.vlReport ? model : `paddle-formula/${model}`,
+      backend: options.vlReport ? source.environment.backend : 'onnxruntime-cpu',
       sourceReport: sourceName,
       sourceReportSha256: sha256Bytes(sourceBytes),
       sampleCount: rows.length,
@@ -125,7 +143,9 @@ try {
       manifestSha256: sha256Bytes(manifestBytes)
     },
     modelResults,
-    boundary: 'MathJax render success and raster-shape similarity are renderer compatibility and visual-structure diagnostics. They do not prove mathematical equivalence, semantic correctness, TeX-engine portability, model accuracy, or any backend other than the checked-in ONNX Runtime CPU predictions.'
+    boundary: options.vlReport
+      ? 'PaddleOCR-VL predictions use only an outer display-delimiter removal before rendering; raw prediction hashes are retained. Render success and raster/MathML structure are diagnostics, not mathematical equivalence, semantic accuracy, TeX portability or other-backend evidence.'
+      : 'MathJax render success and raster-shape similarity are renderer compatibility and visual-structure diagnostics. They do not prove mathematical equivalence, semantic correctness, TeX-engine portability, model accuracy, or any backend other than the checked-in ONNX Runtime CPU predictions.'
   };
   await mkdir(path.dirname(options.outputJson), {recursive: true});
   await mkdir(path.dirname(options.outputMarkdown), {recursive: true});
@@ -234,9 +254,11 @@ function percentile(values, probability) {
 
 function markdown(report) {
   const lines = [
-    '# Formula realFormula MathJax render and MathML diagnostics (2026-10-17)',
+    options.vlReport ? '# PaddleOCR-VL realFormula MathJax render and MathML diagnostics' : '# Formula realFormula MathJax render and MathML diagnostics (2026-10-17)',
     '',
-    'This report renders the 121 MathNet references and six checked-in ONNX Runtime CPU prediction sets with the locked MathJax renderer, compares paired grayscale rasters, and records normalized MathML structural fingerprints. It is a renderability/structure diagnostic, not a mathematical-semantic score.',
+    options.vlReport
+      ? 'This report renders 121 MathNet references and one external PaddleOCR-VL prediction set with the same locked MathJax protocol. Only outer display delimiters are removed from VL predictions. It is a renderability/structure diagnostic, not mathematical-semantic accuracy.'
+      : 'This report renders the 121 MathNet references and six checked-in ONNX Runtime CPU prediction sets with the locked MathJax renderer, compares paired grayscale rasters, and records normalized MathML structural fingerprints. It is a renderability/structure diagnostic, not a mathematical-semantic score.',
     '',
     '| Model | Samples | Reference rendered | Prediction rendered | Comparable pairs | MathML structural match | Exact text | Foreground IoU P05 / P50 | Pixel similarity P05 / P50 |',
     '|---|---:|---:|---:|---:|---:|---:|---:|---:|'
@@ -258,7 +280,9 @@ function markdown(report) {
     '',
     '- A successful MathJax render only proves compatibility with this locked renderer and configuration. It does not prove compatibility with a full TeX distribution.',
     '- Pixel similarity, foreground IoU and normalized MathML structure are diagnostics; they cannot establish mathematical equivalence or semantic correctness.',
-    '- The predictions come from the checked-in ONNX Runtime CPU reports. OpenVINO, OpenCV DNN and TensorRT quality are not represented.',
+    options.vlReport
+      ? '- The predictions come from the single external PaddleOCR-VL report identified by SHA-256. Other backends and models are not represented.'
+      : '- The predictions come from the checked-in ONNX Runtime CPU reports. OpenVINO, OpenCV DNN and TensorRT quality are not represented.',
     '- No release-quality threshold is inferred from these exploratory distributions.'
   );
   return lines.join('\n') + '\n';
@@ -280,9 +304,15 @@ function parseArguments(args) {
     verificationRoot: path.resolve(values.get('verification-root') ?? path.join(cwd, 'eng/models/paddle-document/verification')),
     outputJson: path.resolve(values.get('output-json') ?? path.join(cwd, 'eng/models/paddle-document/verification/formula-realformula-render-quality-20261013.json')),
     outputMarkdown: path.resolve(values.get('output-markdown') ?? path.join(cwd, 'eng/models/paddle-document/verification/formula-realformula-render-quality-20261013.md')),
+    vlReport: values.has('vl-report') ? path.resolve(values.get('vl-report')) : null,
     rasterWidth,
     rasterHeight
   };
+}
+
+function stripDisplayDelimiters(value) {
+  const trimmed = value.trim();
+  return trimmed.startsWith('\\[') && trimmed.endsWith('\\]') ? trimmed.slice(2, -2).trim() : trimmed;
 }
 
 function parseBoundedInteger(value, name, minimum, maximum) {

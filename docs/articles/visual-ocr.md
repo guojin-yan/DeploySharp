@@ -984,6 +984,8 @@ Console.WriteLine(result.Text);
 
 公式任务另有[realFormula 121 张人工标注图像的实测](../../eng/models/paddle-ocr/verification/paddleocr-vl-realformula-ort-cuda-20261026.md)：Windows RTX 3060 上的 ORT CUDA 四图路径完成 121/121 次生成，全部 EOS、没有截断。严格去空白 LaTeX 文本匹配为 0/121，字符 CER 为 55.15%；不同但可能等价的 LaTeX 写法会被计为错误，因此这不是公式语义正确率。6 GB 显卡连续处理不同尺寸时，默认 CUDA arena 曾在第 10 张图发生内存申请失败；显式启用后端现有的逐次 arena 收缩配置后完成全量。该配置不保证任意大图的峰值显存，也不会自动改动普通推理默认值。
 
+[后续公式结构诊断](../../eng/models/paddle-ocr/verification/paddleocr-vl-realformula-structure-20261026.md)中，121 个 VL 输出都可由固定 MathJax 渲染；在 118 个可比较的参考式中，23 个 MathML 结构完全相同。保守数值代入只能够判断 8 个，其中 7 个采样相符、1 个根号作用范围不同，余下 113 个不可判定。可渲染、结构相同或有限点代入一致都不等于全数据集数学正确率。
+
 如果使用 OpenVINO CPU，准备相同的四图和 tokenizer，在注册时选择对应后端即可；不要为四个阶段混入其它导出批次的模型：
 
 ```csharp
