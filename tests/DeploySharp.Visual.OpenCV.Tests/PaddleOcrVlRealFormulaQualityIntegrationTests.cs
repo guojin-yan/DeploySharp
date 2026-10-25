@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using JYPPX.DeploySharp;
 using JYPPX.DeploySharp.Backends.OnnxRuntime;
@@ -70,6 +71,11 @@ public sealed class PaddleOcrVlRealFormulaQualityIntegrationTests
             throw new ArgumentException("Choose onnxruntime-cpu, onnxruntime-cuda or openvino-cpu for the quality backend.");
         bool cudaArenaShrink = backend == "onnxruntime-cuda"
             && Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_VL_REAL_FORMULA_CUDA_ARENA_SHRINK") != "0";
+        string? cudaTf32 = backend == "onnxruntime-cuda"
+            ? Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_VL_REAL_FORMULA_CUDA_TF32") : null;
+        if (cudaTf32 is not (null or "0" or "1"))
+            throw new ArgumentException("DEPLOYSHARP_PADDLEOCR_VL_REAL_FORMULA_CUDA_TF32 must be 0 or 1.");
+        bool recordTokenIds = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_VL_REAL_FORMULA_RECORD_TOKEN_IDS") == "1";
         string reportPath = Path.GetFullPath(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_VL_REAL_FORMULA_REPORT_PATH")
             ?? Path.Combine(TestContext.TestResultsDirectory!, "paddleocr-vl-realformula-" + backend + ".json"));
         Directory.CreateDirectory(Path.GetDirectoryName(reportPath)!);
@@ -87,9 +93,12 @@ public sealed class PaddleOcrVlRealFormulaQualityIntegrationTests
         else
         {
             bool cuda = backend == "onnxruntime-cuda";
+            IReadOnlyDictionary<string, string>? cudaProviderOptions = cudaTf32 == null ? null
+                : new Dictionary<string, string> { ["use_tf32"] = cudaTf32 };
             var runtimeOptions = new OnnxRuntimeOptions(executionProvider: cuda
                     ? OnnxRuntimeExecutionProvider.Cuda : OnnxRuntimeExecutionProvider.Cpu,
-                intraOpThreads: 4, interOpThreads: 1, enableMemoryPattern: false, enableCpuMemoryArena: false);
+                intraOpThreads: 4, interOpThreads: 1, enableMemoryPattern: false, enableCpuMemoryArena: false,
+                cudaProviderOptions: cudaProviderOptions);
             if (cudaArenaShrink)
                 runtimeOptions = runtimeOptions.WithRunConfigEntries(new Dictionary<string, string>
                 {
@@ -147,7 +156,7 @@ public sealed class PaddleOcrVlRealFormulaQualityIntegrationTests
                 },
                 protocol = new
                 {
-                    task = "FormulaRecognition", maximumNewTokens = options.MaximumNewTokens, cudaArenaShrink,
+                    task = "FormulaRecognition", maximumNewTokens = options.MaximumNewTokens, cudaArenaShrink, cudaTf32, recordTokenIds,
                     imageExifOrientation = "raw encoded pixels; no EXIF transposition",
                     normalization = "Remove Unicode whitespace in reference and prediction; compare remaining UTF-16 code units with Levenshtein distance. This is not mathematical or TeX semantic equivalence.",
                     timing = "One pass per image; wall time covers production preprocessing plus generation, excluding session creation. Preprocessing is measured before GenerateAsync; generationMilliseconds comes from the production session and excludes its queue. No warm-up or controlled clock."
@@ -193,7 +202,7 @@ public sealed class PaddleOcrVlRealFormulaQualityIntegrationTests
                     reference.Length, prediction.Length, edits, (double)edits / Math.Max(1, reference.Length),
                     string.Equals(reference, prediction, StringComparison.Ordinal), generated.FinishReason.ToString(),
                     generated.TokenIds.Count, preprocessingMilliseconds, generated.Elapsed.TotalMilliseconds,
-                    timer.Elapsed.TotalMilliseconds));
+                    timer.Elapsed.TotalMilliseconds, recordTokenIds ? generated.TokenIds.ToArray() : null));
                 Save("running");
                 TestContext.WriteLine("PaddleOCR-VL realFormula " + results.Count + "/" + selected.Count + " " + sample.Image
                     + " CER=" + ((double)edits / Math.Max(1, reference.Length)).ToString("F4"));
@@ -267,5 +276,6 @@ public sealed class PaddleOcrVlRealFormulaQualityIntegrationTests
     private sealed record QualityRow(string Image, string ImageSha256, string ReferenceLatex, string Prediction,
         int ReferenceLength, int PredictionLength, int CharacterEdits, double CharacterErrorRate,
         bool ExactMatch, string FinishReason, int GeneratedTokens, double PreprocessingMilliseconds,
-        double GenerationMilliseconds, double WallMilliseconds);
+        double GenerationMilliseconds, double WallMilliseconds,
+        [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] int[]? GeneratedTokenIds);
 }

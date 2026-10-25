@@ -169,7 +169,9 @@ DeploySharp 包尚未发布到 nuget.org。以下保留准确的包 ID 和 `2.0.
 
 ## 🤖 支持的模型
 
-模型目录覆盖 YOLO、DETR、PaddleOCR v5 Preview、PaDiM、BRIA RMBG、SAM、CLIP、BLIP 和 Qwen GGUF。完整的 PaddleOCR v4/v5/v6 核心 ONNX 模型集合（包含 v6 tiny/small/medium）以及已转换的 PP-Structure 文档模型，均按单个资产存放在稳定的 [`models-paddleocr` Release](https://github.com/guojin-yan/DeploySharp/releases/tag=models-paddleocr) 中，用户只需下载自己需要的模型；模型目录和 SHA-256 资产不会嵌入 NuGet 包。**PaddleOCR-VL 1.6 也已经接入，作为实验性的四图 ONNX 生成路径**，支持 OCR、表格、公式、图表、文字定位、印章以及区域和多页编排。固定 Bundle 已在 Windows/Linux ONNX Runtime CPU、OpenVINO CPU 以及 Windows RTX 3060 Laptop ONNX Runtime CUDA 完成六任务生成与 Token/文本对照。CUDA 仍将 KV/logits 回读到 CPU；TensorRT 尚未完成四图生成验证；OpenCV DNN 5.0 无法导入原始 vision/decoder 图。九个 VL 资产已在本地暂存并完成 catalog 映射，远端 Release 仍需具备写权限后上传。详细使用方式见[PaddleOCR 流水线教程](docs/articles/visual-paddle-ocr3.md)、[VL/PP-Structure 教程](docs/articles/visual-paddle-structure.md)，目录 ID 与当前状态见[模型支持指南](docs/articles/model-support.md)，每个模型/后端组合见[模型/后端验证矩阵](docs/model-backend-verification-matrix.md)。
+模型目录覆盖 YOLO、DETR、PaddleOCR v5 Preview、PaDiM、BRIA RMBG、SAM、CLIP、BLIP 和 Qwen GGUF。PaddleOCR v4/v5/v6 核心 ONNX 模型与已转换的 PP-Structure 模型按单个资产存放在 [`models-paddleocr` Release](https://github.com/guojin-yan/DeploySharp/releases/tag/models-paddleocr)，用户只需下载所需模型；模型文件不嵌入 NuGet 包。
+
+**PaddleOCR-VL 1.6 已提供实验性本地推理路径**，覆盖 OCR、表格、公式、图表、文字定位、印章、区域和多页编排。固定四图 ONNX Bundle 已在 ONNX Runtime CPU/CUDA 与 OpenVINO CPU 完成六任务生成验证；派生的五图路径也在 Windows TensorRT 10.11 完成六个固定任务，但任意 Engine Profile 和页面质量尚未验证。原始 vision/decoder 图在 OpenCV DNN 5.0 导入失败。四图、五图 Bundle 已完成本地完整性校验，Release 资产**尚未在线提供**。使用方式与准确边界见[PaddleOCR 流水线教程](docs/articles/visual-paddle-ocr3.md)、[VL/PP-Structure 教程](docs/articles/visual-paddle-structure.md)、[模型支持指南](docs/articles/model-support.md)及[模型/后端验证矩阵](docs/model-backend-verification-matrix.md)。
 
 
 ## 🧪 示例系列

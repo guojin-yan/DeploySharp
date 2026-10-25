@@ -51,6 +51,10 @@ foreach ($field in @('sourceCommit', 'visualAssemblySha256', 'openCvAssemblySha2
 $referenceRows = @($reference.results)
 $candidateRows = @($candidate.results)
 if ($referenceRows.Count -eq 0) { throw 'A backend comparison requires at least one completed image.' }
+$referenceTokenRecording = $reference.protocol.PSObject.Properties['recordTokenIds']
+$candidateTokenRecording = $candidate.protocol.PSObject.Properties['recordTokenIds']
+Assert-Same $(if ($null -eq $referenceTokenRecording) { $null } else { $referenceTokenRecording.Value }) `
+    $(if ($null -eq $candidateTokenRecording) { $null } else { $candidateTokenRecording.Value }) 'protocol/recordTokenIds'
 Assert-Same $reference.dataset.selectedCount $referenceRows.Count 'reference row count'
 Assert-Same $candidate.dataset.selectedCount $candidateRows.Count 'candidate row count'
 Assert-Same $referenceRows.Count $reference.summary.completedCount 'reference completed count'
@@ -64,6 +68,30 @@ $rows = @(
         foreach ($field in @('image', 'imageSha256', 'referenceLatex', 'referenceLength')) {
             Assert-Same $left.$field $right.$field "row $index/$field"
         }
+        $leftTokenIds = $left.PSObject.Properties['generatedTokenIds']
+        $rightTokenIds = $right.PSObject.Properties['generatedTokenIds']
+        if (($null -eq $leftTokenIds) -ne ($null -eq $rightTokenIds)) {
+            throw "Incomparable PaddleOCR-VL reports: row $index/token ID availability"
+        }
+        $tokenIdsAvailable = $null -ne $leftTokenIds
+        $tokenIdsExact = $null
+        $firstTokenDifference = $null
+        if ($tokenIdsAvailable) {
+            $referenceTokens = @($leftTokenIds.Value)
+            $candidateTokens = @($rightTokenIds.Value)
+            Assert-Same $left.generatedTokens $referenceTokens.Count "row $index/reference token count"
+            Assert-Same $right.generatedTokens $candidateTokens.Count "row $index/candidate token count"
+            $tokenIdsExact = ($referenceTokens | ConvertTo-Json -Compress) -ceq ($candidateTokens | ConvertTo-Json -Compress)
+            if (-not $tokenIdsExact) {
+                for ($tokenIndex = 0; $tokenIndex -lt [Math]::Max($referenceTokens.Count, $candidateTokens.Count); $tokenIndex++) {
+                    if ($tokenIndex -ge $referenceTokens.Count -or $tokenIndex -ge $candidateTokens.Count -or
+                        $referenceTokens[$tokenIndex] -ne $candidateTokens[$tokenIndex]) {
+                        $firstTokenDifference = $tokenIndex
+                        break
+                    }
+                }
+            }
+        }
         [ordered]@{
             image = $left.image
             imageSha256 = $left.imageSha256
@@ -71,6 +99,11 @@ $rows = @(
             generatedTokenCountExact = $left.generatedTokens -eq $right.generatedTokens
             finishReasonExact = $left.finishReason -ceq $right.finishReason
             characterEditsExact = $left.characterEdits -eq $right.characterEdits
+            tokenIdsAvailable = $tokenIdsAvailable
+            tokenIdsExact = $tokenIdsExact
+            firstTokenDifferenceIndex = $firstTokenDifference
+            referenceTokenId = $(if ($null -ne $firstTokenDifference -and $firstTokenDifference -lt $referenceTokens.Count) { $referenceTokens[$firstTokenDifference] } else { $null })
+            candidateTokenId = $(if ($null -ne $firstTokenDifference -and $firstTokenDifference -lt $candidateTokens.Count) { $candidateTokens[$firstTokenDifference] } else { $null })
             referenceCharacterEdits = $left.characterEdits
             candidateCharacterEdits = $right.characterEdits
         }
@@ -78,7 +111,8 @@ $rows = @(
 )
 
 $allMatched = @($rows | Where-Object {
-    -not ($_.predictionExact -and $_.generatedTokenCountExact -and $_.finishReasonExact -and $_.characterEditsExact)
+    -not ($_.predictionExact -and $_.generatedTokenCountExact -and $_.finishReasonExact -and $_.characterEditsExact -and
+        (-not $_.tokenIdsAvailable -or $_.tokenIdsExact))
 }).Count -eq 0
 $summary = [ordered]@{
     schemaVersion = 'deploysharp-paddleocr-vl-realformula-backend-comparison-v1'
@@ -109,8 +143,10 @@ $summary = [ordered]@{
     generatedTokenCountExactCount = @($rows | Where-Object generatedTokenCountExact).Count
     finishReasonExactCount = @($rows | Where-Object finishReasonExact).Count
     characterEditsExactCount = @($rows | Where-Object characterEditsExact).Count
+    tokenIdsAvailableCount = @($rows | Where-Object tokenIdsAvailable).Count
+    tokenIdsExactCount = @($rows | Where-Object tokenIdsExact).Count
     rows = $rows
-    boundary = 'This is exact text, generated-token-count, finish-state and character-edit agreement on the selected labelled images under one model and build. Token IDs and intermediate tensors are not in the input reports. A subset is not full-corpus quality, semantic equivalence, controlled latency or general backend support.'
+    boundary = 'This compares text, token count, finish state and character edits on the selected labelled images under one model and build. Individual token IDs are compared only when both external reports explicitly record them; intermediate tensors and logit margins are not compared. A subset is not full-corpus quality, semantic equivalence, controlled latency or general backend support.'
 }
 
 $null = New-Item -ItemType Directory -Force -Path (Split-Path $outputPath)
