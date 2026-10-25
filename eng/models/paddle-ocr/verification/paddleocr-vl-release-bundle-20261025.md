@@ -1,12 +1,14 @@
-# PaddleOCR-VL-1.6 release bundle verification
+# PaddleOCR-VL-1.6 release bundle staging verification
 
 Date: 2026-10-25
 Release: [models-paddleocr](https://github.com/guojin-yan/DeploySharp/releases/tag/models-paddleocr)
 Bundle ID: `paddleocr-vl/1.6`
 
+Publication status: the nine VL assets are staged and catalogued locally; remote upload to `models-paddleocr` is pending a GitHub account with Release write permission.
+
 ## What was published
 
-The stable model release contains PaddleOCR-VL-1.6 as nine independently downloadable assets. The four ONNX graphs are the fixed dynamic FP32 export used by `PaddleOcrVlOnnxSession`; the remaining files are the pinned tokenizer, template and manifest sidecars.
+The local release staging directory contains PaddleOCR-VL-1.6 as nine independently downloadable assets for the stable model release. The four ONNX graphs are the fixed dynamic FP32 export used by `PaddleOcrVlOnnxSession`; the remaining files are the pinned tokenizer, template and manifest sidecars.
 
 | Role | Release asset | Bytes | SHA-256 |
 | --- | --- | ---: | --- |
@@ -20,7 +22,7 @@ The stable model release contains PaddleOCR-VL-1.6 as nine independently downloa
 | chat template | `paddleocr-vl-1.6-chat-template.jinja` | 1,474 | `2f27812dab7f333e471884e0c803d807f11953d5453140dfb1aaba234f872bc8` |
 | manifest | `paddleocr-vl-1.6-bundle.json` | 1,960 | `58dd1e945563f7c2f0f49a5bde094971e7a3d0e5797b39c0f46c00c2b98db0f4` |
 
-The same `models-paddleocr` release retains the seven independently downloadable PP-Chart2Table assets. The generated catalog contains both `paddle-chart/pp-chart2table` and `paddleocr-vl/1.6`; the release-level `SHA256SUMS` covers all assets. The staged catalog and checksum file used for this upload were:
+The local staging also retains the seven independently downloadable PP-Chart2Table assets. The generated catalog contains both `paddle-chart/pp-chart2table` and `paddleocr-vl/1.6`; the release-level `SHA256SUMS` covers all staged assets. The staged catalog and checksum file prepared for upload were:
 
 ```text
 paddleocr-release-catalog.json  bfdf6b54a6b7ba0137c9dc9f66ebed9afd6a589da35f2ef8d0eb48ae6426219c
@@ -29,7 +31,7 @@ SHA256SUMS                     78f12576f989f339689f744a1fd492636afe918b62e95c149
 
 ## Download and cache behavior
 
-`PaddleOcrReleaseClient.GetBundleAsync("paddleocr-vl/1.6")` reads the catalog, downloads only the nine declared assets, checks size and SHA-256, and materializes the local names required by `PaddleOcrVlOnnxSession.CreateVerified`. The globally unique Release names are deliberately different from the bundle-local names (`vision.onnx`, `tokenizer_config.json`, and so on). Chart2Table and PaddleOCR-VL therefore use separate deterministic cache directories even when their sidecars have the same local filename.
+After upload, `PaddleOcrReleaseClient.GetBundleAsync("paddleocr-vl/1.6")` will read the catalog, download only the nine declared assets, check size and SHA-256, and materialize the local names required by `PaddleOcrVlOnnxSession.CreateVerified`. The globally unique Release names are deliberately different from the bundle-local names (`vision.onnx`, `tokenizer_config.json`, and so on). Chart2Table and PaddleOCR-VL therefore use separate deterministic cache directories even when their sidecars have the same local filename.
 
 The cache isolation regression covers online download, offline reuse and conflicting remote asset names. The focused ModelFactory suite passed with `6 passed / 0 skipped / 0 failed` on the development checkout. This verifies the download contract; it does not prove that a downloaded graph is supported by every execution backend.
 
@@ -52,7 +54,7 @@ The export also retains a known boundary: one intermediate Spotting vision featu
 
 ## Reproduction
 
-1. Download the catalog and the nine assets listed under `paddleocr-vl/1.6` from the stable release.
+1. After the pending upload completes, download the catalog and the nine assets listed under `paddleocr-vl/1.6` from the stable release.
 2. Let `PaddleOcrReleaseClient` verify and materialize the bundle, or place the files in a local bundle directory with the manifest.
 3. Run `samples/02-visual/paddleocr-vl-onnx` for a single prepared patch, or `samples/02-visual/paddleocr-vl-document` for decoded pages, region routing and JSON/Markdown export.
 4. Select ONNX Runtime CPU or OpenVINO CPU until an additional backend has its own real-model evidence.
