@@ -25,17 +25,20 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
         private readonly bool _preferPreallocatedCpuOutputs;
         private readonly bool _hasDynamicOutputs;
         private readonly bool _reuseInputCollections;
+        private readonly IReadOnlyDictionary<string, string>? _runConfigEntries;
         private List<string>? _singleInputNames;
         private List<OrtValue>? _singleInputValues;
         private bool _disposed;
 
-        public OnnxRuntimeSession(ModelArtifact artifact, InferenceSession session, int maximumConcurrency, bool nativeAsyncEnabled, bool preferPreallocatedCpuOutputs = false)
+        public OnnxRuntimeSession(ModelArtifact artifact, InferenceSession session, int maximumConcurrency, bool nativeAsyncEnabled,
+            bool preferPreallocatedCpuOutputs = false, IReadOnlyDictionary<string, string>? runConfigEntries = null)
         {
             _artifact = artifact;
             _session = session;
             _maximumConcurrency = maximumConcurrency;
             _nativeAsyncEnabled = nativeAsyncEnabled;
             _preferPreallocatedCpuOutputs = preferPreallocatedCpuOutputs;
+            _runConfigEntries = runConfigEntries;
             _operationGate = new SemaphoreSlim(maximumConcurrency, maximumConcurrency);
             // BackendRegistry normally supplies one independent channel per pool slot.
             // Reusing the short-lived input collection in that common case avoids two
@@ -158,6 +161,9 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
             {
                 try
                 {
+                    if (_runConfigEntries != null)
+                        foreach (KeyValuePair<string, string> entry in _runConfigEntries)
+                            runOptions.AddRunConfigEntry(entry.Key, entry.Value);
                     foreach (NamedTensor input in inputs)
                     {
                         inputNames.Add(input.Name);

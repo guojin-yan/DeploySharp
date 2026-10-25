@@ -141,6 +141,31 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
         /// </summary>
         public bool PreferPreallocatedCpuOutputs { get; }
 
+        /// <summary>
+        /// Gets explicit native RunOptions configuration applied to each call. Empty by default.
+        /// For example, memory.enable_memory_arena_shrinkage=gpu:0 releases unused CUDA arena
+        /// regions after a run; it does not cap live allocations or guarantee a lower peak.
+        /// / 获取每次调用使用的原生 RunOptions 配置；默认空集合。显存 arena 收缩只释放空闲区，不限制活动内存或保证峰值。
+        /// </summary>
+        public IReadOnlyDictionary<string, string> RunConfigEntries { get; } = FreezeEntries(null, nameof(RunConfigEntries));
+
+        /// <summary>
+        /// Creates a settings copy with immutable per-run native configuration. The original
+        /// settings and the public constructor contract are preserved. Use runtime-supported keys.
+        /// / 创建带不可变逐次运行配置的设置副本；保留原设置和构造函数合同，键值须由实际运行时支持。
+        /// </summary>
+        public OnnxRuntimeOptions WithRunConfigEntries(IReadOnlyDictionary<string, string>? entries)
+            => new OnnxRuntimeOptions(this, entries);
+
+        private OnnxRuntimeOptions(OnnxRuntimeOptions source, IReadOnlyDictionary<string, string>? entries)
+            : this(source.IntraOpThreads, source.InterOpThreads, source.GraphOptimization, source.ExecutionMode,
+                   source.EnableMemoryPattern, source.EnableCpuMemoryArena, source.LogSeverity, source.LogId,
+                   source.ProfilingOutputPathPrefix, source.ExecutionProvider, source.CudaDeviceId,
+                   source.CudaProviderOptions, source.SessionConfigEntries, source.PreferPreallocatedCpuOutputs)
+        {
+            RunConfigEntries = FreezeEntries(entries, nameof(entries));
+        }
+
         /// <summary>Gets default CPU settings. / 获取默认 CPU 设置。</summary>
         public static OnnxRuntimeOptions Default { get; } = new OnnxRuntimeOptions();
 

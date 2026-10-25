@@ -158,10 +158,10 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
                 else
                 {
                     using var cudaOptions = new OrtCUDAProviderOptions();
-                    var providerOptions = new Dictionary<string, string>(_options.CudaProviderOptions, StringComparer.Ordinal)
-                    {
-                        ["device_id"] = _options.CudaDeviceId.ToString(System.Globalization.CultureInfo.InvariantCulture)
-                    };
+                    var providerOptions = new Dictionary<string, string>(StringComparer.Ordinal);
+                    foreach (KeyValuePair<string, string> entry in _options.CudaProviderOptions)
+                        providerOptions.Add(entry.Key, entry.Value);
+                    providerOptions["device_id"] = _options.CudaDeviceId.ToString(System.Globalization.CultureInfo.InvariantCulture);
                     cudaOptions.UpdateOptions(providerOptions);
                     value.AppendExecutionProvider_CUDA(cudaOptions);
                 }
@@ -181,7 +181,8 @@ namespace JYPPX.DeploySharp.Backends.OnnxRuntime
             {
                 nativeOptions = CreateNativeOptions(options, artifact);
                 nativeSession = new InferenceSession(modelPath, nativeOptions);
-                var session = new OnnxRuntimeSession(artifact, nativeSession, 1, _options.IntraOpThreads != 1, _options.PreferPreallocatedCpuOutputs);
+                var session = new OnnxRuntimeSession(artifact, nativeSession, 1, _options.IntraOpThreads != 1,
+                    _options.PreferPreallocatedCpuOutputs, _options.RunConfigEntries);
                 nativeSession = null;
                 return session;
             }
