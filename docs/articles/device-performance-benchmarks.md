@@ -78,6 +78,16 @@ Spotting 的官方生成序列明显长于其它 VL 任务，因此采用单独�
 
 该行是长序列的有界 CPU 观察，不纳入其它任务的标准 `5+50` 统计，也不是 Spotting 准确率、GPU/TensorRT/OpenCV DNN 或跨设备性能结论。
 
+## Windows 10.0.26200 / RTX 3060 Laptop / PaddleOCR-VL-1.6 Spotting ORT CUDA（2026-10-25）
+
+Spotting 是长序列任务，本次使用 `1 warm-up + 5 measured` 的独立协议；同一四图 Bundle、同一托管 RGB 输入和单 Session 均复用。每次生成都达到 EOS，286 个 Token 与完整文本和官方参考一致。模型/Session 创建、调用方预处理不计入耗时，GPU 时钟未锁定。
+
+| 模型 / 任务 | 后端 | Wall P50（ms） | Wall P95（ms） | Session P50（ms） | Session P95（ms） | 预热 / 测量 | 状态 |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
+| PaddleOCR-VL-1.6 Spotting | ONNX Runtime CUDA | 178,731.687 | 212,603.536 | 178,644.882 | 212,526.093 | 1 / 5 | 通过 |
+
+完整环境、输入/Bundle SHA、逐次样本和边界见 [ORT CUDA Spotting 正式延迟报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-formal-latency-onnxruntime-cuda-spotting-20261025.md)。这是固定任务的 ORT CUDA 观察，不代表 TensorRT/OpenCV DNN、设备端 KV/logits、锁频性能、跨设备排名或长期稳定性；长序列成本也不应外推到普通 OCR。
+
 ## Windows 10 / RTX 2060
 
 ### 测试环境
