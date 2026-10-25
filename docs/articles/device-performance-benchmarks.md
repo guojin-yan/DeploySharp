@@ -45,6 +45,17 @@ Formula 任务沿用同一四图 Bundle、托管 RGB Processor、单 Session 和
 
 该切片描述生成延迟和 Token 一致性，不是公式语义准确率、渲染等价性、GPU 性能或完整 VL 矩阵。
 
+## Windows 10.0.26200 / PaddleOCR-VL-1.6 Chart CPU 切片（2026-10-25）
+
+Chart 任务沿用同一四图 Bundle、托管 RGB Processor、单 Session 和 `5 warm-up + 50 measured` 协议；每次均检查 EOS、137 个 Token 及完整文本与官方参考一致。详细环境、逐次样本和边界见 [Chart 正式延迟报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-formal-latency-chart-20261025.md)。
+
+| 模型 / 任务 | 后端 | Wall P50（ms） | Wall P95（ms） | Session P50（ms） | Session P95（ms） | 预热 / 测量 | 状态 |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
+| PaddleOCR-VL-1.6 Chart | ONNX Runtime CPU | 22,372.818 | 24,391.971 | 22,370.785 | 24,390.048 | 5 / 50 | 通过 |
+| PaddleOCR-VL-1.6 Chart | OpenVINO CPU | 22,076.120 | 25,688.664 | 22,074.872 | 25,687.257 | 5 / 50 | 通过 |
+
+该切片描述生成延迟和 Token 一致性，不是 ChartQA split accuracy、图表语义正确性、GPU 性能或完整 VL 矩阵。
+
 ## Windows 10 / RTX 2060
 
 ### 测试环境
