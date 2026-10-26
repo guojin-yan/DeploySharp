@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 3,
+  "protocolName": "deploysharp-paddleocr-full-5-50-v1",
+  "generatedUtc": "2026-10-26T08:35:13.1334737+00:00",
+  "machine": "ygj-NUC11PHi7",
+  "os": "Unix 6.8.0.138",
+  "framework": ".NET 10.0.9",
+  "architecture": "X64",
+  "processorCount": 8,
+  "sourceRevision": "6a06930\u002Bworking-tree-opencv-shape-cache",
+  "modelRoot": "/home/ygj/deploysharp-validation/paddleocr-core",
+  "image": "/home/ygj/demo_1.jpg",
+  "imageSha256": "ec81d595407ccb61eb2d4d90e74d976469febb41a74cdbc8dbb8429b1e768f5c",
+  "models": [
+    {
+      "version": "v6",
+      "variant": "small",
+      "role": "det",
+      "onnxPath": "/home/ygj/deploysharp-validation/paddleocr-core/PP-OCRv6/small/PP-OCRv6_small_det_inference.onnx",
+      "onnxSha256": "d73e0058b7a8086bbd57f3d10b8bcd4ff95363f67e06e2762b5e814fe9c9410e",
+      "enginePath": null,
+      "engineSha256": null
+    },
+    {
+      "version": "v6",
+      "variant": "small",
+      "role": "rec",
+      "onnxPath": "/home/ygj/deploysharp-validation/paddleocr-core/PP-OCRv6/small/PP-OCRv6_small_rec_inference.onnx",
+      "onnxSha256": "5435fd747c9e0efe15a96d0b378d5bd157e9492ed8fd80edf08f30d02fa24634",
+      "enginePath": null,
+      "engineSha256": null
+    }
+  ],
+  "backends": [
+    "opencv-dnn"
+  ],
+  "versions": [
+    "v6-small"
+  ],
+  "protocol": {
+    "warmup": 5,
+    "iterations": 50,
+    "stageConcurrency": 2,
+    "batchSize": 1,
+    "tensorRtBatchSize": null,
+    "tensorRtApiVersion": null,
+    "reusePreparedInput": true,
+    "fixedRecognitionWidth": null,
+    "openCvFixedRecognitionWidth": null,
+    "openCvDynamicShapeCache": 16,
+    "recognitionWidthBuckets": null
+  },
+  "runtime": {
+    "cudaRoot": null,
+    "cudnnRoot": null,
+    "onnxRuntimeCudaDllDirectories": null,
+    "tensorRtRoot": null,
+    "bridge": null,
+    "managedAssemblies": [
+      {
+        "name": "JYPPX.OpenCV.CSharp.API",
+        "assemblyVersion": "5.0.0.0",
+        "fileVersion": "5.0.0.0",
+        "productVersion": "5.0.0.0\u002B07729af7822e3d2698e6bde49165f8328d02f1f7",
+        "path": "/home/ygj/deploysharp-validation/DeploySharp-6a06930/tools/DeploySharp.PaddleOcrBenchmark/bin/Release/net10.0/ubuntu.22.04-x64/JYPPX.OpenCV.CSharp.API.dll",
+        "sha256": "9c5744f2b1b680e5a9a80236f72110126061450ec7d076aea9799c4e7e365e48"
+      }
+    ]
+  }
+}

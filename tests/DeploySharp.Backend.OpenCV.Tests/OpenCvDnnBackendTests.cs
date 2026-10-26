@@ -540,6 +540,35 @@ namespace DeploySharp.Backend.OpenCV.Tests
         }
 
         [TestMethod]
+        public void DynamicShapeCacheReusesNetworksAndEvictsLeastRecentlyUsedShape()
+        {
+            string path = Path.Combine(AppContext.BaseDirectory, "fixtures", "dynamic-identity.onnx");
+            byte[] model = File.ReadAllBytes(path);
+            var modelId = new ModelId("fixture/opencv-dynamic-cache");
+            var contract = new OpenCvDnnModelContract(modelId,
+                new[] { new TensorDescriptor("input", TensorElementType.Float32, new TensorShape(-1, 2)) },
+                new[] { new TensorDescriptor("output", TensorElementType.Float32, new TensorShape(-1, 2)) },
+                imageInputNames: Array.Empty<string>());
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new OpenCvDnnOptions(contract, 0));
+            using var provider = new OpenCvDnnBackendProvider(new OpenCvDnnOptions(contract, 2, enableFusion: false, enableWinograd: false));
+            using IInferenceSession session = provider.CreateSession(
+                new ModelArtifact(modelId, "onnx", path, Sha256Hex(model)),
+                new BackendRequest(BackendCapabilities.TensorInference, OpenCvDnnBackendProvider.BackendId, "cpu"),
+                SessionOptions.Default);
+            var cached = (OpenCvDnnSession)session;
+
+            foreach (int batch in new[] { 3, 4, 3, 5, 4 })
+            {
+                float[] values = Enumerable.Range(1, batch * 2).Select(value => (float)value).ToArray();
+                InferenceOutputs result = session.Run(InferenceInputs.Create("input", new Tensor<float>(new TensorShape(batch, 2), values)), CancellationToken.None);
+                CollectionAssert.AreEqual(values, (float[])result.GetRequired("output").Buffer);
+                Assert.IsTrue(cached.CachedDynamicNetworkCount <= 2);
+            }
+            Assert.AreEqual(4, cached.DynamicNetworkLoadCount);
+            Assert.AreEqual(2, cached.CachedDynamicNetworkCount);
+        }
+
+        [TestMethod]
         public void DynamicImageBatchIsSpecializedAndReloadedForRuntimeBatchSize()
         {
             string path = Path.Combine(Path.GetTempPath(), "deploysharp-opencv-dynamic-image-" + Guid.NewGuid().ToString("N") + ".onnx");

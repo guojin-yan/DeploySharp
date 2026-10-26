@@ -110,6 +110,7 @@ foreach ($model in $modelRecords) {
 }
 if ([int]$metadata.schemaVersion -ge 3) {
     $selectedBackends = @($metadata.backends | ForEach-Object { ([string]$_).ToLowerInvariant() })
+    $passedBackends = @($rows | Where-Object { $_.status -eq 'pass' } | ForEach-Object { ([string]$_.backend).ToLowerInvariant() })
     $assemblies = @($metadata.runtime.managedAssemblies)
     foreach ($assembly in $assemblies) {
         if ([string]::IsNullOrWhiteSpace([string]$assembly.name) -or [string]::IsNullOrWhiteSpace([string]$assembly.assemblyVersion) -or [string]::IsNullOrWhiteSpace([string]$assembly.path)) {
@@ -119,20 +120,20 @@ if ([int]$metadata.schemaVersion -ge 3) {
             $failures.Add("managed assembly '$($assembly.name)' is missing a valid sha256")
         }
     }
-    if (($selectedBackends -contains 'onnxruntime' -or $selectedBackends -contains 'onnxruntime-cuda') -and -not ($assemblies.name -contains 'Microsoft.ML.OnnxRuntime')) {
+    if (($passedBackends -contains 'onnxruntime' -or $passedBackends -contains 'onnxruntime-cuda') -and -not ($assemblies.name -contains 'Microsoft.ML.OnnxRuntime')) {
         $failures.Add('ONNX Runtime pass rows require Microsoft.ML.OnnxRuntime assembly evidence')
     }
-    if ($selectedBackends -contains 'onnxruntime-cuda') {
+    if ($passedBackends -contains 'onnxruntime-cuda') {
         foreach ($property in @('cudaRoot', 'cudnnRoot', 'onnxRuntimeCudaDllDirectories')) {
             if ($null -eq $metadata.runtime -or [string]::IsNullOrWhiteSpace([string]$metadata.runtime.$property)) {
                 $failures.Add("ONNX Runtime CUDA pass rows require runtime.$property")
             }
         }
     }
-    if ($selectedBackends -contains 'openvino' -and -not ($assemblies.name -contains 'OpenVINO.CSharp.API')) {
+    if ($passedBackends -contains 'openvino' -and -not ($assemblies.name -contains 'OpenVINO.CSharp.API')) {
         $failures.Add('OpenVINO pass rows require OpenVINO.CSharp.API assembly evidence')
     }
-    if ($selectedBackends -contains 'opencv-dnn' -and -not ($assemblies.name -contains 'JYPPX.OpenCV.CSharp.API')) {
+    if ($passedBackends -contains 'opencv-dnn' -and -not ($assemblies.name -contains 'JYPPX.OpenCV.CSharp.API')) {
         $failures.Add('OpenCV DNN pass rows require JYPPX.OpenCV.CSharp.API assembly evidence')
     }
     if ($selectedBackends -notcontains 'tensorrt') {

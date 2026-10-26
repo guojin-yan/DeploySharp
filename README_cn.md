@@ -171,7 +171,7 @@ DeploySharp 包尚未发布到 nuget.org。以下保留准确的包 ID 和 `2.0.
 
 模型目录覆盖 YOLO、DETR、PaddleOCR v5 Preview、PaDiM、BRIA RMBG、SAM、CLIP、BLIP 和 Qwen GGUF。PaddleOCR v4/v5/v6 核心 ONNX 模型与已转换的 PP-Structure 模型按单个资产存放在 [`models-paddleocr` Release](https://github.com/guojin-yan/DeploySharp/releases/tag/models-paddleocr)，用户只需下载所需模型；模型文件不嵌入 NuGet 包。
 
-**PaddleOCR-VL 1.6 已提供实验性本地推理路径**，覆盖 OCR、表格、公式、图表、文字定位、印章、区域和多页编排。固定四图 ONNX Bundle 已在 ONNX Runtime CPU/CUDA 与 OpenVINO CPU 完成六任务生成验证；派生的五图路径也在 Windows TensorRT 10.11 完成六个固定任务，但任意 Engine Profile 和页面质量尚未验证。原始 vision/decoder 图在 OpenCV DNN 5.0 导入失败。四图、五图 Bundle 已完成本地完整性校验，Release 资产**尚未在线提供**。使用方式与准确边界见[PaddleOCR 流水线教程](docs/articles/visual-paddle-ocr3.md)、[VL/PP-Structure 教程](docs/articles/visual-paddle-structure.md)、[模型支持指南](docs/articles/model-support.md)及[模型/后端验证矩阵](docs/model-backend-verification-matrix.md)。
+**PaddleOCR-VL 1.6 已提供实验性推理路径**，覆盖 OCR、表格、公式、图表、文字定位、印章、区域和多页编排。五图 ONNX Bundle 已作为[独立资产在线提供](https://github.com/guojin-yan/DeploySharp/releases/tag/models-paddleocr)，通过全新缓存下载、完整性校验与离线回读。原始四图已在 ONNX Runtime CPU/CUDA 与 OpenVINO CPU 完成六任务生成验证；派生五图路径也在 Windows TensorRT 10.11 使用设备专用 Engine 完成六个固定任务。下载验证未重新执行生成，任意 Engine Profile 和页面质量仍未验证。原始 vision/decoder 图在 OpenCV DNN 5.0 导入失败。使用方式与准确边界见[PaddleOCR 流水线教程](docs/articles/visual-paddle-ocr3.md)、[VL/PP-Structure 教程](docs/articles/visual-paddle-structure.md)、[模型支持指南](docs/articles/model-support.md)及[模型/后端验证矩阵](docs/model-backend-verification-matrix.md)。
 
 
 ## 🧪 示例系列

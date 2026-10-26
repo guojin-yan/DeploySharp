@@ -18,6 +18,8 @@ namespace JYPPX.DeploySharp.Backends.OpenCV
         private readonly ModelArtifact _artifact;
         private Net? _network;
         private readonly Func<IReadOnlyList<TensorDescriptor>, Net>? _networkFactory;
+        private readonly int _maxCachedDynamicShapes;
+        private readonly List<CachedNetwork> _cachedNetworks = new List<CachedNetwork>();
         private TensorShape[]? _loadedInputShapes;
         private readonly OpenCvDnnModelContract _contract;
         private readonly string[] _outputNames;
@@ -46,16 +48,19 @@ namespace JYPPX.DeploySharp.Backends.OpenCV
             Metadata = new CoreModelMetadata(artifact.ModelId, artifact.Format, contract.Inputs, contract.Outputs);
         }
 
-        internal OpenCvDnnSession(ModelArtifact artifact, OpenCvDnnModelContract contract, Func<IReadOnlyList<TensorDescriptor>, Net> networkFactory)
+        internal OpenCvDnnSession(ModelArtifact artifact, OpenCvDnnModelContract contract, Func<IReadOnlyList<TensorDescriptor>, Net> networkFactory, int maxCachedDynamicShapes)
         {
             _artifact = artifact;
             _contract = contract;
             _networkFactory = networkFactory ?? throw new ArgumentNullException(nameof(networkFactory));
+            _maxCachedDynamicShapes = maxCachedDynamicShapes;
             _outputNames = contract.Outputs.Select(value => value.Name).ToArray();
             Metadata = new CoreModelMetadata(artifact.ModelId, artifact.Format, contract.Inputs, contract.Outputs);
         }
 
         public CoreModelMetadata Metadata { get; }
+        internal int CachedDynamicNetworkCount => _cachedNetworks.Count;
+        internal int DynamicNetworkLoadCount { get; private set; }
 
         public InferenceOutputs Run(InferenceInputs inputs, CancellationToken cancellationToken)
         {
@@ -103,9 +108,14 @@ namespace JYPPX.DeploySharp.Backends.OpenCV
             _operationGate.Wait();
             try
             {
-                try { _network?.Dispose(); }
+                try
+                {
+                    if (_cachedNetworks.Count == 0) _network?.Dispose();
+                    else foreach (CachedNetwork cached in _cachedNetworks) cached.Network.Dispose();
+                }
                 finally
                 {
+                    _cachedNetworks.Clear();
                     _singleImageScratch?.Dispose();
                     if (_batchImageScratch != null) foreach (Mat image in _batchImageScratch) image.Dispose();
                     _singleBlobScratch?.Dispose();
@@ -179,16 +189,46 @@ namespace JYPPX.DeploySharp.Backends.OpenCV
                 }
                 if (sameShape) return;
             }
+            for (int cacheIndex = 0; cacheIndex < _cachedNetworks.Count; cacheIndex++)
+            {
+                CachedNetwork cached = _cachedNetworks[cacheIndex];
+                if (cached.Shapes.Length != runtimeDescriptors.Count) continue;
+                bool sameShape = true;
+                for (int inputIndex = 0; inputIndex < runtimeDescriptors.Count; inputIndex++)
+                {
+                    if (!cached.Shapes[inputIndex].Equals(runtimeDescriptors[inputIndex].Shape)) { sameShape = false; break; }
+                }
+                if (!sameShape) continue;
+                _cachedNetworks.RemoveAt(cacheIndex);
+                _cachedNetworks.Add(cached);
+                _network = cached.Network;
+                _loadedInputShapes = cached.Shapes;
+                return;
+            }
             try
             {
                 Net replacement = _networkFactory(runtimeDescriptors);
-                Net? previous = _network;
+                DynamicNetworkLoadCount++;
+                TensorShape[] shapes = runtimeDescriptors.Select(value => value.Shape).ToArray();
+                _cachedNetworks.Add(new CachedNetwork(shapes, replacement));
                 _network = replacement;
-                _loadedInputShapes = runtimeDescriptors.Select(value => value.Shape).ToArray();
-                previous?.Dispose();
+                _loadedInputShapes = shapes;
+                if (_cachedNetworks.Count > _maxCachedDynamicShapes)
+                {
+                    CachedNetwork evicted = _cachedNetworks[0];
+                    _cachedNetworks.RemoveAt(0);
+                    evicted.Network.Dispose();
+                }
             }
             catch (OpenCvDnnBackendException) { throw; }
             catch (Exception exception) { throw new OpenCvDnnBackendException(OpenCvDnnErrorCodes.ModelLoadFailed, "OpenCV DNN could not load the specialized dynamic-input network.", exception, _artifact.ModelId, operation: "specialize-input", technicalDetails: exception.Message); }
+        }
+
+        private sealed class CachedNetwork
+        {
+            public CachedNetwork(TensorShape[] shapes, Net network) { Shapes = shapes; Network = network; }
+            public TensorShape[] Shapes { get; }
+            public Net Network { get; }
         }
 
         private NamedTensor ReadNativeOutput(Mat native, TensorDescriptor descriptor)

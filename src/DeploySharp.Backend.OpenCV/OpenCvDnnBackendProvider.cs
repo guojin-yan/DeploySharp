@@ -150,7 +150,7 @@ namespace JYPPX.DeploySharp.Backends.OpenCV
             if (_options.Contract.Inputs.Any(value => value.Shape.IsDynamic))
             {
                 if (!_options.SpecializeDynamicInputShapes) throw new OpenCvDnnBackendException(OpenCvDnnErrorCodes.ConfigurationInvalid, "Runtime-dynamic OpenCV DNN inputs require input-shape specialization to be enabled.", modelId: artifact.ModelId, operation: "configure");
-                return new OpenCvDnnSession(artifact, _options.Contract, descriptors => CreateConfiguredNetwork(path, artifact, descriptors));
+                return new OpenCvDnnSession(artifact, _options.Contract, descriptors => CreateConfiguredNetwork(path, artifact, descriptors), _options.MaxCachedDynamicShapes);
             }
 
             Net? network = null;

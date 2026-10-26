@@ -101,13 +101,21 @@ namespace JYPPX.DeploySharp.Backends.OpenCV
     {
         /// <summary>Initializes options bound to one exact model contract. / 初始化绑定到一个精确模型合同的选项。</summary>
         public OpenCvDnnOptions(OpenCvDnnModelContract contract, bool enableFusion = true, bool enableWinograd = true, bool specializeDynamicInputShapes = true, int? numThreads = null)
+            : this(contract, 1, enableFusion, enableWinograd, specializeDynamicInputShapes, numThreads)
+        {
+        }
+
+        /// <summary>Initializes options with a bounded cache of specialized dynamic input shapes. / 初始化带有有界动态输入形状缓存的选项。</summary>
+        public OpenCvDnnOptions(OpenCvDnnModelContract contract, int maxCachedDynamicShapes, bool enableFusion = true, bool enableWinograd = true, bool specializeDynamicInputShapes = true, int? numThreads = null)
         {
             Contract = contract ?? throw new ArgumentNullException(nameof(contract));
+            if (maxCachedDynamicShapes < 1 || maxCachedDynamicShapes > 32) throw new ArgumentOutOfRangeException(nameof(maxCachedDynamicShapes));
             EnableFusion = enableFusion;
             EnableWinograd = enableWinograd;
             SpecializeDynamicInputShapes = specializeDynamicInputShapes;
             if (numThreads.HasValue && numThreads.Value <= 0) throw new ArgumentOutOfRangeException(nameof(numThreads), "OpenCV thread count must be positive when specified.");
             NumThreads = numThreads;
+            MaxCachedDynamicShapes = maxCachedDynamicShapes;
         }
 
         /// <summary>Gets the exact named tensor contract. / 获取精确命名张量合同。</summary>
@@ -120,5 +128,7 @@ namespace JYPPX.DeploySharp.Backends.OpenCV
         public bool SpecializeDynamicInputShapes { get; }
         /// <summary>Gets the optional process-global OpenCV parallel-region thread count. Null preserves the native default. / 获取可选的进程级 OpenCV 并行区域线程数；为 null 时保留原生默认值。</summary>
         public int? NumThreads { get; }
+        /// <summary>Gets the maximum number of specialized networks retained per dynamic-input Session; the default of one preserves previous memory use. / 获取每个动态输入 Session 保留的专门化网络数量上限；默认一份保持原有内存用量。</summary>
+        public int MaxCachedDynamicShapes { get; }
     }
 }

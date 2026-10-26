@@ -1,6 +1,6 @@
 # 模型支持指南
 
-本页说明 DeploySharp 当前模型目录的公开边界。模型支持分为“已收录 Preview”“可执行但未收录”和“暂不支持”三类。`Preview` 表示已有可复现的 ModelPack 和发布身份，不代表所有后端、所有设备或算法精度均已完成验证。
+本页说明 DeploySharp 当前模型目录和专门 Release Bundle 的公开边界。模型支持分为“已发布 Preview”“可执行但未收录”和“暂不支持”三类。`Preview` 表示已有可复现的 ModelPack 或明确的 Release Bundle 身份，不代表所有后端、所有设备或算法精度均已完成验证。
 
 ## 状态定义
 
@@ -8,7 +8,7 @@
 | --- | --- |
 | `ContractVerified` | Profile、输入输出张量和确定性解码合同已通过测试。 |
 | `LocalBackendVerified` | 精确工件已在声明的本机后端和设备上完成真实推理。 |
-| `Preview` | ModelPack 具有固定版本、大小、SHA-256 和发布身份，可按目录规则获取。 |
+| `Preview` | ModelPack 或专门 Bundle 具有固定版本、大小、SHA-256 和发布身份，可按对应目录规则获取。 |
 | `External` | 仅保留合同或外部工件记录，不属于可下载的官方目录。 |
 | `Planned` | 已有任务方向，但当前版本没有可交付的完整工件或流水线。 |
 
@@ -18,14 +18,21 @@
 | --- | --- | --- |
 | YOLO | v5、v6、v7、v8、v9、v10、v11、v12、v13、v26 | 检测、分类、分割、姿态、OBB | 以目录中的精确 ONNX/Engine 工件为准。 |
 | DETR | DEIMv2、PP-YOLOE、RF-DETR、RT-DETR | 检测、实例分割 | 不同导出图的输入输出合同不同。 |
-| PaddleOCR | PP-OCRv4/v5 mobile/server、PP-OCRv6 tiny/small/medium | 检测、识别、方向分类 | 核心 CTC ONNX 资产见 [`models-paddleocr` Release](https://github.com/guojin-yan/DeploySharp/releases/tag/models-paddleocr)；模型与字典按需下载，后端支持按精确工件验证。VL 的实验性本地 Bundle 见下方“可执行但未收录”。 |
+| PaddleOCR | PP-OCRv4/v5 mobile/server、PP-OCRv6 tiny/small/medium | 检测、识别、方向分类 | 核心 CTC ONNX 资产见 [`models-paddleocr` Release](https://github.com/guojin-yan/DeploySharp/releases/tag/models-paddleocr)；模型与字典按需下载，后端支持按精确工件验证。 |
 | PaddleOCR / PP-Structure（新增 Release 资产） | PP-OCRv4/v5/v6 核心 DET/REC/CLS、版面、表格、公式、矫正、印章 | OCR 与文档结构 | 使用 `PaddleOcrReleaseClient` 从 `models-paddleocr` 按单模型下载并校验；Profile 分别由 `PaddleOcrModelCatalog` 与 `PaddleDocumentModelCatalog` 提供。 |
+| PaddleOCR-VL | 固定 1.6 五图 ONNX Bundle | 实验性 OCR、表格、公式、图表、Spotting、印章生成 | 十个独立资产已在 `models-paddleocr` 提供；可按 Bundle 下载、校验和离线复用。固定任务生成和后端边界见下文，不代表全平台或标注质量通过。 |
 | 异常与抠图 | PaDiM、BRIA RMBG 1.4/2.0 | 异常分数/掩码、前景 alpha | RMBG 2.0 的精度和后端按工件分别记录。 |
 | 视觉语言 | CLIP、BLIP Caption Base | 图文相似度、图像描述 | 仅完整的双图/生成工件可复现。 |
 | 可提示分割 | SAM v1 | 点、框、掩码提示 | SAM2/SAM3 不属于当前公开 Preview。 |
 | 本地 LLM | Qwen2.5 0.5B Instruct GGUF | 文本生成、流式、Embedding | 需要应用提供 LLamaSharp 原生运行时。 |
 
 精确模型 ID、下载入口、工件格式和发布版本见[官方模型目录](model-catalog.md)；每个模型与后端的真实验证结果见[模型 × 后端验证矩阵](../model-backend-verification-matrix.md)。
+
+PaddleOCR-VL 使用 `models-paddleocr` 的独立 Bundle catalog，不在上述自动生成的单工件 ModelPack 表中；不能通过是否出现在该表推断其 Bundle 不可下载。
+
+固定 PaddleOCR-VL-1.6 五图 v2 Bundle（五张 ONNX、四个 tokenizer/template 文件及 manifest）已在 [`models-paddleocr`](https://github.com/guojin-yan/DeploySharp/releases/tag/models-paddleocr) 作为十个独立资产发布。`PaddleOcrReleaseClient.GetBundleAsync("paddleocr-vl/1.6")` 已完成全新缓存下载、逐文件哈希校验及离线回读，Visual manifest 也校验了下载所得九个本地文件，见[在线交付验证](../../eng/models/paddle-ocr/verification/paddleocr-vl-release-live-20261026.md)。旧四图 v1 格式仍可读取，但在线 catalog 当前指向五图 v2；下载验证没有从新缓存重跑生成。
+
+四张原始图已在 Linux/Windows ORT CPU、OpenVINO CPU 和 Windows ORT CUDA 完成六任务固定输入生成，765 个 Token/文本与官方参考一致；Windows TensorRT 10.11 使用派生第五图和设备专用 Engine 也完成同组六任务，见[五图生成报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-tensorrt-five-graph-20261026.md)。这些是精确工件的运行证据，不代表页面质量或可下载 TensorRT Engine。OpenCV DNN 5.0 对原始 vision/decoder 动态图导入失败。公式任务的[同构建 ORT CPU/CUDA 121 图对照](../../eng/models/paddle-ocr/verification/paddleocr-vl-realformula-ort-cpu-cuda-121-20261026.md)和[Linux ORT CPU/OpenVINO CPU 121 图逐 Token 对照](../../eng/models/paddle-ocr/verification/paddleocr-vl-realformula-ort-openvino-linux-121-20261026.md)仍为质量诊断：严格去空白匹配 0/121，不是数学语义准确率。表格 OTSL 可解析逻辑单元格/HTML，Spotting 可映射页面像素；其它任务的语义结构和跨后端支持不能外推。用法见[VL 教程](visual-ocr.md#paddleocr-vl-是否已经可用于模型推理)及[表格与 Spotting 教程](visual-paddle-structure.md#vl-spotting文字四边形与页面坐标)。
 
 ## 如何阅读一个模型条目
 
@@ -43,14 +50,11 @@
 
 以下路径具有部分合同或本机实验，但当前不作为官方可下载模型：
 
-- PaddleOCR-VL-1.6：四图 Bundle 已在 Linux/Windows 的 ORT CPU、OpenVINO CPU，以及 Windows RTX 3060 Laptop 的 ORT CUDA 上完成 OCR、表格、公式、图表、Spotting、印章六任务生成，765 个 Token/文本与固定官方参考一致，见 [ORT CUDA 报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-cuda-20261025.md)、[Linux OpenVINO 报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-openvino-linux-20261024.md)和 [Windows OpenVINO 报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-windows-openvino-20261025.md)。TensorRT 10.11 使用派生的第五张 prefill 图和按图像尺寸构建的 Engine，也在同一 Windows GPU 上完成六任务 EOS、Token/文本一致性，见[五图完整生成报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-tensorrt-five-graph-20261026.md)；这是固定输入的单次正确性证据，不是可下载 TensorRT Bundle、正式 P50/P95、跨设备或页面联合质量。CPU/ORT CUDA 的重复延迟在[设备性能实测](device-performance-benchmarks.md)中单独记录，OpenVINO 的历史 OOM 与[内存对照](../../eng/models/paddle-ocr/verification/paddleocr-vl-openvino-source-model-memory-20261024.md)仍适用。OpenCV DNN 5.0 对原始 vision/decoder 图的动态 `Shape` 导入失败；标注质量、长期稳定性和跨设备统一性能仍未完成。
 - Wav2Vec2、Whisper tiny.en：有音频预处理或局部图执行证据，但完整可下载 Bundle 和发布边界尚未闭合；
 - Donut CORD-v2：单页 Encoder/Prefill/KV 路径已有局部执行证据，多页和 TensorRT 尚未收录；
 - LLaVA OneVision：单图 ORT/OpenVINO CPU 路径可执行，完整原生多模态包仍由应用提供；
 - YOLO-World、Grounding DINO、YOLOE：提示词/词表/完整导出工件尚未形成统一发布包；
 - SigLIP：本地双编码器合同存在，当前公开目录只收录 CLIP Preview。
-
-PaddleOCR-VL 的本地 Bundle 校验和按需下载接口已经实现；固定 1.6 的四图 v1（九个 Release 资产）与含派生 prefill 图的五图 v2（十个 Release 资产）均有本地 manifest/哈希验证，远端上传和全新缓存下载回读仍等待具备写权限的账户完成。下载客户端按 Bundle 隔离缓存，不能把本地准备写成已可在线下载。RGB/图像文件可自动准备官方 Patch。表格 OTSL 已支持逻辑单元格/HTML，Spotting 已支持严格标记解析、源裁剪像素与显式页面像素映射；其它任务的语义结构及跨后端支持不能据此外推。公式任务已有[同构建 ORT CPU/CUDA 的 realFormula 121 图对照](../../eng/models/paddle-ocr/verification/paddleocr-vl-realformula-ort-cpu-cuda-121-20261026.md)及[Linux ORT CPU/OpenVINO CPU 的 121 图逐 Token 对照](../../eng/models/paddle-ocr/verification/paddleocr-vl-realformula-ort-openvino-linux-121-20261026.md)；严格去空白匹配均为 0/121，不能视为数学语义准确率或公式质量门通过。使用方式和各自边界见[VL 用法](visual-ocr.md#paddleocr-vl-是否已经可用于模型推理)及[表格与 Spotting 教程](visual-paddle-structure.md#vl-spotting文字四边形与页面坐标)。
 
 ## 暂不支持的模型族
 

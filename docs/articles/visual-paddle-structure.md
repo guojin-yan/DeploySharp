@@ -22,7 +22,7 @@ DeploySharp 现在把 PaddleOCR 的文档智能能力按模块建模，而不是
 
 ## 获取官方模型并转换为 ONNX
 
-标准 PP-Structure ONNX 已经同步发布到 [`models-paddleocr`](https://github.com/guojin-yan/DeploySharp/releases/tag=models-paddleocr) Release，按单模型资产提供，不要求用户下载整包。运行时可用 `PaddleOcrReleaseClient.GetModelAsync("paddle-doc/pp-doclayout-s")`、`paddle-table/slanext-wired` 或 `paddle-formula/unimernet` 按需获取并校验；`PaddleDocumentModelCatalog.GetReleaseArtifact` 可查询对应资产名、大小、SHA-256、opset 和下载地址。Chart2Table 是生成式四图模型，按 `paddle-chart/pp-chart2table` Bundle 用 `PaddleOcrReleaseClient.GetBundleAsync(...)` 单独获取四张 ONNX 和 tokenizer 文件；它不伪装成一个普通单图 ONNX。
+标准 PP-Structure ONNX 已经同步发布到 [`models-paddleocr`](https://github.com/guojin-yan/DeploySharp/releases/tag/models-paddleocr) Release，按单模型资产提供，不要求用户下载整包。运行时可用 `PaddleOcrReleaseClient.GetModelAsync("paddle-doc/pp-doclayout-s")`、`paddle-table/slanext-wired` 或 `paddle-formula/unimernet` 按需获取并校验；`PaddleDocumentModelCatalog.GetReleaseArtifact` 可查询对应资产名、大小、SHA-256、opset 和下载地址。Chart2Table 是生成式四图模型，按 `paddle-chart/pp-chart2table` Bundle 用 `PaddleOcrReleaseClient.GetBundleAsync(...)` 单独获取四张 ONNX 和 tokenizer 文件；它不伪装成一个普通单图 ONNX。
 
 仓库提供官方模型目录和获取脚本：
 
@@ -295,6 +295,8 @@ IReadOnlyList<PaddleDocumentPipelineResult> pages =
 ### PaddleOCR-VL 原始任务接入页面和多页编排
 
 PaddleOCR-VL-1.6 的六类任务可以作为页面阶段接入同一个编排器。`PaddleOcrVlDocumentStage` 负责准备输入、调用 `PaddleOcrVlOnnxSession`、保留 Token/EOS 或截断状态，并把页码、输入 SHA、模型和后端写入 `PaddleDocumentVisionLanguageResult`。已有四图 Session 的调用方式如下：
+
+固定 1.6 五图 ONNX Bundle 可用 `PaddleOcrReleaseClient.GetBundleAsync("paddleocr-vl/1.6")` 从 [`models-paddleocr`](https://github.com/guojin-yan/DeploySharp/releases/tag/models-paddleocr) 按需下载并校验；十个资产已完成[全新缓存与离线回读验证](../../eng/models/paddle-ocr/verification/paddleocr-vl-release-live-20261026.md)。该下载结果不包含设备专用 TensorRT Engine，且没有替代下述任务生成和页面质量验证。
 
 四图 Session 已在 Linux 的 ONNX Runtime CPU 和 OpenVINO CPU 上分别完成六任务单图生成对照。[OpenVINO 配置](visual-ocr.md#paddleocr-vl-是否已经可用于模型推理)复用同一 API 和图文件；下方使用 `onnxruntime-cpu` 的页面/版面联合案例仍是 ORT 的实测范围，不据此宣称 OpenVINO 多页联合质量已通过。
 

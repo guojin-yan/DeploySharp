@@ -89,7 +89,6 @@
   "openGates": [
     "paddleocr-vl-representative-labelled-spotting-and-reading-order-quality",
     "paddleocr-vl-other-task-labelled-quality-and-page-composition",
-    "paddleocr-vl-release-upload-download-readback",
     "A2-A3-B1b-B2-B3-and-other-PP-Structure-quality-gates",
     "formal-multibackend-device-performance-and-stability"
   ],

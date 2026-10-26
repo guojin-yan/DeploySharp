@@ -492,6 +492,21 @@ dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Test
 
 结果目录包含六份带原始样本的 JSON。TensorRT 先按教程配置 DLL 路径，再以 `-c Release` 执行 `PaddleDocumentTensorRtExternalIntegrationTests`，本轮原始文件为 `paddle-tensorrt-release-50.trx`；构建结果、图片哈希和全部计时样本保存在输出中。复现时请按实际工作树状态记录源码标识。
 
+## Ubuntu 22.04 / i7-1165G7：PP-OCRv6 Small 单图完整流水线（2026-10-26）
+
+设备 `ygj-NUC11PHi7`；本节仅用 CPU 后端，主机安装的 RTX 2060 不参与推理。固定 `demo_1.jpg`（SHA-256 `ec81d595407ccb61eb2d4d90e74d976469febb41a74cdbc8dbb8429b1e768f5c`）、PP-OCRv6 Small DET/REC、16 个区域、batch 1/两路阶段 Session、动态识别宽度上限 3200。每行 5 次预热 + 50 次计时，复用已准备的检测输入和已解码底图，排除模型加载和原图解码；CPU 未锁频。
+
+| 完整流水线后端/配置 | P50 ms | P95 ms |
+| --- | ---: | ---: |
+| ONNX Runtime CPU | 309.153 | 345.692 |
+| OpenVINO CPU | 239.854 | 284.206 |
+| OpenCV DNN CPU，默认形状缓存 1 | 1439.253 | 1510.367 |
+| OpenCV DNN CPU，可选形状缓存 16，第 1 次 | 426.472 | 485.785 |
+| OpenCV DNN CPU，可选形状缓存 16，第 2 次 | 479.831 | 546.506 |
+| OpenCV DNN CPU，可选形状缓存 8 | 1406.747 | 1640.434 |
+
+六行的文本与语义结果 SHA 一致，均通过正式报告校验。OpenCV 缓存保留多个动态形状原生网络，有内存代价；16 在这张图的 16 区域工作集有效，8 则没有稳定收益，因此默认仍为 1。原始 CSV、邻接环境记录、模型 SHA、运行时版本和边界见[逐设备验证报告](../../eng/models/paddle-ocr/verification/paddleocr-v6-small-linux-shape-cache-20261026.md)。此处与下方三图预取批次的输入和计时范围不同，不直接比较。
+
 ## Ubuntu 22.04 / RTX 2060：PP-OCRv6 Small 三图异步预取流水线
 
 远端 `ygj-NUC11PHi7` 上使用 PP-OCRv6 Small DET/REC、PP-OCRv5 Mobile CLS 和 ONNX Runtime CPU，按 `5 warm-up + 50 measured` 运行 `OcrPipeline.RunPrefetchedAsync(prefetch:2)`。每个计时样本处理三张 SHA 不同的 HierText JPEG；Pipeline 最大并发为 2，DET/CLS/REC 各配置两路独立 Session。计时包含图片读取/解码、预处理、异步准备、完整 OCR 和结果合并，排除模型/Session 创建与预热。

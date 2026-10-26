@@ -209,6 +209,8 @@ internal static partial class Program
                 reusePreparedInput,
                 fixedRecognitionWidth = ReadOptionalPositiveInt("DEPLOYSHARP_PADDLEOCR_FIXED_RECOGNITION_WIDTH"),
                 openCvFixedRecognitionWidth = ReadOptionalPositiveInt("DEPLOYSHARP_PADDLEOCR_OPENCV_FIXED_RECOGNITION_WIDTH"),
+                openCvDynamicShapeCache = backends.Contains("opencv-dnn", StringComparer.OrdinalIgnoreCase)
+                    ? ReadInt("DEPLOYSHARP_PADDLEOCR_OPENCV_SHAPE_CACHE", 1) : (int?)null,
                 recognitionWidthBuckets = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_RECOGNITION_WIDTH_BUCKETS")
             },
             runtime = new
@@ -445,6 +447,7 @@ internal static partial class Program
             else if (backend == "opencv-dnn")
             {
                 int? openCvNumThreads = ResolveOpenCvNumThreads();
+                int openCvShapeCache = ReadInt("DEPLOYSHARP_PADDLEOCR_OPENCV_SHAPE_CACHE", 1);
                 TensorShape detInput = new TensorShape(1, 3, detOptions.ModelSize.Height, detOptions.ModelSize.Width);
                 TensorShape detOutput = new TensorShape(1, 1, detOptions.ModelSize.Height, detOptions.ModelSize.Width);
                 TensorDescriptor recOutput = OpenCvOutput(recognizer);
@@ -460,7 +463,7 @@ internal static partial class Program
                 // Keep OpenCV DNN's production CPU graph optimizations enabled. The
                 // batch-static / width-dynamic contract is specialized by the adapter.
                 detectionRegistry.UseOpenCvDnn(new OpenCvDnnOptions(OpenCvContract(detProfile), numThreads: openCvNumThreads));
-                stageRegistry.UseOpenCvDnn(new OpenCvDnnOptions(OpenCvContract(recProfile), numThreads: openCvNumThreads));
+                stageRegistry.UseOpenCvDnn(new OpenCvDnnOptions(OpenCvContract(recProfile), openCvShapeCache, numThreads: openCvNumThreads));
                 if (clsProfile != null)
                 {
                     TensorShape clsInput = WithBatch(classifier!.InputShape, effectiveBatchSize);
@@ -792,7 +795,8 @@ internal static partial class Program
             Assembly = Artifact(typeof(Program).Assembly.Location),
             VisualAssembly = Artifact(typeof(OcrPipeline).Assembly.Location),
             Image = Artifact(image), Detector = Artifact(detector), Recognizer = Artifact(recognizer), Classifier = classifier == null ? null : Artifact(classifier),
-            Protocol = new { Warmup = warmup, Iterations = iterations, Batch = batch, Sessions = sessions, MaximumRegions = maximumRegions, ReusePreparedInput = reusePreparedInput },
+            Protocol = new { Warmup = warmup, Iterations = iterations, Batch = batch, Sessions = sessions, MaximumRegions = maximumRegions, ReusePreparedInput = reusePreparedInput,
+                OpenCvDynamicShapeCache = backend == "opencv-dnn" ? ReadInt("DEPLOYSHARP_PADDLEOCR_OPENCV_SHAPE_CACHE", 1) : (int?)null },
             Crop = new { crop.ProfileId, crop.TargetHeight, crop.WidthMode, crop.MinimumWidth, crop.MaximumWidth, crop.WidthAlignment, crop.WidthBuckets, crop.OverflowMode, crop.RecognitionWindows, crop.Geometry, crop.OrientationRetry, crop.TransformMode, crop.CropProcessing, crop.EnhancementRetry },
             SourceSize = result.SourceSize, TextSha256 = ComputeTextSha256(result), ContractSha256 = ComputeContractSha256(result), SemanticContractSha256 = ComputeSemanticContractSha256(result),
             ClampedRegions = result.Regions.Count(item => item.RecognitionWidth?.WidthClamped == true),
