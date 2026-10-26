@@ -49,6 +49,9 @@ Assert-Equal 512 $managed.protocol.maximumNewTokens 'managed token budget'
 Assert-Equal $managed.dataset.annotatedCount $managed.summary.completedCount 'managed corpus completion'
 Assert-Equal $managed.summary.completedCount @($managed.results).Count 'managed row count'
 Assert-Equal $true $managed.protocol.recordTokenIds 'managed token recording'
+if ($null -ne $manifest.PSObject.Properties['datasetManifestSha256']) {
+    Assert-Equal $manifest.datasetManifestSha256 $managed.dataset.manifestSha256 'dataset manifest SHA'
+}
 
 $expectedCases = @($manifest.cases)
 if ($expectedCases.Count -eq 0) { throw 'The official sample manifest is empty.' }
@@ -56,6 +59,9 @@ $seen = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordi
 $rows = [System.Collections.Generic.List[object]]::new()
 $reportRecords = [System.Collections.Generic.List[object]]::new()
 $implementation = $null
+$officialScriptSha256 = $null
+$officialConfigSha256 = $null
+$officialPackages = $null
 
 foreach ($officialFile in $officialFiles) {
     $official = Read-Json $officialFile
@@ -67,6 +73,8 @@ foreach ($officialFile in $officialFiles) {
         $official.checkpoint.weightSha256 'official weight SHA'
     Assert-Equal 'cpu' $official.environment.device 'official device'
     Assert-Equal 'float32' $official.environment.dtype 'official precision'
+    Assert-Equal 4 $official.environment.threads 'official thread count'
+    Assert-Equal '5.20.2' $official.implementation.transformersVersion 'official Transformers version'
     Assert-Equal 'pil' $official.protocol.processorBackend 'official processor'
     Assert-Equal 'sdpa' $official.protocol.attention 'official attention'
     Assert-Equal $true $official.protocol.requestedUseCache 'official KV cache'
@@ -74,14 +82,27 @@ foreach ($officialFile in $officialFiles) {
     Assert-Equal 512 $official.protocol.maximumNewTokens 'official token budget'
     if ($null -eq $implementation) {
         $implementation = $official.implementation
+        $officialScriptSha256 = $official.scriptSha256
+        $officialConfigSha256 = $official.checkpoint.configSha256
+        $officialPackages = $official.environment.packages
     } else {
+        Assert-Equal $officialScriptSha256 $official.scriptSha256 'official reference script SHA'
+        Assert-Equal $officialConfigSha256 $official.checkpoint.configSha256 'official config SHA'
+        Assert-Equal $officialPackages $official.environment.packages 'official package versions'
         foreach ($field in @('processorModuleSha256', 'imageProcessorModuleSha256', 'modelModuleSha256', 'transformersVersion')) {
             Assert-Equal $implementation.$field $official.implementation.$field "official implementation/$field"
         }
     }
-    $reportRecords.Add([ordered]@{ sha256 = Sha256 $officialFile; completedCount = @($official.cases).Count })
+    $reportCases = @($official.cases)
+    if ($reportCases.Count -eq 0) { throw "Official shard has no cases: $officialFile" }
+    $reportRecords.Add([ordered]@{
+        sha256 = Sha256 $officialFile
+        completedCount = $reportCases.Count
+        firstCaseId = $reportCases[0].id
+        lastCaseId = $reportCases[-1].id
+    })
 
-    foreach ($case in @($official.cases)) {
+    foreach ($case in $reportCases) {
         $expected = @($expectedCases | Where-Object id -CEQ $case.id)
         Assert-Equal 1 $expected.Count "manifest case/$($case.id)"
         if (-not $seen.Add([string]$case.id)) { throw "Duplicate official case: $($case.id)" }
@@ -99,6 +120,9 @@ foreach ($officialFile in $officialFiles) {
         Assert-Equal 'EndOfSequence' $row.finishReason "managed EOS/$imageName"
         $officialTokens = @($case.generatedTokenIds)
         $managedTokens = @($row.generatedTokenIds)
+        if ($officialTokens.Count -eq 0 -or $officialTokens[-1] -ne 2) {
+            throw "Official EOS token is missing: $imageName"
+        }
         Assert-Equal $officialTokens.Count $row.generatedTokens "managed token count/$imageName"
         $firstDifference = $null
         for ($index = 0; $index -lt [Math]::Max($officialTokens.Count, $managedTokens.Count); $index++) {
@@ -134,8 +158,11 @@ $summary = [ordered]@{
     annotationCsvSha256 = $managed.dataset.csvSha256
     checkpointRevision = $manifest.checkpointRevision
     officialWeightSha256 = '85a479d506a11e724e7285d395c551be69f41dbc16b6342d3cacfb189aed71db'
+    officialConfigSha256 = $officialConfigSha256
+    officialScriptSha256 = $officialScriptSha256
     officialImplementation = [ordered]@{
         transformersVersion = $implementation.transformersVersion
+        packages = $officialPackages
         processorModuleSha256 = $implementation.processorModuleSha256
         imageProcessorModuleSha256 = $implementation.imageProcessorModuleSha256
         modelModuleSha256 = $implementation.modelModuleSha256
@@ -147,9 +174,12 @@ $summary = [ordered]@{
     managedOpenCvAssemblySha256 = $managed.environment.openCvAssemblySha256
     managedTestAssemblySha256 = $managed.environment.testAssemblySha256
     comparedCount = $rowArray.Count
+    generatedTokenTotal = [long]($rowArray | ForEach-Object { [int]$_['generatedTokenCount'] } | Measure-Object -Sum).Sum
+    officialReportCount = $reportRecords.Count
     tokenIdsExactCount = $tokenMatches
     textExactCount = $textMatches
     annotationWhitespaceExactCount = @($rowArray | Where-Object annotationWhitespaceExact).Count
+    managedCorpusCharacterErrorRate = $managed.summary.corpusCharacterErrorRate
     rows = $rowArray
     boundary = 'This checks five selected images and exact generated tokens/text against the pinned official Python weights. It does not compare intermediate tensors, prove formula semantic accuracy, validate the other 116 corpus images against official weights, or establish controlled latency.'
 }

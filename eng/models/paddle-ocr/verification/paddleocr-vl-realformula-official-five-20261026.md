@@ -30,4 +30,6 @@ Compare both official JSON files to the checked-in 121-image C# report:
   -OutputJsonPath official-comparison.json
 ```
 
-The retained raw official reports are outside Git at `E:/DeploySharpEvidence/paddleocr-vl-official-realformula-{first,remaining4}-20261026.json`; their SHA-256 values are `d64e6b771741233e8be5e76fd07a1356f1c993980710c6fddc0c6dc2a4f9dc74` and `1303db12445db59e218757af846c36e1475c0c581a50e8c1bfc16567eb864b5d`. The comparison also pins the C# source commit and assembly hashes. Official timings are one pass per image, not a controlled P50/P95 benchmark. Other VL tasks, full-page quality, the other 116 official-weight comparisons, TensorRT corpus quality and online Bundle availability remain open.
+The retained raw official reports are outside Git at `E:/DeploySharpEvidence/paddleocr-vl-official-realformula-{first,remaining4}-20261026.json`; their SHA-256 values are `d64e6b771741233e8be5e76fd07a1356f1c993980710c6fddc0c6dc2a4f9dc74` and `1303db12445db59e218757af846c36e1475c0c581a50e8c1bfc16567eb864b5d`. The comparison also pins the C# source commit and assembly hashes. Official timings are one pass per image, not a controlled P50/P95 benchmark. Other VL tasks, full-page quality, TensorRT corpus quality and online Bundle availability remain open.
+
+Follow-up: the [full 121-image official-weight comparison](paddleocr-vl-realformula-official-121-20261026.md) subsequently closed the other 116 generation-parity comparisons; the remaining quality and deployment boundaries above still apply.
