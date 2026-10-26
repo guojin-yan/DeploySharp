@@ -9,6 +9,8 @@ This is a readable summary of the authoritative [31-entry backend matrix](paddle
 | OpenCV DNN CPU | 11 | 20 | 0 |
 | TensorRT CUDA | 21 | 10 | 0 |
 
+These counts describe the registered exact artifact execution scope, not a promise of dynamic Batch or task accuracy. The matrix also tracks 12 narrower dynamic-Batch rows separately: ORT CPU has six `pass` plus six `pass-separate-report` rows; OpenVINO CPU has six `pass` and six `not-measured-in-this-dynamic-batch-run` rows; OpenCV DNN CPU has two `pass` and ten `unsupported-exact-dynamic-batch-contract` rows; TensorRT CUDA has six `pass` and six `unsupported` rows. These values must not be folded into the 31-asset counts above.
+
 ## Supported evidence scope
 
 - ORT CPU has graph/decoder evidence for all 31 matrix entries.
@@ -19,3 +21,5 @@ This is a readable summary of the authoritative [31-entry backend matrix](paddle
 ## Interpretation
 
 `pass` means the exact artifact/backend/device/runtime combination has real execution evidence. `unsupported` means it was attempted and failed at the current importer/runtime. `unverified` means code/assets exist but no exact real execution evidence has been registered. These counts do not establish dataset accuracy, general platform support or performance rankings.
+
+For the current development closeout, the ten TensorRT `unsupported` entries are known formula/SLANeXt importer or Builder limitations, not pending measurements. Existing reports are sufficient to preserve their present status; a new graph export or runtime change is required before retesting them. Formula mathematical quality, ChartQA split accuracy and independent multi-page quality remain separate acceptance gaps even for `pass` backends.
