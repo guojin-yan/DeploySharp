@@ -31,13 +31,15 @@ internal static class Program
         bool releaseMode = args.Length > 0 && args[0] == "--release";
         bool bundleMode = args.Length > 0 && args[0] == "--bundle";
         bool verifiedMode = releaseMode || bundleMode;
-        string[] positional = verifiedMode
-            ? args.Skip(1).Where(argument => argument != "--offline").ToArray()
-            : args;
         bool offline = args.Count(argument => argument == "--offline") == 1;
+        bool verifyOnly = args.Count(argument => argument == "--verify-only") == 1;
+        string[] positional = verifiedMode
+            ? args.Skip(1).Where(argument => argument != "--offline" && argument != "--verify-only").ToArray()
+            : args;
         if (verifiedMode
-            ? (positional.Length < 3 || positional.Length > 4 || (offline && !releaseMode)
+            ? (positional.Length < (verifyOnly ? 2 : 3) || positional.Length > (verifyOnly ? 2 : 4) || (offline && !releaseMode)
                 || args.Count(argument => argument == "--offline") > 1
+                || args.Count(argument => argument == "--verify-only") > 1
                 || positional.Any(argument => argument.StartsWith("--", StringComparison.Ordinal)))
             : (positional.Length < 4 || positional.Length > 5))
         {
@@ -69,44 +71,30 @@ internal static class Program
         }
         if (spec.LayoutDetector != null && (!automaticTasks || spec.Pages.Any(page => page.Regions.Length != 0)))
             throw new InvalidDataException("layoutDetector requires task=Auto and no manual regions.");
-        if (spec.LayoutDetector != null && (spec.LayoutDetector.ModelId != "paddle-doc/pp-doclayout-l" || string.IsNullOrWhiteSpace(spec.LayoutDetector.Path)))
-            throw new InvalidDataException("This detector example requires paddle-doc/pp-doclayout-l and an explicit ONNX path.");
+        if (spec.LayoutDetector != null && spec.LayoutDetector.ModelId != "paddle-doc/pp-doclayout-l")
+            throw new InvalidDataException("This detector example requires paddle-doc/pp-doclayout-l.");
+        if (spec.LayoutDetector != null && string.IsNullOrWhiteSpace(spec.LayoutDetector.Path) && !releaseMode)
+            throw new InvalidDataException("The detector ONNX path is required outside --release mode.");
         string? layoutModelPath = null;
-        if (spec.LayoutDetector != null)
+        if (spec.LayoutDetector != null && !string.IsNullOrWhiteSpace(spec.LayoutDetector.Path))
         {
             layoutModelPath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(manifestPath)!, spec.LayoutDetector.Path));
             if (!File.Exists(layoutModelPath)) throw new FileNotFoundException("Layout detector model not found.", layoutModelPath);
             if (spec.LayoutDetector.Sha256 != null)
             {
-                string expected = spec.LayoutDetector.Sha256;
-                if (expected.Length != 64 || !expected.All(Uri.IsHexDigit))
-                    throw new InvalidDataException("layoutDetector.sha256 must be a 64-character hexadecimal SHA-256 value.");
                 using var modelStream = File.OpenRead(layoutModelPath);
-                string actual = Convert.ToHexString(SHA256.HashData(modelStream));
-                if (!string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase))
-                    throw new InvalidDataException("Layout detector model SHA-256 does not match layoutDetector.sha256.");
+                ValidateLayoutSha256(spec.LayoutDetector.Sha256, Convert.ToHexString(SHA256.HashData(modelStream)));
             }
         }
         if (spec.Pages.Length == 0 || spec.Pages.Select(page => page.PageIndex).Distinct().Count() != spec.Pages.Length)
             throw new InvalidDataException("Pages must be nonempty and have unique pageIndex values.");
         int parallelism = 1;
-        if (positional.Length == (verifiedMode ? 4 : 5)
+        if (!verifyOnly && positional.Length == (verifiedMode ? 4 : 5)
             && (!int.TryParse(positional[verifiedMode ? 3 : 4], NumberStyles.Integer, CultureInfo.InvariantCulture, out parallelism)
                 || parallelism < 1 || parallelism > 8))
             throw new ArgumentOutOfRangeException(nameof(parallelism), "Page parallelism must be between 1 and 8.");
-        string output = Path.GetFullPath(positional[verifiedMode ? 2 : 3]);
-        Directory.CreateDirectory(output);
-        PaddleDocumentPage[] pages = spec.Pages.Select(page => new PaddleDocumentPage(
-            spec.LayoutDetector != null
-                ? OpenCvImageSource.FromFile(Path.GetFullPath(Path.Combine(Path.GetDirectoryName(manifestPath)!, page.Image)))
-                : (object)new PageInput(OpenCvImageSource.FromFile(Path.GetFullPath(Path.Combine(Path.GetDirectoryName(manifestPath)!, page.Image))), page),
-            new VisualSize(page.Width, page.Height), page.PageIndex)).ToArray();
-
         using var cancellation = new CancellationTokenSource();
         Console.CancelKeyPress += (_, e) => { e.Cancel = true; cancellation.Cancel(); };
-        using var registry = new BackendRegistry();
-        registry.UseOnnxRuntime(new OnnxRuntimeOptions(intraOpThreads: 4, interOpThreads: 1,
-            enableMemoryPattern: false, enableCpuMemoryArena: false));
         if (releaseMode)
         {
             using var client = new PaddleOcrReleaseClient(new PaddleOcrReleaseClientOptions(sourceRoot,
@@ -115,7 +103,33 @@ internal static class Program
                 cancellationToken: cancellation.Token);
             bundleRoot = downloaded.TokenizerDirectoryPath;
             sourceRoot = bundleRoot;
+            if (spec.LayoutDetector != null && layoutModelPath == null)
+            {
+                PaddleOcrReleaseModelMaterialization detector = await client.GetModelAsync(spec.LayoutDetector.ModelId,
+                    cancellationToken: cancellation.Token);
+                layoutModelPath = detector.ModelPath;
+                if (spec.LayoutDetector.Sha256 != null)
+                    ValidateLayoutSha256(spec.LayoutDetector.Sha256, detector.Model.Sha256);
+            }
         }
+        if (verifyOnly)
+        {
+            PaddleOcrVlBundleManifest manifest = PaddleOcrVlBundleManifest.LoadFromDirectory(bundleRoot);
+            manifest.VerifyFiles(bundleRoot);
+            Console.WriteLine($"bundle={manifest.BundleId} graphs={(manifest.HasPrefillGraph ? 5 : 4)} verified={manifest.Artifacts.Count} detector={(layoutModelPath ?? "none")}");
+            return 0;
+        }
+        string output = Path.GetFullPath(positional[verifiedMode ? 2 : 3]);
+        Directory.CreateDirectory(output);
+        PaddleDocumentPage[] pages = spec.Pages.Select(page => new PaddleDocumentPage(
+            spec.LayoutDetector != null
+                ? OpenCvImageSource.FromFile(Path.GetFullPath(Path.Combine(Path.GetDirectoryName(manifestPath)!, page.Image)))
+                : (object)new PageInput(OpenCvImageSource.FromFile(Path.GetFullPath(Path.Combine(Path.GetDirectoryName(manifestPath)!, page.Image))), page),
+            new VisualSize(page.Width, page.Height), page.PageIndex)).ToArray();
+
+        using var registry = new BackendRegistry();
+        registry.UseOnnxRuntime(new OnnxRuntimeOptions(intraOpThreads: 4, interOpThreads: 1,
+            enableMemoryPattern: false, enableCpuMemoryArena: false));
         var vlRequest = new BackendRequest(BackendCapabilities.TensorInference, OnnxRuntimeBackendProvider.BackendId, "cpu");
         using var session = verifiedMode
             ? PaddleOcrVlOnnxSession.CreateVerified(registry, bundleRoot, vlRequest)
@@ -211,11 +225,21 @@ internal static class Program
         return task;
     }
 
+    private static void ValidateLayoutSha256(string expected, string actual)
+    {
+        if (expected.Length != 64 || !expected.All(Uri.IsHexDigit))
+            throw new InvalidDataException("layoutDetector.sha256 must be a 64-character hexadecimal SHA-256 value.");
+        if (!string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidDataException("Layout detector model SHA-256 does not match layoutDetector.sha256.");
+    }
+
     private static void PrintUsage()
     {
         Console.Error.WriteLine("Usage:");
         Console.Error.WriteLine("  --release <cache-root> <pages.json> <output-directory> [page-parallelism] [--offline]");
         Console.Error.WriteLine("  --bundle <bundle-root> <pages.json> <output-directory> [page-parallelism]");
+        Console.Error.WriteLine("  --release <cache-root> <pages.json> --verify-only [--offline]");
+        Console.Error.WriteLine("  --bundle <bundle-root> <pages.json> --verify-only");
         Console.Error.WriteLine("  <tokenizer-root> <bundle-root> <pages.json> <output-directory> [page-parallelism]");
     }
 
