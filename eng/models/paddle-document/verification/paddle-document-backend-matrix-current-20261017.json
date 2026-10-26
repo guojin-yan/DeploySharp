@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-document-backend-matrix-summary-v1",
-  "generatedUtc": "2026-10-26T19:08:33Z",
+  "generatedUtc": "2026-10-26T19:21:28Z",
   "sourceRevision": "1d7edf67bbffcb12c4366ce518d0e4406f44574f",
   "sourceMatrix": {
     "path": "eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json",
@@ -147,6 +147,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 0,
+        "linkedRawReportCount": 0,
         "sourceRevision": "5786d637a24391e3a7ebd90ba9b33608486df0ff"
       },
       {
@@ -162,6 +163,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "c0983459b772b932acaef690f27e6bc852fa499b"
       },
       {
@@ -177,6 +179,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "c0983459b772b932acaef690f27e6bc852fa499b"
       },
       {
@@ -192,6 +195,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "5f67001dfa54e841b4aadc9a2db2ea90c02a0b4b"
       },
       {
@@ -207,6 +211,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "68d2c8559cac893aa04b4322e2ec00bc2ca05780"
       },
       {
@@ -222,6 +227,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "68d2c8559cac893aa04b4322e2ec00bc2ca05780"
       },
       {
@@ -237,6 +243,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "f0c2717d0433bd4a0d4a347faa3ce62c893fb8cb"
       },
       {
@@ -252,6 +259,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "f0c2717d0433bd4a0d4a347faa3ce62c893fb8cb"
       },
       {
@@ -267,6 +275,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 0,
+        "linkedRawReportCount": 0,
         "sourceRevision": null
       },
       {
@@ -282,6 +291,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 0,
+        "linkedRawReportCount": 0,
         "sourceRevision": null
       },
       {
@@ -299,6 +309,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 0,
+        "linkedRawReportCount": 2,
         "sourceRevision": "874482c"
       },
       {
@@ -315,6 +326,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 2,
+        "linkedRawReportCount": 0,
         "sourceRevision": "4d9bb25"
       },
       {
@@ -334,6 +346,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 0,
+        "linkedRawReportCount": 0,
         "sourceRevision": null
       },
       {
@@ -349,6 +362,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 0,
+        "linkedRawReportCount": 0,
         "sourceRevision": null
       },
       {
@@ -364,6 +378,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 0,
+        "linkedRawReportCount": 0,
         "sourceRevision": null
       },
       {
@@ -379,6 +394,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 0,
+        "linkedRawReportCount": 0,
         "sourceRevision": null
       },
       {
@@ -394,6 +410,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 0,
+        "linkedRawReportCount": 0,
         "sourceRevision": null
       },
       {
@@ -409,6 +426,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 0,
+        "linkedRawReportCount": 0,
         "sourceRevision": null
       },
       {
@@ -429,6 +447,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 0,
+        "linkedRawReportCount": 0,
         "sourceRevision": null
       },
       {
@@ -444,6 +463,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 0,
+        "linkedRawReportCount": 0,
         "sourceRevision": null
       },
       {
@@ -459,6 +479,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 0,
+        "linkedRawReportCount": 0,
         "sourceRevision": null
       },
       {
@@ -476,6 +497,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 8,
+        "linkedRawReportCount": 0,
         "sourceRevision": "731b483"
       },
       {
@@ -493,6 +515,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 8,
+        "linkedRawReportCount": 0,
         "sourceRevision": "731b483"
       },
       {
@@ -509,6 +532,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 0,
+        "linkedRawReportCount": 0,
         "sourceRevision": null
       },
       {
@@ -524,6 +548,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 0,
+        "linkedRawReportCount": 0,
         "sourceRevision": null
       },
       {
@@ -539,6 +564,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 0,
+        "linkedRawReportCount": 0,
         "sourceRevision": null
       },
       {
@@ -554,6 +580,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "unrecorded"
       },
       {
@@ -569,6 +596,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "unrecorded"
       },
       {
@@ -584,6 +612,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "unrecorded"
       },
       {
@@ -599,6 +628,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "unrecorded"
       },
       {
@@ -614,6 +644,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "unrecorded"
       },
       {
@@ -629,6 +660,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "unrecorded"
       },
       {
@@ -644,6 +676,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "unrecorded"
       },
       {
@@ -659,6 +692,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "unrecorded"
       },
       {
@@ -674,6 +708,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "unrecorded"
       },
       {
@@ -689,6 +724,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "unrecorded"
       },
       {
@@ -704,6 +740,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "unrecorded"
       },
       {
@@ -719,6 +756,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "unrecorded"
       },
       {
@@ -734,6 +772,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "unrecorded"
       },
       {
@@ -749,6 +788,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "unrecorded"
       },
       {
@@ -764,6 +804,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "unrecorded"
       },
       {
@@ -779,6 +820,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "unrecorded"
       },
       {
@@ -794,6 +836,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "unrecorded"
       },
       {
@@ -809,6 +852,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "unrecorded"
       },
       {
@@ -824,6 +868,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "unrecorded"
       },
       {
@@ -839,6 +884,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "unrecorded"
       },
       {
@@ -854,6 +900,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "eff037ea95d573db2c5924718fd907f366d1fa38"
       },
       {
@@ -869,6 +916,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "unrecorded"
       },
       {
@@ -884,6 +932,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "0d2bc03"
       },
       {
@@ -899,6 +948,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "0d2bc03"
       },
       {
@@ -914,6 +964,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "0d2bc03"
       },
       {
@@ -929,6 +980,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "0d2bc03"
       },
       {
@@ -944,6 +996,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "0d2bc03"
       },
       {
@@ -959,6 +1012,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "0d2bc03"
       },
       {
@@ -974,6 +1028,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "0d2bc03"
       },
       {
@@ -989,6 +1044,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "0d2bc03"
       },
       {
@@ -1004,6 +1060,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "1c6de115727b4dc79a81f64238b9b17d8d2d90ef"
       },
       {
@@ -1019,6 +1076,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "1c6de115727b4dc79a81f64238b9b17d8d2d90ef"
       },
       {
@@ -1034,6 +1092,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "1c6de115727b4dc79a81f64238b9b17d8d2d90ef"
       },
       {
@@ -1049,6 +1108,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "1c6de115727b4dc79a81f64238b9b17d8d2d90ef"
       },
       {
@@ -1064,6 +1124,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "1c6de115727b4dc79a81f64238b9b17d8d2d90ef"
       },
       {
@@ -1079,6 +1140,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "1c6de115727b4dc79a81f64238b9b17d8d2d90ef"
       },
       {
@@ -1094,6 +1156,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "1c6de115727b4dc79a81f64238b9b17d8d2d90ef"
       },
       {
@@ -1109,6 +1172,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "1c6de115727b4dc79a81f64238b9b17d8d2d90ef"
       },
       {
@@ -1124,6 +1188,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "1c6de115727b4dc79a81f64238b9b17d8d2d90ef"
       },
       {
@@ -1139,6 +1204,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "a84dc8d452cfb8da58b27095e5c11bb90faac6ee"
       },
       {
@@ -1154,6 +1220,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 1,
+        "linkedRawReportCount": 0,
         "sourceRevision": "a84dc8d452cfb8da58b27095e5c11bb90faac6ee"
       },
       {
@@ -1174,6 +1241,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 6,
+        "linkedRawReportCount": 0,
         "sourceRevision": "156568db53ae8afb5a907db94c9e9e4d67936f4e"
       },
       {
@@ -1191,6 +1259,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 18,
+        "linkedRawReportCount": 0,
         "sourceRevision": "044eabfc306abfe9340c5741f0093aefc5973d06"
       }
     ],
@@ -1954,7 +2023,27 @@
         "seal-mobile-tensorrt11-dynamic-batch2",
         "seal-server-tensorrt11-dynamic-batch2"
       ],
-      "boundary": "This checks numeric samplesMs arrays embedded in each registered JSON and their declared measurement counts. Summary-only bundles may have separate local raw reports; their P50/P95 cannot be recomputed from the registered JSON alone."
+      "shaLinkedRawBundleCount": 1,
+      "shaLinkedRawReportCount": 2,
+      "unlinkedSummaryBundleCount": 15,
+      "unlinkedSummaryEvidenceIds": [
+        "official-classification",
+        "document-orientation-tensorrt10-single-image",
+        "table-classification-tensorrt10-single-image",
+        "static-layout-tensorrt11",
+        "pp-docblocklayout-tensorrt11-dynamic-batch2",
+        "pp-doclayout-l-tensorrt11-dynamic-batch2",
+        "pp-doclayout-plus-l-tensorrt11-dynamic-batch2",
+        "rtdetr-h-17cls-tensorrt11-dynamic-batch2",
+        "rtdetr-h-3cls-tensorrt11-dynamic-batch2",
+        "picodet-static-layout-tensorrt11",
+        "rtdetr-h-layout-3cls-tensorrt-dynamic-batch",
+        "rtdetr-h-layout-17cls-tensorrt-dynamic-batch",
+        "table-cell-tensorrt",
+        "seal-mobile-tensorrt11-dynamic-batch2",
+        "seal-server-tensorrt11-dynamic-batch2"
+      ],
+      "boundary": "Embedded numeric samplesMs arrays are checked against declared counts. SHA-linked tracked raw reports are checked for hash and sample count. Other summary-only bundles may have separate local raw reports; their P50/P95 cannot be recomputed from the registered JSON alone."
     },
     "boundary": "Every currently passing primary release artifact/backend pair has a mapped formal evidence bundle. Two ORT-pass derived OpenVINO compatibility graphs lack standalone formal timing. The reports use different inputs and devices/profiles, so coverage does not establish a unified comparable performance matrix."
   },
