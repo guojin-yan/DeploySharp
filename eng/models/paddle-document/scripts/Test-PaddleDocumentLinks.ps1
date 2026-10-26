@@ -84,6 +84,7 @@ $documents = @(
     'eng/models/paddle-ocr/verification/paddleocr-vl-tensorrt-device-kv-20261026.md',
     'eng/models/paddle-ocr/verification/paddleocr-vl-five-graph-bundle-20261026.md',
     'eng/models/paddle-ocr/verification/paddleocr-vl-release-live-20261026.md',
+    'eng/models/paddle-ocr/verification/paddleocr-vl-release-sample-20261026.md',
     'eng/models/paddle-ocr/verification/paddleocr-v6-small-linux-shape-cache-20261026.md',
     'eng/models/paddle-ocr/verification/paddleocr-vl-encoded-input-parity-20261026.md',
     'eng/models/paddle-ocr/verification/paddleocr-vl-realformula-ort-cuda-20261026.md',

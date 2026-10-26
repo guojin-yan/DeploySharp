@@ -10,6 +10,6 @@ The real image workflows are under samples/06-models/release-inference and the t
 
 The [official SAM video adapter](roi-official-sam/README.md) / [官方 SAM 视频适配案例](roi-official-sam/README_cn.md) connects the ROI planner to Meta's Python predictor, decodes a bounded real video, exports source-space masks, and checks correction/reset consistency. It is not a native ONNX/TensorRT SAM backend.
 
-The [PaddleOCR-VL ONNX sample](paddleocr-vl-onnx/README.md) runs the fixed PaddleOCR-VL-1.6 four-graph bundle. Its low-level mode accepts official float32 patches; applications that reference `DeploySharp.Visual.OpenCV` can use `OpenCvPaddleOcrVlInputFactory` to decode an image and create those patches automatically before calling the same `PaddleOcrVlOnnxSession`.
+The [PaddleOCR-VL ONNX sample](paddleocr-vl-onnx/README.md) downloads and verifies the fixed PaddleOCR-VL-1.6 five-graph Release Bundle, prepares a user image with OpenCV and runs ORT CPU generation. It also retains the original low-level mode for official float32 patch fixtures and four-graph export directories.
 
 The [PaddleOCR-VL document sample](paddleocr-vl-document/README.md) accepts actual images and caller-supplied page regions, decodes each page once, runs the real crops through the same VL generator, preserves page/region provenance, and exports JSON/Markdown with cancellation and bounded page concurrency. Its `Auto` mode selects OCR/table/formula/chart/seal tasks by the supplied layout category, supports custom mappings, and preserves skipped regions and original indices.

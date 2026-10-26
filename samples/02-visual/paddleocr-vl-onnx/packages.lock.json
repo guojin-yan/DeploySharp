@@ -44,6 +44,21 @@
           "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )"
         }
       },
+      "JYPPX.DeploySharp.ModelFactory": {
+        "type": "Project",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )",
+          "JYPPX.DeploySharp.ModelPack.Json": "[2.0.0-alpha.1, )",
+          "System.Text.Json": "[10.0.10, )"
+        }
+      },
+      "JYPPX.DeploySharp.ModelPack.Json": {
+        "type": "Project",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )",
+          "System.Text.Json": "[10.0.10, )"
+        }
+      },
       "JYPPX.DeploySharp.Visual": {
         "type": "Project",
         "dependencies": {
@@ -51,6 +66,19 @@
           "Microsoft.ML.Tokenizers": "[2.0.0, )",
           "System.Text.Json": "[10.0.10, )"
         }
+      },
+      "JYPPX.DeploySharp.Visual.OpenCV": {
+        "type": "Project",
+        "dependencies": {
+          "JYPPX.DeploySharp.Visual": "[2.0.0-alpha.1, )",
+          "JYPPX.OpenCV.CSharp.API": "[5.0.0, )"
+        }
+      },
+      "JYPPX.OpenCV.CSharp.API": {
+        "type": "CentralTransitive",
+        "requested": "[5.0.0, )",
+        "resolved": "5.0.0",
+        "contentHash": "j1QxEejIrat0Wt7bVlTEyWld4LlM6lxkERDPMX23opdTgXDH5LMOYSwcjKR4jq4/+NCH7cTf7SUrabNe0UZQVQ=="
       },
       "Microsoft.ML.OnnxRuntime.Managed": {
         "type": "CentralTransitive",

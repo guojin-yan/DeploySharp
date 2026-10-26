@@ -8,6 +8,8 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\DeploySharp.Visual\DeploySharp.Visual.csproj" />
+    <ProjectReference Include="..\..\..\src\DeploySharp.Visual.OpenCV\DeploySharp.Visual.OpenCV.csproj" />
     <ProjectReference Include="..\..\..\src\DeploySharp.Backend.OnnxRuntime\DeploySharp.Backend.OnnxRuntime.csproj" />
+    <ProjectReference Include="..\..\..\src\DeploySharp.ModelFactory\DeploySharp.ModelFactory.csproj" />
   </ItemGroup>
 </Project>
