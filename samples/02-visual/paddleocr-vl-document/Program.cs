@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -70,6 +71,22 @@ internal static class Program
             throw new InvalidDataException("layoutDetector requires task=Auto and no manual regions.");
         if (spec.LayoutDetector != null && (spec.LayoutDetector.ModelId != "paddle-doc/pp-doclayout-l" || string.IsNullOrWhiteSpace(spec.LayoutDetector.Path)))
             throw new InvalidDataException("This detector example requires paddle-doc/pp-doclayout-l and an explicit ONNX path.");
+        string? layoutModelPath = null;
+        if (spec.LayoutDetector != null)
+        {
+            layoutModelPath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(manifestPath)!, spec.LayoutDetector.Path));
+            if (!File.Exists(layoutModelPath)) throw new FileNotFoundException("Layout detector model not found.", layoutModelPath);
+            if (spec.LayoutDetector.Sha256 != null)
+            {
+                string expected = spec.LayoutDetector.Sha256;
+                if (expected.Length != 64 || !expected.All(Uri.IsHexDigit))
+                    throw new InvalidDataException("layoutDetector.sha256 must be a 64-character hexadecimal SHA-256 value.");
+                using var modelStream = File.OpenRead(layoutModelPath);
+                string actual = Convert.ToHexString(SHA256.HashData(modelStream));
+                if (!string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase))
+                    throw new InvalidDataException("Layout detector model SHA-256 does not match layoutDetector.sha256.");
+            }
+        }
         if (spec.Pages.Length == 0 || spec.Pages.Select(page => page.PageIndex).Distinct().Count() != spec.Pages.Length)
             throw new InvalidDataException("Pages must be nonempty and have unique pageIndex values.");
         int parallelism = 1;
@@ -133,8 +150,7 @@ internal static class Program
                 new VisualSize(640, 640), includeGeometryInputs: true, scoreThreshold: spec.LayoutDetector.ScoreThreshold);
             var profiles = new VisualProfileRegistry(); profiles.Register(profile.VisualProfile); profiles.Freeze();
             var request = new BackendRequest(BackendCapabilities.TensorInference, OnnxRuntimeBackendProvider.BackendId, "cpu");
-            string modelPath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(manifestPath)!, spec.LayoutDetector.Path));
-            using var detector = new VisualPipeline(registry, profiles.Select(profile.CreateArtifact(modelPath), registry, request, VisualTaskId.LayoutDetection), request);
+            using var detector = new VisualPipeline(registry, profiles.Select(profile.CreateArtifact(layoutModelPath!), registry, request, VisualTaskId.LayoutDetection), request);
             var detectedPipeline = OpenCvPaddleOcrVlDocumentPipeline.FromSession(detector, model, vlModel, "onnxruntime-cpu", session, tokenizer,
                 generationOptions, router, maximumRegions: spec.LayoutDetector.MaximumRegions,
                 maximumPagePixels: spec.LayoutDetector.MaximumPagePixels, continueOnRegionFailure: true, readingOrderOptions: readingOrder);
@@ -226,6 +242,7 @@ internal static class Program
     {
         public string ModelId { get; set; } = "paddle-doc/pp-doclayout-l";
         public string Path { get; set; } = "";
+        public string? Sha256 { get; set; }
         public float ScoreThreshold { get; set; } = .3f;
         public int MaximumRegions { get; set; } = 64;
         public int MaximumPagePixels { get; set; } = 128 * 1024 * 1024;

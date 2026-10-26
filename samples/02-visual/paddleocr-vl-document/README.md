@@ -99,6 +99,7 @@ JSON 的 `payload.regions` 和区域文件名仍按原 `regionIndex`，新增 `p
   "layoutDetector": {
     "modelId": "paddle-doc/pp-doclayout-l",
     "path": "pp-doclayout-l.onnx",
+    "sha256": "d65ead6d31c0535b99b7976840f038ba2e7e7be060476d0c413f72dca86b78a9",
     "scoreThreshold": 0.3,
     "maximumRegions": 64,
     "maximumPagePixels": 134217728
@@ -109,7 +110,7 @@ JSON 的 `payload.regions` 和区域文件名仍按原 `regionIndex`，新增 `p
 }
 ```
 
-模型路径也相对 `pages.json` 所在目录；文件须为该模型已验证的 ONNX 导出，不能用任意同名文件替换。当前此示例的检测器配置只接受 `paddle-doc/pp-doclayout-l`；其它已经正确绑定的 LayoutDetection `VisualPipeline` 可直接传给库的 `OpenCvPaddleOcrVlDocumentPipeline`。检测器与 VL 目前都使用 ONNX Runtime CPU。
+模型路径也相对 `pages.json` 所在目录。上面的 SHA-256 对应已验证的 PP-DocLayout-L ONNX 文件；配置 `sha256` 时示例会在创建推理 Session 前核对文件，哈希不符则失败。省略该字段可使用其它自行验收的导出，但文件名相同不代表模型合同相同。当前此示例的检测器配置只接受 `paddle-doc/pp-doclayout-l`；其它已经正确绑定的 LayoutDetection `VisualPipeline` 可直接传给库的 `OpenCvPaddleOcrVlDocumentPipeline`。检测器与 VL 目前都使用 ONNX Runtime CPU。
 
 检测器模式要求 `task=Auto`，且页面不能同时配置手工 `regions`。`scoreThreshold` 过滤低分候选；`maximumRegions` 是过滤后所有检测区域的上限，包括将跳过的图片类。超限会在 VL 生成前明确失败，不静默截断为前 K 个。`maximumPagePixels` 是解码后页面像素上限，超限在检测前失败；它不替代编码文件大小、解码器内存或 VL Token/KV 的独立预算。
 
