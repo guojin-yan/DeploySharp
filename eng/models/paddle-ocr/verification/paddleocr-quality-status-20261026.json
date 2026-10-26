@@ -18,13 +18,13 @@
       "referenceCharacters": 406,
       "wordEdits": 47,
       "referenceWords": 63,
+      "officialWeightParity": "411/411 generated token IDs, full decoded text, EOS and 4769856-patch SHA match",
       "report": "paddleocr-vl-funsd-spotting-quality-20261026.json",
       "status": "one-page-labelled-diagnostic-complete; representative-quality-open",
-      "boundary": "Word-centroid association is not official FUNSD accuracy. No official-weight comparison for this page or multi-page/cross-backend quality claim."
+      "boundary": "Word-centroid association is not official FUNSD accuracy. Same-page official-weight output parity does not establish representative or multi-page/cross-backend quality."
     }
   ],
   "openGates": [
-    "paddleocr-vl-same-page-official-weight-generation-parity",
     "paddleocr-vl-representative-labelled-spotting-and-reading-order-quality",
     "paddleocr-vl-other-task-labelled-quality-and-page-composition",
     "paddleocr-vl-release-upload-download-readback",

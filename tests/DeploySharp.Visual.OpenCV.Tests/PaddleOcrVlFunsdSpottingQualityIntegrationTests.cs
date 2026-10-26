@@ -113,11 +113,14 @@ public sealed class PaddleOcrVlFunsdSpottingQualityIntegrationTests
             Assert.AreEqual(width, input.ImagePlan.SourceSize.Width);
             Assert.AreEqual(height, input.ImagePlan.SourceSize.Height);
             Assert.AreEqual(imageSha256, input.SourceSha256);
+            float[] patches = (float[])input.PixelPatches.Buffer;
+            string patchSha256 = Convert.ToHexString(SHA256.HashData(MemoryMarshal.AsBytes(patches.AsSpan()))).ToLowerInvariant();
             PaddleOcrVlGenerationResult generated = await session.GenerateAsync(input, tokenizer,
                 new PaddleOcrVlGenerationOptions(maximumNewTokens: 2048, timeout: TimeSpan.FromMinutes(15)));
             PaddleOcrVlSpottingParseResult parsed = PaddleOcrVlSpottingParser.Parse(generated.Text,
                 generated.FinishReason, input.ImagePlan.SourceSize, input.SourceFrame);
-            report["generation"] = new { generated.Text, tokenCount = generated.TokenIds.Count,
+            report["generation"] = new { generated.Text, generatedTokenIds = generated.TokenIds.ToArray(),
+                tokenCount = generated.TokenIds.Count, patchFloatCount = patches.Length, patchSha256,
                 finishReason = generated.FinishReason.ToString(), generationMilliseconds = generated.Elapsed.TotalMilliseconds,
                 parseStatus = parsed.Status.ToString(), parsed.Diagnostics, parsedRegionCount = parsed.Regions.Count,
                 sourceSha256 = input.SourceSha256 };

@@ -1,6 +1,6 @@
 # PaddleOCR-VL FUNSD Spotting labelled-page diagnostic
 
-Date: 2026-10-26. This is the first independent word-annotation check of the production PaddleOCR-VL-1.6 Spotting path. It is a **single preselected page**, not a FUNSD split score or a release-quality pass. The full 25,734-byte per-region report, including predicted text, quadrilaterals, linked label IDs and unmatched IDs, remains outside Git at `E:\DeploySharpEvidence\paddleocr-vl-funsd-spotting-20261026\onnxruntime-cpu-first-page.json` (SHA-256 `f88cee914acda1731f6e29ef62ddeef918d24ac067c79b8a9472c3cac58263da`). No FUNSD image or annotation is republished here.
+Date: 2026-10-26. This is the first independent word-annotation check of the production PaddleOCR-VL-1.6 Spotting path. It is a **single preselected page**, not a FUNSD split score or a release-quality pass. The full 25,734-byte per-region report, including predicted text, quadrilaterals, linked label IDs and unmatched IDs, remains outside Git at `E:\DeploySharpEvidence\paddleocr-vl-funsd-spotting-20261026\onnxruntime-cpu-first-page.json` (SHA-256 `f88cee914acda1731f6e29ef62ddeef918d24ac067c79b8a9472c3cac58263da`). The later Token/Patch report and official-weight report are also kept outside Git. No FUNSD image or annotation is republished here.
 
 ## Fixed input and execution
 
@@ -21,10 +21,24 @@ FUNSD labels individual words, while Spotting may return whole lines. To avoid f
 | Associated character edits / reference characters | 263 / 406 (`64.78%`) |
 | Associated word edits / reference words | 47 / 63 (`74.60%`) |
 
-These rates are **centroid-associated diagnostics**, not official FUNSD detection IoU/F1 or general Spotting CER/WER. A polygon near a word but missing its centroid counts as a localization miss; a large line polygon may own several words. In this page, one generated `COURT:` region has no associated word even though the label text exists, and a `CASE NAME:` prediction associates only with `CASE`; this illustrates why transcript and localization failures must be inspected together. The full-page slice exposes a real quality gap despite earlier fixed-image Token parity with the official model. This new page has **not** yet been compared against an official full-weight Spotting run, so the gap must not be attributed solely to the upstream model or solely to this export.
+These rates are **centroid-associated diagnostics**, not official FUNSD detection IoU/F1 or general Spotting CER/WER. A polygon near a word but missing its centroid counts as a localization miss; a large line polygon may own several words. In this page, one generated `COURT:` region has no associated word even though the label text exists, and a `CASE NAME:` prediction associates only with `CASE`; this illustrates why transcript and localization failures must be inspected together. The full-page slice exposes a real quality gap, including when the official weights produce the same generated output.
+
+## Official-weight comparison on the same page
+
+The pinned original `PaddlePaddle/PaddleOCR-VL-1.6` weights ran with the official PIL Processor and Transformers `5.20.2` on Linux CPU FP32. The production C# four-graph Bundle was independently rerun on Windows ORT CPU with the same source image, task and 2,048-token limit. The official report is `E:\DeploySharpEvidence\paddleocr-vl-funsd-spotting-20261026\official-result.json` (96,794 bytes, SHA-256 `988b69522f860315cb78016af087fcce76ec057617ff6ad0d8a6f18ef8b5892a`); the C# report is `onnxruntime-cpu-first-page-tokens.json` in that directory (31,531 bytes, SHA-256 `fbf7f5b34a3eef8cd543bd6db166f14a85872e30a28dbd9105407f46665d432a`). The C# report pins the test assembly SHA-256 `8794c7ffe5a946ddfc564193fcf61ef81cc9718a3784582e63ae6a9d4a379b88` and source HEAD `4a16265`.
+
+| Compared field | Result |
+| --- | --- |
+| Source image SHA and checkpoint revision | Both match |
+| Input Patch tensor | 4,769,856 Float32 values; SHA-256 `2935615f3db99ff37406ccc40a72c60a7a1a3a0878ff4b59287d3cf7197160e2` on both paths |
+| Generated Token IDs | 411/411 positions match; 0 mismatches |
+| Decoded text and termination | Exact text match; both EOS |
+| C# Spotting parse and labelled diagnostic | 26 regions; 45/63 covered words, CER `263/406`, WER `47/63`, unchanged from the first run |
+
+Thus this page's generated-text/localization gap is shared by the pinned official output and the C# export; it is **not evidence of an ONNX/C# generation drift on this page**. The association metric still mixes word-level truth with possibly line-level model regions, and one page cannot establish the cause or magnitude of general Spotting errors. Official and C# wall times came from different hosts, so they must not be compared as a backend benchmark.
 
 ## Reproduction and remaining gate
 
 The executable test is `PaddleOcrVlFunsdSpottingQualityIntegrationTests.EvaluateFirstFunsdTestPageAgainstIndependentWordAnnotations`. It requires the pinned FUNSD manifest/images, matching four-graph Bundle and official tokenizer directory. Set `DEPLOYSHARP_PADDLEOCR_VL_FUNSD_SPOTTING_RUN=1`, `DEPLOYSHARP_PADDLEOCR_VL_BUNDLE_ROOT`, `DEPLOYSHARP_PADDLEOCR_VL_MODEL_ROOT`, and optionally `DEPLOYSHARP_PADDLE_FUNSD_ROOT` and `DEPLOYSHARP_PADDLEOCR_VL_FUNSD_SPOTTING_REPORT_PATH`; run the named test in `DeploySharp.Visual.OpenCV.Tests`. A Windows restore is needed if this checkout's previous `obj` assets targeted Linux native packages. The two deterministic association tests passed `2/2`, and the external run passed `1/1`.
 
-Next, compare this page's generated Token IDs/text with the pinned official weights, then expand the predeclared selection across pages and backends with bounded output handling. One page cannot close independent Spotting localization/text quality, reading order, multi-page, table/Chart/seal semantics, controlled performance, or V7 online Bundle delivery.
+Next, expand the predeclared selection across pages and backends with bounded output handling and inspect localization and transcription failures separately. One page cannot close independent Spotting localization/text quality, reading order, multi-page, table/Chart/seal semantics, controlled performance, or V7 online Bundle delivery.

@@ -39,6 +39,24 @@
     "sha256": "f88cee914acda1731f6e29ef62ddeef918d24ac067c79b8a9472c3cac58263da",
     "testAssemblySha256": "60be1e788da0dfe09985e2df60972c83e2d2b77053eb27accda43f8e4da291f0"
   },
+  "officialWeightParity": {
+    "status": "passed-single-page",
+    "officialReportSha256": "988b69522f860315cb78016af087fcce76ec057617ff6ad0d8a6f18ef8b5892a",
+    "csharpReportSha256": "fbf7f5b34a3eef8cd543bd6db166f14a85872e30a28dbd9105407f46665d432a",
+    "officialReportBytes": 96794,
+    "csharpReportBytes": 31531,
+    "imageSha256Match": true,
+    "checkpointRevisionMatch": true,
+    "patchFloatCount": 4769856,
+    "patchSha256": "2935615f3db99ff37406ccc40a72c60a7a1a3a0878ff4b59287d3cf7197160e2",
+    "patchSha256Match": true,
+    "generatedTokenCount": 411,
+    "generatedTokenMismatches": 0,
+    "decodedTextMatch": true,
+    "bothReachedEos": true,
+    "csharpTestAssemblySha256": "8794c7ffe5a946ddfc564193fcf61ef81cc9718a3784582e63ae6a9d4a379b88",
+    "boundary": "Pinned official CPU FP32 and C# ORT CPU on one image. This is output parity, not representative labelled Spotting quality or a cross-device latency comparison."
+  },
   "status": "one-page-diagnostic-complete; representative-labelled-quality-open",
-  "boundary": "Word-label versus possible line-output granularity; not official FUNSD accuracy, an official-weight parity result on this page, formal latency or general backend support."
+  "boundary": "Word-label versus possible line-output granularity; official-weight output parity is confirmed on this page but is not official FUNSD accuracy, formal latency or general backend support."
 }
