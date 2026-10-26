@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "kind": "incremental-quality-status-index",
+  "date": "2026-10-26",
+  "baseline": "paddleocr-quality-status-20261025",
+  "newEvidence": [
+    {
+      "scope": "PaddleOCR-VL 1.6 labelled FUNSD Spotting page",
+      "model": "paddleocr-vl/1.6",
+      "backend": "onnxruntime-cpu",
+      "imageId": "funsd-test-82504862",
+      "labelledWords": 63,
+      "predictedRegions": 26,
+      "coveredWords": 45,
+      "uncoveredWords": 18,
+      "unmatchedPredictions": 5,
+      "characterEdits": 263,
+      "referenceCharacters": 406,
+      "wordEdits": 47,
+      "referenceWords": 63,
+      "report": "paddleocr-vl-funsd-spotting-quality-20261026.json",
+      "status": "one-page-labelled-diagnostic-complete; representative-quality-open",
+      "boundary": "Word-centroid association is not official FUNSD accuracy. No official-weight comparison for this page or multi-page/cross-backend quality claim."
+    }
+  ],
+  "openGates": [
+    "paddleocr-vl-same-page-official-weight-generation-parity",
+    "paddleocr-vl-representative-labelled-spotting-and-reading-order-quality",
+    "paddleocr-vl-other-task-labelled-quality-and-page-composition",
+    "paddleocr-vl-release-upload-download-readback",
+    "A2-A3-B1b-B2-B3-and-other-PP-Structure-quality-gates",
+    "formal-multibackend-device-performance-and-stability"
+  ],
+  "boundary": "Evidence-navigation increment; does not change backend support or approve a release accuracy claim."
+}

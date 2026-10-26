@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "kind": "bounded-labelled-spotting-diagnostic",
+  "date": "2026-10-26",
+  "model": "paddleocr-vl/1.6",
+  "backend": "onnxruntime-cpu",
+  "dataset": {
+    "name": "FUNSD",
+    "split": "test",
+    "selection": "first nonempty record of funsd-test-full-001.jsonl before inference",
+    "imageId": "funsd-test-82504862",
+    "imageSha256": "9a66fa4013bf93b9ba4e959feef7d6b2e278b714ca9d3d347b35aeb305b92626",
+    "manifestSha256": "5d58429c21d4df671654b8016a58d47d758ff69b7e3378c6e42b571cb360cab3",
+    "labelledWords": 63
+  },
+  "generation": {
+    "finishReason": "EndOfSequence",
+    "tokenCount": 411,
+    "parseStatus": "Succeeded",
+    "predictedRegions": 26,
+    "observedMilliseconds": 337485.1555
+  },
+  "quality": {
+    "protocol": "smallest-area containing predicted quadrilateral per FUNSD word centroid; NFKC, whitespace collapse, invariant uppercase; uncovered labels are deletions and unassigned predictions are insertions",
+    "coveredWords": 45,
+    "uncoveredWords": 18,
+    "unmatchedPredictions": 5,
+    "ambiguousWords": 0,
+    "characterEdits": 263,
+    "referenceCharacters": 406,
+    "characterErrorRate": 0.647783251231527,
+    "wordEdits": 47,
+    "referenceWords": 63,
+    "wordErrorRate": 0.746031746031746
+  },
+  "rawReport": {
+    "location": "E:\\DeploySharpEvidence\\paddleocr-vl-funsd-spotting-20261026\\onnxruntime-cpu-first-page.json",
+    "bytes": 25734,
+    "sha256": "f88cee914acda1731f6e29ef62ddeef918d24ac067c79b8a9472c3cac58263da",
+    "testAssemblySha256": "60be1e788da0dfe09985e2df60972c83e2d2b77053eb27accda43f8e4da291f0"
+  },
+  "status": "one-page-diagnostic-complete; representative-labelled-quality-open",
+  "boundary": "Word-label versus possible line-output granularity; not official FUNSD accuracy, an official-weight parity result on this page, formal latency or general backend support."
+}
