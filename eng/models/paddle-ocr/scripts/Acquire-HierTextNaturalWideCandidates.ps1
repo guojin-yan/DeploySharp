@@ -21,6 +21,9 @@ $report = Get-Content -LiteralPath $reportFullPath -Raw | ConvertFrom-Json
 if ([string]$report.schemaVersion -ne 'deploysharp-paddleocr-hiertext-natural-wide-a2-v1') {
     throw "Unsupported A2 report schema: $($report.schemaVersion)"
 }
+$split = if ([string]::IsNullOrWhiteSpace([string]$report.source.split)) { 'validation' } else { [string]$report.source.split }
+if ($split -notin @('train', 'validation', 'test')) { throw "Unsupported HierText split: $split" }
+$defaultStem = if ($split -eq 'validation') { 'natural-wide-a2-20261017' } else { "natural-wide-a2-$split-$(Get-Date -Format yyyyMMdd)" }
 
 if ([string]::IsNullOrWhiteSpace($DestinationRoot)) {
     $DestinationRoot = [string]$report.source.imageRoot
@@ -32,13 +35,13 @@ $destination = [IO.Path]::GetFullPath($DestinationRoot)
 $null = New-Item -ItemType Directory -Force -Path $destination
 
 if ([string]::IsNullOrWhiteSpace($AcquisitionManifestPath)) {
-    $AcquisitionManifestPath = Join-Path (Split-Path -Parent $destination) 'natural-wide-a2-20261017-acquisition.json'
+    $AcquisitionManifestPath = Join-Path (Split-Path -Parent $destination) "$defaultStem-acquisition.json"
 }
 $acquisitionFullPath = [IO.Path]::GetFullPath($AcquisitionManifestPath)
 $null = New-Item -ItemType Directory -Force -Path (Split-Path -Parent $acquisitionFullPath)
 
 if ([string]::IsNullOrWhiteSpace($BenchmarkManifestPath)) {
-    $BenchmarkManifestPath = Join-Path (Split-Path -Parent $destination) 'natural-wide-a2-20261017-manifest.jsonl'
+    $BenchmarkManifestPath = Join-Path (Split-Path -Parent $destination) "$defaultStem-manifest.jsonl"
 }
 $benchmarkManifestFullPath = [IO.Path]::GetFullPath($BenchmarkManifestPath)
 $null = New-Item -ItemType Directory -Force -Path (Split-Path -Parent $benchmarkManifestFullPath)
@@ -48,12 +51,11 @@ if ($candidateIds.Count -eq 0) {
     throw 'The A2 report contains no candidate image IDs.'
 }
 
-# HierText's official repository documents the CVDF archive at
-# s3://open-images-dataset/ocr/validation.tgz.  The public S3 object layout also
-# exposes each validation JPEG under this prefix, which avoids downloading the
-# complete ~577 MB archive for a nine-image audit.  Do not replace this with an
-# unrelated mirror: the object URL and per-file SHA are part of the evidence.
-$sourceTemplate = 'https://open-images-dataset.s3.amazonaws.com/ocr/validation/{image_id}.jpg'
+# Use the official CVDF per-image object path for the audited split.
+$sourceTemplate = "https://open-images-dataset.s3.amazonaws.com/ocr/$split/{image_id}.jpg"
+if ([string]$report.source.imageSourceTemplate -ne $sourceTemplate) {
+    throw 'The audit source URL does not match the official object path for its split.'
+}
 $rows = [System.Collections.Generic.List[object]]::new()
 foreach ($imageId in $candidateIds) {
     if ($imageId -notmatch '^[0-9a-fA-F]{16}$') {
@@ -101,6 +103,7 @@ $result = [ordered]@{
     reportPath = $reportFullPath
     reportSha256 = (Get-FileHash -LiteralPath $reportFullPath -Algorithm SHA256).Hash.ToLowerInvariant()
     sourceRevision = [string]$report.source.sourceRevision
+    split = $split
     annotationVersion = [string]$report.source.annotationVersion
     datasetBoundary = 'Images are fetched from the official Open Images CVDF object path for local verification only. Per-image Open Images license/attribution metadata was not present in the supplied local CSV; do not redistribute these files or claim a release license from this manifest.'
     sourceTemplate = $sourceTemplate
@@ -127,7 +130,7 @@ $manifestLines = @($candidateIds | ForEach-Object {
     [ordered]@{
         schemaVersion = 1
         image_id = $imageId.ToLowerInvariant()
-        image_relpath = 'validation/' + $imageId.ToLowerInvariant() + '.jpg'
+        image_relpath = "$split/" + $imageId.ToLowerInvariant() + '.jpg'
         image_path = (Join-Path $destination ($imageId.ToLowerInvariant() + '.jpg'))
         candidate_lines = $imageCandidates
     } | ConvertTo-Json -Depth 8 -Compress

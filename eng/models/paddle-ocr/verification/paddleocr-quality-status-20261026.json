@@ -5,6 +5,24 @@
   "baseline": "paddleocr-quality-status-20261025",
   "newEvidence": [
     {
+      "scope": "PP-OCRv6 Small/Medium independent natural wide-line A2 quality",
+      "models": ["paddleocr/ppocrv6/small-rec", "paddleocr/ppocrv6/medium-rec"],
+      "backends": ["onnxruntime-cpu", "openvino-cpu", "opencv-dnn-cpu"],
+      "dataset": "HierText test at revision 70b6620b2b112597d8219e11eee9773a1403827c, separate from the validation seam-development split",
+      "labelledLines": 17,
+      "sourceImages": 11,
+      "mainQualityLines": 12,
+      "officialIllegibleDiagnostics": 5,
+      "referenceCharacters": 1945,
+      "referenceWords": 315,
+      "small": { "clampCharacterEdits": 56, "slidingCharacterEdits": 101, "clampWordEdits": 26, "slidingWordEdits": 34 },
+      "medium": { "clampCharacterEdits": 45, "slidingCharacterEdits": 134, "clampWordEdits": 21, "slidingWordEdits": 32 },
+      "ortToOpenVinoAndOpenCvParity": "68/68 text, CTC class and seam decisions per backend; 70/70 raw window text and classes per backend",
+      "reports": ["paddleocr-hiertext-test-natural-wide-a2-ort-20261026.json", "paddleocr-hiertext-test-natural-wide-a2-ov-opencv-20261026.json"],
+      "status": "independent-natural-wide-quality-regression-for-sliding-window; clamp-default-retained",
+      "boundary": "GT quadrilateral REC-only, no DET/CLS/page execution or formal latency. TensorRT, repeated-number/single-character seams and broader labelled quality remain open; no automatic SlidingWindow enablement."
+    },
+    {
       "scope": "PaddleOCR-VL 1.6 labelled FUNSD Spotting page",
       "model": "paddleocr-vl/1.6",
       "backend": "onnxruntime-cpu",

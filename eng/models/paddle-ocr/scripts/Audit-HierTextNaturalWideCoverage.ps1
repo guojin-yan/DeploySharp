@@ -2,6 +2,8 @@
 param(
     [Parameter(Mandatory)]
     [string]$AnnotationsPath,
+    [ValidateSet('train', 'validation', 'test')]
+    [string]$Split = 'validation',
     [string]$ImageRoot = 'F:\OCRBenchmarkTesting\data\images\hiertext\validation',
     [string]$MetadataPath = 'F:\OCRBenchmarkTesting\artifacts\cache\hiertext\validation-images-with-rotation.csv',
     [int]$TargetHeight = 48,
@@ -11,6 +13,12 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+if (-not $PSBoundParameters.ContainsKey('ImageRoot')) {
+    $ImageRoot = "F:\OCRBenchmarkTesting\data\images\hiertext\$Split"
+}
+if (-not $PSBoundParameters.ContainsKey('MetadataPath')) {
+    $MetadataPath = "F:\OCRBenchmarkTesting\artifacts\cache\hiertext\$Split-images-with-rotation.csv"
+}
 
 function Resolve-RepositoryRoot {
     $candidate = (Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..')).Path
@@ -44,7 +52,7 @@ $repositoryRoot = Resolve-RepositoryRoot
 $annotationsFullPath = (Resolve-Path -LiteralPath $AnnotationsPath).Path
 $annotationDocument = Get-GzipJson -Path $annotationsFullPath
 $annotationRevision = 'unknown'
-if ([IO.Path]::GetFileName($annotationsFullPath) -match 'validation-([0-9a-f]{40})\.jsonl\.gz$') {
+if ([IO.Path]::GetFileName($annotationsFullPath) -match "^$Split-([0-9a-f]{40})\.jsonl\.gz$") {
     $annotationRevision = $Matches[1]
 }
 $annotationVersion = 'unknown'
@@ -143,7 +151,8 @@ $result = [ordered]@{
         metadataSha256 = if ($metadataFullPath) { Get-Sha256 -Path $metadataFullPath } else { $null }
         metadataRowCount = $metadataById.Count
         imageRoot = $ImageRoot
-        imageSourceTemplate = 'https://open-images-dataset.s3.amazonaws.com/ocr/validation/{image_id}.jpg'
+        split = $Split
+        imageSourceTemplate = "https://open-images-dataset.s3.amazonaws.com/ocr/$Split/{image_id}.jpg"
     }
     protocol = [ordered]@{
         targetHeight = $TargetHeight
@@ -163,8 +172,8 @@ $result = [ordered]@{
     boundary = 'These are natural annotated lines whose projected recognition geometry exceeds the threshold; they are not natural 3,200-character lines. Candidate JPEGs may be acquired from the official Open Images CVDF object path for local verification, but the supplied metadata CSV has no matching per-image attribution rows. OCR, SlidingWindow seam mapping, CER/WER, memory budget and backend parity are separate evidence.'
 }
 
-$jsonFullPath = [IO.Path]::GetFullPath((Join-Path $repositoryRoot $OutputJsonPath))
-$markdownFullPath = [IO.Path]::GetFullPath((Join-Path $repositoryRoot $OutputMarkdownPath))
+$jsonFullPath = [IO.Path]::GetFullPath($(if ([IO.Path]::IsPathRooted($OutputJsonPath)) { $OutputJsonPath } else { Join-Path $repositoryRoot $OutputJsonPath }))
+$markdownFullPath = [IO.Path]::GetFullPath($(if ([IO.Path]::IsPathRooted($OutputMarkdownPath)) { $OutputMarkdownPath } else { Join-Path $repositoryRoot $OutputMarkdownPath }))
 New-Item -ItemType Directory -Force -Path (Split-Path -Parent $jsonFullPath) | Out-Null
 New-Item -ItemType Directory -Force -Path (Split-Path -Parent $markdownFullPath) | Out-Null
 $result | ConvertTo-Json -Depth 16 | Set-Content -LiteralPath $jsonFullPath -Encoding utf8
@@ -177,7 +186,7 @@ $availableImageCount = [int]$result['summary']['availableImageCount']
 $missingImageCount = [int]$result['summary']['missingImageCount']
 $metadataImageCount = [int]$result['summary']['metadataImageCount']
 $sourceImageTemplate = [string]$result['source']['imageSourceTemplate']
-[void]$markdown.AppendLine('# HierText natural wide-line coverage audit for A2 (2026-10-17)')
+[void]$markdown.AppendLine("# HierText $Split natural wide-line coverage audit for A2")
 [void]$markdown.AppendLine()
 [void]$markdown.AppendLine("This report scans the pinned HierText annotation source using a target recognition height of **$TargetHeight** and keeps every natural line whose projected recognition width is at least **$MinimumProjectedWidth**. The projection is a geometry signal, not a claim that the line contains that many characters.")
 [void]$markdown.AppendLine()

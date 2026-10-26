@@ -36,6 +36,7 @@ public sealed class PaddleOcrNaturalWideLineExternalIntegrationTests
 {
     private const string Revision = "70b6620b2b112597d8219e11eee9773a1403827c";
     private const string AnnotationSha = "ce7085d8bf24c2f13df852715c34494e6748cafcabb4bfc7a6e2bb320f58d23a";
+    private const string TestAnnotationSha = "8a8f6cb6dd706b457b822634e9f19b7f51cc9813729d57401a3bb6ea45abd438";
     private const string DictionarySha = "769e7fa79bb297b5f18d8dbd149e364a45bc61f2b3f574e5ea836f0b261c23a6";
     public TestContext TestContext { get; set; } = null!;
 
@@ -48,15 +49,22 @@ public sealed class PaddleOcrNaturalWideLineExternalIntegrationTests
 
         string datasetRoot = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_NATURAL_WIDE_ROOT") ?? @"F:\OCRBenchmarkTesting";
         string modelRoot = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_NATURAL_WIDE_MODEL_ROOT") ?? @"E:\Model\paddleocr";
+        string split = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_NATURAL_WIDE_SPLIT") ?? "validation";
+        if (split is not ("validation" or "test")) throw new ArgumentException("Choose the validation or test HierText split.");
         string candidatePath = RequireFile(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_NATURAL_WIDE_CANDIDATES")
-            ?? Path.Combine(FindRepoRoot(), "eng/models/paddle-ocr/verification/hiertext-natural-wide-coverage-a2-20261017.json"));
-        string annotationPath = RequireFile(Path.Combine(datasetRoot, "artifacts/cache/hiertext/validation-" + Revision + ".jsonl.gz"));
-        Assert.AreEqual(AnnotationSha, ShaFile(annotationPath));
-        List<WideLine> lines = LoadLines(candidatePath, annotationPath, datasetRoot);
-        Assert.AreEqual(13, lines.Count);
-        Assert.AreEqual(11, lines.Count(line => line.QualityStratum == "legible-height-at-least-2px"));
-        Assert.AreEqual(1, lines.Count(line => !line.Legible));
-        Assert.AreEqual(1, lines.Count(line => line.Height < 2));
+            ?? (split == "validation" ? Path.Combine(FindRepoRoot(), "eng/models/paddle-ocr/verification/hiertext-natural-wide-coverage-a2-20261017.json")
+                : throw new ArgumentException("Set DEPLOYSHARP_PADDLEOCR_NATURAL_WIDE_CANDIDATES for the independent test split.")));
+        string annotationPath = RequireFile(Path.Combine(datasetRoot, "artifacts/cache/hiertext/" + split + "-" + Revision + ".jsonl.gz"));
+        string expectedAnnotationSha = split == "test" ? TestAnnotationSha : AnnotationSha;
+        Assert.AreEqual(expectedAnnotationSha, ShaFile(annotationPath));
+        List<WideLine> lines = LoadLines(candidatePath, annotationPath, datasetRoot, split, expectedAnnotationSha);
+        Assert.AreEqual(split == "test" ? 17 : 13, lines.Count);
+        if (split == "validation")
+        {
+            Assert.AreEqual(11, lines.Count(line => line.QualityStratum == "legible-height-at-least-2px"));
+            Assert.AreEqual(1, lines.Count(line => !line.Legible));
+            Assert.AreEqual(1, lines.Count(line => line.Height < 2));
+        }
 
         var rows = new List<LineEvidence>();
         var localTraces = new List<object>();
@@ -279,13 +287,13 @@ public sealed class PaddleOcrNaturalWideLineExternalIntegrationTests
             testAssemblySha256 = ShaFile(GetType().Assembly.Location), visualAssemblySha256 = ShaFile(typeof(OcrPipeline).Assembly.Location),
             environment = new { os = RuntimeInformation.OSDescription, framework = RuntimeInformation.FrameworkDescription,
                 processArchitecture = RuntimeInformation.ProcessArchitecture.ToString(), logicalProcessors = Environment.ProcessorCount },
-            dataset = new { name = "HierText", revision = Revision, split = "validation", annotationSha256 = AnnotationSha,
+            dataset = new { name = "HierText", revision = Revision, split, annotationSha256 = expectedAnnotationSha,
                 candidateReportSha256 = ShaFile(candidatePath), lines = lines.Select(line => new { line.Key, line.ImageId, line.ParagraphIndex, line.LineIndex,
                     line.ImageSha256, line.Legible, line.Handwritten, line.Vertical, sourceHeight = line.Height, qualityStratum = line.QualityStratum }).ToArray() },
             protocol = new { path = "GT quadrilateral -> RecognizeOnlyAsync; DET/CLS bypassed", maximumWidthPixels = 3200, targetHeight = 48,
                 overlapRatio = .2, batchSize = 1, sessions = 1, order = "backend -> model -> Clamp then SlidingWindow -> pinned candidate order",
                 metrics = "Unicode-scalar CER and whitespace-token WER; raw ordinal and explicit invariant-lowercase views; no punctuation/space removal",
-                qualityStrata = "Main quality: legible=true and source bbox height>=2px (11); official illegible (1) and 1px-height geometry (1) retained separately.",
+                qualityStrata = "Main quality: legible=true and source bbox height>=2px; official illegible and sub-2px geometry retained separately. Counts come from dataset.lines.",
                 measurements = "One untimed execution per line/mode/backend; no speed or statistical significance claim",
                 detectorSession = "Required by OcrPipeline construction but never executed; OpenCV/TensorRT recognizer-only paths keep this dormant Session on ORT CPU. All crop/window/CTC/merge code is shared.",
                 crossBackend = backends.Length > 1 ? "All configured backends compared by the same model/mode/line keys; differences recorded, not assumed absent" : "Not compared within a single-backend run; use the source-linked comparison against a separate reference report" },
@@ -296,8 +304,8 @@ public sealed class PaddleOcrNaturalWideLineExternalIntegrationTests
         }, new JsonSerializerOptions { WriteIndented = true }));
         TestContext.AddResultFile(report);
         TestContext.WriteLine("NATURAL_WIDE_GT_REPORT=" + report);
-        Assert.AreEqual(52 * backends.Length, rows.Count);
-        Assert.AreEqual(52, parity.Length);
+        Assert.AreEqual(lines.Count * 4 * backends.Length, rows.Count);
+        Assert.AreEqual(lines.Count * 4, parity.Length);
         Assert.IsTrue(parity.All(pair => pair.rows == backends.Length));
     }
 
@@ -316,9 +324,15 @@ public sealed class PaddleOcrNaturalWideLineExternalIntegrationTests
         for (int index = 0; index < text.Tokens.Count; index++) Assert.AreEqual(index, text.Tokens[index].Timestep);
     }
 
-    private static List<WideLine> LoadLines(string candidatePath, string annotationPath, string datasetRoot)
+    private static List<WideLine> LoadLines(string candidatePath, string annotationPath, string datasetRoot,
+        string split, string expectedAnnotationSha)
     {
         using JsonDocument candidates = JsonDocument.Parse(File.ReadAllText(candidatePath));
+        Assert.AreEqual("deploysharp-paddleocr-hiertext-natural-wide-a2-v1", candidates.RootElement.GetProperty("schemaVersion").GetString());
+        Assert.AreEqual(expectedAnnotationSha, candidates.RootElement.GetProperty("source").GetProperty("annotationSha256").GetString());
+        if (candidates.RootElement.GetProperty("source").TryGetProperty("split", out JsonElement auditSplit))
+            Assert.AreEqual(split, auditSplit.GetString());
+        else Assert.AreEqual("validation", split);
         using FileStream file = File.OpenRead(annotationPath);
         using var gzip = new GZipStream(file, CompressionMode.Decompress);
         using JsonDocument annotations = JsonDocument.Parse(gzip);
@@ -339,7 +353,7 @@ public sealed class PaddleOcrNaturalWideLineExternalIntegrationTests
             double height = points.Max(point => point.Y) - points.Min(point => point.Y);
             bool legible = line.GetProperty("legible").GetBoolean();
             string stratum = !legible ? "official-illegible" : height < 2 ? "one-pixel-height-diagnostic" : "legible-height-at-least-2px";
-            string imagePath = RequireFile(Path.Combine(datasetRoot, "data/images/hiertext/validation", imageId + ".jpg"));
+            string imagePath = RequireFile(Path.Combine(datasetRoot, "data/images/hiertext", split, imageId + ".jpg"));
             string imageSha = ShaFile(imagePath);
             Assert.AreEqual(candidate.GetProperty("imageSha256").GetString(), imageSha);
             result.Add(new WideLine(result.Count, imageId + "/" + p + "/" + l, imageId, p, l, text, imagePath, imageSha,

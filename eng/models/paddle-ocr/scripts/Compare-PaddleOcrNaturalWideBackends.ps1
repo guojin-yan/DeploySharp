@@ -16,11 +16,11 @@ function Assert-Same($Expected, $Actual, [string]$Context) {
 function Same($Left, $Right) {
     ($Left | ConvertTo-Json -Depth 45 -Compress) -ceq ($Right | ConvertTo-Json -Depth 45 -Compress)
 }
-function Index-Backend($Report, [string]$Backend) {
+function Index-Backend($Report, [string]$Backend, [int]$ExpectedRows) {
     $index = [Collections.Generic.Dictionary[string,object]]::new([StringComparer]::Ordinal)
     if (@($Report.runtimes | Where-Object backend -CEQ $Backend).Count -ne 1) { throw "Expected exactly one runtime entry for $Backend" }
     foreach ($row in @($Report.rows | Where-Object Backend -CEQ $Backend)) { $index.Add("$($row.Model)/$($row.Mode)/$($row.Key)", $row) }
-    if ($index.Count -ne 52) { throw "Expected 52 unique model/mode/line rows for $Backend" }
+    if ($index.Count -ne $ExpectedRows) { throw "Expected $ExpectedRows unique model/mode/line rows for $Backend" }
     return ,$index
 }
 function Evidence([string]$Path, $Report, [string]$Backend) {
@@ -35,13 +35,16 @@ function Decisions($Windows) {
 $reference = Get-Content -LiteralPath $ReferenceReportPath -Raw | ConvertFrom-Json -Depth 60
 $candidate = Get-Content -LiteralPath $CandidateReportPath -Raw | ConvertFrom-Json -Depth 60
 foreach ($field in @('dataset', 'models', 'visualAssemblySha256', 'environment')) { Assert-Same $reference.$field $candidate.$field $field }
+$sourceLineCount = @($reference.dataset.lines).Count
+if ($sourceLineCount -lt 1) { throw 'A backend comparison requires labelled source lines.' }
+$expectedRows = $sourceLineCount * 4
 foreach ($field in @('path', 'maximumWidthPixels', 'targetHeight', 'overlapRatio', 'batchSize', 'sessions', 'metrics', 'qualityStrata', 'measurements')) {
     Assert-Same $reference.protocol.$field $candidate.protocol.$field "protocol/$field"
 }
 Assert-Same 3200 $candidate.protocol.maximumWidthPixels 'required width'
 Assert-Same 48 $candidate.protocol.targetHeight 'required height'
-$left = Index-Backend $reference $ReferenceBackend
-$right = Index-Backend $candidate $CandidateBackend
+$left = Index-Backend $reference $ReferenceBackend $expectedRows
+$right = Index-Backend $candidate $CandidateBackend $expectedRows
 $rawWindowTextMatched = 0; $rawWindowClassesMatched = 0; $windowsCompared = 0
 $rows = @(foreach ($key in @($left.Keys | Sort-Object -CaseSensitive)) {
     if (!$right.ContainsKey($key)) { throw "Missing candidate key: $key" }
@@ -69,7 +72,7 @@ $validation = [ordered]@{ sourceModelDictionaryAndGeometryMatched = $true; sameV
     metricsMatched = @($rows | Where-Object metricsMatched -EQ $true).Count;
     seamDecisionsMatched = @($rows | Where-Object seamDecisionsMatched -EQ $true).Count;
     windowsCompared = $windowsCompared; rawWindowTextMatched = $rawWindowTextMatched; rawWindowClassesMatched = $rawWindowClassesMatched }
-$matched = $validation.textMatched -eq 52 -and $validation.emittedClassesMatched -eq 52 -and $validation.metricsMatched -eq 52 -and $validation.seamDecisionsMatched -eq 52 `
+$matched = $validation.textMatched -eq $expectedRows -and $validation.emittedClassesMatched -eq $expectedRows -and $validation.metricsMatched -eq $expectedRows -and $validation.seamDecisionsMatched -eq $expectedRows `
     -and $rawWindowTextMatched -eq $windowsCompared -and $rawWindowClassesMatched -eq $windowsCompared
 $summary = [ordered]@{
     schemaVersion = 'deploysharp-paddleocr-natural-wide-backend-comparison-v1'; generatedUtc = [DateTimeOffset]::UtcNow.ToString('o');
@@ -79,7 +82,7 @@ $summary = [ordered]@{
     candidateEvidence = Evidence $CandidateReportPath $candidate $CandidateBackend;
     dataset = $candidate.dataset; models = $candidate.models; protocol = $candidate.protocol; validation = $validation;
     candidateEngines = @($candidate.engines); gpuObservation = $candidate.gpuObservation; rows = $rows;
-    boundary = 'Same 13 development-diagnostic HierText lines / 9 source images; 11 main-quality lines and two separate diagnostics. Same DLL, model/dictionary/source identities and preprocessing/window geometry required. Comparison covers text hashes, emitted classes, CER/WER and seam decisions, not native tensors/confidences bitwise parity, independent accuracy, page accuracy, performance, or other exact model/backend combinations. DET/CLS bypassed; CPU crop/CTC/merge also used with TensorRT. A2 stays open.'
+    boundary = "Same $sourceLineCount HierText $($candidate.dataset.split) lines / $(@($candidate.dataset.lines.ImageId | Sort-Object -Unique).Count) source images. Same DLL, model/dictionary/source identities and preprocessing/window geometry required. Comparison covers text hashes, emitted classes, CER/WER and seam decisions, not native tensors/confidences bitwise parity, page accuracy, performance, or other exact model/backend combinations. DET/CLS bypassed; CPU crop/CTC/merge also used with TensorRT. A2 stays open."
 }
 $jsonFull = [IO.Path]::GetFullPath($OutputJsonPath); $mdFull = [IO.Path]::GetFullPath($OutputMarkdownPath)
 foreach ($path in @($jsonFull, $mdFull)) {
@@ -90,12 +93,12 @@ $summary | ConvertTo-Json -Depth 45 | Set-Content -LiteralPath $jsonFull -Encodi
 $md = [Text.StringBuilder]::new()
 [void]$md.AppendLine('# Natural wide-line backend comparison: ' + $ReferenceBackend + ' / ' + $CandidateBackend + ' (2026-10-23)')
 [void]$md.AppendLine()
-[void]$md.AppendLine('Status: **' + $summary.status + '**. Both native runs use the same production Visual DLL and pinned source images, labels, model and dictionary hashes. Each backend executes Small/Medium × Clamp/SlidingWindow × 13 labelled quadrilaterals (52 calls). DET/CLS are bypassed, height is 48, maximum width is 3,200, overlap is 0.2 and batch/Session count is one. This comparison explicitly joins two real native reports; one-backend self-comparisons are not counted as backend pairs.')
+[void]$md.AppendLine("Status: **$($summary.status)**. Both native runs use the same production Visual DLL and pinned source images, labels, model and dictionary hashes. Each backend executes Small/Medium x Clamp/SlidingWindow x $sourceLineCount labelled quadrilaterals ($expectedRows calls). DET/CLS are bypassed, height is 48, maximum width is 3,200, overlap is 0.2 and batch/Session count is one. This comparison explicitly joins two real native reports; one-backend self-comparisons are not counted as backend pairs.")
 [void]$md.AppendLine()
 [void]$md.AppendLine('| Compared contract | Matched / compared |')
 [void]$md.AppendLine('| --- | ---: |')
 foreach ($field in @('textMatched', 'emittedClassesMatched', 'metricsMatched', 'seamDecisionsMatched')) {
-    [void]$md.AppendLine("| $field | $($validation[$field]) / 52 |")
+    [void]$md.AppendLine("| $field | $($validation[$field]) / $expectedRows |")
 }
 [void]$md.AppendLine("| Raw window text | $rawWindowTextMatched / $windowsCompared |")
 [void]$md.AppendLine("| Raw window emitted classes | $rawWindowClassesMatched / $windowsCompared |")
