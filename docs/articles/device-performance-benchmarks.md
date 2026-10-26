@@ -206,6 +206,10 @@ Spotting 是长序列任务，本次使用 `1 warm-up + 5 measured` 的独立协
 
 本轮先用 `trtexec` 验证每个重建 Engine 可以由 TensorRT 10.11 反序列化，再通过 DeploySharp bridge 执行完整流水线；因此修复了原有 TensorRT 10.10/10.11 序列化版本不匹配导致的 `deserializeCudaEngine` 空对象假失败。表中平均值、P50/P95 来自各自正式 CSV，分段时间不能相加后当作总耗时。该轮没有同步采集 GPU 遥测，不能据此宣称锁频或功耗状态；设备、runtime、bridge、输入和所有模型/Engine SHA 以汇总 JSON 为准。Engine 与 TensorRT 序列化版本、GPU 架构和 profile 绑定，换设备或 TensorRT minor 版本必须重新构建。
 
+### PP-OCRv6 Small OpenCV DNN 宽度分桶诊断（2026-10-26）
+
+同一台 Ryzen 7 5800H 主机、同一 `demo_1.jpg` 和完整流水线，OpenCV DNN CPU 使用静态 REC Batch=1、两个独立阶段 Session、Clamp320、复用输入；两组均为 5 次预热 + 50 次测量。动态宽度的 P50/P95 为 `1061.834/1156.418 ms`，显式 `48,64,96,128,192,256,320` 分桶后为 `974.565/1244.388 ms`；有序文字 SHA 相同，实际张量宽度种类 `5→3`，托管分配/次下降 `22.78%`。P50 改善但 P95 回退；这是单图顺序对照，不替代上表 TensorRT 的不同 Batch/Engine 口径，更不能声称稳定提速或默认应启用。完整模型/输入/程序集 SHA、CSV、验证结果及 241 条标注行的质量取舍见[专项报告](../../eng/models/paddle-ocr/verification/paddleocr-width-bucket-quality-performance-20261026.md)。
+
 ## Windows 10 / Intel Core i7-14700KF / RTX 5060 Ti
 
 ### 测试环境
