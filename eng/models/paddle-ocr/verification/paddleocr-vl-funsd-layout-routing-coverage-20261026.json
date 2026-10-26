@@ -1,0 +1,106 @@
+{
+  "schemaVersion": "deploysharp-paddleocr-vl-layout-word-coverage-v1",
+  "method": "Non-ignored annotated word bbox center inside detector source bounds; completed, failed-only, skipped-only, uncovered are disjoint with that precedence. Overlap counters are additional. No text or reading-order scoring.",
+  "annotationManifestSha256": "5d58429c21d4df671654b8016a58d47d758ff69b7e3378c6e42b571cb360cab3",
+  "pageCount": 2,
+  "totals": {
+    "completed": 205,
+    "failedOnly": 0,
+    "skippedOnly": 74,
+    "uncovered": 0,
+    "completedAndSkipped": 204,
+    "multipleCompleted": 7,
+    "words": 279,
+    "ignoredWords": 0
+  },
+  "pages": [
+    {
+      "pageIndex": 3,
+      "sourceSampleId": "86220490",
+      "sourceImageSha256": "391c29fe036015e1c52d9ed0f065e35fc5d2054ab4285aa1123f8a269b79fef9",
+      "outputName": "page-3.json",
+      "outputSha256": "0e0de6175c04ef97b0ba77ad9829d9c92ce20071751ea06a64dfb8c72bf19f27",
+      "detectedRegions": 4,
+      "counts": {
+        "completed": 1,
+        "failedOnly": 0,
+        "skippedOnly": 74,
+        "uncovered": 0,
+        "completedAndSkipped": 0,
+        "multipleCompleted": 1,
+        "words": 75,
+        "ignoredWords": 0
+      },
+      "regions": [
+        {
+          "regionIndex": 0,
+          "category": "image",
+          "status": "Skipped",
+          "coveredWords": 74
+        },
+        {
+          "regionIndex": 1,
+          "category": "number",
+          "status": "Succeeded",
+          "coveredWords": 0
+        },
+        {
+          "regionIndex": 2,
+          "category": "text",
+          "status": "Succeeded",
+          "coveredWords": 1
+        },
+        {
+          "regionIndex": 3,
+          "category": "aside_text",
+          "status": "Succeeded",
+          "coveredWords": 1
+        }
+      ]
+    },
+    {
+      "pageIndex": 7,
+      "sourceSampleId": "87147607",
+      "sourceImageSha256": "ac0b4c9f380c1bf2e791b7ba7f9b29725473f6031c34241e5af5f3f3364f07a1",
+      "outputName": "page-7.json",
+      "outputSha256": "e4bd438fb8c9f061059aae702361b1bfcf4b81ecaf8d08b83370627e27a06dcf",
+      "detectedRegions": 4,
+      "counts": {
+        "completed": 204,
+        "failedOnly": 0,
+        "skippedOnly": 0,
+        "uncovered": 0,
+        "completedAndSkipped": 204,
+        "multipleCompleted": 6,
+        "words": 204,
+        "ignoredWords": 0
+      },
+      "regions": [
+        {
+          "regionIndex": 0,
+          "category": "table",
+          "status": "Succeeded",
+          "coveredWords": 204
+        },
+        {
+          "regionIndex": 1,
+          "category": "number",
+          "status": "Succeeded",
+          "coveredWords": 0
+        },
+        {
+          "regionIndex": 2,
+          "category": "image",
+          "status": "Skipped",
+          "coveredWords": 204
+        },
+        {
+          "regionIndex": 3,
+          "category": "table_title",
+          "status": "Succeeded",
+          "coveredWords": 6
+        }
+      ]
+    }
+  ]
+}

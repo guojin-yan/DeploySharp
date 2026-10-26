@@ -115,6 +115,8 @@ JSON 的 `payload.regions` 和区域文件名仍按原 `regionIndex`，新增 `p
 
 返回顺序是检测器顺序，**不是阅读顺序**。默认图片类/未知类别仍跳过；如果模型将正文误判为图片，该内容也不会被默认解析，可显式配置 `"taskByCategory": { "image": "TextRecognition" }`。这改变任务选择，不改善版面模型本身的准确率。检测到重叠类别时保留每个原始区域，不自动合并重复文本。
 
+[两张 FUNSD 页的离线词框覆盖检查](../../../eng/models/paddle-ocr/verification/paddleocr-vl-funsd-layout-routing-coverage-20261026.md)显示了这一取舍：其中一页的 75 个标注词里有 74 个只落在被跳过的图片区域；另一页的图片区域与已执行的表格区域重叠，不能把它们重复计作遗漏。不要仅凭 `skippedCount` 判断页面完整性，也不要无评估地对所有图片区域启用 OCR。
+
 ## 运行与结果
 
 ```powershell
