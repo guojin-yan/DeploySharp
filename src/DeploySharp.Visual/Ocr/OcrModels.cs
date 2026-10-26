@@ -494,6 +494,8 @@ namespace JYPPX.DeploySharp.Visual
         public int MinimumWidth { get; }
         /// <summary>Gets width alignment. / 获取宽度对齐。</summary>
         public int WidthAlignment { get; }
+        /// <summary>Gets optional dynamic tensor-width buckets; null retains exact aligned widths. / 获取可选动态张量宽度分桶；null 保持精确对齐宽度。</summary>
+        public IReadOnlyList<int>? WidthBuckets { get; }
         /// <summary>Gets interpolation. / 获取插值方式。</summary>
         public TextCropInterpolation Interpolation { get; }
         /// <summary>Gets output color order. / 获取输出颜色顺序。</summary>
@@ -559,7 +561,7 @@ namespace JYPPX.DeploySharp.Visual
         internal TextCropProfile ForWidthRetryCandidate(int maximumWidth)
         {
             if (maximumWidth <= MaximumWidth) throw new ArgumentOutOfRangeException(nameof(maximumWidth));
-            return new TextCropProfile(this, OverflowMode, maximumWidthOverride: maximumWidth, clearWidthRetry: true);
+            return new TextCropProfile(this, OverflowMode, maximumWidthOverride: maximumWidth, clearWidthRetry: true, clearWidthBuckets: true);
         }
 
         /// <summary>Enables bounded crop diagnostics and any configured enhancement without changing input shape. / 启用有界裁剪诊断及配置的增强，不修改输入形状。</summary>
@@ -586,16 +588,35 @@ namespace JYPPX.DeploySharp.Visual
         }
 
         /// <summary>Creates an immutable copy that always emits the requested recognition width. This is useful for backends that must specialize dynamic input shapes. / 创建始终输出指定识别宽度的不可变副本，适用于必须专门化动态输入形状的后端。</summary>
-        /// <remarks>A wider-width retry is cleared because it is defined only for dynamic-width profiles. All other crop, normalization, geometry, retry, and overflow settings are preserved. / 更宽宽度重试仅适用于动态宽度 Profile，因此会被清除；其余裁剪、归一化、几何、重试及超宽设置均保留。</remarks>
+        /// <remarks>Dynamic-width buckets and wider-width retry are cleared; other crop, normalization, geometry, retry, and overflow settings are preserved. / 清除动态宽度分桶和更宽宽度重试；其余裁剪、归一化、几何、重试及超宽设置均保留。</remarks>
         public TextCropProfile WithFixedWidth(int fixedWidth)
         {
             if (fixedWidth <= 0 || fixedWidth > MaximumWidth) throw new ArgumentOutOfRangeException(nameof(fixedWidth));
             if (WidthMode == OcrRecognitionWidthMode.Fixed && FixedWidth == fixedWidth) return this;
             return new TextCropProfile(this, OverflowMode, widthModeOverride: OcrRecognitionWidthMode.Fixed,
-                fixedWidthOverride: fixedWidth, clearWidthRetry: true);
+                fixedWidthOverride: fixedWidth, clearWidthRetry: true, clearWidthBuckets: true);
         }
 
-        private TextCropProfile(TextCropProfile source, RecognitionOverflowMode mode, OcrRecognitionWindowOptions? windows = null, OcrGeometryOptions? geometry = null, OcrOrientationRetryOptions? retry = null, OcrCropTransformMode? transformMode = null, OcrCropProcessingOptions? cropProcessing = null, OcrEnhancementRetryOptions? enhancementRetry = null, OcrWidthRetryOptions? widthRetry = null, bool clearEnhancementRetry = false, int? maximumWidthOverride = null, bool clearWidthRetry = false, OcrRecognitionWidthMode? widthModeOverride = null, int? fixedWidthOverride = null)
+        /// <summary>Rounds each dynamic recognition width up to a bounded tensor shape, padding the image without stretching its content. / 将动态识别宽度向上取整到有限张量形状，通过填充而非拉伸图像内容。</summary>
+        /// <remarks>The ascending buckets must end at MaximumWidth. This is opt-in because CTC quality must be checked for the target model and backend. / 分桶须严格递增并以 MaximumWidth 结尾；CTC 质量需按模型和后端验证，故默认不启用。</remarks>
+        public TextCropProfile WithWidthBuckets(IEnumerable<int> widths)
+        {
+            if (widths == null) throw new ArgumentNullException(nameof(widths));
+            if (WidthMode != OcrRecognitionWidthMode.Dynamic) throw new InvalidOperationException("Width buckets require a dynamic crop width profile.");
+            var buckets = new List<int>();
+            foreach (int width in widths)
+            {
+                if (width < MinimumWidth || width > MaximumWidth || width <= (buckets.Count == 0 ? 0 : buckets[buckets.Count - 1])
+                    || (width != MaximumWidth && width % WidthAlignment != 0) || buckets.Count >= 64)
+                    throw new ArgumentOutOfRangeException(nameof(widths), "Buckets must be strictly ascending, aligned and within the recognition width bounds (at most 64).");
+                buckets.Add(width);
+            }
+            if (buckets.Count == 0 || buckets[buckets.Count - 1] != MaximumWidth)
+                throw new ArgumentException("The last width bucket must equal MaximumWidth.", nameof(widths));
+            return new TextCropProfile(this, OverflowMode, widthBuckets: buckets.AsReadOnly());
+        }
+
+        private TextCropProfile(TextCropProfile source, RecognitionOverflowMode mode, OcrRecognitionWindowOptions? windows = null, OcrGeometryOptions? geometry = null, OcrOrientationRetryOptions? retry = null, OcrCropTransformMode? transformMode = null, OcrCropProcessingOptions? cropProcessing = null, OcrEnhancementRetryOptions? enhancementRetry = null, OcrWidthRetryOptions? widthRetry = null, bool clearEnhancementRetry = false, int? maximumWidthOverride = null, bool clearWidthRetry = false, OcrRecognitionWidthMode? widthModeOverride = null, int? fixedWidthOverride = null, IReadOnlyList<int>? widthBuckets = null, bool clearWidthBuckets = false)
             : this(source.ProfileId, source.TargetHeight, widthModeOverride ?? source.WidthMode, fixedWidthOverride ?? source.FixedWidth, maximumWidthOverride ?? source.MaximumWidth,
                 source.WidthAlignment, source.Interpolation, source.ColorOrder, source.Layout, source.Means, source.Scales,
                 source.PaddingColor, source.MaximumCropPixels, source.MinimumWidth)
@@ -608,6 +629,7 @@ namespace JYPPX.DeploySharp.Visual
             CropProcessing = cropProcessing ?? source.CropProcessing;
             EnhancementRetry = clearEnhancementRetry ? null : enhancementRetry ?? source.EnhancementRetry;
             WidthRetry = clearWidthRetry ? null : widthRetry ?? source.WidthRetry;
+            WidthBuckets = clearWidthBuckets ? null : widthBuckets ?? source.WidthBuckets;
             if (EnhancementRetry != null && CropProcessing?.Enhancement != null)
                 throw new ArgumentException("Enhancement retry requires an unenhanced first pass; configure enhancement on the retry options only.");
             if (WidthRetry != null && WidthRetry.CandidateMaximumWidth <= MaximumWidth)
@@ -648,6 +670,9 @@ namespace JYPPX.DeploySharp.Visual
                 long bounded = Math.Min(MaximumWidth, Math.Max(MinimumWidth, naturalWidth));
                 long aligned = ((bounded + WidthAlignment - 1) / WidthAlignment) * WidthAlignment;
                 target = (int)Math.Min(MaximumWidth, aligned);
+                if (WidthBuckets != null)
+                    foreach (int bucket in WidthBuckets)
+                        if (bucket >= target) { target = bucket; break; }
             }
             return new OcrRecognitionWidthInfo(naturalWidth, target, target, OverflowMode);
         }

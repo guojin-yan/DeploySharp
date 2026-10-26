@@ -176,6 +176,8 @@ dotnet artifacts/build/paddleocr-cuda12/bin/DeploySharp.PaddleOcrBenchmark/relea
 
 The tool exits with code 3 when there are no successful rows, including when all calls are intentionally rejected by the width policy. A mixed-backend run with at least one success still requires inspection of every CSV status; exit code 0 is not a claim that all combinations passed.
 
+For a dynamic-width model, `DEPLOYSHARP_PADDLEOCR_RECOGNITION_WIDTH_BUCKETS='48,64,96,128,192,256,320'` opts into a finite set of tensor widths when `DEPLOYSHARP_PADDLEOCR_MAXIMUM_WIDTH=320` as above. Crops within the maximum keep their aspect ratio and pad to the next bucket, reducing distinct OpenCV DNN input shapes; content beyond the maximum still follows the configured overflow policy. The last bucket must equal that maximum. Do not combine this with either fixed-width variable. Bucketing is not the default or a proven speed/accuracy improvement for every model: compare labelled CER/WER and warmed latency on the target backend before use. Width sidecars record the exact buckets.
+
 JSON sidecars are exported **outside measured spans** and contain the last measured result's text/polygons, dictionary SHA, natural/target/tensor widths, compression and batch-padding flags, input/model/assembly hashes and protocol. Existing CSV text/contract hashes are unchanged. A null width diagnostic means unknown, not uncompressed. Successful repeated configurations overwrite their same-named report; use a fresh output directory per experiment and retain failure rows/logs (failed calls have no successful width sidecar).
 
 主库默认上限仍为 3200，基准工具的 320 仅用于保持历史协议。自然宽度、区域受限宽度和实际批张量宽度分别记录，不能把补齐 padding 当成压缩。`SlidingWindow` 保留原检测行和阅读顺序；逐窗口原文、token、宽度和接缝不确定信息导出到 JSON，不能仅凭 `status=pass` 判断文字准确。

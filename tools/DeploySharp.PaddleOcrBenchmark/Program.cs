@@ -208,7 +208,8 @@ internal static partial class Program
                 tensorRtApiVersion = usesTensorRt ? (int)tensorRtApiVersion : (int?)null,
                 reusePreparedInput,
                 fixedRecognitionWidth = ReadOptionalPositiveInt("DEPLOYSHARP_PADDLEOCR_FIXED_RECOGNITION_WIDTH"),
-                openCvFixedRecognitionWidth = ReadOptionalPositiveInt("DEPLOYSHARP_PADDLEOCR_OPENCV_FIXED_RECOGNITION_WIDTH")
+                openCvFixedRecognitionWidth = ReadOptionalPositiveInt("DEPLOYSHARP_PADDLEOCR_OPENCV_FIXED_RECOGNITION_WIDTH"),
+                recognitionWidthBuckets = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_RECOGNITION_WIDTH_BUCKETS")
             },
             runtime = new
             {
@@ -412,6 +413,13 @@ internal static partial class Program
             int? fixedRecognitionWidth = ReadOptionalPositiveInt("DEPLOYSHARP_PADDLEOCR_FIXED_RECOGNITION_WIDTH");
             if (!fixedRecognitionWidth.HasValue && backend == "opencv-dnn")
                 fixedRecognitionWidth = ReadOptionalPositiveInt("DEPLOYSHARP_PADDLEOCR_OPENCV_FIXED_RECOGNITION_WIDTH");
+            string? widthBuckets = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_RECOGNITION_WIDTH_BUCKETS");
+            if (!string.IsNullOrWhiteSpace(widthBuckets))
+            {
+                if (fixedRecognitionWidth.HasValue) throw new ArgumentException("Fixed recognition width and width buckets are mutually exclusive.");
+                recognitionCrop = recognitionCrop.WithWidthBuckets(widthBuckets.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Select(value => int.Parse(value, NumberStyles.Integer, Invariant)));
+            }
             if (fixedRecognitionWidth.HasValue) recognitionCrop = recognitionCrop.WithFixedWidth(fixedRecognitionWidth.Value);
             if (backend == "onnxruntime" || backend == "onnxruntime-cuda")
             {
@@ -785,7 +793,7 @@ internal static partial class Program
             VisualAssembly = Artifact(typeof(OcrPipeline).Assembly.Location),
             Image = Artifact(image), Detector = Artifact(detector), Recognizer = Artifact(recognizer), Classifier = classifier == null ? null : Artifact(classifier),
             Protocol = new { Warmup = warmup, Iterations = iterations, Batch = batch, Sessions = sessions, MaximumRegions = maximumRegions, ReusePreparedInput = reusePreparedInput },
-            Crop = new { crop.ProfileId, crop.TargetHeight, crop.WidthMode, crop.MinimumWidth, crop.MaximumWidth, crop.WidthAlignment, crop.OverflowMode, crop.RecognitionWindows, crop.Geometry, crop.OrientationRetry, crop.TransformMode, crop.CropProcessing, crop.EnhancementRetry },
+            Crop = new { crop.ProfileId, crop.TargetHeight, crop.WidthMode, crop.MinimumWidth, crop.MaximumWidth, crop.WidthAlignment, crop.WidthBuckets, crop.OverflowMode, crop.RecognitionWindows, crop.Geometry, crop.OrientationRetry, crop.TransformMode, crop.CropProcessing, crop.EnhancementRetry },
             SourceSize = result.SourceSize, TextSha256 = ComputeTextSha256(result), ContractSha256 = ComputeContractSha256(result), SemanticContractSha256 = ComputeSemanticContractSha256(result),
             ClampedRegions = result.Regions.Count(item => item.RecognitionWidth?.WidthClamped == true),
             PixelQualityOptions = ReadPixelQualityOptions(), result.PixelQuality,

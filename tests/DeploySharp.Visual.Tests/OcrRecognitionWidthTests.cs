@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using JYPPX.DeploySharp.Geometry;
 using JYPPX.DeploySharp.Visual;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -104,6 +105,45 @@ namespace DeploySharp.Visual.Tests
             Assert.AreEqual(320, fixedProfile.CalculateWidth(Quad(100, 20), TextOrientation.Degrees0));
             Assert.AreSame(fixedProfile, fixedProfile.WithFixedWidth(320));
             Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => source.WithFixedWidth(641));
+        }
+
+        [TestMethod]
+        public void OptionalWidthBucketsPadWithoutChangingOverflowOrSourceProfile()
+        {
+            var source = new TextCropProfile("width/buckets", 48, OcrRecognitionWidthMode.Dynamic, 320, 640, 32, minimumWidth: 48);
+            int[] values = { 64, 128, 256, 640 };
+            TextCropProfile bucketed = source.WithWidthBuckets(values).WithRecognitionOverflowMode(RecognitionOverflowMode.Reject);
+            values[0] = 96;
+
+            Assert.IsNull(source.WidthBuckets);
+            CollectionAssert.AreEqual(new[] { 64, 128, 256, 640 }, new List<int>(bucketed.WidthBuckets!));
+            Assert.AreEqual(64, bucketed.CalculateWidth(Quad(20, 48), TextOrientation.Degrees0));
+            Assert.AreEqual(128, bucketed.CalculateWidth(Quad(65, 48), TextOrientation.Degrees0));
+            Assert.AreEqual(256, bucketed.CalculateWidth(Quad(129, 48), TextOrientation.Degrees0));
+            Assert.AreEqual(640, bucketed.CalculateWidth(Quad(640, 48), TextOrientation.Degrees0));
+            Assert.IsFalse(bucketed.DescribeWidth(Quad(129, 48), TextOrientation.Degrees0).WidthClamped);
+            Assert.ThrowsExactly<OcrPipelineException>(() => bucketed.CalculateWidth(Quad(641, 48), TextOrientation.Degrees0));
+            Assert.AreEqual(160, source.CalculateWidth(Quad(129, 48), TextOrientation.Degrees0));
+
+            TextCropProfile fixedWidth = bucketed.WithFixedWidth(320);
+            Assert.IsNull(fixedWidth.WidthBuckets);
+            Assert.AreEqual(320, fixedWidth.CalculateWidth(Quad(129, 48), TextOrientation.Degrees0));
+            TextCropProfile retry = bucketed.WithWidthRetry(new OcrWidthRetryOptions(960));
+            Assert.IsNotNull(retry.WidthBuckets);
+        }
+
+        [TestMethod]
+        public void WidthBucketsRejectInvalidContracts()
+        {
+            var dynamic = new TextCropProfile("width/invalid-buckets", 48, OcrRecognitionWidthMode.Dynamic, 320, 640, 32, minimumWidth: 48);
+            Assert.ThrowsExactly<ArgumentNullException>(() => dynamic.WithWidthBuckets(null!));
+            Assert.ThrowsExactly<ArgumentException>(() => dynamic.WithWidthBuckets(Array.Empty<int>()));
+            Assert.ThrowsExactly<ArgumentException>(() => dynamic.WithWidthBuckets(new[] { 64, 128 }));
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => dynamic.WithWidthBuckets(new[] { 64, 64, 640 }));
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => dynamic.WithWidthBuckets(new[] { 65, 640 }));
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => dynamic.WithWidthBuckets(new[] { 32, 640 }));
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => dynamic.WithWidthBuckets(new[] { 64, 672 }));
+            Assert.ThrowsExactly<InvalidOperationException>(() => dynamic.WithFixedWidth(320).WithWidthBuckets(new[] { 640 }));
         }
 
         private static TextQuadrilateral Quad(float width, float height) => new TextQuadrilateral(

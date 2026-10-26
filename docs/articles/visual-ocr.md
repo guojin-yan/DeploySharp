@@ -85,6 +85,8 @@ foreach (OcrRegionResult region in result.Regions)
 
 后续[固定宽度 320 正式矩阵](../../eng/models/paddle-ocr/verification/paddleocr-core-opencv-dnn-fixed320-steady-formal-20261013.md)避免了 crop 宽度变化时重复专门化和导入整张 ONNX 图。七组 `5+50` 均通过：P50 降低 `26.0%–49.0%`，报告的托管分配降低 `96.04%–99.76%` 至约 `17.5–46.9 MiB/次`；同固定宽度下，七组 ORT/OpenCV 的有序文本和语义合同 SHA 均一致。进一步的[同后端十页 SROIE 质量对照](../../eng/models/paddle-ocr/verification/sroie-v6-small-opencv-fixed320-quality-20261013.md)只改变 v6 Small 的宽度策略：固定 320 的诊断总耗时 P50/P95 下降 `68.0%/69.2%`，但 matched CER/WER 上升 `0.87/2.16` 个百分点，`531` 个对齐区域中有 `101` 个文字不同；检测数量和 polygon 不变。另一组[241 条 HierText 自然倾斜文字对照](../../eng/models/paddle-ocr/verification/paddleocr-hiertext-fixed320-quality-20261026.md)中，Fixed320 的聚合 CER/WER 反而更低，但仍有单条退化；该质量测试没有正式 5+50 计时。不同数据集结果方向相反，因此动态宽度保持默认，固定宽度仅作为显式选项。使用时先在代表性标注数据上验证：`TextCropProfile fastCrop = cropProfile.WithFixedWidth(320);`。裁剪内容保持原宽高比，剩余列填充，不会把文字横向拉伸。两份 OpenCV 性能数据都不能与 Batch=8 后端直接排名。
 
+还有一种显式折中方案是有限动态宽度分桶：`TextCropProfile bucketed = cropProfile.WithWidthBuckets(new[] { 48, 64, 96, 128, 192, 256, 320, 448, 640, 960, 1280, 1920, 2560, 3200 });`。列表须严格递增、对齐并以当前 `MaximumWidth` 结尾；模型输入仍须支持动态宽度。行的内容按原比例缩放到自然宽度，再补到下一个桶，不为对齐桶而压缩；**自然宽度超过上限时，Clamp 或固定宽度仍可能压缩文字**。分桶不改变默认行为，也不能与 `WithFixedWidth` 同时使用。[241 条自然倾斜标注行及完整流水线 5+50 对照](../../eng/models/paddle-ocr/verification/paddleocr-width-bucket-quality-performance-20261026.md)显示 OpenCV DNN 的张量宽度种类和 P50/托管分配下降，但 P95 上升、部分行 CER 退化且聚合 WER 上升；因此需按目标数据集和设备自行验证，不自动启用。
+
 动态宽度会产生 padding。<code>MaximumRecognitionPaddingRatio</code> 默认为 1.0，只把等宽文本行放在同一批次。目标后端经过实测后，可以适当调高该值以减少 batch 数，但要同时观察填充计算和显存占用。
 
 P3 的并发与生命周期合同由[集中验证报告](../../eng/models/paddle-ocr/verification/paddleocr-p3-concurrency-contract-20261013.md)维护。当前回归覆盖动态 REC Batch、独立单通道 Session 池、批次顺序恢复、排队/活动取消、异常后复用、预取输入释放和幂等关闭；Visual 合同 `95/95`、ORT CPU OCR/lifecycle `5/5`、ORT provider/session-pool `12/12`、OpenVINO CPU OCR/lifecycle `4/4`，另有 OpenVINO provider/session-pool `9/9` 通过。两 Session 的真实设备对照仍需按后端调优，不能从 ORT 的收益外推到 OpenVINO。该证据不等于长时间 soak、跨设备吞吐或 PP-Structure 全模型并发通过。
@@ -581,7 +583,7 @@ foreach (OcrRegionResult item in result.Regions)
 | 字段 | 含义 |
 | --- | --- |
 | `NaturalWidth` | 按已定向四边形长宽比计算的 `ceil(TargetHeight × width / height)`；在最小宽度、对齐和上限之前 |
-| `TargetWidth` | 当前区域经最小值、对齐和上限处理后的规划宽度；固定宽度模式采用 `FixedWidth` |
+| `TargetWidth` | 当前区域经最小值、对齐、可选分桶和上限处理后的规划宽度；固定宽度模式采用 `FixedWidth` |
 | `TensorWidth` | 实际提交的 Batch 张量宽度，可能包含与其他更宽文本行共同补齐的 padding |
 | `WidthClamped` | 单窗口自然宽度超过受限宽度时为 true；滑窗合并结果为 false，逐窗口都通过宽度检查 |
 | `BatchPadded` | `TensorWidth > TargetWidth`，仅表示 Batch 补齐 |
