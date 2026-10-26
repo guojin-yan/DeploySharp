@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -32,7 +33,7 @@ public sealed class PaddleOcrVlFunsdSpottingQualityIntegrationTests
 
     [TestMethod]
     [TestCategory("ExternalModels")]
-    public async Task EvaluateFirstFunsdTestPageAgainstIndependentWordAnnotations()
+    public async Task EvaluateSelectedFunsdTestPageAgainstIndependentWordAnnotations()
     {
         if (Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_VL_FUNSD_SPOTTING_RUN") != "1")
             Assert.Inconclusive("Set DEPLOYSHARP_PADDLEOCR_VL_FUNSD_SPOTTING_RUN=1 for the labelled Spotting evaluation.");
@@ -43,12 +44,17 @@ public sealed class PaddleOcrVlFunsdSpottingQualityIntegrationTests
         string bundleRoot = Required("DEPLOYSHARP_PADDLEOCR_VL_BUNDLE_ROOT");
         string modelRoot = Required("DEPLOYSHARP_PADDLEOCR_VL_MODEL_ROOT");
         if (!File.Exists(manifestPath)) Assert.Inconclusive("The pinned FUNSD manifest is required: " + manifestPath);
+        int pageIndex = 0;
+        string? requestedPage = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_VL_FUNSD_SPOTTING_PAGE_INDEX");
+        if (requestedPage is not null && (!int.TryParse(requestedPage, NumberStyles.None, CultureInfo.InvariantCulture, out pageIndex) || pageIndex < 0))
+            throw new ArgumentOutOfRangeException(nameof(requestedPage), "The FUNSD page index must be a nonnegative integer.");
         string reportPath = Path.GetFullPath(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_VL_FUNSD_SPOTTING_REPORT_PATH")
-            ?? Path.Combine(TestContext.TestResultsDirectory!, "paddleocr-vl-funsd-spotting.json"));
+            ?? Path.Combine(TestContext.TestResultsDirectory!, $"paddleocr-vl-funsd-spotting-{pageIndex}.json"));
+        if (File.Exists(reportPath)) throw new IOException("The FUNSD Spotting report already exists: " + reportPath);
         Directory.CreateDirectory(Path.GetDirectoryName(reportPath)!);
 
-        string firstLine = File.ReadLines(manifestPath).First(line => !string.IsNullOrWhiteSpace(line));
-        using JsonDocument document = JsonDocument.Parse(firstLine);
+        string selectedLine = SelectManifestLine(File.ReadLines(manifestPath), pageIndex);
+        using JsonDocument document = JsonDocument.Parse(selectedLine);
         JsonElement page = document.RootElement;
         Assert.AreEqual("FUNSD", page.GetProperty("source_dataset").GetString());
         Assert.AreEqual("test", page.GetProperty("source_split").GetString());
@@ -73,8 +79,8 @@ public sealed class PaddleOcrVlFunsdSpottingQualityIntegrationTests
             ["schemaVersion"] = "deploysharp-paddleocr-vl-funsd-spotting-quality-v1",
             ["generatedUtc"] = DateTimeOffset.UtcNow,
             ["status"] = "running",
-            ["dataset"] = new { name = "FUNSD", split = "test", selection = "first nonempty row of funsd-test-full-001.jsonl, before inference",
-                imageId, imageRelativePath, imageSha256, width, height, labelledWords = labels.Count,
+            ["dataset"] = new { name = "FUNSD", split = "test", selection = "zero-based nonempty row of funsd-test-full-001.jsonl, chosen before inference",
+                pageIndex, imageId, imageRelativePath, imageSha256, width, height, labelledWords = labels.Count,
                 sourceRevision = page.GetProperty("source_revision").GetString(), manifestSha256 = Hash(manifestPath),
                 benchmarkEligibility = page.GetProperty("benchmark_eligibility").GetString() },
             ["model"] = new { id = "paddleocr-vl/1.6", checkpointRevision = PaddleOcrVlInputPlanning.OfficialV16Revision,
@@ -169,6 +175,23 @@ public sealed class PaddleOcrVlFunsdSpottingQualityIntegrationTests
         Assert.AreEqual(1, quality.UnmatchedPredictions);
         Assert.AreEqual(10, quality.CharacterEdits);
         Assert.AreEqual(2, quality.WordEdits);
+    }
+
+    [TestMethod]
+    public void ManifestSelectionIgnoresBlankRowsAndRejectsOutOfRangeIndices()
+    {
+        string[] lines = { "", "first", "   ", "second" };
+        Assert.AreEqual("first", SelectManifestLine(lines, 0));
+        Assert.AreEqual("second", SelectManifestLine(lines, 1));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => SelectManifestLine(lines, -1));
+        Assert.ThrowsExactly<InvalidDataException>(() => SelectManifestLine(lines, 2));
+    }
+
+    private static string SelectManifestLine(IEnumerable<string> lines, int pageIndex)
+    {
+        if (pageIndex < 0) throw new ArgumentOutOfRangeException(nameof(pageIndex));
+        return lines.Where(line => !string.IsNullOrWhiteSpace(line)).Skip(pageIndex).FirstOrDefault()
+            ?? throw new InvalidDataException("The FUNSD manifest has no nonempty row at index " + pageIndex + ".");
     }
 
     private static QualityResult Evaluate(IReadOnlyList<WordLabel> labels, IReadOnlyList<PredictedRegion> predictions)
