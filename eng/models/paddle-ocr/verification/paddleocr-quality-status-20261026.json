@@ -56,7 +56,7 @@
     {
       "scope": "PP-OCRv6 Small natural-skew crop geometry",
       "model": "paddleocr/ppocrv6/small-rec",
-      "backends": ["onnxruntime-cpu", "openvino-cpu"],
+      "backends": ["onnxruntime-cpu", "openvino-cpu", "opencv-dnn-cpu"],
       "dataset": "HierText validation sample-002 and sample-003",
       "rows": 241,
       "referenceCharacters": 1265,
@@ -65,9 +65,9 @@
       "referenceWords": 312,
       "polygonWordEdits": 137,
       "boxWordEdits": 150,
-      "rowTextAndEditParity": "241/241 across the two backends",
+      "rowTextAndEditParity": "241/241 across all three backends under a shared model batch=1 protocol; ORT batch=1 and batch=16 predictions also match 241/241",
       "report": "paddleocr-hiertext-natural-skew-crops-20261026.json",
-      "status": "bounded-natural-skew-crop-diagnostic-complete; A3-natural-orientation-acceptance-open",
+      "status": "bounded-three-backend-natural-skew-crop-diagnostic-complete; A3-natural-orientation-acceptance-open",
       "boundary": "Top-edge skew comes from annotated quadrilateral vertices; it is not independent upright/inverted truth. Detection, automatic orientation, whole-page quality and formal latency were not measured."
     }
   ],

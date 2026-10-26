@@ -66,7 +66,7 @@
       "boxWordEdits": 108
     }
   ],
-  "backends": [
+  "initialBatch16Backends": [
     {
       "id": "onnxruntime-cpu",
       "rawReportSha256": "f5165cc772ac5b713bff7d2ad41d1acd69ff4d036a82fcb2df6f237cf4f94dde",
@@ -80,7 +80,30 @@
       "testAssemblySha256": "2ef304b804d9682937538811df66735e993ac9a71925476e01857db5fabbeaae"
     }
   ],
-  "crossBackend": "All 241 row identities, references, polygon/box predictions and character/word edit counts match",
-  "status": "bounded-natural-skew-crop-diagnostic-complete; A3-natural-orientation-acceptance-open",
+  "batchOneValidation": {
+    "sourceMarker": "0db0b13-dirty-batch1-opencv",
+    "testAssemblySha256": "6fef36523948e36fff3a4c5a93ab1068468e41383bd947197683fabe7ed146ac",
+    "modelBatchMaximum": 1,
+    "recognitionSessionCount": 1,
+    "detectorBackend": "onnxruntime-cpu; not executed by RecognizeOnlyAsync",
+    "backendReports": [
+      {
+        "id": "onnxruntime-cpu",
+        "rawReportSha256": "d6dd89a57062ec0814bab4421d016f3b4161ee5a35d63c9db951b3517a73010b"
+      },
+      {
+        "id": "openvino-cpu",
+        "rawReportSha256": "e1f4cdc8cb60c7bf62bb5c3cd2f4936012b1ae7bf6afbe2d5bf35cb08c36f244"
+      },
+      {
+        "id": "opencv-dnn-cpu",
+        "rawReportSha256": "461789b3162f51371c82dd0b1575b412358e684b5f55a10903661309f94ebff3"
+      }
+    ],
+    "perBackendTotals": "All three repeat the top-level 241-row character/word edit totals",
+    "crossBackend": "241/241 row identities, references, polygon/box predictions and character/word edit counts match across all three backends",
+    "batchOneVsBatch16Ort": "241/241 polygon predictions and 241/241 box predictions match"
+  },
+  "status": "bounded-three-backend-natural-skew-crop-diagnostic-complete; A3-natural-orientation-acceptance-open",
   "boundary": "Top-edge angle is derived from annotation geometry, not independent upright/inverted truth. No detection, automatic orientation, whole-page quality or formal performance measurement."
 }

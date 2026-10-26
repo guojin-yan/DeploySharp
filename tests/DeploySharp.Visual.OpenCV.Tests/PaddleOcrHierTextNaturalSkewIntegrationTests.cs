@@ -9,10 +9,12 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using JYPPX.DeploySharp;
 using JYPPX.DeploySharp.Backends.OnnxRuntime;
+using JYPPX.DeploySharp.Backends.OpenCV;
 using JYPPX.DeploySharp.Backends.OpenVINO;
 using JYPPX.DeploySharp.Geometry;
 using JYPPX.DeploySharp.Models;
 using JYPPX.DeploySharp.Registry;
+using JYPPX.DeploySharp.Tensors;
 using JYPPX.DeploySharp.Visual;
 using JYPPX.DeploySharp.Visual.Models.PaddleOcr;
 using JYPPX.DeploySharp.Visual.OpenCV;
@@ -45,6 +47,7 @@ public sealed class PaddleOcrHierTextNaturalSkewIntegrationTests
     [TestMethod]
     [DataRow("onnxruntime")]
     [DataRow("openvino")]
+    [DataRow("opencv-dnn")]
     [TestCategory("ExternalModels")]
     public async Task NaturalSkewLinesComparePolygonWithAxisAlignedBounds(string backend)
     {
@@ -78,21 +81,34 @@ public sealed class PaddleOcrHierTextNaturalSkewIntegrationTests
         Assert.AreEqual(DictionarySha, ShaFile(dictionaryPath));
         OcrCharacterSet characters = PaddleOcrProfiles.LoadCharacterSet(dictionaryPath, "hiertext-skew-v6-small", "v6-small", true, DictionarySha);
         PaddleOcrProfile detector = PaddleOcrModelCatalog.CreateProfile(PaddleOcrModelCatalog.Find(detectorId), Artifact(detectorRelease), maximumBatch: 1);
-        PaddleOcrProfile recognizer = PaddleOcrModelCatalog.CreateProfile(PaddleOcrModelCatalog.Find(recognizerId), Artifact(recognizerRelease, DictionarySha), characters, maximumBatch: 16);
+        PaddleOcrProfile recognizer = PaddleOcrModelCatalog.CreateProfile(PaddleOcrModelCatalog.Find(recognizerId), Artifact(recognizerRelease, DictionarySha), characters, maximumBatch: 1);
 
-        using var registry = new BackendRegistry();
+        using var detectorRegistry = new BackendRegistry().UseOnnxRuntime();
+        using var recognizerRegistry = new BackendRegistry();
         BackendId backendId;
-        if (backend == "openvino") { registry.UseOpenVino(); backendId = OpenVinoBackendProvider.BackendId; }
-        else { registry.UseOnnxRuntime(); backendId = OnnxRuntimeBackendProvider.BackendId; }
+        if (backend == "openvino") { recognizerRegistry.UseOpenVino(); backendId = OpenVinoBackendProvider.BackendId; }
+        else if (backend == "onnxruntime") { recognizerRegistry.UseOnnxRuntime(); backendId = OnnxRuntimeBackendProvider.BackendId; }
+        else if (backend == "opencv-dnn")
+        {
+            int classes = ((GreedyCtcDecoder)recognizer.VisualProfile.Decoder).ExpectedClassCount;
+            var contract = new OpenCvDnnModelContract(recognizerId,
+                new[] { new TensorDescriptor(recognizer.VisualProfile.Input.Name, TensorElementType.Float32, new TensorShape(1, 3, 48, -1)) },
+                new[] { new TensorDescriptor(recognizer.VisualProfile.Outputs[0].Name, TensorElementType.Float32, new TensorShape(1, -1, classes)) });
+            recognizerRegistry.UseOpenCvDnn(new OpenCvDnnOptions(contract, enableFusion: true, enableWinograd: true, specializeDynamicInputShapes: true));
+            backendId = OpenCvDnnBackendProvider.BackendId;
+        }
+        else throw new ArgumentOutOfRangeException(nameof(backend));
         var profiles = new VisualProfileRegistry();
         profiles.Register(detector.VisualProfile);
         profiles.Register(recognizer.VisualProfile);
         profiles.Freeze();
-        var request = new BackendRequest(BackendCapabilities.TensorInference, backendId, backend == "openvino" ? "CPU" : "cpu");
-        using var pipeline = new OcrPipeline(registry,
-            profiles.Select(detector.CreateArtifact(detectorPath, backendId), registry, request, VisualTaskId.TextDetection), request,
-            profiles.Select(recognizer.CreateArtifact(recognizerPath, backendId), registry, request, VisualTaskId.TextRecognition), request,
-            recognizer.CropProfile!, new OcrPipelineOptions(maximumRegions: 16, maximumRecognitionBatch: 16,
+        var detectorRequest = new BackendRequest(BackendCapabilities.TensorInference, OnnxRuntimeBackendProvider.BackendId, "cpu");
+        var recognizerRequest = new BackendRequest(BackendCapabilities.TensorInference, backendId, backend == "openvino" ? "CPU" : "cpu");
+        using var pipeline = new OcrPipeline(detectorRegistry,
+            profiles.Select(detector.CreateArtifact(detectorPath, OnnxRuntimeBackendProvider.BackendId), detectorRegistry, detectorRequest, VisualTaskId.TextDetection), detectorRequest,
+            recognizerRegistry,
+            profiles.Select(recognizer.CreateArtifact(recognizerPath, backendId), recognizerRegistry, recognizerRequest, VisualTaskId.TextRecognition), recognizerRequest,
+            recognizer.CropProfile!, new OcrPipelineOptions(maximumRegions: 16, maximumRecognitionBatch: 1,
                 maximumSourcePixels: 128L * 1024L * 1024L), new SessionOptions(1), new SessionOptions(1));
 
         var observations = new List<Observation>(selection.Lines.Count);
@@ -154,7 +170,7 @@ public sealed class PaddleOcrHierTextNaturalSkewIntegrationTests
                 recognizerSha256 = recognizerRelease.Sha256, dictionarySha256 = DictionarySha },
             protocol = new { stage = "RecognizeOnlyAsync; detection and automatic orientation are not executed",
                 comparison = "Same decoded source and recognizer: annotated perspective quadrilateral versus its axis-aligned bounding rectangle; case-sensitive OCR text metrics.",
-                batchMaximum = 16, sessionCount = 1, targetHeight = recognizer.CropProfile!.TargetHeight,
+                batchMaximum = 1, sessionCount = 1, targetHeight = recognizer.CropProfile!.TargetHeight,
                 maximumWidth = recognizer.CropProfile.MaximumWidth },
             totals = new { rows = observations.Count, referenceCharacters = observations.Sum(row => row.ReferenceCharacters),
                 referenceWords = observations.Sum(row => row.ReferenceWords),
