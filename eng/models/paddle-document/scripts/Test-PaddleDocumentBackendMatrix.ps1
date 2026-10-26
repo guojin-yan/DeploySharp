@@ -34,6 +34,30 @@ function Get-StatusCounts {
     return [pscustomobject]$counts
 }
 
+function Get-MeasuredSampleCounts {
+    param([object]$Node)
+
+    if ($null -eq $Node) { return }
+    if ($Node -is [array]) {
+        foreach ($item in $Node) { Get-MeasuredSampleCounts -Node $item }
+        return
+    }
+    if ($Node -isnot [pscustomobject]) { return }
+    foreach ($property in $Node.PSObject.Properties) {
+        if ($property.Name -eq 'samplesMs') {
+            $samples = @($property.Value)
+            if ($samples.Count -eq 0 -or @($samples | Where-Object {
+                $_ -isnot [double] -and $_ -isnot [int] -and $_ -isnot [long] -and $_ -isnot [decimal]
+            }).Count -gt 0) {
+                throw 'A samplesMs field is empty or contains non-numeric values.'
+            }
+            $samples.Count
+        } else {
+            Get-MeasuredSampleCounts -Node $property.Value
+        }
+    }
+}
+
 $repositoryRoot = Resolve-RepositoryRoot
 $matrixFullPath = (Resolve-Path -LiteralPath $MatrixPath).Path
 $matrix = Get-Content -LiteralPath $matrixFullPath -Raw | ConvertFrom-Json
@@ -146,6 +170,12 @@ function Read-FormalPerformanceEvidence {
 
     $warmupCount = if ($null -ne $protocol.warmupCount) { [int]$protocol.warmupCount } else { [int]$protocol.warmup }
     $measurementCount = if ($null -ne $protocol.measurementCount) { [int]$protocol.measurementCount } else { [int]$protocol.iterations }
+    $sampleCounts = @(Get-MeasuredSampleCounts -Node $document)
+    foreach ($count in $sampleCounts) {
+        if ($count -ne $measurementCount) {
+            throw "Evidence '$RelativePath' has $count samplesMs values, but declares $measurementCount measurements."
+        }
+    }
     [ordered]@{
         id = $Id
         path = $RelativePath.Replace('\', '/')
@@ -154,6 +184,7 @@ function Read-FormalPerformanceEvidence {
         backends = @($Backends)
         warmupCount = $warmupCount
         measurementCount = $measurementCount
+        inRepositorySampleArrayCount = $sampleCounts.Count
         sourceRevision = if ($null -ne $document.sourceRevision) { [string]$document.sourceRevision } else { $null }
     }
 }
@@ -233,6 +264,8 @@ $formalPerformanceEvidence = @(
     (Read-FormalPerformanceEvidence -RepositoryRoot $repositoryRoot -RelativePath 'eng/models/paddle-document/verification/paddle-document-ort-formula-benchmark-20261018.json' -Id 'formula-six-models-ort-cpu' -Scope 'Six official Paddle formula exports with stable token/EOS/LaTeX contracts on ONNX Runtime CPU' -ModelIds @('paddle-formula/pp-formulanet-plus-s', 'paddle-formula/pp-formulanet-plus-m', 'paddle-formula/pp-formulanet-plus-l', 'paddle-formula/pp-formulanet-s', 'paddle-formula/pp-formulanet-l', 'paddle-formula/unimernet') -Backends @('onnxruntime-cpu')),
     (Read-FormalPerformanceEvidence -RepositoryRoot $repositoryRoot -RelativePath 'eng/models/paddle-document/verification/chart2table-fixed-benchmark-20261017.json' -Id 'chart2table-fixed-sample' -Scope 'Fixed ChartQA Chart2Table single-sample generation' -ModelIds @('paddle-chart/pp-chart2table') -Backends @('onnxruntime-cpu', 'openvino-cpu', 'tensorrt-cuda'))
 )
+$sampledBundles = @($formalPerformanceEvidence | Where-Object { $_.inRepositorySampleArrayCount -gt 0 })
+$summaryOnlyBundles = @($formalPerformanceEvidence | Where-Object { $_.inRepositorySampleArrayCount -eq 0 })
 
 $performancePairRows = [System.Collections.Generic.List[object]]::new()
 foreach ($bundle in $formalPerformanceEvidence) {
@@ -342,6 +375,12 @@ $result = [ordered]@{
             excludedDerivedPairs = @($excludedDerivedPairs)
             errors = @()
         }
+        sampleAvailability = [ordered]@{
+            inRepositoryBundleCount = $sampledBundles.Count
+            summaryOnlyBundleCount = $summaryOnlyBundles.Count
+            summaryOnlyEvidenceIds = @($summaryOnlyBundles | ForEach-Object { $_.id })
+            boundary = 'This checks numeric samplesMs arrays embedded in each registered JSON and their declared measurement counts. Summary-only bundles may have separate local raw reports; their P50/P95 cannot be recomputed from the registered JSON alone.'
+        }
         boundary = 'Every currently passing primary release artifact/backend pair has a mapped formal evidence bundle. Two ORT-pass derived OpenVINO compatibility graphs lack standalone formal timing. The reports use different inputs and devices/profiles, so coverage does not establish a unified comparable performance matrix.'
     }
     boundary = [ordered]@{
@@ -428,6 +467,7 @@ if ($missingEvidence.Count -eq 0) {
 [void]$builder.AppendLine('## Formal performance evidence coverage')
 [void]$builder.AppendLine()
 [void]$builder.AppendLine('The following exact evidence bundles declare at least 5 warm-ups and 50 measured calls. This is a coverage index, not a ranking and not a substitute for a full 31-artifact × backend matrix.')
+[void]$builder.AppendLine("Of $($formalPerformanceEvidence.Count) registered JSON bundles, $($sampledBundles.Count) embed numeric ``samplesMs`` arrays with the declared measurement count; $($summaryOnlyBundles.Count) are summary-only in this index. Separate local raw reports may exist, but their percentiles cannot be independently recomputed from the registered JSON alone.")
 [void]$builder.AppendLine()
 [void]$builder.AppendLine('| Evidence bundle | Scope | Backends | Models | Protocol |')
 [void]$builder.AppendLine('| --- | --- | --- | --- | --- |')
