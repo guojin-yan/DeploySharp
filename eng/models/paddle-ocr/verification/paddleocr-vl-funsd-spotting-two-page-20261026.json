@@ -22,6 +22,15 @@
       "referenceCharacters": 406,
       "wordEdits": 47,
       "referenceWords": 63,
+      "errorBreakdown": {
+        "associatedCharacterEdits": 108,
+        "unmatchedPredictionCharacterInsertions": 44,
+        "uncoveredReferenceCharacterDeletions": 111,
+        "associatedWordEdits": 24,
+        "unmatchedPredictionWordInsertions": 5,
+        "uncoveredReferenceWordDeletions": 18,
+        "derivedReportSha256": "7b5547da8bec4812ee801ba73b3039bee35b233aef44141bd57b4167e15b6edb"
+      },
       "generatedTokens": 411,
       "finishReason": "EndOfSequence",
       "officialWeightTokenMismatches": 0,
@@ -42,6 +51,15 @@
       "referenceCharacters": 416,
       "wordEdits": 12,
       "referenceWords": 75,
+      "errorBreakdown": {
+        "associatedCharacterEdits": 12,
+        "unmatchedPredictionCharacterInsertions": 0,
+        "uncoveredReferenceCharacterDeletions": 2,
+        "associatedWordEdits": 10,
+        "unmatchedPredictionWordInsertions": 0,
+        "uncoveredReferenceWordDeletions": 2,
+        "derivedReportSha256": "6e4e87cca48443252e9d2e994bb4f1c99e017abb12397eebea0b198688409c2f"
+      },
       "generatedTokens": 362,
       "finishReason": "EndOfSequence",
       "parseStatus": "Succeeded",

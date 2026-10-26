@@ -18,10 +18,12 @@ FUNSD labels individual words, while Spotting may return whole lines. To avoid f
 | Covered / uncovered labelled words | 45 / 18 |
 | Predictions without an assigned label | 5 |
 | Labels inside multiple predictions | 0 |
-| Associated character edits / reference characters | 263 / 406 (`64.78%`) |
-| Associated word edits / reference words | 47 / 63 (`74.60%`) |
+| Protocol-total character edits / reference characters | 263 / 406 (`64.78%`) |
+| Protocol-total word edits / reference words | 47 / 63 (`74.60%`) |
 
 These rates are **centroid-associated diagnostics**, not official FUNSD detection IoU/F1 or general Spotting CER/WER. A polygon near a word but missing its centroid counts as a localization miss; a large line polygon may own several words. In this page, one generated `COURT:` region has no associated word even though the label text exists, and a `CASE NAME:` prediction associates only with `CASE`; this illustrates why transcript and localization failures must be inspected together. The full-page slice exposes a real quality gap, including when the official weights produce the same generated output.
+
+An offline re-evaluation of the completed report separates 263 character edits into 108 within associated regions, 44 from unmatched predictions and 111 from uncovered truth; the corresponding word-edit split is 24/5/18 = 47. The [two-page diagnostic](paddleocr-vl-funsd-spotting-two-page-20261026.md#error-decomposition-from-saved-predictions) records both pages, report hashes and reproduction. This decomposition does not identify a pure transcription error rate: associated edits can still reflect incorrect word-to-region assignment or reading order.
 
 ## Official-weight comparison on the same page
 

@@ -10,6 +10,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using JYPPX.DeploySharp;
 using JYPPX.DeploySharp.Backends.OnnxRuntime;
+using JYPPX.DeploySharp.Backends.OpenVINO;
 using JYPPX.DeploySharp.Models;
 using JYPPX.DeploySharp.Registry;
 using JYPPX.DeploySharp.Visual;
@@ -43,13 +44,14 @@ public sealed class PaddleOcrVlFunsdSpottingQualityIntegrationTests
         string manifestPath = Path.Combine(datasetRoot, "data", "annotations", "manifests", "funsd-test-full-001.jsonl");
         string bundleRoot = Required("DEPLOYSHARP_PADDLEOCR_VL_BUNDLE_ROOT");
         string modelRoot = Required("DEPLOYSHARP_PADDLEOCR_VL_MODEL_ROOT");
+        string backend = ResolveBackend(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_VL_FUNSD_SPOTTING_BACKEND"));
         if (!File.Exists(manifestPath)) Assert.Inconclusive("The pinned FUNSD manifest is required: " + manifestPath);
         int pageIndex = 0;
         string? requestedPage = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_VL_FUNSD_SPOTTING_PAGE_INDEX");
         if (requestedPage is not null && (!int.TryParse(requestedPage, NumberStyles.None, CultureInfo.InvariantCulture, out pageIndex) || pageIndex < 0))
             throw new ArgumentOutOfRangeException(nameof(requestedPage), "The FUNSD page index must be a nonnegative integer.");
         string reportPath = Path.GetFullPath(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_VL_FUNSD_SPOTTING_REPORT_PATH")
-            ?? Path.Combine(TestContext.TestResultsDirectory!, $"paddleocr-vl-funsd-spotting-{pageIndex}.json"));
+            ?? Path.Combine(TestContext.TestResultsDirectory!, $"paddleocr-vl-funsd-spotting-{backend}-{pageIndex}.json"));
         if (File.Exists(reportPath)) throw new IOException("The FUNSD Spotting report already exists: " + reportPath);
         Directory.CreateDirectory(Path.GetDirectoryName(reportPath)!);
 
@@ -66,11 +68,7 @@ public sealed class PaddleOcrVlFunsdSpottingQualityIntegrationTests
         int width = page.GetProperty("width").GetInt32(), height = page.GetProperty("height").GetInt32();
         string imageSha256 = page.GetProperty("source_provenance").GetProperty("image_sha256").GetString()!;
         Assert.AreEqual(imageSha256, Hash(imagePath), "The FUNSD image changed.");
-        List<WordLabel> labels = page.GetProperty("instances").EnumerateArray()
-            .Where(instance => !instance.GetProperty("ignore").GetBoolean() && !string.IsNullOrWhiteSpace(instance.GetProperty("text").GetString()))
-            .Select(instance => new WordLabel(instance.GetProperty("instance_id").GetString()!,
-                instance.GetProperty("text").GetString()!, instance.GetProperty("reading_order").GetInt32(),
-                ReadPolygon(instance.GetProperty("polygon")))).ToList();
+        List<WordLabel> labels = ReadLabels(page);
         Assert.AreEqual(page.GetProperty("statistics").GetProperty("valid_region_count").GetInt32(), labels.Count);
         Assert.IsTrue(labels.All(label => label.Polygon.All(point => point.X >= 0 && point.X <= width && point.Y >= 0 && point.Y <= height)));
 
@@ -87,8 +85,10 @@ public sealed class PaddleOcrVlFunsdSpottingQualityIntegrationTests
                 tokenizerSha256 = Hash(Path.Combine(modelRoot, "tokenizer.model")),
                 graphs = new[] { "vision", "embedding", "decoder", "head" }.ToDictionary(role => role,
                     role => Hash(Path.Combine(bundleRoot, role + ".onnx"))) },
-            ["environment"] = new { backend = "onnxruntime-cpu", os = RuntimeInformation.OSDescription,
+            ["environment"] = new { backend, os = RuntimeInformation.OSDescription,
                 framework = RuntimeInformation.FrameworkDescription, architecture = RuntimeInformation.ProcessArchitecture.ToString(),
+                backendOptions = backend == "openvino-cpu" ? "latency; 4 inference threads; 1 stream; 1 request" :
+                    "4 intra-op threads; 1 inter-op thread; memory pattern disabled; CPU arena disabled",
                 sourceCommit = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_VL_SOURCE_COMMIT") ?? "not-recorded",
                 visualAssemblySha256 = Hash(typeof(PaddleOcrVlOnnxSession).Assembly.Location),
                 openCvAssemblySha256 = Hash(typeof(OpenCvPaddleOcrVlInputFactory).Assembly.Location),
@@ -109,10 +109,21 @@ public sealed class PaddleOcrVlFunsdSpottingQualityIntegrationTests
         try
         {
             using var registry = new BackendRegistry();
-            registry.UseOnnxRuntime(new OnnxRuntimeOptions(intraOpThreads: 4, interOpThreads: 1,
-                enableMemoryPattern: false, enableCpuMemoryArena: false));
+            BackendRequest backendRequest;
+            if (backend == "openvino-cpu")
+            {
+                registry.UseOpenVino(new OpenVinoOptions(performanceHint: OpenVinoPerformanceHint.Latency,
+                    streams: 1, inferenceThreads: 4, requestCount: 1));
+                backendRequest = new BackendRequest(BackendCapabilities.TensorInference, OpenVinoBackendProvider.BackendId, "CPU");
+            }
+            else
+            {
+                registry.UseOnnxRuntime(new OnnxRuntimeOptions(intraOpThreads: 4, interOpThreads: 1,
+                    enableMemoryPattern: false, enableCpuMemoryArena: false));
+                backendRequest = new BackendRequest(BackendCapabilities.TensorInference, OnnxRuntimeBackendProvider.BackendId, "cpu");
+            }
             using var session = PaddleOcrVlOnnxSession.Create(registry, bundleRoot,
-                new BackendRequest(BackendCapabilities.TensorInference, OnnxRuntimeBackendProvider.BackendId, "cpu"));
+                backendRequest);
             var tokenizer = new PaddleOcrVlTokenizer(modelRoot);
             var factory = new OpenCvPaddleOcrVlInputFactory(128 * 1024 * 1024, normalizeExifOrientation: false);
             PaddleOcrVlPreparedInput input = factory.CreateFromFile(imagePath, PaddleOcrVlTask.TextSpotting);
@@ -162,6 +173,9 @@ public sealed class PaddleOcrVlFunsdSpottingQualityIntegrationTests
         Assert.AreEqual(0, quality.UncoveredWords);
         Assert.AreEqual(0, quality.CharacterEdits);
         Assert.AreEqual(0, quality.WordEdits);
+        Assert.AreEqual(11, quality.ErrorBreakdown.AssociatedReferenceCharacters);
+        Assert.AreEqual(2, quality.ErrorBreakdown.AssociatedReferenceWords);
+        Assert.AreEqual(0, quality.ErrorBreakdown.UnmatchedPredictionCharacterInsertions);
     }
 
     [TestMethod]
@@ -175,6 +189,26 @@ public sealed class PaddleOcrVlFunsdSpottingQualityIntegrationTests
         Assert.AreEqual(1, quality.UnmatchedPredictions);
         Assert.AreEqual(10, quality.CharacterEdits);
         Assert.AreEqual(2, quality.WordEdits);
+        Assert.AreEqual(5, quality.ErrorBreakdown.UnmatchedPredictionCharacterInsertions);
+        Assert.AreEqual(1, quality.ErrorBreakdown.UnmatchedPredictionWordInsertions);
+        Assert.AreEqual(5, quality.ErrorBreakdown.UncoveredReferenceCharacterDeletions);
+        Assert.AreEqual(1, quality.ErrorBreakdown.UncoveredReferenceWordDeletions);
+        Assert.AreEqual(0, quality.ErrorBreakdown.AssociatedCharacterEdits);
+    }
+
+    [TestMethod]
+    public void AssociatedTextEditsStaySeparateFromLocalizationMisses()
+    {
+        var labels = new[] { Word("a", "Hello", 0, 0, 0, 40, 20), Word("b", "world", 1, 80, 0, 120, 20) };
+        var predictions = new[] { Region(0, "Hella", 0, 0, 40, 20) };
+        QualityResult quality = Evaluate(labels, predictions);
+        Assert.AreEqual(1, quality.ErrorBreakdown.AssociatedCharacterEdits);
+        Assert.AreEqual(1, quality.ErrorBreakdown.AssociatedWordEdits);
+        Assert.AreEqual(5, quality.ErrorBreakdown.UncoveredReferenceCharacterDeletions);
+        Assert.AreEqual(1, quality.ErrorBreakdown.UncoveredReferenceWordDeletions);
+        Assert.AreEqual(0, quality.ErrorBreakdown.UnmatchedPredictionCharacterInsertions);
+        Assert.AreEqual(6, quality.CharacterEdits);
+        Assert.AreEqual(2, quality.WordEdits);
     }
 
     [TestMethod]
@@ -187,12 +221,108 @@ public sealed class PaddleOcrVlFunsdSpottingQualityIntegrationTests
         Assert.ThrowsExactly<InvalidDataException>(() => SelectManifestLine(lines, 2));
     }
 
+    [TestMethod]
+    public void BackendSelectionRejectsUnknownProviders()
+    {
+        Assert.AreEqual("onnxruntime-cpu", ResolveBackend(null));
+        Assert.AreEqual("openvino-cpu", ResolveBackend("openvino-cpu"));
+        Assert.ThrowsExactly<ArgumentException>(() => ResolveBackend("opencv-dnn"));
+    }
+
+    [TestMethod]
+    [TestCategory("ExternalModels")]
+    public void ReevaluateCompletedReportWithoutModelInference()
+    {
+        string? sourcePath = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_VL_FUNSD_SPOTTING_SOURCE_REPORT");
+        if (string.IsNullOrWhiteSpace(sourcePath))
+            Assert.Inconclusive("Set DEPLOYSHARP_PADDLEOCR_VL_FUNSD_SPOTTING_SOURCE_REPORT for offline error decomposition.");
+        sourcePath = Path.GetFullPath(sourcePath);
+        string outputPath = Required("DEPLOYSHARP_PADDLEOCR_VL_FUNSD_SPOTTING_BREAKDOWN_REPORT");
+        if (File.Exists(outputPath)) throw new IOException("The FUNSD Spotting breakdown report already exists: " + outputPath);
+        string datasetRoot = Path.GetFullPath(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLE_FUNSD_ROOT")
+            ?? @"F:\OCRBenchmarkTesting");
+        string manifestPath = Path.Combine(datasetRoot, "data", "annotations", "manifests", "funsd-test-full-001.jsonl");
+        using JsonDocument source = JsonDocument.Parse(File.ReadAllBytes(sourcePath));
+        JsonElement root = source.RootElement;
+        Assert.AreEqual("completed", root.GetProperty("status").GetString());
+        Assert.AreEqual("paddleocr-vl/1.6", root.GetProperty("model").GetProperty("id").GetString());
+        Assert.AreEqual(PaddleOcrVlInputPlanning.OfficialV16Revision,
+            root.GetProperty("model").GetProperty("checkpointRevision").GetString());
+        Assert.AreEqual("EndOfSequence", root.GetProperty("generation").GetProperty("finishReason").GetString());
+        Assert.AreEqual("Succeeded", root.GetProperty("generation").GetProperty("parseStatus").GetString());
+        JsonElement dataset = root.GetProperty("dataset");
+        Assert.AreEqual("FUNSD", dataset.GetProperty("name").GetString());
+        Assert.AreEqual("test", dataset.GetProperty("split").GetString());
+        Assert.AreEqual(Hash(manifestPath), dataset.GetProperty("manifestSha256").GetString());
+        int pageIndex = dataset.TryGetProperty("pageIndex", out JsonElement index) ? index.GetInt32() : 0;
+        using JsonDocument selected = JsonDocument.Parse(SelectManifestLine(File.ReadLines(manifestPath), pageIndex));
+        JsonElement page = selected.RootElement;
+        Assert.AreEqual(page.GetProperty("image_id").GetString(), dataset.GetProperty("imageId").GetString());
+        Assert.AreEqual(page.GetProperty("source_provenance").GetProperty("image_sha256").GetString(),
+            dataset.GetProperty("imageSha256").GetString());
+        List<WordLabel> labels = ReadLabels(page);
+        JsonElement original = root.GetProperty("quality");
+        List<PredictedRegion> predictions = original.GetProperty("regions").EnumerateArray()
+            .Select(region => new PredictedRegion(region.GetProperty("index").GetInt32(), region.GetProperty("text").GetString()!,
+                region.GetProperty("polygon").EnumerateArray().Select(point =>
+                    new Point(point.GetProperty("x").GetDouble(), point.GetProperty("y").GetDouble())).ToArray()))
+            .ToList();
+        Assert.IsTrue(predictions.Select((prediction, position) => prediction.Index == position).All(value => value),
+            "The saved region order must match its prediction indices.");
+        QualityResult actual = Evaluate(labels, predictions);
+        Assert.AreEqual(original.GetProperty("labelledWords").GetInt32(), actual.LabelledWords);
+        Assert.AreEqual(original.GetProperty("predictedRegions").GetInt32(), actual.PredictedRegions);
+        Assert.AreEqual(original.GetProperty("coveredWords").GetInt32(), actual.CoveredWords);
+        Assert.AreEqual(original.GetProperty("uncoveredWords").GetInt32(), actual.UncoveredWords);
+        Assert.AreEqual(original.GetProperty("unmatchedPredictions").GetInt32(), actual.UnmatchedPredictions);
+        Assert.AreEqual(original.GetProperty("ambiguousWords").GetInt32(), actual.AmbiguousWords);
+        Assert.AreEqual(original.GetProperty("referenceCharacters").GetInt32(), actual.ReferenceCharacters);
+        Assert.AreEqual(original.GetProperty("referenceWords").GetInt32(), actual.ReferenceWords);
+        Assert.AreEqual(original.GetProperty("characterEdits").GetInt32(), actual.CharacterEdits);
+        Assert.AreEqual(original.GetProperty("wordEdits").GetInt32(), actual.WordEdits);
+        Assert.AreEqual(actual.ReferenceCharacters, actual.ErrorBreakdown.AssociatedReferenceCharacters +
+            actual.ErrorBreakdown.UncoveredReferenceCharacterDeletions);
+        Assert.AreEqual(actual.ReferenceWords, actual.ErrorBreakdown.AssociatedReferenceWords +
+            actual.ErrorBreakdown.UncoveredReferenceWordDeletions);
+        Assert.AreEqual(actual.CharacterEdits, actual.ErrorBreakdown.AssociatedCharacterEdits +
+            actual.ErrorBreakdown.UnmatchedPredictionCharacterInsertions +
+            actual.ErrorBreakdown.UncoveredReferenceCharacterDeletions);
+        Assert.AreEqual(actual.WordEdits, actual.ErrorBreakdown.AssociatedWordEdits +
+            actual.ErrorBreakdown.UnmatchedPredictionWordInsertions +
+            actual.ErrorBreakdown.UncoveredReferenceWordDeletions);
+        var summary = new { schemaVersion = "deploysharp-paddleocr-vl-funsd-spotting-error-breakdown-v1",
+            sourceReportSha256 = Hash(sourcePath), manifestSha256 = Hash(manifestPath), pageIndex,
+            imageId = dataset.GetProperty("imageId").GetString(), imageSha256 = dataset.GetProperty("imageSha256").GetString(),
+            backend = root.GetProperty("environment").GetProperty("backend").GetString(),
+            actual.LabelledWords, actual.PredictedRegions, actual.CoveredWords, actual.UncoveredWords,
+            actual.UnmatchedPredictions, actual.AmbiguousWords, actual.ReferenceCharacters, actual.ReferenceWords,
+            actual.CharacterEdits, actual.WordEdits, actual.ErrorBreakdown,
+            boundary = "Centroid-associated edit decomposition; associated edits still mix transcription and within-region assignment. Not official FUNSD accuracy." };
+        Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+        File.WriteAllText(outputPath, JsonSerializer.Serialize(summary, JsonOptions) + "\n");
+        TestContext.AddResultFile(outputPath);
+    }
+
+    private static string ResolveBackend(string? value)
+    {
+        string selected = string.IsNullOrWhiteSpace(value) ? "onnxruntime-cpu" : value.Trim().ToLowerInvariant();
+        return selected == "onnxruntime-cpu" || selected == "openvino-cpu" ? selected :
+            throw new ArgumentException("FUNSD Spotting backend must be onnxruntime-cpu or openvino-cpu.", nameof(value));
+    }
+
     private static string SelectManifestLine(IEnumerable<string> lines, int pageIndex)
     {
         if (pageIndex < 0) throw new ArgumentOutOfRangeException(nameof(pageIndex));
         return lines.Where(line => !string.IsNullOrWhiteSpace(line)).Skip(pageIndex).FirstOrDefault()
             ?? throw new InvalidDataException("The FUNSD manifest has no nonempty row at index " + pageIndex + ".");
     }
+
+    private static List<WordLabel> ReadLabels(JsonElement page)
+        => page.GetProperty("instances").EnumerateArray()
+            .Where(instance => !instance.GetProperty("ignore").GetBoolean() && !string.IsNullOrWhiteSpace(instance.GetProperty("text").GetString()))
+            .Select(instance => new WordLabel(instance.GetProperty("instance_id").GetString()!,
+                instance.GetProperty("text").GetString()!, instance.GetProperty("reading_order").GetInt32(),
+                ReadPolygon(instance.GetProperty("polygon")))).ToList();
 
     private static QualityResult Evaluate(IReadOnlyList<WordLabel> labels, IReadOnlyList<PredictedRegion> predictions)
     {
@@ -211,6 +341,8 @@ public sealed class PaddleOcrVlFunsdSpottingQualityIntegrationTests
         }
         var rows = new List<MatchedRegion>(predictions.Count);
         int referenceCharacters = 0, referenceWords = 0, edits = 0, wordEdits = 0;
+        int associatedCharacters = 0, associatedWords = 0, associatedEdits = 0, associatedWordEdits = 0;
+        int unmatchedCharacterInsertions = 0, unmatchedWordInsertions = 0;
         for (int index = 0; index < predictions.Count; index++)
         {
             PredictedRegion prediction = predictions[index];
@@ -220,21 +352,36 @@ public sealed class PaddleOcrVlFunsdSpottingQualityIntegrationTests
             OcrTextAccuracyMetrics metrics = OcrTextAccuracy.Compare(reference, hypothesis);
             referenceCharacters += metrics.ReferenceCharacters; referenceWords += metrics.ReferenceWords;
             edits += metrics.CharacterEditDistance; wordEdits += metrics.WordEditDistance;
+            if (matched.Length == 0)
+            {
+                unmatchedCharacterInsertions += metrics.CharacterEditDistance;
+                unmatchedWordInsertions += metrics.WordEditDistance;
+            }
+            else
+            {
+                associatedCharacters += metrics.ReferenceCharacters; associatedWords += metrics.ReferenceWords;
+                associatedEdits += metrics.CharacterEditDistance; associatedWordEdits += metrics.WordEditDistance;
+            }
             rows.Add(new MatchedRegion(prediction.Index, prediction.Text, prediction.Polygon,
                 matched.Select(label => label.Id).ToArray(), reference, metrics.CharacterEditDistance, metrics.WordEditDistance));
         }
+        int uncoveredCharacterDeletions = 0, uncoveredWordDeletions = 0;
         foreach (WordLabel label in missed)
         {
             OcrTextAccuracyMetrics metrics = OcrTextAccuracy.Compare(Normalize(label.Text), "");
             referenceCharacters += metrics.ReferenceCharacters; referenceWords += metrics.ReferenceWords;
             edits += metrics.CharacterEditDistance; wordEdits += metrics.WordEditDistance;
+            uncoveredCharacterDeletions += metrics.CharacterEditDistance;
+            uncoveredWordDeletions += metrics.WordEditDistance;
         }
         int covered = labels.Count - missed.Count;
+        var breakdown = new ErrorBreakdown(associatedCharacters, associatedWords, associatedEdits, associatedWordEdits,
+            unmatchedCharacterInsertions, unmatchedWordInsertions, uncoveredCharacterDeletions, uncoveredWordDeletions);
         return new QualityResult(labels.Count, predictions.Count, covered, missed.Count,
             rows.Count(row => row.GroundTruthWordIds.Length == 0), ambiguous, referenceCharacters, referenceWords,
             edits, wordEdits, referenceCharacters == 0 ? 0 : (double)edits / referenceCharacters,
             referenceWords == 0 ? 0 : (double)wordEdits / referenceWords,
-            missed.Select(label => label.Id).ToArray(), rows);
+            missed.Select(label => label.Id).ToArray(), rows, breakdown);
     }
 
     private static bool Contains(IReadOnlyList<Point> polygon, Point point)
@@ -302,5 +449,8 @@ public sealed class PaddleOcrVlFunsdSpottingQualityIntegrationTests
     private sealed record QualityResult(int LabelledWords, int PredictedRegions, int CoveredWords, int UncoveredWords,
         int UnmatchedPredictions, int AmbiguousWords, int ReferenceCharacters, int ReferenceWords,
         int CharacterEdits, int WordEdits, double CharacterErrorRate, double WordErrorRate,
-        string[] UncoveredWordIds, IReadOnlyList<MatchedRegion> Regions);
+        string[] UncoveredWordIds, IReadOnlyList<MatchedRegion> Regions, ErrorBreakdown ErrorBreakdown);
+    private sealed record ErrorBreakdown(int AssociatedReferenceCharacters, int AssociatedReferenceWords,
+        int AssociatedCharacterEdits, int AssociatedWordEdits, int UnmatchedPredictionCharacterInsertions,
+        int UnmatchedPredictionWordInsertions, int UncoveredReferenceCharacterDeletions, int UncoveredReferenceWordDeletions);
 }
