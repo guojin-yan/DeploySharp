@@ -60,7 +60,7 @@
     {
       "scope": "PP-OCRv6 Small/Medium prediction-blind HierText train wide-line holdout",
       "models": ["paddleocr/ppocrv6/small-rec", "paddleocr/ppocrv6/medium-rec"],
-      "backend": "onnxruntime-cpu-1.28.0",
+      "backends": ["onnxruntime-cpu-1.28.0", "openvino-cpu-2026.2.1", "opencv-dnn-cpu-5.0.0"],
       "dataset": "HierText train at revision 70b6620b2b112597d8219e11eee9773a1403827c",
       "annotationSha256": "bf7a271c7a016e66ad87556078f0371f8fb12beaa2e2e60fc33458ad57c3e4fd",
       "candidateReportSha256": "96dc5fb9d6293bcf91360063bb95ee12127571859d74e180b74431dbefa29bc3",
@@ -68,15 +68,19 @@
       "eligibleImages": 26,
       "selectedLines": 12,
       "selectedImages": 12,
-      "callsCompleted": 48,
+      "callsCompletedPerBackend": 48,
+      "backendComparison": "ORT versus OpenVINO and ORT versus OpenCV DNN each: 48/48 text, emitted classes, CER/WER metrics and seam decisions; 48/48 raw-window text and class hashes",
       "referenceCharacters": 1642,
       "referenceWords": 246,
       "small": { "clampCharacterEdits": 37, "slidingCharacterEdits": 85, "clampWordEdits": 20, "slidingWordEdits": 28 },
       "medium": { "clampCharacterEdits": 27, "slidingCharacterEdits": 83, "clampWordEdits": 16, "slidingWordEdits": 26 },
       "rawReportSha256": "1309762eb2470e6319ca74d4ef7b77b64d24c04c2d9d48075409a1e5b9aacd92",
+      "openVinoOpenCvReportSha256": "0c609000cbe257051cdebf4e3f0187094bbcde171ce955fee96281eb30df0c85",
+      "ortOpenVinoComparisonSha256": "34c01e0cd31133760bca113b27369754c3411d97f98746a99f391024cd50b4d3",
+      "ortOpenCvComparisonSha256": "6b05634c3cda16f196b1aa60cdc9c249b58bc710a4b3f092b268fcabe173f288",
       "report": "paddleocr-hiertext-train-natural-wide-holdout-20261027.md",
-      "status": "prediction-blind-holdout-run; clamp-default-retained; A2-open",
-      "boundary": "Train-split selection is separate from seam development but may overlap source-model training. GT-quadrilateral REC-only, one untimed ORT CPU pass. No other backend, DET/CLS/page, official test accuracy or formal performance claim."
+      "status": "prediction-blind-holdout-run; exact-three-backend-cpu-parity; clamp-default-retained; A2-open",
+      "boundary": "Train-split selection is separate from seam development but may overlap source-model training. GT-quadrilateral REC-only, one untimed pass per backend. No TensorRT, DET/CLS/page, official test accuracy or formal performance claim."
     }
   ]
 }
