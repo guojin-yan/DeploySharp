@@ -1,6 +1,6 @@
 # PP-Structure backend status — current index
 
-Generated 2026-10-18T04:30:39Z from source revision 1d7edf67bbffcb12c4366ce518d0e4406f44574f. The authoritative matrix is [eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json](paddle-document-backend-matrix-20260929.json), whose artifact rows are intentionally preserved as the source of truth.
+Generated 2026-10-26T06:21:29Z from source revision 1d7edf67bbffcb12c4366ce518d0e4406f44574f. The authoritative matrix is [eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json](paddle-document-backend-matrix-20260929.json), whose artifact rows are intentionally preserved as the source of truth.
 
 This index covers **31 exact artifact/backend rows** on the named Windows host. It is an execution/contract index, not a claim that every PP-Structure task is production-ready.
 
@@ -122,10 +122,10 @@ The following exact evidence bundles declare at least 5 warm-ups and 50 measured
 | openvino-cpu | 27 | 23 | 23 |
 | tensorrt-cuda | 28 | 21 | 21 |
 
-Formal single-model performance evidence now covers every currently passing OpenVINO CPU and OpenCV DNN CPU artifact in the 31-row matrix. The six FormulaNet-family exports have ORT CPU formal 5/50 records, and UVDoc has a TensorRT dynamic Batch=2 formal benchmark. Wireless SLANeXt remains blocked before TensorRT Engine creation by the exact current importer/Builder boundary, so its missing timing is a support blocker rather than a runnable benchmark gap. These records do not change backend pass/unsupported state. No result here establishes dataset accuracy, second-device reproducibility, locked-clock performance, or long-duration throughput.
+All 84 currently passing primary release artifact/backend pairs have mapped formal evidence; 2 ORT-pass derived OpenVINO compatibility-graph pairs lack standalone formal timing. The bundles use different inputs and device profiles, so this is coverage, not a unified comparable performance matrix. These records do not change backend pass/unsupported state or establish dataset accuracy, second-device reproducibility, locked-clock performance, or long-duration throughput.
 
 ## Boundaries still open
 
-- Quality: A2 natural continuous ≥3,200-character ground truth, A3 natural rotation/inversion labels, B1b/B2/B3 natural degradation/enhancement safety, formula semantic quality, and ChartQA split accuracy.
+- Quality: A2 annotated natural lines with normalized recognition width >3,200 pixels and seam quality, A3 natural rotation/inversion labels, B1b/B2/B3 natural degradation/enhancement safety, formula semantic quality, and ChartQA split accuracy.
 - Performance: one unified formal 5-warm-up/50-measured protocol for the full PP-Structure set, a second-device matrix, and long-duration/throughput stability.
 - `pass` means only that the exact artifact/backend/device/runtime contract executed with the evidence linked by the matrix; it does not promote neighboring exports, runtimes or model families.

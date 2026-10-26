@@ -281,6 +281,26 @@ foreach ($pair in $distinctPerformancePairs) {
         $performanceCoverageErrors.Add("Performance evidence '$($pair.modelId)' / '$($pair.backend)' is registered as '$($asset.$statusProperty)' in the authoritative matrix, not 'pass'.")
     }
 }
+$performancePairKeys = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+foreach ($pair in $distinctPerformancePairs) {
+    [void]$performancePairKeys.Add("$($pair.modelId)|$($pair.backend)")
+}
+$excludedDerivedPairs = [System.Collections.Generic.List[object]]::new()
+$requiredPassingPairCount = 0
+foreach ($asset in $assets) {
+    foreach ($entry in $performanceBackendProperties.GetEnumerator()) {
+        if ([string]$asset.($entry.Value) -ne 'pass') { continue }
+        $key = "$($asset.modelId)|$($entry.Key)"
+        if ([string]$asset.artifactKind -eq 'derived-compat-onnx' -and -not $performancePairKeys.Contains($key)) {
+            $excludedDerivedPairs.Add([ordered]@{ modelId = [string]$asset.modelId; backend = [string]$entry.Key })
+            continue
+        }
+        $requiredPassingPairCount++
+        if (-not $performancePairKeys.Contains($key)) {
+            $performanceCoverageErrors.Add("Passing release artifact '$($asset.modelId)' / '$($entry.Key)' has no formal performance evidence.")
+        }
+    }
+}
 if ($performanceCoverageErrors.Count -gt 0) {
     throw "Formal performance coverage audit failed: $($performanceCoverageErrors -join ' | ')"
 }
@@ -318,13 +338,15 @@ $result = [ordered]@{
         coverageAudit = [ordered]@{
             status = 'pass'
             validatedPairCount = $distinctPerformancePairs.Count
+            requiredPassingPairCount = $requiredPassingPairCount
+            excludedDerivedPairs = @($excludedDerivedPairs)
             errors = @()
         }
-        boundary = 'These are the explicitly mapped formal evidence bundles currently present. They are partial coverage, not a claim that every one of the 31 PP-Structure artifacts has a unified 5/50 benchmark on every backend.'
+        boundary = 'Every currently passing primary release artifact/backend pair has a mapped formal evidence bundle. Two ORT-pass derived OpenVINO compatibility graphs lack standalone formal timing. The reports use different inputs and devices/profiles, so coverage does not establish a unified comparable performance matrix.'
     }
     boundary = [ordered]@{
         statement = 'This index records exact artifact/backend execution evidence only. It does not establish dataset accuracy, CER/WER, formal P50/P95 ranking, engine portability, long-duration stability, or support for unlisted artifacts.'
-        qualityGates = @('A2 natural continuous >=3200-character ground truth', 'A3 natural rotation/inversion labels', 'B1b/B2/B3 natural degradation and enhancement cost', 'formula semantic quality', 'ChartQA split accuracy')
+        qualityGates = @('A2 annotated natural lines with normalized recognition width >3200 pixels and seam quality', 'A3 natural rotation/inversion labels', 'B1b/B2/B3 natural degradation and enhancement cost', 'formula semantic quality', 'ChartQA split accuracy')
         performanceGates = @('unified formal 5 warm-up + 50 measured PP-Structure protocol', 'second-device matrix', 'long-duration soak and cross-page throughput')
     }
     assets = @($assets | ForEach-Object {
@@ -421,12 +443,12 @@ foreach ($summary in $performancePairSummary) {
     [void]$builder.AppendLine("| $($summary.backend) | $($summary.evidencePairCount) | $($summary.distinctModelBackendPairCount) | $($summary.distinctModelCount) |" )
 }
 [void]$builder.AppendLine()
-[void]$builder.AppendLine('Formal single-model performance evidence now covers every currently passing OpenVINO CPU and OpenCV DNN CPU artifact in the 31-row matrix. The six FormulaNet-family exports have ORT CPU formal 5/50 records, and UVDoc has a TensorRT dynamic Batch=2 formal benchmark. Wireless SLANeXt remains blocked before TensorRT Engine creation by the exact current importer/Builder boundary, so its missing timing is a support blocker rather than a runnable benchmark gap. These records do not change backend pass/unsupported state. No result here establishes dataset accuracy, second-device reproducibility, locked-clock performance, or long-duration throughput.')
+[void]$builder.AppendLine("All $requiredPassingPairCount currently passing primary release artifact/backend pairs have mapped formal evidence; $($excludedDerivedPairs.Count) ORT-pass derived OpenVINO compatibility-graph pairs lack standalone formal timing. The bundles use different inputs and device profiles, so this is coverage, not a unified comparable performance matrix. These records do not change backend pass/unsupported state or establish dataset accuracy, second-device reproducibility, locked-clock performance, or long-duration throughput.")
 
 [void]$builder.AppendLine()
 [void]$builder.AppendLine('## Boundaries still open')
 [void]$builder.AppendLine()
-[void]$builder.AppendLine('- Quality: A2 natural continuous ≥3,200-character ground truth, A3 natural rotation/inversion labels, B1b/B2/B3 natural degradation/enhancement safety, formula semantic quality, and ChartQA split accuracy.')
+[void]$builder.AppendLine('- Quality: A2 annotated natural lines with normalized recognition width >3,200 pixels and seam quality, A3 natural rotation/inversion labels, B1b/B2/B3 natural degradation/enhancement safety, formula semantic quality, and ChartQA split accuracy.')
 [void]$builder.AppendLine('- Performance: one unified formal 5-warm-up/50-measured protocol for the full PP-Structure set, a second-device matrix, and long-duration/throughput stability.')
 [void]$builder.AppendLine('- `pass` means only that the exact artifact/backend/device/runtime contract executed with the evidence linked by the matrix; it does not promote neighboring exports, runtimes or model families.')
 

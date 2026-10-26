@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-document-backend-matrix-summary-v1",
-  "generatedUtc": "2026-10-18T04:30:39Z",
+  "generatedUtc": "2026-10-26T06:21:29Z",
   "sourceRevision": "1d7edf67bbffcb12c4366ce518d0e4406f44574f",
   "sourceMatrix": {
     "path": "eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json",
@@ -1851,14 +1851,25 @@
     "coverageAudit": {
       "status": "pass",
       "validatedPairCount": 84,
+      "requiredPassingPairCount": 84,
+      "excludedDerivedPairs": [
+        {
+          "modelId": "paddle-table/slanext-wired-openvino-compat",
+          "backend": "onnxruntime-cpu"
+        },
+        {
+          "modelId": "paddle-table/slanext-wireless-openvino-compat",
+          "backend": "onnxruntime-cpu"
+        }
+      ],
       "errors": []
     },
-    "boundary": "These are the explicitly mapped formal evidence bundles currently present. They are partial coverage, not a claim that every one of the 31 PP-Structure artifacts has a unified 5/50 benchmark on every backend."
+    "boundary": "Every currently passing primary release artifact/backend pair has a mapped formal evidence bundle. Two ORT-pass derived OpenVINO compatibility graphs lack standalone formal timing. The reports use different inputs and devices/profiles, so coverage does not establish a unified comparable performance matrix."
   },
   "boundary": {
     "statement": "This index records exact artifact/backend execution evidence only. It does not establish dataset accuracy, CER/WER, formal P50/P95 ranking, engine portability, long-duration stability, or support for unlisted artifacts.",
     "qualityGates": [
-      "A2 natural continuous >=3200-character ground truth",
+      "A2 annotated natural lines with normalized recognition width >3200 pixels and seam quality",
       "A3 natural rotation/inversion labels",
       "B1b/B2/B3 natural degradation and enhancement cost",
       "formula semantic quality",
