@@ -32,12 +32,14 @@ namespace JYPPX.DeploySharp.Visual.TensorRT
         private readonly CudaMemory _positionMemory;
         private readonly CudaMemory _hiddenMemory;
         private readonly CudaMemory _logitsMemory;
+        private readonly PaddleOcrVlGpuLogitsReducer? _logitsReducer;
         private readonly SemaphoreSlim _operation = new SemaphoreSlim(1, 1);
         private bool _disposed;
 
         /// <summary>Binds five caller-owned sessions whose graph ports match the pinned 1.6 Bundle. / 绑定与固定 1.6 Bundle 端口匹配的五个调用方持有 Session。</summary>
         public PaddleOcrVlTensorRtDeviceSession(IInferenceSession vision, IInferenceSession embedding,
-            IInferenceSession decoder, IInferenceSession head, IInferenceSession prefill)
+            IInferenceSession decoder, IInferenceSession head, IInferenceSession prefill,
+            bool useDeviceLogitsReduction = false)
         {
             _vision = vision ?? throw new ArgumentNullException(nameof(vision));
             _embedding = embedding ?? throw new ArgumentNullException(nameof(embedding));
@@ -66,6 +68,9 @@ namespace JYPPX.DeploySharp.Visual.TensorRT
                 _positionMemory = positionMemory;
                 _hiddenMemory = hiddenMemory;
                 _logitsMemory = logitsMemory;
+                _logitsReducer = useDeviceLogitsReduction
+                    ? PaddleOcrVlGpuLogitsReducer.TryCreate(logitsMemory, VocabularySize, deviceDecoder.DeviceOrdinal)
+                    : null;
             }
             catch
             {
@@ -73,6 +78,9 @@ namespace JYPPX.DeploySharp.Visual.TensorRT
                 throw;
             }
         }
+
+        /// <summary>Gets whether decode tokens are selected on CUDA instead of copying full logits to the host. / 获取解码 Token 是否在 CUDA 上选取。</summary>
+        public bool UsesDeviceLogitsReduction => _logitsReducer != null;
 
         /// <summary>Runs bounded greedy generation; calls on this instance are serialized. / 执行有界 Greedy 生成，同一实例的调用串行化。</summary>
         public PaddleOcrVlGenerationResult Generate(PaddleOcrVlPreparedInput input, PaddleOcrVlTokenizer tokenizer,
@@ -101,6 +109,7 @@ namespace JYPPX.DeploySharp.Visual.TensorRT
             {
                 if (_disposed) return;
                 _disposed = true;
+                if (_logitsReducer != null) TryDispose(_logitsReducer);
                 TryDispose(_logitsMemory); TryDispose(_hiddenMemory); TryDispose(_positionMemory);
                 TryDispose(_embeddingMemory); TryDispose(_stream);
             }
@@ -185,8 +194,13 @@ namespace JYPPX.DeploySharp.Visual.TensorRT
                     new[] { new TensorRtDeviceTensor("logits", TensorElementType.Float32, new TensorShape(1, 1, VocabularySize), _logitsMemory) },
                     _stream, cancellationToken))
                 {
-                    head.Synchronize();
-                    selected = ArgMax(_logitsMemory.ToSingleArray(VocabularySize));
+                    if (_logitsReducer != null)
+                        selected = _logitsReducer.Select(_stream, VocabularySize);
+                    else
+                    {
+                        head.Synchronize();
+                        selected = ArgMax(_logitsMemory.ToSingleArray(VocabularySize));
+                    }
                     head.ReleaseAfterEnqueue();
                     decode.ReleaseAfterEnqueue();
                 }

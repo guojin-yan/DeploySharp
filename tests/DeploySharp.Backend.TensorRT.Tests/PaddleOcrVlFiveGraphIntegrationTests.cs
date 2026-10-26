@@ -141,8 +141,12 @@ public sealed class PaddleOcrVlFiveGraphIntegrationTests
                 : Array.Empty<TimedSession>();
             IInferenceSession[] active = timed.Length > 0 ? timed.Cast<IInferenceSession>().ToArray() : sessions.ToArray();
             using var pipeline = deviceKvEnabled ? null : new PaddleOcrVlOnnxSession(active[0], active[1], active[2], active[3], active[4]);
+            bool useDeviceLogitsReduction = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_VL_REQUIRE_DEVICE_LOGITS") == "1";
             using var devicePipeline = deviceKvEnabled
-                ? new PaddleOcrVlTensorRtDeviceSession(active[0], active[1], active[2], active[3], active[4]) : null;
+                ? new PaddleOcrVlTensorRtDeviceSession(active[0], active[1], active[2], active[3], active[4], useDeviceLogitsReduction) : null;
+            report["deviceLogitsReduction"] = devicePipeline?.UsesDeviceLogitsReduction;
+            if (Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_VL_REQUIRE_DEVICE_LOGITS") == "1")
+                Assert.IsTrue(devicePipeline?.UsesDeviceLogitsReduction, "CUDA logits reduction was required but the session fell back to CPU.");
             var generationOptions = new PaddleOcrVlGenerationOptions(maximumNewTokens: maximum, timeout: TimeSpan.FromMinutes(15));
             async Task<PaddleOcrVlGenerationResult> GenerateOneAsync() => devicePipeline != null
                 ? devicePipeline.Generate(input, tokenizer, generationOptions)

@@ -13,6 +13,8 @@ param(
     [ValidateRange(1, 512)] [int] $MaximumNewTokens = 512,
     [switch] $Latency,
     [switch] $DeviceKv,
+    [switch] $DisableDeviceLogits,
+    [switch] $RequireDeviceLogits,
     [ValidateRange(1, 100)] [int] $Warmups = 5,
     [ValidateRange(1, 200)] [int] $Measurements = 50,
     [Parameter(Mandatory)] [string] $TensorRtRoot,
@@ -46,6 +48,12 @@ if ($Latency) {
 }
 if ($DeviceKv) { $env:DEPLOYSHARP_PADDLEOCR_VL_TENSORRT_DEVICE_KV = '1' }
 else { Remove-Item Env:DEPLOYSHARP_PADDLEOCR_VL_TENSORRT_DEVICE_KV -ErrorAction SilentlyContinue }
+if ($DisableDeviceLogits) { $env:DEPLOYSHARP_PADDLEOCR_VL_DISABLE_DEVICE_LOGITS = '1' }
+else { Remove-Item Env:DEPLOYSHARP_PADDLEOCR_VL_DISABLE_DEVICE_LOGITS -ErrorAction SilentlyContinue }
+if ($RequireDeviceLogits) {
+    if (-not $DeviceKv -or $DisableDeviceLogits) { throw 'RequireDeviceLogits requires DeviceKv and conflicts with DisableDeviceLogits.' }
+    $env:DEPLOYSHARP_PADDLEOCR_VL_REQUIRE_DEVICE_LOGITS = '1'
+} else { Remove-Item Env:DEPLOYSHARP_PADDLEOCR_VL_REQUIRE_DEVICE_LOGITS -ErrorAction SilentlyContinue }
 $env:DEPLOYSHARP_PADDLEOCR_VL_SOURCE_COMMIT = (& git -C $repoRoot rev-parse HEAD).Trim()
 if ($LASTEXITCODE -ne 0) { throw 'Cannot identify the source commit.' }
 $testSource = Join-Path $repoRoot 'tests\DeploySharp.Backend.TensorRT.Tests\PaddleOcrVlFiveGraphIntegrationTests.cs'
@@ -86,6 +94,8 @@ $summary = [ordered]@{
     maximumNewTokens = $MaximumNewTokens
     latency = [bool]$Latency
     deviceKv = [bool]$DeviceKv
+    disableDeviceLogits = [bool]$DisableDeviceLogits
+    requireDeviceLogits = [bool]$RequireDeviceLogits
     warmups = if ($Latency) { $Warmups } else { $null }
     measurements = if ($Latency) { $Measurements } else { $null }
     cases = @($rows)
