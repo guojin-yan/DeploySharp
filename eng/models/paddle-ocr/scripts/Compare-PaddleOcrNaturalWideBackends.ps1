@@ -91,7 +91,7 @@ foreach ($path in @($jsonFull, $mdFull)) {
 }
 $summary | ConvertTo-Json -Depth 45 | Set-Content -LiteralPath $jsonFull -Encoding utf8
 $md = [Text.StringBuilder]::new()
-[void]$md.AppendLine('# Natural wide-line backend comparison: ' + $ReferenceBackend + ' / ' + $CandidateBackend + ' (2026-10-23)')
+[void]$md.AppendLine('# Natural wide-line backend comparison: ' + $ReferenceBackend + ' / ' + $CandidateBackend + ' (' + [DateTimeOffset]::Now.ToString('yyyy-MM-dd') + ')')
 [void]$md.AppendLine()
 [void]$md.AppendLine("Status: **$($summary.status)**. Both native runs use the same production Visual DLL and pinned source images, labels, model and dictionary hashes. Each backend executes Small/Medium x Clamp/SlidingWindow x $sourceLineCount labelled quadrilaterals ($expectedRows calls). DET/CLS are bypassed, height is 48, maximum width is 3,200, overlap is 0.2 and batch/Session count is one. This comparison explicitly joins two real native reports; one-backend self-comparisons are not counted as backend pairs.")
 [void]$md.AppendLine()
@@ -103,10 +103,10 @@ foreach ($field in @('textMatched', 'emittedClassesMatched', 'metricsMatched', '
 [void]$md.AppendLine("| Raw window text | $rawWindowTextMatched / $windowsCompared |")
 [void]$md.AppendLine("| Raw window emitted classes | $rawWindowClassesMatched / $windowsCompared |")
 [void]$md.AppendLine()
-[void]$md.AppendLine('Native runtimes: ' + $summary.referenceEvidence.runtime.nativeVersion + '; ' + $summary.candidateEvidence.runtime.nativeVersion + '. The [machine report](' + [IO.Path]::GetFileName($jsonFull) + ') includes per-row hashes/metrics, exact input report SHA values, DLL identities and any freshly built engine identities. No raw annotation text or image is copied into this report.')
+[void]$md.AppendLine('Native runtimes: ' + $summary.referenceEvidence.runtime.nativeVersion + '; ' + $summary.candidateEvidence.runtime.nativeVersion + '. The [machine report](' + [IO.Path]::GetFileName($jsonFull) + ') includes per-row hashes/metrics, exact input report SHA values, DLL identities and candidate Engine identities/provenance. No raw annotation text or image is copied into this report.')
 [void]$md.AppendLine()
 if ($CandidateBackend -ceq 'tensorrt') {
-    [void]$md.AppendLine('TensorRT engines are built through the library with runtime-default precision, optimization level 0 and 256 MiB workspace; dynamic input profile [1,3,48,minimumWidth] / [1,3,48,320] / [1,3,48,3200]. CPU crop/CTC/merge is shared with the reference. GPU snapshots capture two instants only; concurrent workloads and uncontrolled clocks prevent performance interpretation.')
+    [void]$md.AppendLine('TensorRT Engine SHA values and build/reuse provenance are recorded per model in the machine report. A reused prebuilt Engine is SHA-pinned but its build profile is not re-inspected by this comparison. CPU crop/CTC/merge is shared with the reference. GPU snapshots capture two instants only; concurrent workloads and uncontrolled clocks prevent performance interpretation.')
     [void]$md.AppendLine()
 }
 [void]$md.AppendLine($summary.boundary)

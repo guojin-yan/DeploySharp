@@ -26,7 +26,36 @@
       "ortOpenCvComparisonSha256": "8ec37bdb20daaa6b67cf3eabc14a3c6162fc2bea6241eb46a1c90b5df8e2ae84",
       "report": "paddleocr-natural-wide-seam-candidate-20261027.md",
       "status": "bounded-seam-improvement; exact-three-backend-cpu-parity; clamp-default-retained; A2-open",
-      "boundary": "GT quadrilateral REC-only. TensorRT, natural repeated-number/single-character seams, broader quality and formal latency remain unverified."
+      "boundary": "GT quadrilateral REC-only. TensorRT is tracked separately below; natural repeated-number/single-character seams, broader quality and formal latency remain unverified."
+    },
+    {
+      "scope": "PP-OCRv6 Small/Medium independent natural wide-line TensorRT follow-up",
+      "models": ["paddleocr/ppocrv6/small-rec", "paddleocr/ppocrv6/medium-rec"],
+      "backend": "tensorrt-11-rtx3060-laptop",
+      "dataset": "HierText test at revision 70b6620b2b112597d8219e11eee9773a1403827c",
+      "labelledLines": 17,
+      "mainQualityLines": 12,
+      "callsCompleted": 68,
+      "mainQualityRowsMatched": 48,
+      "mainQualityRowsCompared": 48,
+      "allTextAndClassRowsMatched": 64,
+      "allMetricRowsMatched": 66,
+      "allSeamDecisionRowsMatched": 68,
+      "allRowsCompared": 68,
+      "rawWindowTextAndClassMatched": 68,
+      "rawWindowsCompared": 70,
+      "differentRowsStratum": "official-illegible only",
+      "small": { "clampCharacterEdits": 56, "slidingCharacterEdits": 58, "referenceCharacters": 1945 },
+      "medium": { "clampCharacterEdits": 45, "slidingCharacterEdits": 91, "referenceCharacters": 1945 },
+      "engineSha256": {
+        "small": "75cd404311421d0fd9a8b9ccaef91812be5fbc7072ee4ff1631b14f88ccd063d",
+        "medium": "036e46893749d8af378047fa33843f9e2ea64a3a9b4675e07783483a9e6dce36"
+      },
+      "nativeReportSha256": "034dd9c384dca5c6d2a0e89dfcefe08bdf2f9f262f2af60ca7ab18ed75405f66",
+      "ortTensorRtComparisonSha256": "08cddb8fa01ae635bffe3363dd159d46c9d998a623b1b21081fdf4bc55bcbb53",
+      "report": "paddleocr-natural-wide-seam-candidate-20261027.md",
+      "status": "main-quality-parity; diagnostic-differences; A2-open",
+      "boundary": "GT quadrilateral REC-only, shared CPU crop/CTC/merge. Prebuilt Engine profile not re-inspected. No DET/CLS/page quality or formal performance claim."
     }
   ]
 }

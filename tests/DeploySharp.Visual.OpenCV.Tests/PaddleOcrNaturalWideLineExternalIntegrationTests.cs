@@ -152,18 +152,37 @@ public sealed class PaddleOcrNaturalWideLineExternalIntegrationTests
                         var min = new TensorShape(1, 3, 48, recognizer.CropProfile.MinimumWidth);
                         var opt = new TensorShape(1, 3, 48, 320);
                         var max = new TensorShape(1, 3, 48, 3200);
-                        Directory.CreateDirectory(engineRoot);
-                        TensorRtOnnxEngineBuildResult engine = new TensorRtOnnxEngineBuilder().Build(recognizer.CreateArtifact(recognizerPath),
-                            Path.Combine(engineRoot, "v6-" + size + "-rec.engine"), new TensorRtOnnxEngineBuildOptions(apiVersion: api,
-                                precision: TensorRtOnnxEnginePrecision.RuntimeDefault, workspaceBytes: 268435456UL, optimizationLevel: 0,
-                                inputProfiles: new[] { new TensorRtOnnxInputProfile(recognizer.VisualProfile.Input.Name, min, opt, max) }));
-                        Assert.IsTrue(engine.EngineBytes > 0);
-                        engines.Add(new { model = size, engine.EngineSha256, engine.EngineBytes, engine.BuildInputsSha256, engine.OnnxSha256,
-                            api = (int)api, precision = engine.Precision.ToString(), optimizationLevel = 0, workspaceBytes = 268435456,
-                            minimumShape = min.ToArray(), optimumShape = opt.ToArray(), maximumShape = max.ToArray() });
-                        selectedRecognizerPath = engine.EnginePath;
+                        string? prebuiltRoot = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_NATURAL_WIDE_PREBUILT_ENGINE_ROOT");
+                        string engineSha;
+                        if (string.IsNullOrWhiteSpace(prebuiltRoot))
+                        {
+                            Directory.CreateDirectory(engineRoot);
+                            TensorRtOnnxEngineBuildResult engine = new TensorRtOnnxEngineBuilder().Build(recognizer.CreateArtifact(recognizerPath),
+                                Path.Combine(engineRoot, "v6-" + size + "-rec.engine"), new TensorRtOnnxEngineBuildOptions(apiVersion: api,
+                                    precision: TensorRtOnnxEnginePrecision.RuntimeDefault, workspaceBytes: 268435456UL, optimizationLevel: 0,
+                                    inputProfiles: new[] { new TensorRtOnnxInputProfile(recognizer.VisualProfile.Input.Name, min, opt, max) }));
+                            Assert.IsTrue(engine.EngineBytes > 0);
+                            engines.Add(new { model = size, engine.EngineSha256, engine.EngineBytes, engine.BuildInputsSha256, engine.OnnxSha256,
+                                api = (int)api, precision = engine.Precision.ToString(), optimizationLevel = 0, workspaceBytes = 268435456,
+                                minimumShape = min.ToArray(), optimumShape = opt.ToArray(), maximumShape = max.ToArray() });
+                            selectedRecognizerPath = engine.EnginePath;
+                            engineSha = engine.EngineSha256;
+                        }
+                        else
+                        {
+                            selectedRecognizerPath = RequireFile(Path.Combine(prebuiltRoot, "v6-" + size + "-rec.engine"));
+                            string? expectedSha = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_NATURAL_WIDE_PREBUILT_SHA_" + size.ToUpperInvariant());
+                            if (expectedSha == null || expectedSha.Length != 64 || !expectedSha.All(Uri.IsHexDigit))
+                                throw new ArgumentException("A pinned 64-hex prebuilt Engine SHA is required for each recognizer.");
+                            engineSha = ShaFile(selectedRecognizerPath);
+                            Assert.AreEqual(expectedSha.ToLowerInvariant(), engineSha);
+                            long engineBytes = new FileInfo(selectedRecognizerPath).Length;
+                            Assert.IsTrue(engineBytes > 0);
+                            engines.Add(new { model = size, EngineSha256 = engineSha, EngineBytes = engineBytes, OnnxSha256 = recRelease.Sha256,
+                                api = (int)api, source = "prebuilt-exact-sha", profileSource = "caller-pinned Engine; profile not re-inspected" });
+                        }
                         Checkpoint(backend, size, "engine-built");
-                        recognizer = PaddleOcrModelCatalog.CreateProfile(recognizerId, Artifact(recRelease, DictionarySha, engine.EngineSha256), characters, maximumBatch: 1);
+                        recognizer = PaddleOcrModelCatalog.CreateProfile(recognizerId, Artifact(recRelease, DictionarySha, engineSha), characters, maximumBatch: 1);
                         recognizerRegistry.UseTensorRT(new TensorRtBackendOptions(api));
                         backendId = TensorRtBackendProvider.BackendId;
                         break;
