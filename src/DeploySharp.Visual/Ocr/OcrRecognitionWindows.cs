@@ -236,8 +236,9 @@ namespace JYPPX.DeploySharp.Visual
                 }
                 if (!string.Equals(rawText.ToString(), raw.Text, StringComparison.Ordinal)) throw new ArgumentException("CTC emissions do not reproduce the raw text.", nameof(windows));
                 int overlapEditDistance = 0;
-                int remove = index == 0 ? 0 : Match(windows[index - 1], window, previous!, current, profile, out overlapEditDistance);
-                bool uncertain = index > 0 && (remove == 0 || overlapEditDistance > 0);
+                bool approximate = false;
+                int remove = index == 0 ? 0 : Match(windows[index - 1], window, previous!, current, profile, out overlapEditDistance, out approximate);
+                bool uncertain = index > 0 && (remove == 0 || approximate);
                 int ordinal = 0;
                 int offset = trace.Count;
                 for (int tokenIndex = 0; tokenIndex < raw.Tokens.Count; tokenIndex++)
@@ -267,9 +268,10 @@ namespace JYPPX.DeploySharp.Visual
             return new OcrRegionResult(region, merged, new OcrRecognitionWidthInfo(naturalWidth, targetWidth, tensorWidth, RecognitionOverflowMode.SlidingWindow, windows.Count), diagnostics);
         }
 
-        private static int Match(OcrRecognitionWindowResult left, OcrRecognitionWindowResult right, List<OcrToken> suffix, List<OcrToken> prefix, TextCropProfile profile, out int editDistance)
+        private static int Match(OcrRecognitionWindowResult left, OcrRecognitionWindowResult right, List<OcrToken> suffix, List<OcrToken> prefix, TextCropProfile profile, out int editDistance, out bool approximate)
         {
             editDistance = 0;
+            approximate = false;
             int maximum = Math.Min(profile.RecognitionWindows.MaximumOverlapTokens, Math.Min(suffix.Count, prefix.Count));
             double overlap = left.End - right.Start;
             double leftStep = StepWidth(left, profile);
@@ -293,7 +295,9 @@ namespace JYPPX.DeploySharp.Visual
                 if (match) return count;
             }
 
-            return MatchApproximate(left, right, suffix, prefix, profile, out editDistance);
+            int matched = MatchApproximate(left, right, suffix, prefix, profile, out editDistance);
+            approximate = matched > 0;
+            return matched;
         }
 
         private static int MatchApproximate(OcrRecognitionWindowResult left, OcrRecognitionWindowResult right, List<OcrToken> suffix, List<OcrToken> prefix, TextCropProfile profile, out int editDistance)
@@ -303,13 +307,8 @@ namespace JYPPX.DeploySharp.Visual
             int minimum = profile.RecognitionWindows.MinimumOverlapTokens;
             double leftStep = StepWidth(left, profile);
             double rightStep = StepWidth(right, profile);
-            int leftStart = suffix.Count;
-            double leftTolerance = leftStep * 0.5;
-            double leftMinimum = right.Start - leftTolerance;
-            double leftMaximum = left.End + leftTolerance;
+            double leftMaximum = left.End + leftStep * 3;
             if (suffix.Count > 0 && Position(left, suffix[suffix.Count - 1], leftStep) > leftMaximum) return 0;
-            while (leftStart > 0 && Position(left, suffix[leftStart - 1], leftStep) >= leftMinimum) leftStart--;
-            int leftCount = suffix.Count - leftStart;
 
             int rightEnd = 0;
             double rightTolerance = rightStep * 0.5;
@@ -317,36 +316,73 @@ namespace JYPPX.DeploySharp.Visual
             double rightMaximum = left.End + rightTolerance;
             if (prefix.Count > 0 && Position(right, prefix[0], rightStep) < rightMinimum) return 0;
             while (rightEnd < prefix.Count && Position(right, prefix[rightEnd], rightStep) <= rightMaximum) rightEnd++;
-            int rightCount = rightEnd;
-
             int minimumFuzzyTokens = Math.Max(8, Math.Max(minimum, profile.RecognitionWindows.MaximumOverlapEditDistance * 2 + 1));
-            if (leftCount < minimumFuzzyTokens || rightCount < minimumFuzzyTokens || leftCount > maximum || rightCount > maximum)
-                return 0;
-
-            for (int index = leftStart; index < suffix.Count; index++) if (suffix[index].IsUnknown || suffix[index].IsBlank) return 0;
+            if (rightEnd < minimumFuzzyTokens) return 0;
             for (int index = 0; index < rightEnd; index++) if (prefix[index].IsUnknown || prefix[index].IsBlank) return 0;
 
+            int leftStart = suffix.Count;
+            while (leftStart > 0 && Position(left, suffix[leftStart - 1], leftStep) >= right.Start - leftStep * 0.5) leftStart--;
             int budget = profile.RecognitionWindows.MaximumOverlapEditDistance;
-            int leading = leftCount - rightCount;
-            bool whitespaceBoundary = leading >= 0 && leading <= budget;
-            // Geometry can include an extra leading space on the left. Charge it to
-            // the same budget; arbitrary dropped letters/digits cannot enable fuzzy
-            // substitutions on a shorter right prefix.
-            // 几何边界可能多含左侧空格，须计入同一预算；不忽略字母/编号来放宽替换。
-            for (int index = 0; whitespaceBoundary && index < leading; index++)
-                whitespaceBoundary = IsWhitespace(suffix[leftStart + index]);
-            if (whitespaceBoundary)
-            {
-                int distance = SubstitutionDistance(left, right, suffix, leftStart + leading, prefix, rightCount, profile, budget - leading);
-                if (distance <= budget - leading)
-                {
-                    editDistance = distance + leading;
-                    return rightCount;
-                }
-            }
+            int matched = MatchApproximateAtStart(left, right, suffix, prefix, profile, leftStart, rightEnd,
+                leftStep, rightStep, minimumFuzzyTokens, maximum, budget, out editDistance);
+            if (matched > 0) return matched;
 
-            return MatchKnownSubsequence(left, right, suffix, leftStart, prefix, rightCount, leftStep, rightStep,
-                minimumFuzzyTokens, budget, out editDistance);
+            // A clipped first token can sit just before the geometric overlap.
+            // Extend only to an identical right-prefix token, never to an arbitrary glyph.
+            // 首 token 可能刚好落在几何重叠外；只扩展到与右侧首 token 相同的位置。
+            int expandedStart = leftStart;
+            while (expandedStart > 0 && Position(left, suffix[expandedStart - 1], leftStep) >= right.Start - leftStep * 3) expandedStart--;
+            for (int start = leftStart - 1; start >= expandedStart; start--)
+            {
+                if (!TokenEquals(suffix[start], prefix[0])) continue;
+                matched = MatchApproximateAtStart(left, right, suffix, prefix, profile, start, rightEnd,
+                    leftStep, rightStep, minimumFuzzyTokens, maximum, budget, out editDistance);
+                if (matched > 0) return matched;
+            }
+            editDistance = 0;
+            return 0;
+        }
+
+        private static int MatchApproximateAtStart(OcrRecognitionWindowResult left, OcrRecognitionWindowResult right,
+            List<OcrToken> suffix, List<OcrToken> prefix, TextCropProfile profile, int leftStart, int rightEnd,
+            double leftStep, double rightStep, int minimumFuzzyTokens, int maximum, int budget, out int editDistance)
+        {
+            editDistance = 0;
+            int leftCount = suffix.Count - leftStart;
+            if (leftCount < minimumFuzzyTokens || leftCount > maximum) return 0;
+            for (int index = leftStart; index < suffix.Count; index++) if (suffix[index].IsUnknown || suffix[index].IsBlank) return 0;
+            int firstCandidate = Math.Min(rightEnd, Math.Min(maximum, leftCount + budget));
+            int lastCandidate = Math.Max(minimumFuzzyTokens, leftCount - budget);
+            if (rightEnd < lastCandidate) lastCandidate = rightEnd;
+            // The geometric interval may include the next word. Keep that right
+            // suffix intact and try only lengths close to the left overlap size.
+            // 几何区间可能含下一个词；保留该右侧尾部，只尝试与左侧重叠长度接近的候选。
+            for (int rightCount = firstCandidate; rightCount >= lastCandidate; rightCount--)
+            {
+                if (rightCount < rightEnd && !TokenEquals(suffix[leftStart], prefix[0]))
+                {
+                    bool trailingWhitespace = true;
+                    for (int index = rightCount; index < rightEnd; index++) trailingWhitespace &= IsWhitespace(prefix[index]);
+                    if (!trailingWhitespace) continue;
+                }
+                int leading = leftCount - rightCount;
+                bool whitespaceBoundary = leading >= 0 && leading <= budget;
+                for (int index = 0; whitespaceBoundary && index < leading; index++)
+                    whitespaceBoundary = IsWhitespace(suffix[leftStart + index]);
+                if (whitespaceBoundary)
+                {
+                    int distance = SubstitutionDistance(left, right, suffix, leftStart + leading, prefix, rightCount, profile, budget - leading);
+                    if (distance <= budget - leading)
+                    {
+                        editDistance = distance + leading;
+                        return rightCount;
+                    }
+                }
+                int matched = MatchKnownSubsequence(left, right, suffix, leftStart, prefix, rightCount, leftStep, rightStep,
+                    minimumFuzzyTokens, budget, out editDistance);
+                if (matched > 0) return matched;
+            }
+            return 0;
         }
 
         private static int MatchKnownSubsequence(OcrRecognitionWindowResult left, OcrRecognitionWindowResult right,

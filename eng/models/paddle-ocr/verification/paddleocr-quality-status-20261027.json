@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "kind": "incremental-quality-status-index",
+  "date": "2026-10-27",
+  "baseline": "paddleocr-quality-status-20261026",
+  "newEvidence": [
+    {
+      "scope": "PP-OCRv6 Small/Medium independent natural wide-line seam follow-up",
+      "models": ["paddleocr/ppocrv6/small-rec", "paddleocr/ppocrv6/medium-rec"],
+      "backend": "onnxruntime-cpu",
+      "dataset": "HierText test at revision 70b6620b2b112597d8219e11eee9773a1403827c",
+      "labelledLines": 17,
+      "mainQualityLines": 12,
+      "referenceCharacters": 1945,
+      "referenceWords": 315,
+      "small": { "clampCharacterEdits": 56, "slidingCharacterEditsBefore": 101, "slidingCharacterEditsAfter": 58, "slidingWordEditsBefore": 34, "slidingWordEditsAfter": 28 },
+      "medium": { "clampCharacterEdits": 45, "slidingCharacterEditsBefore": 134, "slidingCharacterEditsAfter": 91, "slidingWordEditsBefore": 32, "slidingWordEditsAfter": 26 },
+      "mainLineComparison": "4 better, 0 worse, 20 unchanged across 12 lines x 2 models",
+      "clampTextChanged": 0,
+      "rawWindowTextOrClassChanged": 0,
+      "baselineReportSha256": "c7f10c8d2652eb6a97026d99f83d89ddf99b78a49ff315cbf41e6fb35cd485ce",
+      "candidateReportSha256": "63cdd5a39b53bd2709c59e769c64694558e656eccfbd5379e73892076b6a036a",
+      "report": "paddleocr-natural-wide-seam-candidate-20261027.md",
+      "status": "bounded-seam-improvement; clamp-default-retained; A2-open",
+      "boundary": "GT quadrilateral REC-only. OpenVINO/OpenCV post-change parity, TensorRT, natural repeated-number/single-character seams, broader quality and formal latency remain unverified."
+    }
+  ]
+}

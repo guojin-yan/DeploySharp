@@ -337,6 +337,61 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
+        public void TrailingRightWhitespaceDoesNotBlockBoundedOverlapMatching()
+        {
+            TextRegion region = Region(400, 48);
+            TextCropProfile profile = Profile(new OcrRecognitionWindowOptions(.5));
+            IReadOnlyList<OcrRecognitionWindow> plans = OcrRecognitionWindowPlanner.Plan(region, profile);
+            Assert.AreEqual(2, plans.Count);
+            double start = plans[1].Start, end = plans[0].End;
+            var left = new List<(double, string, int)> { (.2 / end, "A", 1) };
+            var right = new List<(double, string, int)>();
+            for (int index = 0; index < 10; index++)
+            {
+                double position = start + (end - start) * (index + 1) / 12;
+                string text = ((char)('B' + index)).ToString();
+                left.Add((position / end, text, index + 2));
+                right.Add(((position - start) / (1 - start), index == 0 ? "X" : text, index == 0 ? 999 : index + 2));
+            }
+            right.Add(((end - start) * .95 / (1 - start), " ", 1000));
+            right.Add(((.9 - start) / (1 - start), "Z", 1001));
+            var raw = new[] { new OcrRecognitionWindowResult(plans[0], Trace(plans[0], profile, left), plans[0].Crop.WidthInfo),
+                new OcrRecognitionWindowResult(plans[1], Trace(plans[1], profile, right), plans[1].Crop.WidthInfo) };
+            OcrRegionResult merged = OcrRecognitionWindowMerger.Merge(region, profile, raw);
+            Assert.AreEqual("ABCDEFGHIJK Z", merged.Recognition.Text);
+            Assert.AreEqual(10, merged.RecognitionWindows[1].RemovedPrefixTokens);
+            Assert.AreEqual(1, merged.RecognitionWindows[1].OverlapEditDistance);
+            Assert.IsTrue(merged.RecognitionWindows[1].SeamUncertain);
+        }
+
+        [TestMethod]
+        public void OneClippedBoundaryTokenCanAnchorAnOtherwiseExactOverlap()
+        {
+            TextRegion region = Region(400, 48);
+            TextCropProfile profile = Profile(new OcrRecognitionWindowOptions(.5));
+            IReadOnlyList<OcrRecognitionWindow> plans = OcrRecognitionWindowPlanner.Plan(region, profile);
+            Assert.AreEqual(2, plans.Count);
+            double start = plans[1].Start, end = plans[0].End;
+            var left = new List<(double, string, int)> { ((start - 2.2 * end / 100) / end, "?", 1) };
+            var right = new List<(double, string, int)> { (.01, "?", 1) };
+            for (int index = 0; index < 10; index++)
+            {
+                double position = start + (end - start) * (index + 1) / 12;
+                string text = ((char)('B' + index)).ToString();
+                left.Add((position / end, text, index + 2));
+                right.Add(((position - start) / (1 - start), text, index + 2));
+            }
+            right.Add(((.9 - start) / (1 - start), "Z", 1001));
+            var raw = new[] { new OcrRecognitionWindowResult(plans[0], Trace(plans[0], profile, left), plans[0].Crop.WidthInfo),
+                new OcrRecognitionWindowResult(plans[1], Trace(plans[1], profile, right), plans[1].Crop.WidthInfo) };
+            OcrRegionResult merged = OcrRecognitionWindowMerger.Merge(region, profile, raw);
+            Assert.AreEqual("?BCDEFGHIJKZ", merged.Recognition.Text);
+            Assert.AreEqual(11, merged.RecognitionWindows[1].RemovedPrefixTokens);
+            Assert.AreEqual(0, merged.RecognitionWindows[1].OverlapEditDistance);
+            Assert.IsTrue(merged.RecognitionWindows[1].SeamUncertain);
+        }
+
+        [TestMethod]
         public void AmbiguousRepeatedNumberAlignmentsKeepTheRightPrefix()
         {
             TextRegion region = Region(400, 48);

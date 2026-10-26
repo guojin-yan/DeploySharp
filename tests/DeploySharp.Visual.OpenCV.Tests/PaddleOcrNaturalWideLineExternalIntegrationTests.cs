@@ -65,6 +65,15 @@ public sealed class PaddleOcrNaturalWideLineExternalIntegrationTests
             Assert.AreEqual(1, lines.Count(line => !line.Legible));
             Assert.AreEqual(1, lines.Count(line => line.Height < 2));
         }
+        string? selectedKeys = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_NATURAL_WIDE_KEYS");
+        if (!string.IsNullOrWhiteSpace(selectedKeys))
+        {
+            string[] keys = selectedKeys.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+            if (keys.Length == 0 || keys.Distinct(StringComparer.Ordinal).Count() != keys.Length
+                || keys.Any(key => !lines.Any(line => line.Key == key)))
+                throw new ArgumentException("Choose unique natural-wide keys present in the pinned candidate report.");
+            lines = lines.Where(line => keys.Contains(line.Key, StringComparer.Ordinal)).ToList();
+        }
 
         var rows = new List<LineEvidence>();
         var localTraces = new List<object>();
@@ -292,6 +301,7 @@ public sealed class PaddleOcrNaturalWideLineExternalIntegrationTests
                     line.ImageSha256, line.Legible, line.Handwritten, line.Vertical, sourceHeight = line.Height, qualityStratum = line.QualityStratum }).ToArray() },
             protocol = new { path = "GT quadrilateral -> RecognizeOnlyAsync; DET/CLS bypassed", maximumWidthPixels = 3200, targetHeight = 48,
                 overlapRatio = .2, batchSize = 1, sessions = 1, order = "backend -> model -> Clamp then SlidingWindow -> pinned candidate order",
+                selection = selectedKeys == null ? "complete pinned geometry selection" : "explicit diagnostic key subset; not the complete quality cohort",
                 metrics = "Unicode-scalar CER and whitespace-token WER; raw ordinal and explicit invariant-lowercase views; no punctuation/space removal",
                 qualityStrata = "Main quality: legible=true and source bbox height>=2px; official illegible and sub-2px geometry retained separately. Counts come from dataset.lines.",
                 measurements = "One untimed execution per line/mode/backend; no speed or statistical significance claim",
@@ -300,7 +310,7 @@ public sealed class PaddleOcrNaturalWideLineExternalIntegrationTests
             models, runtimes, engines, quality, paired, parity, rows, localTraceEvidence,
             gpuObservation = new { before = gpuBefore, after = backends.Contains("tensorrt") ? ReadGpuTelemetry() : null,
                 scope = "Snapshots only, no clock control or during-run utilization/power sampling; quality execution, not a performance benchmark" },
-            boundary = "A2 is a >3200 normalized-pixel-width gate, not a 3200-character gate. This bounded geometry-selected slice is recognizer-only, not detector/page accuracy, official HierText scoring, seam ground truth or release acceptance. Repeated-number/single-character seam sets, further backends and wider independent validation remain open."
+            boundary = "A2 is a >3200 normalized-pixel-width gate, not a 3200-character gate. This bounded geometry-selected slice is recognizer-only, not detector/page accuracy, official HierText scoring, seam ground truth or release acceptance. An explicit key subset is diagnostic only and cannot replace the complete cohort. Repeated-number/single-character seam sets, further backends and wider independent validation remain open."
         }, new JsonSerializerOptions { WriteIndented = true }));
         TestContext.AddResultFile(report);
         TestContext.WriteLine("NATURAL_WIDE_GT_REPORT=" + report);
