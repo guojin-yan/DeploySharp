@@ -1,12 +1,12 @@
 # PaddleOCR-VL 页面区域与多页示例
 
-> 状态：四图 ONNX Bundle 已接入主库并在本地 staging catalog 中完成九个资产映射；远端 `models-paddleocr` Release 资产待具备写权限后上传。
+> 状态：PaddleOCR-VL-1.6 五图 ONNX Bundle 已作为十个独立资产发布到 [`models-paddleocr` Release](https://github.com/guojin-yan/DeploySharp/releases/tag/models-paddleocr)。本示例支持按需下载、离线复用和本地 Bundle 校验。
 
 本示例把实际图片解码、版面区域裁剪、VL 生成和页面 JSON/Markdown 导出连成一个完整流程。支持 .NET 8/9/10 的实验性 PaddleOCR-VL-1.6 Bundle；当前使用 ONNX Runtime CPU，OpenCV 只负责图片解码和裁剪。
 
 ## 准备模型和页面
 
-模型使用固定 revision `c5630abae1d940eafe0697512a0325494b02ab42`。`tokenizer-root` 包含官方 tokenizer/template 文件，`bundle-root` 包含同一批次的 `vision.onnx`、`embedding.onnx`、`decoder.onnx`、`head.onnx`。Bundle 的来源、验证工厂和下载状态见 [VL 使用说明](../../../docs/articles/visual-ocr.md#paddleocr-vl-是否已经可用于模型推理)；九个独立资产已在本地暂存并完成 catalog 映射，远端 Release 尚未提供这些资产；具备写权限并完成上传后，才可用 `PaddleOcrReleaseClient.GetBundleAsync("paddleocr-vl/1.6")` 按需下载并校验。
+模型使用固定 revision `c5630abae1d940eafe0697512a0325494b02ab42`。推荐用 `--release`：`PaddleOcrReleaseClient.GetBundleAsync("paddleocr-vl/1.6")` 只下载本模型的五个 ONNX 图、四个 tokenizer/template 文件和 manifest，按 Release catalog 的大小与 SHA-256 校验后隔离缓存；`--offline` 只从已经完整校验的缓存运行。已有本地 Bundle 可用 `--bundle`，在创建 Session 前再次校验 manifest 和文件。Bundle 的来源、验证工厂和后端边界见 [VL 使用说明](../../../docs/articles/visual-ocr.md#paddleocr-vl-是否已经可用于模型推理)。
 
 新建 `pages.json`，为每页指定图片、解码后尺寸、唯一页码和已知区域。例如两页各有一块表格：
 
@@ -119,16 +119,14 @@ JSON 的 `payload.regions` 和区域文件名仍按原 `regionIndex`，新增 `p
 
 ```powershell
 dotnet run --project samples/02-visual/paddleocr-vl-document/PaddleOcrVlDocument.csproj -c Release -- `
-  E:\Model\PaddleOCR-VL\1.6\c5630abae1d940eafe0697512a0325494b02ab42 `
-  E:\Model\PaddleOCR-VL\exports\dynamic-fp32-20261023 `
-  E:\Data\document\pages.json E:\Data\document\vl-output 2
+  --release E:\DeploySharpCache E:\Data\document\pages.json E:\Data\document\vl-output 2
 ```
 
-最后的 `2` 是页面并发上限，省略时顺序处理。示例自动引用 Windows x64 或 Ubuntu 22.04 x64 的 OpenCV runtime；原生系统依赖仍需可用。`Ctrl+C` 取消流水线。每页输出 `page-<index>.json` 和 `.md`，包括原始生成文本、Token、结束原因、页面与区域输入身份、源区域坐标、局部失败和阶段耗时。存在失败、未到 EOS、表格结构或 Spotting 解析失败的区域时返回非零退出码。
+首次运行需要网络下载约 4.4 GiB 模型资产；后续相同命令可追加 `--offline` 只使用已校验缓存。已有 Bundle 则将 `--release <cache-root>` 换成 `--bundle <bundle-root>`；旧的 `<tokenizer-root> <bundle-root>` 位置参数模式仍兼容，但不会执行 Bundle manifest 校验。最后的 `2` 是页面并发上限，省略时顺序处理。示例自动引用 Windows x64 或 Ubuntu 22.04 x64 的 OpenCV runtime；原生系统依赖仍需可用。`Ctrl+C` 取消流水线。每页输出 `page-<index>.json` 和 `.md`，包括原始生成文本、Token、结束原因、页面与区域输入身份、源区域坐标、局部失败和阶段耗时。存在失败、未到 EOS、表格结构或 Spotting 解析失败的区域时返回非零退出码。
 
 表格任务自动附带严格 OTSL 分析。解析成功的区域另生成 `page-<index>-region-<index>.table.html`，包含横向/纵向合并；JSON 的 `table` 对象保留逻辑单元格、跨度、状态和诊断，Markdown 显示转义后的表格并保留 OTSL 原文。生成成功数仍统计生成结果，表格是否可用应检查 `table.succeeded`；示例控制台单独打印该状态。示例不自动启用行宽修复，库的显式修复用法见[VL 表格教程](../../../docs/articles/visual-paddle-structure.md#vl-表格otsl合并单元格与-html)。输出目录应为本次运行专用目录，避免将以前运行留下的 HTML 误当成本次结果。
 
-Linux 默认使用 `ubuntu.22.04-x64` RID；交叉发布可加 `-r ubuntu.22.04-x64 --self-contained false`。程序目标为 .NET 8，需要对应运行时；仅安装 .NET 9/10 时可以显式设置 `DOTNET_ROLL_FORWARD=Major` 后运行已发布的 DLL。[实际 Linux 页面记录](../../../eng/models/paddle-ocr/verification/paddleocr-vl-regional-pages-linux-20261024.md)包含两页三个手工表格区域的真实 ORT 运行和示例输出核对。
+Linux 默认使用 `ubuntu.22.04-x64` RID；交叉发布可加 `-r ubuntu.22.04-x64 -p:UseRidGraph=true --self-contained false`。程序目标为 .NET 8，需要对应运行时；仅安装 .NET 9/10 时可以显式设置 `DOTNET_ROLL_FORWARD=Major` 后运行已发布的 DLL。[已发布五图 Bundle 的两页实测](../../../eng/models/paddle-ocr/verification/paddleocr-vl-release-document-pages-linux-20261026.md)覆盖本示例的 `--release --offline` 和 `--bundle`；[早期页面记录](../../../eng/models/paddle-ocr/verification/paddleocr-vl-regional-pages-linux-20261024.md)保存四图参考结果。两者均是手工区域的功能验证，不代表独立多页质量。
 
 `Auto` 模式也有[Linux 混合页面运行记录](../../../eng/models/paddle-ocr/verification/paddleocr-vl-mixed-pages-linux-20261024.md)：由固定六任务 RGB 组成两张 PNG，六个任务区域的全部 765 Token/文本匹配官方参考、均 EOS，另有两个明确跳过项。独立示例实际运行的 JSON/Markdown 与集成测试一致；这是手工版面的拼接页面集成验证，不是独立多页质量或自动版面检测结果。
 

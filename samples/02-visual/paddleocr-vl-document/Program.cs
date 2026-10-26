@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using JYPPX.DeploySharp;
 using JYPPX.DeploySharp.Backends.OnnxRuntime;
 using JYPPX.DeploySharp.Geometry;
+using JYPPX.DeploySharp.ModelFactory;
 using JYPPX.DeploySharp.Models;
 using JYPPX.DeploySharp.Registry;
 using JYPPX.DeploySharp.Results.Language;
@@ -21,12 +22,30 @@ internal static class Program
 {
     private static async Task<int> Main(string[] args)
     {
-        if (args.Length < 4 || args.Length > 5)
+        if (args.Length == 1 && (args[0] == "--help" || args[0] == "-h"))
         {
-            Console.Error.WriteLine("Usage: dotnet run -- <tokenizer-root> <bundle-root> <pages.json> <output-directory> [page-parallelism]");
+            PrintUsage();
+            return 0;
+        }
+        bool releaseMode = args.Length > 0 && args[0] == "--release";
+        bool bundleMode = args.Length > 0 && args[0] == "--bundle";
+        bool verifiedMode = releaseMode || bundleMode;
+        string[] positional = verifiedMode
+            ? args.Skip(1).Where(argument => argument != "--offline").ToArray()
+            : args;
+        bool offline = args.Count(argument => argument == "--offline") == 1;
+        if (verifiedMode
+            ? (positional.Length < 3 || positional.Length > 4 || (offline && !releaseMode)
+                || args.Count(argument => argument == "--offline") > 1
+                || positional.Any(argument => argument.StartsWith("--", StringComparison.Ordinal)))
+            : (positional.Length < 4 || positional.Length > 5))
+        {
+            PrintUsage();
             return 2;
         }
-        string manifestPath = Path.GetFullPath(args[2]);
+        string sourceRoot = Path.GetFullPath(positional[0]);
+        string bundleRoot = verifiedMode ? sourceRoot : Path.GetFullPath(positional[1]);
+        string manifestPath = Path.GetFullPath(positional[verifiedMode ? 1 : 2]);
         DocumentSpec spec = JsonSerializer.Deserialize<DocumentSpec>(File.ReadAllText(manifestPath),
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? throw new InvalidDataException("Empty document manifest.");
         bool automaticTasks = string.Equals(spec.Task, "Auto", StringComparison.OrdinalIgnoreCase);
@@ -53,9 +72,12 @@ internal static class Program
             throw new InvalidDataException("This detector example requires paddle-doc/pp-doclayout-l and an explicit ONNX path.");
         if (spec.Pages.Length == 0 || spec.Pages.Select(page => page.PageIndex).Distinct().Count() != spec.Pages.Length)
             throw new InvalidDataException("Pages must be nonempty and have unique pageIndex values.");
-        int parallelism = args.Length == 5 ? int.Parse(args[4], CultureInfo.InvariantCulture) : 1;
-        if (parallelism < 1 || parallelism > 8) throw new ArgumentOutOfRangeException(nameof(parallelism), "Page parallelism must be between 1 and 8.");
-        string output = Path.GetFullPath(args[3]);
+        int parallelism = 1;
+        if (positional.Length == (verifiedMode ? 4 : 5)
+            && (!int.TryParse(positional[verifiedMode ? 3 : 4], NumberStyles.Integer, CultureInfo.InvariantCulture, out parallelism)
+                || parallelism < 1 || parallelism > 8))
+            throw new ArgumentOutOfRangeException(nameof(parallelism), "Page parallelism must be between 1 and 8.");
+        string output = Path.GetFullPath(positional[verifiedMode ? 2 : 3]);
         Directory.CreateDirectory(output);
         PaddleDocumentPage[] pages = spec.Pages.Select(page => new PaddleDocumentPage(
             spec.LayoutDetector != null
@@ -68,9 +90,20 @@ internal static class Program
         using var registry = new BackendRegistry();
         registry.UseOnnxRuntime(new OnnxRuntimeOptions(intraOpThreads: 4, interOpThreads: 1,
             enableMemoryPattern: false, enableCpuMemoryArena: false));
-        using var session = PaddleOcrVlOnnxSession.Create(registry, Path.GetFullPath(args[1]),
-            new BackendRequest(BackendCapabilities.TensorInference, OnnxRuntimeBackendProvider.BackendId, "cpu"));
-        var tokenizer = new PaddleOcrVlTokenizer(Path.GetFullPath(args[0]));
+        if (releaseMode)
+        {
+            using var client = new PaddleOcrReleaseClient(new PaddleOcrReleaseClientOptions(sourceRoot,
+                offline: offline, requestTimeout: TimeSpan.FromHours(2)));
+            PaddleOcrReleaseBundleMaterialization downloaded = await client.GetBundleAsync("paddleocr-vl/1.6",
+                cancellationToken: cancellation.Token);
+            bundleRoot = downloaded.TokenizerDirectoryPath;
+            sourceRoot = bundleRoot;
+        }
+        var vlRequest = new BackendRequest(BackendCapabilities.TensorInference, OnnxRuntimeBackendProvider.BackendId, "cpu");
+        using var session = verifiedMode
+            ? PaddleOcrVlOnnxSession.CreateVerified(registry, bundleRoot, vlRequest)
+            : PaddleOcrVlOnnxSession.Create(registry, bundleRoot, vlRequest);
+        var tokenizer = new PaddleOcrVlTokenizer(sourceRoot);
         var layoutModel = new PaddleDocumentModelDescriptor("application/manual-regions", "Caller-supplied regions",
             PaddleDocumentModule.LayoutDetection, "https://github.com/guojin-yan/DeploySharp", "page-rectangles");
         var vlModel = new PaddleDocumentModelDescriptor("paddleocr-vl/1.6", "PaddleOCR-VL-1.6",
@@ -160,6 +193,14 @@ internal static class Program
         if (!Enum.TryParse(value, true, out PaddleOcrVlTask task) || !Enum.IsDefined(typeof(PaddleOcrVlTask), task))
             throw new InvalidDataException("Unknown routed VL task: " + value);
         return task;
+    }
+
+    private static void PrintUsage()
+    {
+        Console.Error.WriteLine("Usage:");
+        Console.Error.WriteLine("  --release <cache-root> <pages.json> <output-directory> [page-parallelism] [--offline]");
+        Console.Error.WriteLine("  --bundle <bundle-root> <pages.json> <output-directory> [page-parallelism]");
+        Console.Error.WriteLine("  <tokenizer-root> <bundle-root> <pages.json> <output-directory> [page-parallelism]");
     }
 
     private sealed record PageInput(OpenCvImageSource Source, PageSpec Spec);

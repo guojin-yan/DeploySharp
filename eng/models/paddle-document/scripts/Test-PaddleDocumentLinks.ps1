@@ -87,6 +87,7 @@ $documents = @(
     'eng/models/paddle-ocr/verification/paddleocr-vl-release-sample-20261026.md',
     'eng/models/paddle-ocr/verification/paddleocr-vl-release-offline-generation-linux-20261026.md',
     'eng/models/paddle-ocr/verification/paddleocr-vl-release-six-task-offline-linux-20261026.md',
+    'eng/models/paddle-ocr/verification/paddleocr-vl-release-document-pages-linux-20261026.md',
     'eng/models/paddle-ocr/verification/paddleocr-v6-small-linux-shape-cache-20261026.md',
     'eng/models/paddle-ocr/verification/paddleocr-vl-encoded-input-parity-20261026.md',
     'eng/models/paddle-ocr/verification/paddleocr-vl-realformula-ort-cuda-20261026.md',

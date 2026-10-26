@@ -65,6 +65,21 @@
           "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )"
         }
       },
+      "JYPPX.DeploySharp.ModelFactory": {
+        "type": "Project",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )",
+          "JYPPX.DeploySharp.ModelPack.Json": "[2.0.0-alpha.1, )",
+          "System.Text.Json": "[10.0.10, )"
+        }
+      },
+      "JYPPX.DeploySharp.ModelPack.Json": {
+        "type": "Project",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )",
+          "System.Text.Json": "[10.0.10, )"
+        }
+      },
       "JYPPX.DeploySharp.Visual": {
         "type": "Project",
         "dependencies": {

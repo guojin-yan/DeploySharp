@@ -12,6 +12,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\DeploySharp.Visual.OpenCV\DeploySharp.Visual.OpenCV.csproj" GlobalPropertiesToRemove="RuntimeIdentifier;SelfContained" />
     <ProjectReference Include="..\..\..\src\DeploySharp.Backend.OnnxRuntime\DeploySharp.Backend.OnnxRuntime.csproj" GlobalPropertiesToRemove="RuntimeIdentifier;SelfContained" />
+    <ProjectReference Include="..\..\..\src\DeploySharp.ModelFactory\DeploySharp.ModelFactory.csproj" GlobalPropertiesToRemove="RuntimeIdentifier;SelfContained" />
     <PackageReference Include="JYPPX.OpenCV.runtime.win-x64" />
     <PackageReference Include="JYPPX.OpenCV.runtime.ubuntu.22.04-x64" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime" />
