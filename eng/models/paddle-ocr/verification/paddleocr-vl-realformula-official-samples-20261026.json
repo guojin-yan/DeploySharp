@@ -1,0 +1,35 @@
+{
+  "checkpointRevision": "c5630abae1d940eafe0697512a0325494b02ab42",
+  "cases": [
+    {
+      "id": "220808471-63",
+      "task": "formula",
+      "image": "img-corrected/220808471-63.png",
+      "sha256": "f6af58ce95d3b20c257e3df8f8729a17356485523201bbd09416c54ead10ad66"
+    },
+    {
+      "id": "220312373-25",
+      "task": "formula",
+      "image": "img-corrected/220312373-25.png",
+      "sha256": "2cbedc4f376fce7acd9daf2e737db4b85fb57f95f3ba92b35f84293860aea3a4"
+    },
+    {
+      "id": "230110053-1",
+      "task": "formula",
+      "image": "img-corrected/230110053-1.png",
+      "sha256": "0994860961ce0566f965d8aaa90ab1e7184c7d690242747197aebb2e133bf35d"
+    },
+    {
+      "id": "210508113-24",
+      "task": "formula",
+      "image": "img-corrected/210508113-24.png",
+      "sha256": "b5c800b6c5e1d55c639f3177ba970677a28a7ffcf930101f8e4609f2edcb08be"
+    },
+    {
+      "id": "220511982-14",
+      "task": "formula",
+      "image": "img-corrected/220511982-14.png",
+      "sha256": "65215c888761604a66e69ddbfdb5910afe4c37f7e479f119df8bd473deaf3fc0"
+    }
+  ]
+}

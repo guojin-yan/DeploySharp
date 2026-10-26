@@ -84,6 +84,7 @@ $documents = @(
     'eng/models/paddle-ocr/verification/paddleocr-vl-realformula-ort-cpu-cuda-121-20261026.md',
     'eng/models/paddle-ocr/verification/paddleocr-vl-realformula-openvino-linux-probe-20261026.md',
     'eng/models/paddle-ocr/verification/paddleocr-vl-realformula-ort-openvino-linux-121-20261026.md',
+    'eng/models/paddle-ocr/verification/paddleocr-vl-realformula-official-five-20261026.md',
     'eng/models/paddle-ocr/verification/paddleocr-vl-realformula-structure-20261026.md',
     'eng/models/paddle-ocr/verification/paddleocr-vl-windows-ort-20261025.md',
     'eng/models/paddle-ocr/verification/paddleocr-vl-windows-openvino-20261025.md',
