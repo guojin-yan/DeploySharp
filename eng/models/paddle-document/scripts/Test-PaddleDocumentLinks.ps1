@@ -52,6 +52,7 @@ $documents = @(
     'eng/models/paddle-ocr/verification/paddleocr-quality-status-20261018.md',
     'eng/models/paddle-ocr/verification/paddleocr-quality-status-20261023.md',
     'eng/models/paddle-ocr/verification/paddleocr-quality-status-20261026.md',
+    'eng/models/paddle-ocr/verification/paddleocr-hiertext-natural-skew-crops-20261026.md',
     'eng/models/paddle-ocr/verification/paddleocr-sroie-natural-source-enhancement-20261023.md',
     'eng/models/paddle-ocr/verification/paddleocr-funsd-natural-low-quality-enhancement-20261023.md',
     'eng/models/paddle-ocr/verification/paddleocr-funsd-paired-enhancement-cost-20261023.md',
