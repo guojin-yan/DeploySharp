@@ -1002,6 +1002,8 @@ Console.WriteLine(result.Text);
 
 Linux 同构建的[真实标注图 OpenVINO 探针](../../eng/models/paddle-ocr/verification/paddleocr-vl-realformula-openvino-linux-probe-20261026.md)在 realFormula 前 5 张上与 ORT CPU 的文本、生成 Token ID 和 EOS 全部一致；另有最大尺寸 5 张的 OpenVINO CPU 生成与内存观察。它们仍是有界样本，不能当作 OpenVINO 全 121 图质量或跨后端速度结论。
 
+后续按每进程最多五图的有界协议，完成[Linux 同构建 ORT CPU / OpenVINO CPU 的 121 图全量对照](../../eng/models/paddle-ocr/verification/paddleocr-vl-realformula-ort-openvino-linux-121-20261026.md)：两边均 121/121 EOS、0 截断；解码文本和逐 Token ID 均为 121/121 一致。两边严格去空白匹配均为 0/121，字符 CER 均约 55.17%。这是固定 1.6 四图、该标注集上的后端决策一致性，不是数学语义准确率或公式质量门通过；分片重启和无预热运行时间不能作为正式推理速度排名。
+
 [后续公式结构诊断](../../eng/models/paddle-ocr/verification/paddleocr-vl-realformula-structure-20261026.md)中，121 个 VL 输出都可由固定 MathJax 渲染；在 118 个可比较的参考式中，23 个 MathML 结构完全相同。保守数值代入只能够判断 8 个，其中 7 个采样相符、1 个根号作用范围不同，余下 113 个不可判定。可渲染、结构相同或有限点代入一致都不等于全数据集数学正确率。
 
 如果使用 OpenVINO CPU，准备相同的四图和 tokenizer，在注册时选择对应后端即可；不要为四个阶段混入其它导出批次的模型：

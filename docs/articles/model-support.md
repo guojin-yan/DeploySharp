@@ -50,7 +50,7 @@
 - YOLO-World、Grounding DINO、YOLOE：提示词/词表/完整导出工件尚未形成统一发布包；
 - SigLIP：本地双编码器合同存在，当前公开目录只收录 CLIP Preview。
 
-PaddleOCR-VL 的本地 Bundle 校验和按需下载接口已经实现；固定 1.6 的四图 v1（九个 Release 资产）与含派生 prefill 图的五图 v2（十个 Release 资产）均有本地 manifest/哈希验证，远端上传和全新缓存下载回读仍等待具备写权限的账户完成。下载客户端按 Bundle 隔离缓存，不能把本地准备写成已可在线下载。RGB/图像文件可自动准备官方 Patch。表格 OTSL 已支持逻辑单元格/HTML，Spotting 已支持严格标记解析、源裁剪像素与显式页面像素映射；其它任务的语义结构及跨后端支持不能据此外推。公式任务另有[同构建 ORT CPU/CUDA 的 realFormula 121 图对照](../../eng/models/paddle-ocr/verification/paddleocr-vl-realformula-ort-cpu-cuda-121-20261026.md)，但这不是数学语义准确率。使用方式和各自边界见[VL 用法](visual-ocr.md#paddleocr-vl-是否已经可用于模型推理)及[表格与 Spotting 教程](visual-paddle-structure.md#vl-spotting文字四边形与页面坐标)。
+PaddleOCR-VL 的本地 Bundle 校验和按需下载接口已经实现；固定 1.6 的四图 v1（九个 Release 资产）与含派生 prefill 图的五图 v2（十个 Release 资产）均有本地 manifest/哈希验证，远端上传和全新缓存下载回读仍等待具备写权限的账户完成。下载客户端按 Bundle 隔离缓存，不能把本地准备写成已可在线下载。RGB/图像文件可自动准备官方 Patch。表格 OTSL 已支持逻辑单元格/HTML，Spotting 已支持严格标记解析、源裁剪像素与显式页面像素映射；其它任务的语义结构及跨后端支持不能据此外推。公式任务已有[同构建 ORT CPU/CUDA 的 realFormula 121 图对照](../../eng/models/paddle-ocr/verification/paddleocr-vl-realformula-ort-cpu-cuda-121-20261026.md)及[Linux ORT CPU/OpenVINO CPU 的 121 图逐 Token 对照](../../eng/models/paddle-ocr/verification/paddleocr-vl-realformula-ort-openvino-linux-121-20261026.md)；严格去空白匹配均为 0/121，不能视为数学语义准确率或公式质量门通过。使用方式和各自边界见[VL 用法](visual-ocr.md#paddleocr-vl-是否已经可用于模型推理)及[表格与 Spotting 教程](visual-paddle-structure.md#vl-spotting文字四边形与页面坐标)。
 
 ## 暂不支持的模型族
 
