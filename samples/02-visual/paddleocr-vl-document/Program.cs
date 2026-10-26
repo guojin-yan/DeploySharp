@@ -56,8 +56,13 @@ internal static class Program
         if (!automaticTasks && (!Enum.TryParse(spec.Task, true, out task) || !Enum.IsDefined(typeof(PaddleOcrVlTask), task)))
             throw new InvalidDataException("Unknown VL task.");
         var overrides = spec.TaskByCategory?.Select(mapping => new KeyValuePair<string, PaddleOcrVlTask?>(mapping.Key, ParseOptionalTask(mapping.Value)));
-        PaddleOcrVlTaskRouter router = PaddleOcrVlTaskRouter.CreatePpStructure(overrides, ParseOptionalTask(spec.UnmatchedCategoryTask));
-        if (!automaticTasks && (spec.TaskByCategory != null || spec.UnmatchedCategoryTask != null))
+        PaddleOcrVlImageFallbackOptions? imageFallback = spec.ImageFallback == null ? null
+            : new PaddleOcrVlImageFallbackOptions(ParseOptionalTask(spec.ImageFallback.Task)
+                ?? throw new InvalidDataException("imageFallback.task is required."),
+                spec.ImageFallback.MinimumUncoveredAreaRatio, spec.ImageFallback.MaximumRegionsPerPage);
+        PaddleOcrVlTaskRouter router = PaddleOcrVlTaskRouter.CreatePpStructure(overrides,
+            ParseOptionalTask(spec.UnmatchedCategoryTask), imageFallback);
+        if (!automaticTasks && (spec.TaskByCategory != null || spec.UnmatchedCategoryTask != null || imageFallback != null))
             throw new InvalidDataException("Category routing options require task=Auto.");
         if (!automaticTasks && spec.ReadingOrder != null)
             throw new InvalidDataException("This example's readingOrder option requires task=Auto.");
@@ -250,9 +255,16 @@ internal static class Program
         public int MaximumNewTokens { get; set; } = 512;
         public Dictionary<string, string?>? TaskByCategory { get; set; }
         public string? UnmatchedCategoryTask { get; set; }
+        public ImageFallbackSpec? ImageFallback { get; set; }
         public LayoutDetectorSpec? LayoutDetector { get; set; }
         public ReadingOrderSpec? ReadingOrder { get; set; }
         public PageSpec[] Pages { get; set; } = Array.Empty<PageSpec>();
+    }
+    private sealed class ImageFallbackSpec
+    {
+        public string Task { get; set; } = "TextRecognition";
+        public double MinimumUncoveredAreaRatio { get; set; } = .25;
+        public int MaximumRegionsPerPage { get; set; } = 1;
     }
     private sealed class ReadingOrderSpec
     {

@@ -476,7 +476,9 @@ foreach (var region in mixed.Executions)
         (region.Result?.Text ?? region.SkipReason ?? region.FailureMessage));
 ```
 
-`CreatePpStructure` 按现有版面标签选择任务：文字/标题类 → OCR，`table` → 表格，`formula` → 公式，`chart` → 图表，`seal` → 印章。类别匹配忽略大小写和两端空白。图片类及未知类默认跳过；可覆盖映射，也可通过 `unmatchedCategoryTask` 为未知类配置任务。显式 `null` 映射的优先级更高，始终跳过该类别；Spotting 需应用明确配置，不根据图片类别猜测。路由器复制配置后只读，可供并发页面共享。
+`CreatePpStructure` 按现有版面标签选择任务：文字/标题类 → OCR，`table` → 表格，`formula` → 公式，`chart` → 图表，`seal` → 印章。类别匹配忽略大小写和两端空白。图片类及未知类默认跳过；可覆盖映射，也可通过 `unmatchedCategoryTask` 为未知类配置任务。未开启图片回退时，显式 `null` 映射始终跳过该类别；Spotting 需应用明确配置，不根据图片类别猜测。路由器复制配置后只读，可供并发页面共享。
+
+版面模型有时把正文误判为 `image`。应用可显式开启 `imageFallback: new PaddleOcrVlImageFallbackOptions(PaddleOcrVlTask.TextRecognition, minimumUncoveredAreaRatio: .25, maximumRegionsPerPage: 1)`，传给 `CreatePpStructure`。路由器只对本来跳过的 `image` 区域计算其它已规划路由区域在其内部的矩形**并集**覆盖；达到未覆盖比例阈值的候选按未覆盖绝对面积排序，每页取前 N 个，同面积保留原索引先后。选中区域的页面警告为 `vl-image-fallback:<index>`。该计算每页执行一次，不启动额外检测器；默认关闭。显式非空的 `image` 类别任务仍优先于此回退，`image: null` 加启用回退表示按几何规则挑选而不是无条件跳过。若要保持全部图片跳过，应不配置回退。筛选发生在生成前，正常区域后来失败不会重新触发回退；回退也不判断图片有无文字或消除其它区域的重复解析，预算、阈值和质量须由应用数据确定。[真实检测框与单次图片推理记录](../../eng/models/paddle-ocr/verification/paddleocr-vl-image-fallback-20261026.md)展示了边界；完整 manifest 见[示例](../../samples/02-visual/paddleocr-vl-document/README.md#自动检测版面再执行-vl)。
 
 [Linux 混合页面实测](../../eng/models/paddle-ocr/verification/paddleocr-vl-mixed-pages-linux-20261024.md)验证两张无损拼接 PNG 上的六个任务区域和两个跳过项：全部 Patch、765 Token/文本与固定官方参考一致且 EOS，页码/区域索引不变。该集成测试使用手工版面输入，不是自动版面模型、独立多页质量或正式性能结论。
 

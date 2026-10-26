@@ -105,16 +105,24 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             if (string.IsNullOrWhiteSpace(pageSha)) throw new InvalidOperationException("The page input identity callback returned an empty value.");
             var watch = Stopwatch.StartNew();
             IReadOnlyList<int> readingOrder = PaddleDocumentReadingOrder.GetIndices(layout.Regions, context.Page.SourceSize, _readingOrderOptions, cancellationToken);
+            HashSet<int> imageFallbackIndices = _router.GetImageFallbackRegionIndices(layout.Regions);
             var executions = new List<PaddleDocumentVisionLanguageRegionExecution>(layout.Regions.Count);
             var warnings = new List<string> { "vl-regional-output-no-coordinates" };
             for (int index = 0; index < layout.Regions.Count; index++)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 PaddleDocumentRegion region = layout.Regions[index];
-                if (!_router.TryGetTask(region.Category, out PaddleOcrVlTask task))
+                bool routed = _router.TryGetTask(region.Category, out PaddleOcrVlTask task);
+                bool imageFallbackUsed = !routed && imageFallbackIndices.Contains(index);
+                if (!routed && !imageFallbackUsed)
                 {
                     executions.Add(PaddleDocumentVisionLanguageRegionExecution.CreateSkipped(index, region, "no-vl-task-for-layout-category"));
                     continue;
+                }
+                if (imageFallbackUsed)
+                {
+                    task = _router.ImageFallback!.Task;
+                    warnings.Add("vl-image-fallback:" + index);
                 }
                 try
                 {

@@ -55,6 +55,108 @@ public sealed class PaddleOcrVlLayoutStageTests
     }
 
     [TestMethod]
+    public void ImageFallbackOptionsRejectInvalidBudgets()
+    {
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new PaddleOcrVlImageFallbackOptions((PaddleOcrVlTask)999));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new PaddleOcrVlImageFallbackOptions(minimumUncoveredAreaRatio: double.NaN));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new PaddleOcrVlImageFallbackOptions(minimumUncoveredAreaRatio: 0));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new PaddleOcrVlImageFallbackOptions(minimumUncoveredAreaRatio: 1.1));
+        Assert.ThrowsExactly<ArgumentOutOfRangeException>(() => new PaddleOcrVlImageFallbackOptions(maximumRegionsPerPage: 0));
+    }
+
+    [TestMethod]
+    public async Task ImageFallbackSelectsOnlyUncoveredImageAndRetainsSourceIndex()
+    {
+        var regions = new[]
+        {
+            new PaddleDocumentRegion("image", 1, new RectangleF(0, 0, 100, 100)),
+            new PaddleDocumentRegion("text", 1, new RectangleF(0, 0, 10, 10)),
+            new PaddleDocumentRegion("image", 1, new RectangleF(150, 0, 100, 100)),
+            new PaddleDocumentRegion("table", 1, new RectangleF(150, 0, 100, 100))
+        };
+        var prepared = new List<int>();
+        var stage = Stage((context, region, index, task, token) => { prepared.Add(index); return Task.FromResult(Input(task, index)); },
+            (context, region, index, input, token) => Task.FromResult(Generation(input)),
+            router: PaddleOcrVlTaskRouter.CreatePpStructure(imageFallback: new PaddleOcrVlImageFallbackOptions()));
+        var result = (await Run(stage, regions)).GetRequired<PaddleDocumentVisionLanguageRoutedPageResult>(PaddleDocumentModule.VisionLanguageParsing);
+        CollectionAssert.AreEqual(new[] { 0, 1, 3 }, prepared);
+        Assert.AreEqual(PaddleOcrVlTask.TextRecognition, result.Executions[0].Task);
+        Assert.IsTrue(result.Executions[2].Skipped);
+        CollectionAssert.Contains(result.Warnings.ToArray(), "vl-image-fallback:0");
+        CollectionAssert.DoesNotContain(result.Warnings.ToArray(), "vl-image-fallback:2");
+    }
+
+    [TestMethod]
+    public async Task ImageFallbackUsesUnionCoverageAndStablePageBudget()
+    {
+        var regions = new[]
+        {
+            new PaddleDocumentRegion("image", 1, new RectangleF(0, 0, 100, 100)),
+            new PaddleDocumentRegion("text", 1, new RectangleF(0, 0, 50, 100)),
+            new PaddleDocumentRegion("table", 1, new RectangleF(50, 0, 50, 100)),
+            new PaddleDocumentRegion("image", 1, new RectangleF(120, 0, 40, 40)),
+            new PaddleDocumentRegion("image", 1, new RectangleF(170, 0, 40, 40)),
+            new PaddleDocumentRegion("image", 1, new RectangleF(220, 0, 20, 20))
+        };
+        var stage = Stage((context, region, index, task, token) => Task.FromResult(Input(task, index)),
+            (context, region, index, input, token) => Task.FromResult(Generation(input)),
+            router: PaddleOcrVlTaskRouter.CreatePpStructure(imageFallback: new PaddleOcrVlImageFallbackOptions(maximumRegionsPerPage: 2)));
+        var result = (await Run(stage, regions)).GetRequired<PaddleDocumentVisionLanguageRoutedPageResult>(PaddleDocumentModule.VisionLanguageParsing);
+        Assert.IsTrue(result.Executions[0].Skipped);
+        Assert.IsTrue(result.Executions[5].Skipped);
+        Assert.AreEqual(PaddleOcrVlTask.TextRecognition, result.Executions[3].Task);
+        Assert.AreEqual(PaddleOcrVlTask.TextRecognition, result.Executions[4].Task);
+        CollectionAssert.Contains(result.Warnings.ToArray(), "vl-image-fallback:3");
+        CollectionAssert.Contains(result.Warnings.ToArray(), "vl-image-fallback:4");
+    }
+
+    [TestMethod]
+    public async Task ExplicitImageTaskTakesPriorityOverFallbackBudget()
+    {
+        var regions = new[]
+        {
+            new PaddleDocumentRegion("image", 1, new RectangleF(0, 0, 20, 20)),
+            new PaddleDocumentRegion("image", 1, new RectangleF(30, 0, 20, 20))
+        };
+        var router = PaddleOcrVlTaskRouter.CreatePpStructure(
+            new Dictionary<string, PaddleOcrVlTask?> { ["image"] = PaddleOcrVlTask.TextRecognition },
+            imageFallback: new PaddleOcrVlImageFallbackOptions(maximumRegionsPerPage: 1));
+        var stage = Stage((context, region, index, task, token) => Task.FromResult(Input(task, index)),
+            (context, region, index, input, token) => Task.FromResult(Generation(input)), router: router);
+        var result = (await Run(stage, regions)).GetRequired<PaddleDocumentVisionLanguageRoutedPageResult>(PaddleDocumentModule.VisionLanguageParsing);
+        Assert.AreEqual(2, result.SucceededCount);
+        Assert.IsFalse(result.Warnings.Any(warning => warning.StartsWith("vl-image-fallback:", StringComparison.Ordinal)));
+    }
+
+    [TestMethod]
+    public async Task RecordedFunsdDetectorBoxesSelectPageThreeButNotOverlappingPageSeven()
+    {
+        var router = PaddleOcrVlTaskRouter.CreatePpStructure(imageFallback: new PaddleOcrVlImageFallbackOptions());
+        var stage = Stage((context, region, index, task, token) => Task.FromResult(Input(task, index)),
+            (context, region, index, input, token) => Task.FromResult(Generation(input)), router: router);
+        var pageThree = new[]
+        {
+            new PaddleDocumentRegion("image", 0.7381599f, new RectangleF(72.54758f, 152.612f, 590.8673f, 693.9916f)),
+            new PaddleDocumentRegion("number", 0.4570042f, new RectangleF(43.389698f, 75.13815f, 8.4928055f, 8.508446f)),
+            new PaddleDocumentRegion("text", 0.35140854f, new RectangleF(661.2267f, 710.3175f, 21.45459f, 103.797f)),
+            new PaddleDocumentRegion("aside_text", 0.30272943f, new RectangleF(661.2267f, 710.3175f, 21.45459f, 103.797f))
+        };
+        var pageSeven = new[]
+        {
+            new PaddleDocumentRegion("table", 1, new RectangleF(15.869151f, 24.340034f, 722.5322f, 971.8575f)),
+            new PaddleDocumentRegion("number", 1, new RectangleF(6.4226384f, 30.69006f, 5.6686864f, 6.2612f)),
+            new PaddleDocumentRegion("image", 1, new RectangleF(15.869151f, 24.340034f, 722.5322f, 971.8575f)),
+            new PaddleDocumentRegion("table_title", 1, new RectangleF(42.988083f, 167.6665f, 315.80798f, 15.162933f))
+        };
+        var three = (await Run(stage, pageThree, pageSize: new VisualSize(754, 1000))).GetRequired<PaddleDocumentVisionLanguageRoutedPageResult>(PaddleDocumentModule.VisionLanguageParsing);
+        var seven = (await Run(stage, pageSeven, pageSize: new VisualSize(754, 1000))).GetRequired<PaddleDocumentVisionLanguageRoutedPageResult>(PaddleDocumentModule.VisionLanguageParsing);
+        CollectionAssert.Contains(three.Warnings.ToArray(), "vl-image-fallback:0");
+        Assert.AreEqual(PaddleOcrVlTask.TextRecognition, three.Executions[0].Task);
+        Assert.IsTrue(seven.Executions[2].Skipped);
+        Assert.IsFalse(seven.Warnings.Any(warning => warning.StartsWith("vl-image-fallback:", StringComparison.Ordinal)));
+    }
+
+    [TestMethod]
     public async Task MixedPagePreservesEveryIndexAndCorrectTaskSpecificProvenanceAndExports()
     {
         string[] categories = { "table", "figure", "formula", "text", "chart", "spotting", "seal" };
@@ -261,17 +363,24 @@ public sealed class PaddleOcrVlLayoutStageTests
         Func<PaddleDocumentPipelineContext, PaddleDocumentRegion, int, PaddleOcrVlTask, CancellationToken, Task<PaddleOcrVlPreparedInput>> prepare,
         Func<PaddleDocumentPipelineContext, PaddleDocumentRegion, int, PaddleOcrVlPreparedInput, CancellationToken, Task<PaddleOcrVlGenerationResult>> generate,
         Func<PaddleDocumentPipelineContext, PaddleDocumentRegion, int, PaddleOcrVlTask, Exception, CancellationToken, Task<PaddleOcrVlGenerationResult>>? fallback = null,
-        bool continueOnRegionFailure = false, PaddleDocumentReadingOrderOptions? readingOrderOptions = null)
-        => new(Model(PaddleDocumentModule.VisionLanguageParsing), "test", Router(), _ => Hash(14), prepare, generate,
+        bool continueOnRegionFailure = false, PaddleDocumentReadingOrderOptions? readingOrderOptions = null,
+        PaddleOcrVlTaskRouter? router = null)
+        => new(Model(PaddleDocumentModule.VisionLanguageParsing), "test", router ?? Router(), _ => Hash(14), prepare, generate,
             fallback: fallback, continueOnRegionFailure: continueOnRegionFailure, readingOrderOptions: readingOrderOptions);
 
     private static Task<PaddleDocumentPipelineResult> Run(PaddleOcrVlLayoutStage stage, string[] categories, CancellationToken token = default)
+        => Run(stage, categories.Select((category, index) => new PaddleDocumentRegion(category, 1,
+            new RectangleF(index * 20, 4, 15, 12))).ToArray(), token);
+
+    private static Task<PaddleDocumentPipelineResult> Run(PaddleOcrVlLayoutStage stage, PaddleDocumentRegion[] regions,
+        CancellationToken token = default, VisualSize? pageSize = null)
     {
         var layout = new PaddleDocumentPipelineStage(PaddleDocumentModule.LayoutDetection, (context, cancellation) => Task.FromResult<PaddleDocumentModuleResult>(
             new PaddleDocumentRegionResult(PaddleDocumentModule.LayoutDetection,
                 new PaddleDocumentResultMetadata(Model(PaddleDocumentModule.LayoutDetection), "manual", TimeSpan.Zero, Hash(14), context.Page.PageIndex),
-                categories.Select((category, index) => new PaddleDocumentRegion(category, 1, new RectangleF(index * 20, 4, 15, 12))))));
-        return new PaddleDocumentPipeline(new IPaddleDocumentPipelineStage[] { stage, layout }).RunAsync(new PaddleDocumentPage("page", new VisualSize(300, 200), 7), token);
+                regions)));
+        return new PaddleDocumentPipeline(new IPaddleDocumentPipelineStage[] { stage, layout }).RunAsync(
+            new PaddleDocumentPage("page", pageSize ?? new VisualSize(300, 200), 7), token);
     }
     private static PaddleOcrVlPreparedInput Input(PaddleOcrVlTask task, int index)
     {

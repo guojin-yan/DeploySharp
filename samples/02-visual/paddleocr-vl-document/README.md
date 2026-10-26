@@ -64,9 +64,9 @@
 }
 ```
 
-默认映射覆盖现有 PP-Structure 的 3/5/17/23/Plus 标签：文字和标题类选择 `TextRecognition`，表格/公式/图表/印章选择各自任务；`image`、`figure`、`header_image`、`footer_image` 和未知类别明确跳过。类别匹配忽略大小写和首尾空白。`taskByCategory` 可覆盖默认映射，`null` 表示主动跳过；例如上面为应用自定义的 `spotting` 类别选择定位任务，并跳过页眉。省略该对象时保留默认映射。
+默认映射覆盖现有 PP-Structure 的 3/5/17/23/Plus 标签：文字和标题类选择 `TextRecognition`，表格/公式/图表/印章选择各自任务；`image`、`figure`、`header_image`、`footer_image` 和未知类别明确跳过。类别匹配忽略大小写和首尾空白。`taskByCategory` 可覆盖默认映射，通常 `null` 表示主动跳过；例如上面为应用自定义的 `spotting` 类别选择定位任务，并跳过页眉。图片区域显式开启几何回退时的例外见下文。省略该对象时保留默认映射。
 
-如需对所有未匹配类别执行 OCR，可以增加 `"unmatchedCategoryTask": "TextRecognition"`。显式配置为 `null` 的类别（包括默认图片类）仍然跳过。固定任务模式下配置类别路由选项会报错，防止配置被静默忽略。
+如需对所有未匹配类别执行 OCR，可以增加 `"unmatchedCategoryTask": "TextRecognition"`。显式配置为 `null` 的类别默认跳过；仅启用下文图片回退时，`image` 可按几何规则被选中。固定任务模式下配置类别路由选项会报错，防止配置被静默忽略。
 
 混合结果使用 `PaddleDocumentVisionLanguageRoutedPageResult` / `VisionLanguageParsing`，每个原始区域都有连续不变的 `regionIndex`，并记录 `Succeeded`、`Failed` 或 `Skipped`。跳过项保留类别/源框/原因，不生成文本，也不计入失败；失败项保留已选任务。每个成功项单独保存实际任务、模块、Token、结束原因和输入 SHA。示例不会将跳过项视为错误，但任何生成失败或非 EOS 结果都会返回退出码 `1`。
 
@@ -116,6 +116,18 @@ JSON 的 `payload.regions` 和区域文件名仍按原 `regionIndex`，新增 `p
 返回顺序是检测器顺序，**不是阅读顺序**。默认图片类/未知类别仍跳过；如果模型将正文误判为图片，该内容也不会被默认解析，可显式配置 `"taskByCategory": { "image": "TextRecognition" }`。这改变任务选择，不改善版面模型本身的准确率。检测到重叠类别时保留每个原始区域，不自动合并重复文本。
 
 [两张 FUNSD 页的离线词框覆盖检查](../../../eng/models/paddle-ocr/verification/paddleocr-vl-funsd-layout-routing-coverage-20261026.md)显示了这一取舍：其中一页的 75 个标注词里有 74 个只落在被跳过的图片区域；另一页的图片区域与已执行的表格区域重叠，不能把它们重复计作遗漏。不要仅凭 `skippedCount` 判断页面完整性，也不要无评估地对所有图片区域启用 OCR。
+
+对这种版面误分类，可在 `task=Auto` 的 manifest 顶层显式启用有界图片回退：
+
+```json
+"imageFallback": {
+  "task": "TextRecognition",
+  "minimumUncoveredAreaRatio": 0.25,
+  "maximumRegionsPerPage": 1
+}
+```
+
+这是顶层字段片段。省略时仍跳过 `image`；启用后只考虑类别映射原本跳过的 `image` 框，计算它未被其它已规划路由区域的**并集**覆盖比例，再按未覆盖面积选每页最多一块；面积相同时按原检测索引排序。`figure`、`header_image` 等其它类别不自动回退。显式 `taskByCategory.image` 设为非空任务时，类别映射优先，所有图片框均运行该任务，不受回退预算约束；设为 `null` 且启用回退时，仍按本回退规则筛选。结果以 `vl-image-fallback:<regionIndex>` 标记，不改变原索引或默认行为。固定任务模式不接受此选项。筛选发生在生成前，正常区域后来失败不会重新触发图片回退。真实两页检测框分别验证了未覆盖图片的选择和完全重叠图片的跳过；这只补路由缺口，不保证图片一定包含文字，也不去重其它重叠区域。详见[定向验证记录](../../../eng/models/paddle-ocr/verification/paddleocr-vl-image-fallback-20261026.md)。
 
 ## 运行与结果
 
