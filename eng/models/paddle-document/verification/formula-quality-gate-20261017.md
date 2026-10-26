@@ -27,6 +27,8 @@ This report is a fail-closed gate over the existing 121-sample MathNet realFormu
 
 The linked restricted numeric-substitution report assessed 36/726 pairs (4.96% coverage); 690 pairs were not assessable. Of assessed pairs, 36 had no sampled mismatch and 0 differed. This sparse, unreviewed diagnostic is not a proof or release-quality evidence; mathematical semantic status remains **NOT ASSESSED**.
 
+Those numbers are the historical v0.3.0 snapshot. The [v0.4.0 conservative reevaluation](formula-realformula-semantic-reevaluation-20261026.md) reduces assessable pairs to 29/726; the quality gate remains unchanged.
+
 See [formula-realformula-numeric-equivalence-20261018.md](formula-realformula-numeric-equivalence-20261018.md) and the [machine-readable report](formula-realformula-numeric-equivalence-20261018.json) for hashes, protocol and fail-closed boundaries.
 
 ## Reproduction

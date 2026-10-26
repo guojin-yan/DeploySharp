@@ -70,6 +70,9 @@ export function compareAstPair(reference, prediction, {
   if (validCount < MIN_VALID_SAMPLES) {
     return result('not-assessable', 'insufficient-valid-substitutions', validCount, mismatchCount.value, variables.length, reference, prediction, domainSkipCount);
   }
+  if (mismatchCount.value === 0 && !relationsPreserveBoundary(reference, prediction)) {
+    return result('not-assessable', 'relation-boundary-unproven', validCount, 0, variables.length, reference, prediction, domainSkipCount);
+  }
   return result(
     mismatchCount.value === 0 ? 'sampled-equivalent' : 'sampled-different',
     mismatchCount.value === 0 ? null : 'numeric-substitution-mismatch',
@@ -80,6 +83,24 @@ export function compareAstPair(reference, prediction, {
     prediction,
     domainSkipCount
   );
+}
+
+function relationsPreserveBoundary(reference, prediction) {
+  if (reference.type === 'tuple' || prediction.type === 'tuple') {
+    return reference.type === 'tuple' && prediction.type === 'tuple' &&
+      reference.items.length === prediction.items.length &&
+      reference.items.every((item, index) => relationsPreserveBoundary(item, prediction.items[index]));
+  }
+  if (reference.type !== 'relation' && prediction.type !== 'relation') return true;
+  if (reference.type !== 'relation' || prediction.type !== 'relation') return false;
+  const direct = reference.operator === prediction.operator &&
+    serializeAst(reference.left) === serializeAst(prediction.left) &&
+    serializeAst(reference.right) === serializeAst(prediction.right);
+  if (direct) return true;
+  const reversed = new Map([['=', '='], ['≠', '≠'], ['≈', '≈'], ['≃', '≃'], ['<', '>'], ['>', '<'], ['≤', '≥'], ['≥', '≤']]);
+  return reversed.get(reference.operator) === prediction.operator &&
+    serializeAst(reference.left) === serializeAst(prediction.right) &&
+    serializeAst(reference.right) === serializeAst(prediction.left);
 }
 
 export async function compareLatexPair(referenceLatex, predictionLatex, {
@@ -398,7 +419,6 @@ function evaluate(node, values) {
         default: throw new EvaluationDomainError(`unsupported-function-${node.name}`);
       }
     }
-    case 'relation': return false;
     default: throw new EvaluationDomainError(`unsupported-ast-${node.type}`);
   }
 }

@@ -2,6 +2,8 @@
 
 Date: 2026-10-26. These diagnostics reuse the [121-image labelled Formula run](paddleocr-vl-realformula-ort-cuda-20261026.md), source-report SHA-256 `c991d56972625ff8688300a0671e9591025c0c9d6103434eab7797add98d9bd7`. Model and backend remain the pinned four-graph PaddleOCR-VL-1.6 ONNX export on Windows ONNX Runtime CUDA. The dataset and selection are unchanged. The existing private [formula evaluation tool](../../paddle-document/tools/formula-render-quality/README.md) now accepts this completed external report as an explicit input; its default six-model path remains unchanged.
 
+The numeric rows below are the historical evaluator v0.3.0 result. [Evaluator v0.4.0 reevaluation](../../paddle-document/verification/formula-realformula-semantic-reevaluation-20261026.md) corrected false agreement for distinct equations: current VL counts are 5 sampled-equivalent, 1 sampled-different and 115 not-assessable. Rendering and structure rows below are unchanged.
+
 | Diagnostic | Result |
 | --- | ---: |
 | Reference formulas rendered by locked MathJax | 118 / 121 |

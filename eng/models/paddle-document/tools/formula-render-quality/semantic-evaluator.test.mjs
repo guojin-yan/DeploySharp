@@ -58,6 +58,20 @@ test('numeric substitution detects equations with different real solution sets',
 test('relation direction reversal is accepted as a sampled relation match', async () => {
   const result = await compare(String.raw`x+1=3`, String.raw`3=x+1`);
   assert.equal(result.status, 'sampled-equivalent');
+  const inequality = await compare('x<y', 'y>x');
+  assert.equal(inequality.status, 'sampled-equivalent');
+});
+
+test('matching false truth tables do not establish relation equivalence', async () => {
+  const equation = await compare('y=x+a', 'y=x+b');
+  assert.equal(equation.status, 'not-assessable');
+  assert.equal(equation.reason, 'relation-boundary-unproven');
+  const inequality = await compare('x<100', 'x<200');
+  assert.equal(inequality.status, 'not-assessable');
+  assert.equal(inequality.reason, 'relation-boundary-unproven');
+  const tuple = await compare('x<100, y=200', 'x<200, y=200');
+  assert.equal(tuple.status, 'not-assessable');
+  assert.equal(tuple.reason, 'relation-boundary-unproven');
 });
 
 test('domain mismatches are not silently discarded', async () => {

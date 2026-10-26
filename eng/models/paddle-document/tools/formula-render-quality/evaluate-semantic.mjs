@@ -101,7 +101,7 @@ try {
 
   const report = {
     schemaVersion: 'deploysharp-realformula-numeric-equivalence-diagnostic-v1',
-    evaluatorVersion: '0.3.0',
+    evaluatorVersion: '0.4.0',
     generatedUtc: new Date().toISOString(),
     runtime: {
       node: process.version,
@@ -120,7 +120,7 @@ try {
       modelTrainingOverlap: 'unknown'
     },
     modelResults,
-    boundary: 'sampled-equivalent means only that this restricted evaluator found no difference on the recorded deterministic real-valued substitutions. It is not a proof of mathematical equivalence, does not cover unsupported constructs/domains/complex values, and must not be used as a release-quality pass. The dataset overlap with model training is unknown; an independent validation set and reviewed semantic evaluator remain required.'
+    boundary: 'sampled-equivalent means only that this restricted evaluator found no difference on the recorded deterministic real-valued substitutions. Relation pairs additionally require identical boundary ASTs or an exact operand/operator reversal; matching truth values alone are insufficient. It is not a proof of mathematical equivalence, does not cover unsupported constructs/domains/complex values, and must not be used as a release-quality pass. The dataset overlap with model training is unknown; an independent validation set and reviewed semantic evaluator remain required.'
   };
   await mkdir(path.dirname(options.outputJson), {recursive: true});
   await mkdir(path.dirname(options.outputMarkdown), {recursive: true});
@@ -163,7 +163,7 @@ function markdown(report) {
     '## Boundary',
     '',
     '- Numerical agreement on a finite set of values is not a symbolic proof and can miss counterexamples; real-only evaluation omits complex semantics, binding, units, sets, matrices, summations, integrals, piecewise expressions and many other constructs.',
-    '- Unsupported or insufficient-coverage pairs are `not-assessable`, never counted as equivalent.',
+    '- Unsupported or insufficient-coverage pairs are `not-assessable`, never counted as equivalent. Different relation boundaries are also `not-assessable` when substitutions find no mismatch: two equations can both be false at every sampled point.',
     '- The 121-sample dataset is legally attributed as CC-BY-4.0, but overlap with model training is unknown. This diagnostic does not close the independent semantic evaluator or release-quality gate.',
     options.vlReport
       ? '- Only the external PaddleOCR-VL report identified by SHA-256 is evaluated; no other backend quality is inferred.'

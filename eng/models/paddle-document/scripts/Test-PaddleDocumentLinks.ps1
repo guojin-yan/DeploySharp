@@ -24,6 +24,7 @@ $documents = @(
     'eng/models/paddle-document/verification/formula-realformula-syntax-quality-20261012.md',
     'eng/models/paddle-document/verification/formula-realformula-render-quality-20261017.md',
     'eng/models/paddle-document/verification/formula-realformula-numeric-equivalence-20261018.md',
+    'eng/models/paddle-document/verification/formula-realformula-semantic-reevaluation-20261026.md',
     'eng/models/paddle-document/verification/formula-quality-gate-20261017.md',
     'eng/models/paddle-document/verification/paddle-document-table-pipeline-ort-openvino-20261014.md',
     'eng/models/paddle-document/verification/paddle-document-official-classification-benchmark-20261017.md',

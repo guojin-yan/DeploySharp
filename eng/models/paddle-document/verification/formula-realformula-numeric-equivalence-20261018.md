@@ -1,5 +1,7 @@
 # realFormula restricted numeric-equivalence diagnostic (2026-10-18)
 
+Historical evaluator v0.3.0 snapshot. Its sampled-equivalent counts were superseded by the [v0.4.0 conservative reevaluation](formula-realformula-semantic-reevaluation-20261026.md): 29/726 rather than 36/726 pairs remain assessable. The original JSON is retained unchanged for traceability.
+
 This is an exploratory, fail-closed diagnostic over the existing 121 MathNet realFormula labels and six checked-in ORT CPU prediction sets. “Sampled-equivalent” is not a proof of mathematical equivalence and is not a release-quality score.
 
 | Model | Samples | Sampled-equivalent | Sampled-different | Not assessable | Assessed coverage | Numeric agreement among assessed |
