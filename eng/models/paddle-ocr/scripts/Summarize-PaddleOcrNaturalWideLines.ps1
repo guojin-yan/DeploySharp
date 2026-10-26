@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)][string]$ReportPath,
+    [string]$CandidatePath,
     [string]$OutputJsonPath = (Join-Path $PSScriptRoot '..\verification\paddleocr-hiertext-natural-wide-gt-20261023.json'),
     [string]$OutputMarkdownPath = (Join-Path $PSScriptRoot '..\verification\paddleocr-hiertext-natural-wide-gt-20261023.md'),
     [string]$Title = 'HierText natural wide-line GT recognition — PP-OCRv6 Small / Medium (2026-10-23)'
@@ -8,6 +9,23 @@ param(
 $ErrorActionPreference = 'Stop'
 $resolved = (Resolve-Path -LiteralPath $ReportPath).Path
 $data = Get-Content -LiteralPath $resolved -Raw | ConvertFrom-Json -Depth 60
+$selectionEvidence = $null
+if (-not [string]::IsNullOrWhiteSpace($CandidatePath)) {
+    $candidateFull = (Resolve-Path -LiteralPath $CandidatePath).Path
+    $candidateSha = (Get-FileHash -LiteralPath $candidateFull -Algorithm SHA256).Hash.ToLowerInvariant()
+    if ($candidateSha -cne [string]$data.dataset.candidateReportSha256) { throw 'Candidate report SHA-256 does not match the native run.' }
+    $candidate = Get-Content -LiteralPath $candidateFull -Raw | ConvertFrom-Json -Depth 30
+    if ([string]$candidate.source.split -cne [string]$data.dataset.split -or
+        [string]$candidate.source.annotationSha256 -cne [string]$data.dataset.annotationSha256 -or
+        (@($candidate.selection.selectedKeys) -join ',') -cne (@($data.dataset.lines.Key) -join ',')) {
+        throw 'Candidate selection, split or annotation does not match the native run.'
+    }
+    $selectionEvidence = [ordered]@{ rule = [string]$candidate.selection.rule;
+        annotationStratified = [bool]$candidate.selection.annotationStratified;
+        selectedKeys = @($candidate.selection.selectedKeys);
+        eligibleLinesWithinSelection = [int]$candidate.selection.eligibleLines;
+        boundary = 'With exact --keys selection, eligibleLinesWithinSelection counts matching keys, not all eligible lines in the train split.' }
+}
 $engines = @($data.engines | Where-Object { $null -ne $_ })
 $backendCount = @($data.runtimes).Count
 $sourceLineCount = @($data.dataset.lines).Count
@@ -43,6 +61,7 @@ $summary = [ordered]@{
     visualAssemblySha256 = $data.visualAssemblySha256
     environment = $data.environment
     dataset = $data.dataset
+    selection = $selectionEvidence
     models = $data.models
     runtimes = $data.runtimes
     engines = $engines
@@ -74,6 +93,7 @@ $md = [Text.StringBuilder]::new()
 [void]$md.AppendLine('The original A2 requirement concerns **normalized recognition width >3,200 pixels**, not 3,200 characters. This experiment uses original labelled quadrilaterals directly with `RecognizeOnlyAsync`, bypassing DET/CLS and detector-association misses. Source JPEGs remain outside the repository.')
 [void]$md.AppendLine()
 [void]$md.AppendLine("Pinned HierText $($data.dataset.split) revision: ``$($data.dataset.revision)``; annotation SHA-256: ``$($data.dataset.annotationSha256)``. The fixed geometry audit contains $sourceLineCount lines in $($summary.executionSummary.sourceImages) images. Main quality uses $mainLineCount officially legible lines with source bbox height >=2px. $illegibleCount officially illegible and $shortLineCount sub-2px-height lines are retained as separate diagnostic strata. No prediction-based exclusion is applied. Image/model/dictionary identities are recorded in the [JSON summary]($([IO.Path]::GetFileName($jsonFull))).")
+if ($null -ne $selectionEvidence) { [void]$md.AppendLine('Selection: ' + $selectionEvidence.rule + '. Exact keys and the annotation-stratification flag are recorded in JSON. This is a deliberately chosen challenge cohort, not a random sample; its candidate SHA is checked against the native report.') }
 [void]$md.AppendLine()
 $runtimeDescription = ($data.runtimes | ForEach-Object { "$($_.backend) $($_.nativeVersion)" }) -join '; '
 [void]$md.AppendLine('Protocol: target height 48; maximum width **3,200**; Clamp versus SlidingWindow with overlap 0.2 and maximum 32 windows; batch 1; one independently created Session per stage; one untimed execution per line/mode/backend. Runtime(s): ' + $runtimeDescription + '. The 32x32 prepared DET tensor is unused: recognition crop sampling always reads the original image. This is neither a latency benchmark nor a claim of statistical significance.')

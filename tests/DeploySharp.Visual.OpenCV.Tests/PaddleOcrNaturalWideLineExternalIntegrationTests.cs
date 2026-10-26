@@ -59,7 +59,11 @@ public sealed class PaddleOcrNaturalWideLineExternalIntegrationTests
         string expectedAnnotationSha = split switch { "test" => TestAnnotationSha, "train" => TrainAnnotationSha, _ => AnnotationSha };
         Assert.AreEqual(expectedAnnotationSha, ShaFile(annotationPath));
         List<WideLine> lines = LoadLines(candidatePath, annotationPath, datasetRoot, split, expectedAnnotationSha);
-        Assert.AreEqual(split switch { "test" => 17, "train" => 12, _ => 13 }, lines.Count);
+        int expectedLines = split switch { "test" => 17, "train" => 12, _ => 13 };
+        string? requestedCount = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_NATURAL_WIDE_EXPECTED_LINES");
+        if (requestedCount != null && (!int.TryParse(requestedCount, out expectedLines) || expectedLines < 1 || expectedLines > 64))
+            throw new ArgumentException("DEPLOYSHARP_PADDLEOCR_NATURAL_WIDE_EXPECTED_LINES must be between 1 and 64.");
+        Assert.AreEqual(expectedLines, lines.Count);
         if (split == "train") Assert.IsTrue(lines.All(line => line.QualityStratum == "legible-height-at-least-2px"));
         if (split == "validation")
         {

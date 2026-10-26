@@ -99,6 +99,27 @@
       "report": "paddleocr-hiertext-train-far-anchor-followup-20261027.md",
       "status": "narrow-development-seam-improvement; clamp-default-retained; A2-open",
       "boundary": "Only saved ORT raw CTC windows were merged. Train selection informed this rule, test selection is reused as regression, and no new independent blind set, native backend inference, whole-page OCR or formal speed was measured."
+    },
+    {
+      "scope": "PP-OCRv6 Small/Medium annotation-stratified natural number and single-character wide lines",
+      "models": ["paddleocr/ppocrv6/small-rec", "paddleocr/ppocrv6/medium-rec"],
+      "backend": "onnxruntime-cpu-1.28.0",
+      "dataset": "HierText train at revision 70b6620b2b112597d8219e11eee9773a1403827c",
+      "annotationSha256": "bf7a271c7a016e66ad87556078f0371f8fb12beaa2e2e60fc33458ad57c3e4fd",
+      "candidateReportSha256": "1a1fcdd619cad0e6000f73053d9706fbfd9a529697f4e9dcb238c3710267ddda",
+      "selectedLines": 3,
+      "selectedImages": 3,
+      "callsCompleted": 12,
+      "referenceCharacters": 357,
+      "referenceWords": 26,
+      "small": { "clampCharacterEdits": 83, "slidingCharacterEdits": 86, "clampWordEdits": 23, "slidingWordEdits": 21 },
+      "medium": { "clampCharacterEdits": 85, "slidingCharacterEdits": 82, "clampWordEdits": 25, "slidingWordEdits": 21 },
+      "uncertainSeamsPerModel": 6,
+      "rawReportSha256": "dcadfed3367bfa511ba1e89ed71a992dc077b6d14ca7af0a0d917d7f8f2f1c16",
+      "rawTraceSha256": "797a90c57ba34b38e231c3c2645a7d2762a13fa838e1179bfd53e665ba18c4dc",
+      "report": "paddleocr-hiertext-train-number-challenge-20261027.md",
+      "status": "annotation-stratified-challenge; repeated-number-ambiguity-observed; clamp-default-retained; A2-open",
+      "boundary": "Three annotation-selected lines disjoint from the earlier 12-line cohort, not random model-independent accuracy. GT-quadrilateral REC-only, one untimed ORT CPU pass. No DET/CLS/page, new-backend parity, official split score or formal performance claim."
     }
   ]
 }

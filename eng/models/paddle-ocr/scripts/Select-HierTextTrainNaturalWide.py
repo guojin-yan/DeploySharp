@@ -31,6 +31,7 @@ def main():
     parser.add_argument("--image-root", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--count", type=int, default=12)
+    parser.add_argument("--keys", help="Comma-separated exact image/paragraph/line keys for a prediction-blind challenge cohort")
     args = parser.parse_args()
     if args.count < 1 or args.count > 64:
         parser.error("--count must be between 1 and 64")
@@ -39,6 +40,12 @@ def main():
     revision = re.fullmatch(r"train-([0-9a-f]{40})\.jsonl\.gz", args.annotations.name)
     if revision is None:
         parser.error("annotation filename must pin a 40-hex train revision")
+    requested_keys = None
+    if args.keys is not None:
+        keys = args.keys.split(",")
+        if len(keys) != args.count or len(set(keys)) != len(keys) or any(not re.fullmatch(r"[0-9a-f]{16}/\d+/\d+", key) for key in keys):
+            parser.error("--keys must contain --count unique exact image/paragraph/line keys")
+        requested_keys = set(keys)
     annotation_sha = sha256(args.annotations)
     if annotation_sha != args.expected_sha256:
         raise ValueError("HierText annotation SHA-256 mismatch")
@@ -67,12 +74,16 @@ def main():
                     if projected <= 3200:
                         continue
                     key = f"{image_id}/{paragraph_index}/{line_index}"
+                    if requested_keys is not None and key not in requested_keys:
+                        continue
                     rank = hashlib.sha256(f"deploysharp-a2-train-v1/{key}".encode()).hexdigest()
                     eligible.append((rank, key, image_id, paragraph_index, line_index,
                                      line, [coordinate for point in zip(xs, ys) for coordinate in point], width, height, projected))
 
     selected = []
     selected_images = set()
+    if requested_keys is not None and len(eligible) != len(requested_keys):
+        raise ValueError("One or more requested keys are not eligible natural wide lines")
     for _, key, image_id, paragraph_index, line_index, line, vertices, width, height, projected in sorted(eligible):
         if image_id in selected_images:
             continue
@@ -114,12 +125,14 @@ def main():
             "imageSourceTemplate": "https://open-images-dataset.s3.amazonaws.com/ocr/train/{image_id}.jpg",
         },
         "selection": {
-            "rule": "Officially legible lines, source bbox height >=2px, projected width >3200px at height 48; SHA-256 rank of deploysharp-a2-train-v1/<image/p/l>; one line per image",
+            "rule": "Officially legible lines, source bbox height >=2px, projected width >3200px at height 48; "
+                    + ("exact preselected annotation keys; one line per image" if requested_keys is not None else "SHA-256 rank of deploysharp-a2-train-v1/<image/p/l>; one line per image"),
             "requestedLines": args.count,
             "eligibleLines": len(eligible),
             "distinctEligibleImages": len({row[2] for row in eligible}),
             "selectedKeys": [f"{row['imageId']}/{row['paragraphIndex']}/{row['lineIndex']}" for row in selected],
             "predictionBlind": True,
+            **({"annotationStratified": True} if requested_keys is not None else {}),
         },
         "candidates": selected,
     }

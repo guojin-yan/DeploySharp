@@ -54,6 +54,7 @@ $documents = @(
     'eng/models/paddle-ocr/verification/paddleocr-quality-status-20261026.md',
     'eng/models/paddle-ocr/verification/paddleocr-quality-status-20261027.md',
     'eng/models/paddle-ocr/verification/paddleocr-natural-wide-seam-candidate-20261027.md',
+    'eng/models/paddle-ocr/verification/paddleocr-hiertext-train-number-challenge-20261027.md',
     'eng/models/paddle-ocr/verification/paddleocr-hiertext-natural-skew-crops-20261026.md',
     'eng/models/paddle-ocr/verification/paddleocr-hiertext-fixed320-quality-20261026.md',
     'eng/models/paddle-ocr/verification/paddleocr-width-bucket-quality-performance-20261026.md',
