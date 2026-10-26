@@ -365,14 +365,16 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
-        public void OneClippedBoundaryTokenCanAnchorAnOtherwiseExactOverlap()
+        [DataRow(2.2)]
+        [DataRow(8.0)]
+        public void OneClippedBoundaryTokenCanAnchorAnOtherwiseExactOverlap(double offsetSteps)
         {
             TextRegion region = Region(400, 48);
             TextCropProfile profile = Profile(new OcrRecognitionWindowOptions(.5));
             IReadOnlyList<OcrRecognitionWindow> plans = OcrRecognitionWindowPlanner.Plan(region, profile);
             Assert.AreEqual(2, plans.Count);
             double start = plans[1].Start, end = plans[0].End;
-            var left = new List<(double, string, int)> { ((start - 2.2 * end / 100) / end, "?", 1) };
+            var left = new List<(double, string, int)> { ((start - offsetSteps * end / 100) / end, "?", 1) };
             var right = new List<(double, string, int)> { (.01, "?", 1) };
             for (int index = 0; index < 10; index++)
             {
@@ -388,6 +390,38 @@ namespace DeploySharp.Visual.Tests
             Assert.AreEqual("?BCDEFGHIJKZ", merged.Recognition.Text);
             Assert.AreEqual(11, merged.RecognitionWindows[1].RemovedPrefixTokens);
             Assert.AreEqual(0, merged.RecognitionWindows[1].OverlapEditDistance);
+            Assert.IsTrue(merged.RecognitionWindows[1].SeamUncertain);
+        }
+
+        [TestMethod]
+        public void RepeatedFarPrefixDoesNotChooseAnAmbiguousDeletion()
+        {
+            TextRegion region = Region(400, 48);
+            TextCropProfile profile = Profile(new OcrRecognitionWindowOptions(.5));
+            IReadOnlyList<OcrRecognitionWindow> plans = OcrRecognitionWindowPlanner.Plan(region, profile);
+            double start = plans[1].Start, end = plans[0].End, step = end / 100;
+            string[] anchor = { "?", "B", "C" };
+            var left = new List<(double, string, int)>();
+            var right = new List<(double, string, int)>();
+            for (int index = 0; index < anchor.Length; index++)
+            {
+                left.Add(((start - (9 - index) * step) / end, anchor[index], index + 1));
+                left.Add(((start - (6 - index) * step) / end, anchor[index], index + 1));
+                right.Add(((index + 1) / 100.0, anchor[index], index + 1));
+            }
+            for (int index = 0; index < 8; index++)
+            {
+                double position = start + (end - start) * (index + 4) / 12;
+                string text = ((char)('D' + index)).ToString();
+                left.Add((position / end, text, index + 4));
+                right.Add(((position - start) / (1 - start), text, index + 4));
+            }
+            right.Add(((.9 - start) / (1 - start), "Z", 1001));
+            var raw = new[] { new OcrRecognitionWindowResult(plans[0], Trace(plans[0], profile, left), plans[0].Crop.WidthInfo),
+                new OcrRecognitionWindowResult(plans[1], Trace(plans[1], profile, right), plans[1].Crop.WidthInfo) };
+            OcrRegionResult merged = OcrRecognitionWindowMerger.Merge(region, profile, raw);
+            Assert.AreEqual(raw[0].Recognition.Text + raw[1].Recognition.Text, merged.Recognition.Text);
+            Assert.AreEqual(0, merged.RecognitionWindows[1].RemovedPrefixTokens);
             Assert.IsTrue(merged.RecognitionWindows[1].SeamUncertain);
         }
 

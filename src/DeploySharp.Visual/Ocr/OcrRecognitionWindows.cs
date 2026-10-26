@@ -339,6 +339,29 @@ namespace JYPPX.DeploySharp.Visual
                     leftStep, rightStep, minimumFuzzyTokens, maximum, budget, out editDistance);
                 if (matched > 0) return matched;
             }
+            // CTC positions can drift farther than the nearest-token margin.
+            // Only a unique three-token anchor may extend the search, and the
+            // normal bounded alignment must still validate the full overlap.
+            double farMargin = Math.Min(leftStep * 10, (left.End - right.Start) * .2);
+            int farStart = expandedStart;
+            while (farStart > 0 && Position(left, suffix[farStart - 1], leftStep) >= right.Start - farMargin) farStart--;
+            int uniqueStart = -1;
+            if (prefix.Count >= 3)
+            {
+                for (int start = farStart; start + 2 < suffix.Count; start++)
+                {
+                    if (!TokenEquals(suffix[start], prefix[0]) || !TokenEquals(suffix[start + 1], prefix[1])
+                        || !TokenEquals(suffix[start + 2], prefix[2])) continue;
+                    if (uniqueStart >= 0) { uniqueStart = -1; break; }
+                    uniqueStart = start;
+                }
+            }
+            if (uniqueStart >= 0 && uniqueStart < expandedStart)
+            {
+                matched = MatchApproximateAtStart(left, right, suffix, prefix, profile, uniqueStart, rightEnd,
+                    leftStep, rightStep, minimumFuzzyTokens, maximum, budget, out editDistance);
+                if (matched > 0) return matched;
+            }
             editDistance = 0;
             return 0;
         }

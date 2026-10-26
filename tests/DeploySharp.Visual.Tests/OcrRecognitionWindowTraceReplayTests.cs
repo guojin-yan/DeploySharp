@@ -30,11 +30,14 @@ public sealed class OcrRecognitionWindowTraceReplayTests
         string repo = FindRepo();
         string tracePath = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_SEAM_REPLAY_TRACE")
             ?? Path.Combine(repo, "artifacts/paddleocr-natural-wide-gt-20261023-final/paddleocr-hiertext-natural-wide-gt-20261023072131.local-traces.json");
-        string candidatePath = Path.Combine(repo, "eng/models/paddle-ocr/verification/hiertext-natural-wide-coverage-a2-20261017.json");
-        string baselinePath = Path.Combine(repo, "eng/models/paddle-ocr/verification/paddleocr-hiertext-natural-wide-gt-20261023.json");
+        string candidatePath = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_SEAM_REPLAY_CANDIDATES")
+            ?? Path.Combine(repo, "eng/models/paddle-ocr/verification/hiertext-natural-wide-coverage-a2-20261017.json");
+        string baselinePath = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_SEAM_REPLAY_BASELINE")
+            ?? Path.Combine(repo, "eng/models/paddle-ocr/verification/paddleocr-hiertext-natural-wide-gt-20261023.json");
         string traceSha = HashFile(tracePath);
-        Assert.AreEqual(TraceSha, traceSha);
-        Assert.AreEqual("80e9fb310b775644b0e9022e19b99608afce26acf97c160aa441175bb131f50d", HashFile(candidatePath));
+        Assert.AreEqual(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_SEAM_REPLAY_TRACE_SHA") ?? TraceSha, traceSha);
+        Assert.AreEqual(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_SEAM_REPLAY_CANDIDATES_SHA")
+            ?? "80e9fb310b775644b0e9022e19b99608afce26acf97c160aa441175bb131f50d", HashFile(candidatePath));
         string phase = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_SEAM_REPLAY_PHASE") ?? "candidate";
         if (phase is not ("baseline" or "candidate")) throw new ArgumentException("Replay phase must be baseline or candidate.");
 
@@ -82,7 +85,8 @@ public sealed class OcrRecognitionWindowTraceReplayTests
             cases.Add(new ReplayCase(row.GetProperty("backend").GetString()!, row.GetProperty("model").GetString()!, key, stratum,
                 row.GetProperty("expected").GetString()!, row.GetProperty("recognized").GetString()!, region, raw.ToArray()));
         }
-        Assert.AreEqual(52, cases.Count);
+        Assert.AreEqual(int.TryParse(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_SEAM_REPLAY_CASES"), out int expectedCases)
+            ? expectedCases : 52, cases.Count);
 
         OcrRegionResult[] results = Sweep(cases, profile);
         var qualityRows = new List<object>();
@@ -152,7 +156,7 @@ public sealed class OcrRecognitionWindowTraceReplayTests
             environment = new { os = RuntimeInformation.OSDescription, framework = RuntimeInformation.FrameworkDescription, logicalProcessors = Environment.ProcessorCount },
             inputs = new { traceSha256 = traceSha, candidateSha256 = HashFile(candidatePath), baselineReportSha256 = HashFile(baselinePath), cases = cases.Count, mainQualityCases = cases.Count(item => item.Stratum == "legible-height-at-least-2px") },
             protocol = new { path = "OcrRecognitionWindowMerger.Merge only; preloaded real raw CTC windows", maximumWidth = 3200, targetHeight = 48,
-                overlap = .2, maximumOverlapTokens = 64, maximumOverlapEditDistance = 2, warmupSweeps = 5, measuredSweeps = 50, linesPerSweep = 52,
+                overlap = .2, maximumOverlapTokens = 64, maximumOverlapEditDistance = 2, warmupSweeps = 5, measuredSweeps = 50, linesPerSweep = cases.Count,
                 metrics = "OcrTextAccuracy.Compare: ordinal Unicode-scalar CER and whitespace-token WER, no implicit normalization",
                 allocations = "GC.GetAllocatedBytesForCurrentThread during Sweep; includes result array and merge results; excludes fingerprint, metrics and JSON",
                 timing = "Sequential merge-only sweeps; no inference/preprocessing/CTC decode/native GPU work. CPU frequency not controlled; phase order is baseline then candidate, not randomized paired trials." },
