@@ -2,6 +2,8 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using JYPPX.DeploySharp;
 using JYPPX.DeploySharp.Backends.OnnxRuntime;
@@ -49,15 +51,18 @@ internal static class Program
         PaddleOcrVlTask task = hasImage ? ParseTask(args[3]) : PaddleOcrVlTask.TextRecognition;
         bool offline = false;
         bool verifyOnly = false;
+        bool rawExif = false;
         foreach (string flag in args.Skip(hasImage ? 4 : 2))
         {
             switch (flag)
             {
                 case "--offline" when release && !offline: offline = true; break;
                 case "--verify-only" when !verifyOnly: verifyOnly = true; break;
+                case "--raw-exif" when hasImage && !rawExif: rawExif = true; break;
                 default: throw new ArgumentException("Unsupported or duplicate option: " + flag);
             }
         }
+        if (verifyOnly && rawExif) throw new ArgumentException("--raw-exif requires inference.");
         if (!verifyOnly && imagePath == null) throw new ArgumentException("An image path and task are required for inference.");
         if (!verifyOnly && !File.Exists(imagePath))
         {
@@ -81,7 +86,8 @@ internal static class Program
             return 0;
         }
 
-        PaddleOcrVlPreparedInput prepared = new OpenCvPaddleOcrVlInputFactory().CreateFromFile(imagePath!, task);
+        PaddleOcrVlPreparedInput prepared = new OpenCvPaddleOcrVlInputFactory(
+            128 * 1024 * 1024, normalizeExifOrientation: !rawExif).CreateFromFile(imagePath!, task);
         return await GenerateAsync(sourceRoot, sourceRoot, prepared, verified: true);
     }
 
@@ -124,6 +130,8 @@ internal static class Program
 
         Console.WriteLine($"task={result.Task}");
         Console.WriteLine($"tokens={result.TokenIds.Count}");
+        Console.WriteLine($"tokens_sha256={Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join(",", result.TokenIds)))).ToLowerInvariant()}");
+        Console.WriteLine($"text_sha256={Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(result.Text))).ToLowerInvariant()}");
         Console.WriteLine($"finish={result.FinishReason}");
         Console.WriteLine($"elapsed_ms={result.Elapsed.TotalMilliseconds.ToString("F1", CultureInfo.InvariantCulture)}");
         Console.WriteLine(result.Text);
@@ -138,12 +146,13 @@ internal static class Program
     private static void PrintUsage()
     {
         Console.WriteLine("Usage:");
-        Console.WriteLine("  --release <cache-root> <image-path> <task> [--offline] [--verify-only]");
-        Console.WriteLine("  --bundle <bundle-root> <image-path> <task> [--verify-only]");
+        Console.WriteLine("  --release <cache-root> <image-path> <task> [--offline] [--raw-exif]");
+        Console.WriteLine("  --bundle <bundle-root> <image-path> <task> [--raw-exif]");
         Console.WriteLine("  --release <cache-root> --verify-only [--offline]");
         Console.WriteLine("  --bundle <bundle-root> --verify-only");
         Console.WriteLine("  <model-root> <bundle-root> <patch-bin> <width> <height> <task>");
         Console.WriteLine("task: TextRecognition | TableRecognition | FormulaRecognition | ChartRecognition | TextSpotting | SealRecognition");
+        Console.WriteLine("--raw-exif: preserve encoded JPEG orientation for comparison with the official Pillow processor");
         Console.WriteLine("patch-bin: little-endian float32 [grid_h,grid_w,3,14,14] from the official PaddleOCR-VL Processor");
     }
 
