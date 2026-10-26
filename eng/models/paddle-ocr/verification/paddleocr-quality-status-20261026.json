@@ -69,6 +69,21 @@
       "report": "paddleocr-hiertext-natural-skew-crops-20261026.json",
       "status": "bounded-three-backend-natural-skew-crop-diagnostic-complete; A3-natural-orientation-acceptance-open",
       "boundary": "Top-edge skew comes from annotated quadrilateral vertices; it is not independent upright/inverted truth. Detection, automatic orientation, whole-page quality and formal latency were not measured."
+    },
+    {
+      "scope": "PP-OCRv6 Small natural-skew Fixed320 recognition crop",
+      "model": "paddleocr/ppocrv6/small-rec",
+      "backends": ["onnxruntime-cpu", "opencv-dnn-cpu"],
+      "dataset": "Same 241 HierText validation lines as the dynamic-width crop comparison",
+      "modelBatchMaximum": 1,
+      "referenceCharacters": 1265,
+      "referenceWords": 312,
+      "dynamic": { "polygonCharacterEdits": 248, "boxCharacterEdits": 319, "polygonWordEdits": 137, "boxWordEdits": 150 },
+      "fixed320": { "polygonCharacterEdits": 223, "boxCharacterEdits": 274, "polygonWordEdits": 131, "boxWordEdits": 143 },
+      "fixed320OrtOpenCvTextAndEditParity": "241/241 for polygon and box rows",
+      "report": "paddleocr-hiertext-fixed320-quality-20261026.json",
+      "status": "bounded-fixed320-quality-comparison-complete; dynamic-width-default-retained",
+      "boundary": "Thirteen polygon and 25 box character-edit rows regress despite aggregate gain. Prior SROIE Fixed320 quality regressed; no universal width-quality or formal latency claim."
     }
   ],
   "openGates": [

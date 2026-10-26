@@ -45,11 +45,13 @@ public sealed class PaddleOcrHierTextNaturalSkewIntegrationTests
     }
 
     [TestMethod]
-    [DataRow("onnxruntime")]
-    [DataRow("openvino")]
-    [DataRow("opencv-dnn")]
+    [DataRow("onnxruntime", false)]
+    [DataRow("openvino", false)]
+    [DataRow("opencv-dnn", false)]
+    [DataRow("onnxruntime", true)]
+    [DataRow("opencv-dnn", true)]
     [TestCategory("ExternalModels")]
-    public async Task NaturalSkewLinesComparePolygonWithAxisAlignedBounds(string backend)
+    public async Task NaturalSkewLinesComparePolygonWithAxisAlignedBounds(string backend, bool fixedWidth)
     {
         if (Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_HIERTEXT_SKEW_RUN") != "1")
             Assert.Inconclusive("Set DEPLOYSHARP_PADDLEOCR_HIERTEXT_SKEW_RUN=1 for the natural-skew quality check.");
@@ -58,7 +60,8 @@ public sealed class PaddleOcrHierTextNaturalSkewIntegrationTests
             ?? @"F:\OCRBenchmarkTesting");
         string outputRoot = Path.GetFullPath(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_HIERTEXT_SKEW_OUTPUT")
             ?? TestContext.TestResultsDirectory!);
-        string outputPath = Path.Combine(outputRoot, "paddleocr-hiertext-natural-skew-" + backend + ".json");
+        string outputPath = Path.Combine(outputRoot, "paddleocr-hiertext-natural-skew-" + backend
+            + (fixedWidth ? "-fixed320" : string.Empty) + ".json");
         if (File.Exists(outputPath)) throw new IOException("The natural-skew evidence already exists: " + outputPath);
 
         Selection selection = Select(root);
@@ -82,6 +85,7 @@ public sealed class PaddleOcrHierTextNaturalSkewIntegrationTests
         OcrCharacterSet characters = PaddleOcrProfiles.LoadCharacterSet(dictionaryPath, "hiertext-skew-v6-small", "v6-small", true, DictionarySha);
         PaddleOcrProfile detector = PaddleOcrModelCatalog.CreateProfile(PaddleOcrModelCatalog.Find(detectorId), Artifact(detectorRelease), maximumBatch: 1);
         PaddleOcrProfile recognizer = PaddleOcrModelCatalog.CreateProfile(PaddleOcrModelCatalog.Find(recognizerId), Artifact(recognizerRelease, DictionarySha), characters, maximumBatch: 1);
+        TextCropProfile cropProfile = fixedWidth ? recognizer.CropProfile!.WithFixedWidth(320) : recognizer.CropProfile!;
 
         using var detectorRegistry = new BackendRegistry().UseOnnxRuntime();
         using var recognizerRegistry = new BackendRegistry();
@@ -92,7 +96,7 @@ public sealed class PaddleOcrHierTextNaturalSkewIntegrationTests
         {
             int classes = ((GreedyCtcDecoder)recognizer.VisualProfile.Decoder).ExpectedClassCount;
             var contract = new OpenCvDnnModelContract(recognizerId,
-                new[] { new TensorDescriptor(recognizer.VisualProfile.Input.Name, TensorElementType.Float32, new TensorShape(1, 3, 48, -1)) },
+                new[] { new TensorDescriptor(recognizer.VisualProfile.Input.Name, TensorElementType.Float32, new TensorShape(1, 3, 48, fixedWidth ? 320 : -1)) },
                 new[] { new TensorDescriptor(recognizer.VisualProfile.Outputs[0].Name, TensorElementType.Float32, new TensorShape(1, -1, classes)) });
             recognizerRegistry.UseOpenCvDnn(new OpenCvDnnOptions(contract, enableFusion: true, enableWinograd: true, specializeDynamicInputShapes: true));
             backendId = OpenCvDnnBackendProvider.BackendId;
@@ -108,7 +112,7 @@ public sealed class PaddleOcrHierTextNaturalSkewIntegrationTests
             profiles.Select(detector.CreateArtifact(detectorPath, OnnxRuntimeBackendProvider.BackendId), detectorRegistry, detectorRequest, VisualTaskId.TextDetection), detectorRequest,
             recognizerRegistry,
             profiles.Select(recognizer.CreateArtifact(recognizerPath, backendId), recognizerRegistry, recognizerRequest, VisualTaskId.TextRecognition), recognizerRequest,
-            recognizer.CropProfile!, new OcrPipelineOptions(maximumRegions: 16, maximumRecognitionBatch: 1,
+            cropProfile, new OcrPipelineOptions(maximumRegions: 16, maximumRecognitionBatch: 1,
                 maximumSourcePixels: 128L * 1024L * 1024L), new SessionOptions(1), new SessionOptions(1));
 
         var observations = new List<Observation>(selection.Lines.Count);
@@ -170,8 +174,8 @@ public sealed class PaddleOcrHierTextNaturalSkewIntegrationTests
                 recognizerSha256 = recognizerRelease.Sha256, dictionarySha256 = DictionarySha },
             protocol = new { stage = "RecognizeOnlyAsync; detection and automatic orientation are not executed",
                 comparison = "Same decoded source and recognizer: annotated perspective quadrilateral versus its axis-aligned bounding rectangle; case-sensitive OCR text metrics.",
-                batchMaximum = 1, sessionCount = 1, targetHeight = recognizer.CropProfile!.TargetHeight,
-                maximumWidth = recognizer.CropProfile.MaximumWidth },
+                batchMaximum = 1, sessionCount = 1, targetHeight = cropProfile.TargetHeight,
+                widthMode = fixedWidth ? "Fixed320" : "Dynamic", maximumWidth = cropProfile.MaximumWidth },
             totals = new { rows = observations.Count, referenceCharacters = observations.Sum(row => row.ReferenceCharacters),
                 referenceWords = observations.Sum(row => row.ReferenceWords),
                 polygonCharacterEdits = observations.Sum(row => row.PolygonCharacterEdits),
