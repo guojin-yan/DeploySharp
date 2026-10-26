@@ -26,4 +26,4 @@ DOTNET_ROLL_FORWARD=Major LD_LIBRARY_PATH=/path/to/native \
   TextRecognition --offline --raw-exif
 ```
 
-The cache path is the **client cache root**, not the Bundle directory; `--bundle` takes the latter. The [sample README](../../../../samples/02-visual/paddleocr-vl-onnx/README.md) documents both modes. This result covers one fixed OCR image and ORT CPU only. Other tasks from the newly downloaded cache, arbitrary images/EXIF/ICC variants, page-level quality, TensorRT/OpenVINO from this cache, formal `5+50` latency and long-running memory stability remain open.
+The cache path is the **client cache root**, not the Bundle directory; `--bundle` takes the latter. The [sample README](../../../../samples/02-visual/paddleocr-vl-onnx/README.md) documents both modes. This result covers one fixed OCR image and ORT CPU; the subsequent [six-task Release-cache run](paddleocr-vl-release-six-task-offline-linux-20261026.md) closes the remaining five fixed-task generation checks. Arbitrary images/EXIF/ICC variants, page-level quality, TensorRT/OpenVINO from this cache, formal `5+50` latency and long-running memory stability remain open.
