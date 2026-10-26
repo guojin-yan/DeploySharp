@@ -34,6 +34,19 @@ Each recipe was attempted on every region, with identical text results across bo
 
 These counts overlap by region and are not additive. In particular, unrestricted CLAHE damages many already-readable source crops in this selection; this is evidence against a blanket enhancement default, not a statement that CLAHE is always unsuitable.
 
+### Source entity-role breakdown (offline audit, 2026-10-27)
+
+The pinned per-region details (`SHA-256 188e32d81b7bc7128252a2b9236e3f387c60f71619ca8a58fe29151bd63ea753`) were joined by `ImageId/InstanceId` to all 1,769 word instances in the pinned FUNSD manifest. All keys matched uniquely. This reuses the original predictions; no model was run again. ORT and OpenVINO have the same text-level error counts in every source entity role. The two near-threshold selection-metadata differences described below do not change this table.
+
+| FUNSD entity role | Regions | ORT / OpenVINO selected | Changed text | CER better / worse | Character edits | Word edits |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| answer | 955 | 488 / 487 | 9 | 4 / 5 | 122 -> 123 | 111 -> 112 |
+| question | 455 | 238 / 238 | 5 | 2 / 1 | 68 -> 67 | 61 -> 60 |
+| other | 280 | 164 / 164 | 7 | 1 / 4 | 114 -> 117 | 39 -> 42 |
+| header | 79 | 48 / 48 | 1 | 0 / 1 | 3 -> 4 | 3 -> 5 |
+
+`answer` is a source annotation role, not a verified business-critical field or severity label. Its five worsened regions are a concrete false-correction signal, but this ten-page sample cannot set or pass a production business-field error budget. No per-page blur, noise or contrast ground truth exists in the manifest, so aggregate/page error rates must not be renamed as degradation-severity strata. B1b-B3 remain open; enhancement remains disabled by default.
+
 ## Backend differences and threshold boundaries
 
 Original text, all three candidate texts and final text match on **1,769/1,769 regions**. Decision plus selected-candidate index match on **1,767/1,769**. The two metadata differences are preserved in the JSON:
