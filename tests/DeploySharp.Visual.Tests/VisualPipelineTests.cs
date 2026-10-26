@@ -225,22 +225,27 @@ namespace DeploySharp.Visual.Tests
             }, maximumConcurrency: 2);
             fixture.Provider.Delay = TimeSpan.FromMilliseconds(15);
             int prepared = 0;
+            var resources = new TrackingDisposable[6];
             IReadOnlyList<VisualInferenceResult> results = await fixture.Pipeline.RunPrefetchedAsync(
                 Enumerable.Range(0, 6).ToArray(),
                 (index, token) =>
                 {
                     token.ThrowIfCancellationRequested();
                     Interlocked.Increment(ref prepared);
+                    var resource = new TrackingDisposable();
+                    resources[index] = resource;
                     var size = new VisualSize(2, 2);
                     var values = new float[12];
                     values[0] = index;
-                    return new PreparedVisualInput("images", new Tensor<float>(new TensorShape(1, 3, 2, 2), values), size, size, 1, VisualTensorLayout.Nchw, ImageTransform.Resize(size, size));
+                    return new PreparedVisualInput("images", new Tensor<float>(new TensorShape(1, 3, 2, 2), values), size, size, 1, VisualTensorLayout.Nchw,
+                        ImageTransform.Resize(size, size), ownership: PreparedInputOwnership.Owned, ownedResource: resource);
                 },
                 prefetch: 2);
 
             CollectionAssert.AreEqual(new[] { "zero", "one", "two", "zero", "one", "two" }, results.Select(value => value.GetValue<ClassificationResult>().TopPrediction!.Label).ToArray());
             Assert.AreEqual(6, prepared);
             Assert.AreEqual(6, fixture.Provider.CreatedSessions.Sum(session => session.RunCount));
+            Assert.IsTrue(resources.All(resource => resource != null && resource.DisposeCount == 1));
         }
 
         [TestMethod]
@@ -262,6 +267,31 @@ namespace DeploySharp.Visual.Tests
 
             Assert.AreEqual(2, results.Count);
             Assert.AreEqual(2, fixture.Provider.CreatedSessions.Sum(session => session.RunCount));
+        }
+
+        [TestMethod]
+        public async Task RunPrefetchedAsyncReleasesOwnedInputWhenPipelineClosesAfterPreparation()
+        {
+            VisualModelProfile profile = VisualTestData.ClassificationProfile();
+            using PipelineFixture fixture = VisualTestData.Pipeline(profile, new TensorShape(1, 3), _ =>
+                InferenceOutputs.Create("scores", new Tensor<float>(new TensorShape(1, 3), new[] { 1f, 2f, 3f })));
+            var resource = new TrackingDisposable();
+            PreparedVisualInput? prepared = null;
+
+            VisualException failure = await Assert.ThrowsExactlyAsync<VisualException>(() => fixture.Pipeline.RunPrefetchedAsync(
+                new[] { 0 },
+                (_, _) =>
+                {
+                    prepared = VisualTestData.ClassificationInput(PreparedInputOwnership.Owned, resource);
+                    fixture.Pipeline.Dispose();
+                    return prepared;
+                }));
+
+            Assert.AreEqual(VisualErrorCodes.ObjectDisposed, failure.ErrorCode);
+            Assert.IsNotNull(prepared);
+            Assert.IsTrue(prepared.IsDisposed);
+            Assert.AreEqual(1, resource.DisposeCount);
+            Assert.AreEqual(0, fixture.Provider.CreatedSessions.Sum(session => session.RunCount));
         }
 
         [TestMethod]

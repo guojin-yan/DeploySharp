@@ -69,7 +69,7 @@ IReadOnlyList<VisualInferenceResult> frames =
         cancellationToken: cancellationToken);
 ```
 
-预取回调在线程池执行，最多保留 `MaximumConcurrency + prefetch` 个已准备项目，并保持源顺序。它不改变模型 shape，也不会绕过单个有状态 Session 的串行约束。回调应返回不可变的 `PreparedVisualInput`，并明确其所有权；不应在回调完成后复用或修改同一底层缓冲。
+预取回调在线程池执行，最多保留 `MaximumConcurrency + prefetch` 个已准备项目，并保持源顺序。它不改变模型 shape，也不会绕过单个有状态 Session 的串行约束。回调应返回不可变的 `PreparedVisualInput`，并明确其所有权；不应在回调完成后复用或修改同一底层缓冲。`Owned` 输入由预取调用在成功、取消或失败后释放，即使 Pipeline 在准备完成后、进入推理前关闭；`Borrowed` 输入仍由调用方释放。
 
 ## 结果类型
 

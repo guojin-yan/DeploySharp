@@ -60,3 +60,15 @@ not close long-running soak, cross-device scaling, GPU throughput, CER/WER,
 quality evaluation, or every PP-Structure model/backend combination. The
 remaining plan items must continue to use exact model/runtime evidence rather
 than inheriting this contract result.
+
+## 2026-10-27 Visual prefetch ownership follow-up
+
+The shared `VisualPipeline.RunPrefetchedAsync` wrapper now releases a callback-created
+`Owned` input even if the Pipeline is disposed between preparation and the start
+of inference. Previously, `ExecuteAsync` could reject the call before entering its
+own cleanup block. The wrapper is the sole disposer for prefetched owned inputs;
+`Borrowed` inputs remain caller-owned. The deterministic `VisualPipelineTests`
+scope passes `20/20` on `net10.0`, including the post-preparation disposal race
+and concurrent successful prefetch with six distinct owned resources released
+exactly once. This is a lifecycle contract fix, not a new model/backend,
+throughput, soak or memory-usage measurement.

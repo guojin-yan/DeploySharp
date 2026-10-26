@@ -294,9 +294,9 @@ namespace JYPPX.DeploySharp.Visual
             if (inputs.Count == 0) return Array.Empty<VisualInferenceResult>();
 
             VisualExecutionOptions effectiveOptions = options ?? VisualExecutionOptions.Default;
-            // Prepared values are transient in this API. Borrowed values remain
-            // caller-owned; owned resources are released after each execution.
-            VisualExecutionOptions runOptions = new VisualExecutionOptions(effectiveOptions.Timeout, disposeOwnedInputOnCompletion: true, effectiveOptions.CorrelationId);
+            // The prefetch wrapper owns callback-created resources even when
+            // inference rejects an input before entering its cleanup path.
+            VisualExecutionOptions runOptions = new VisualExecutionOptions(effectiveOptions.Timeout, disposeOwnedInputOnCompletion: false, effectiveOptions.CorrelationId);
             int capacity = checked(_maximumConcurrency + prefetch);
             var pending = new Queue<Task<VisualInferenceResult>>(Math.Min(capacity, inputs.Count));
             var results = new VisualInferenceResult[inputs.Count];
@@ -337,7 +337,8 @@ namespace JYPPX.DeploySharp.Visual
         {
             PreparedVisualInput input = await prepareAsync(value, cancellationToken).ConfigureAwait(false);
             if (input == null) throw new ArgumentException("The prefetch callback returned null.", nameof(prepareAsync));
-            return await ExecuteAsync(input, options, true, cancellationToken).ConfigureAwait(false);
+            try { return await ExecuteAsync(input, options, true, cancellationToken).ConfigureAwait(false); }
+            finally { if (input.Ownership == PreparedInputOwnership.Owned) input.Dispose(); }
         }
 
         private VisualException MapCancellation(Exception exception, CancellationToken callerToken)

@@ -45,7 +45,7 @@ IReadOnlyList<VisualInferenceResult> results =
         cancellationToken: cancellationToken);
 ```
 
-返回顺序与 `framePaths` 一致。准备回调必须返回不再被其他线程修改的 `PreparedVisualInput`。在实时视频中，不要无限累积路径或帧对象；应由应用使用有界队列分段提交，并明确采用“等待、丢旧帧或丢新帧”的背压策略。
+返回顺序与 `framePaths` 一致。准备回调必须返回不再被其他线程修改的 `PreparedVisualInput`。预取调用负责释放回调返回的 `Owned` 输入，包括推理前关闭、取消和失败路径；`Borrowed` 输入继续由调用方管理。在实时视频中，不要无限累积路径或帧对象；应由应用使用有界队列分段提交，并明确采用“等待、丢旧帧或丢新帧”的背压策略。
 
 ### 并发参数怎么选
 
