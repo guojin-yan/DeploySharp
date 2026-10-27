@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using JYPPX.DeploySharp.Errors;
@@ -142,23 +143,29 @@ namespace JYPPX.DeploySharp.Visual
             var nextIndex = new[] { -1 };
             int workerCount = Math.Min(inputs.Count, _maximumConcurrency);
             var workers = new Task[workerCount];
+            var firstFailure = new Exception?[1];
+            using var stopSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             for (int worker = 0; worker < workerCount; worker++)
             {
                 // Some CPU backends expose RunAsync as a synchronous native call.
                 // Run each bounded worker on the pool so those independent channels
                 // can still overlap without creating one task per input.
-                workers[worker] = Task.Run(() => RunManyWorkerAsync(inputs, results, effectiveOptions, cancellationToken, nextIndex), CancellationToken.None);
+                workers[worker] = Task.Run(async () =>
+                {
+                    try { await RunManyWorkerAsync(inputs, results, effectiveOptions, stopSource.Token, nextIndex).ConfigureAwait(false); }
+                    catch (Exception exception)
+                    {
+                        if (Interlocked.CompareExchange(ref firstFailure[0], exception, null) == null)
+                        {
+                            try { stopSource.Cancel(); }
+                            catch (AggregateException) { }
+                        }
+                    }
+                }, CancellationToken.None);
             }
-            try
-            {
-                await Task.WhenAll(workers).ConfigureAwait(false);
-            }
-            catch
-            {
-                // Let already-started workers unwind before surfacing the first failure.
-                try { await Task.WhenAll(workers).ConfigureAwait(false); } catch { }
-                throw;
-            }
+            await Task.WhenAll(workers).ConfigureAwait(false);
+            Exception? failure = firstFailure[0];
+            if (failure != null) ExceptionDispatchInfo.Capture(failure).Throw();
             return Array.AsReadOnly(results);
         }
 
@@ -277,6 +284,7 @@ namespace JYPPX.DeploySharp.Visual
         {
             while (true)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 int index = Interlocked.Increment(ref nextIndex[0]);
                 if (index >= inputs.Count) return;
                 results[index] = await ExecuteAsync(inputs[index], options, true, cancellationToken).ConfigureAwait(false);

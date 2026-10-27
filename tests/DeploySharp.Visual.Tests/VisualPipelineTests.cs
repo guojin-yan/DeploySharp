@@ -191,6 +191,35 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
+        public async Task RunManyStopsQueuedInputsAfterFirstBackendFailureAndRemainsReusable()
+        {
+            var failure = new InvalidOperationException("first frame failed");
+            using PipelineFixture fixture = VisualTestData.Pipeline(VisualTestData.ClassificationProfile(),
+                new TensorShape(1, 3), inputs =>
+                {
+                    int value = (int)((float[])inputs.GetRequired("images").Buffer)[0];
+                    if (value == 0) throw failure;
+                    return InferenceOutputs.Create("scores", new Tensor<float>(new TensorShape(1, 3), new[] { 0f, 1f, 0f }));
+                }, maximumConcurrency: 1);
+            PreparedVisualInput[] inputs = Enumerable.Range(0, 16)
+                .Select(index => ClassificationInput(index == 0 ? 0 : 1)).ToArray();
+            try
+            {
+                VisualException thrown = await Assert.ThrowsExactlyAsync<VisualException>(() => fixture.Pipeline.RunManyAsync(inputs));
+                Assert.AreSame(failure, thrown.InnerException);
+                Assert.AreEqual(1, fixture.Provider.CreatedSessions.Sum(session => session.RunCount),
+                    "A failed call must not start the queued inputs.");
+
+                IReadOnlyList<VisualInferenceResult> reused = await fixture.Pipeline.RunManyAsync(new[] { inputs[1] });
+                Assert.AreEqual("one", reused[0].GetValue<ClassificationResult>().TopPrediction!.Label);
+            }
+            finally
+            {
+                foreach (PreparedVisualInput input in inputs) input.Dispose();
+            }
+        }
+
+        [TestMethod]
         public async Task SlidingWindowRunnerPrefetchesTilesAndSuppressesOverlappingSourceDetections()
         {
             var schema = new DetectionOutputSchema("boxes", DetectionBoxFormat.Xyxy, false, DetectionScoreMode.ClassScore, 2, 4);

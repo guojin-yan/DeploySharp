@@ -43,7 +43,7 @@ IReadOnlyList<VisualInferenceResult> results =
     await pipeline.RunManyAsync(preparedInputs, cancellationToken: cancellationToken);
 ```
 
-调用会租用空闲 Session，超过池容量的输入排队，并按输入顺序返回。每个 Session 都拥有独立的 native context、scratch buffer 和 backend state；只复制托管包装器会导致线程安全问题或隐式串行。
+调用会租用空闲 Session，超过池容量的输入排队，并按输入顺序返回。任一输入失败后，本次调用停止分配排队输入，等待已启动的 worker 退出，再抛出首个错误；不返回部分结果。已进入 native 的调用能否立即停止取决于后端的取消能力，失败后的同一 Pipeline 仍可复用。每个 Session 都拥有独立的 native context、scratch buffer 和 backend state；只复制托管包装器会导致线程安全问题或隐式串行。
 
 Session 数量不是越大越好。CPU 后端需要在通道数与每通道线程数之间平衡；GPU 后端需要考虑显存、CUDA stream、TensorRT execution context 和功耗限制。建议固定输入和计时协议，在 `1,2,4` 个 Session 上分别测量，而不是在运行时无限扩容。
 
