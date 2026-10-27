@@ -19,6 +19,7 @@ Reproduction from the repository root, with the official model and image at the 
 ```powershell
 & 'E:\Model\PaddleDocument\paddle3\python.exe' -c "from paddlex.inference.models import create_predictor; p=create_predictor('SLANeXt_wired',model_dir=r'E:\Model\PaddleDocument\source\slanext-wired\SLANeXt_wired_infer',device='cpu',batch_size=1); r=list(p.predict(r'E:\Model\PaddleDocument\validation\table_recognition.jpg')); print(r[0]['bbox'])"
 dotnet test tests/DeploySharp.Visual.Tests/DeploySharp.Visual.Tests.csproj --filter FullyQualifiedName~SlanetDecoderFlagsCellsOutsideTheSourceBeforeClipping
+$env:DEPLOYSHARP_PADDLE_DOCUMENT_RUN_EXTERNAL='1'
 dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Tests.csproj --filter FullyQualifiedName~TableStructureDecoderRunsOnRealOrtCpu
 ```
 
