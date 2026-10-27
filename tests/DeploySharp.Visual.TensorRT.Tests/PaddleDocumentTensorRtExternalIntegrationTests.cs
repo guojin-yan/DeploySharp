@@ -296,7 +296,8 @@ namespace DeploySharp.Visual.TensorRT.Tests
                         cpuScore = cpuReference.TopPrediction!.Score,
                         scoreTolerance,
                         p50Ms = sorted[Math.Max(0, (int)Math.Ceiling(iterations * .5) - 1)],
-                        p95Ms = sorted[Math.Max(0, (int)Math.Ceiling(iterations * .95) - 1)]
+                        p95Ms = sorted[Math.Max(0, (int)Math.Ceiling(iterations * .95) - 1)],
+                        samplesMs = samples.ToArray()
                     }));
                 }
             }
@@ -630,7 +631,7 @@ namespace DeploySharp.Visual.TensorRT.Tests
                     below50 = matches.Values.Count(value => value.Iou < .50)
                 }));
                 double[] sorted = samples.OrderBy(value => value).ToArray();
-                Console.WriteLine("PADDLE_DOCUMENT_TENSORRT_LAYOUT " + JsonSerializer.Serialize(new { model = modelId, onnxSha256, engineSha256 = build.EngineSha256, engineBytes = build.EngineBytes, api = (int)apiVersion, warmup, iterations, detections = trtResult.Detections.Count, confidentDetections = actualDetections.Length, confidenceFloor, p50Ms = sorted[Math.Max(0, (int)Math.Ceiling(iterations * .5) - 1)], p95Ms = sorted[Math.Max(0, (int)Math.Ceiling(iterations * .95) - 1)], scoreTolerance = .01, iouThreshold = layoutIouThreshold }));
+                Console.WriteLine("PADDLE_DOCUMENT_TENSORRT_LAYOUT " + JsonSerializer.Serialize(new { model = modelId, onnxSha256, engineSha256 = build.EngineSha256, engineBytes = build.EngineBytes, api = (int)apiVersion, warmup, iterations, detections = trtResult.Detections.Count, confidentDetections = actualDetections.Length, confidenceFloor, p50Ms = sorted[Math.Max(0, (int)Math.Ceiling(iterations * .5) - 1)], p95Ms = sorted[Math.Max(0, (int)Math.Ceiling(iterations * .95) - 1)], samplesMs = samples.ToArray(), scoreTolerance = .01, iouThreshold = layoutIouThreshold }));
             }
             catch (TensorRtBackendException exception) when (exception.ErrorCode == TensorRtErrorCodes.OnnxParseFailed || exception.ErrorCode == TensorRtErrorCodes.EngineBuildFailed)
             {
@@ -783,6 +784,7 @@ namespace DeploySharp.Visual.TensorRT.Tests
                     minimumIou, warmup, iterations,
                     p50Ms = sorted[Math.Max(0, (int)Math.Ceiling(iterations * .5) - 1)],
                     p95Ms = sorted[Math.Max(0, (int)Math.Ceiling(iterations * .95) - 1)],
+                    samplesMs = samples.ToArray(),
                     cudaArchitecture = options.CudaTargetArchitecture
                 }));
             }
@@ -987,7 +989,7 @@ namespace DeploySharp.Visual.TensorRT.Tests
                     batch = new { size = 2, inputShape = input.Tensor.Shape.ToString(), inputRowSha256, auxiliaryShapes = input.AuxiliaryInputs.Select(value => new { name = value.Name, shape = value.Tensor.Shape.ToString() }).ToArray() },
                     rows = Enumerable.Range(0, 2).Select(row => new { row, ortDetections = ortBatch[row].Detections.Count, tensorRtDetections = trtBatch[row].Detections.Count, ortConfidentDetections = ortBatch[row].Detections.Count(value => value.Label.Score >= confidenceFloor), tensorRtConfidentDetections = trtBatch[row].Detections.Count(value => value.Label.Score >= confidenceFloor), minimumIou = minimumIou[row], maximumScoreDrift = maximumScoreDrift[row] }).ToArray(),
                     comparison = new { confidenceFloor, iouThreshold = .80, scoreTolerance = .01 },
-                    timing = new { warmup, iterations, p50Ms = p50, p95Ms = p95 },
+                    timing = new { warmup, iterations, p50Ms = p50, p95Ms = p95, samplesMs = samples.ToArray() },
                     boundary = "Exact dynamic Batch=2 Engine build, provider execution, Paddle NMS decoding and bounded ORT parity for this layout artifact on one Windows RTX host. The two bus.jpg bands are execution probes without layout ground truth; no accuracy, cross-device portability or all-model TensorRT claim is made."
                 }, new JsonSerializerOptions { WriteIndented = true }));
                 TestContext.AddResultFile(report);

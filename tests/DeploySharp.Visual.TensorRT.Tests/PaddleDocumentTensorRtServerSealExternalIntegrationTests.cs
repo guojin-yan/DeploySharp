@@ -195,7 +195,7 @@ namespace DeploySharp.Visual.TensorRT.Tests
                     image = new { file = imagePath, sha256 = ComputeSha256(imagePath), regions = regions.Select(value => new { x = value.Bounds.X, y = value.Bounds.Y, width = value.Bounds.Width, height = value.Bounds.Height }).ToArray() },
                     batch = new { size = 2, inputShape = input.Tensor.Shape.ToString(), outputShape = ortMask.Shape.ToString(), inputRowSha256 },
                     rows = Enumerable.Range(0, 2).Select(row => new { row, ortMaskRowSha256 = TensorRowSha256(ortMask, row), tensorRtMaskRowSha256 = TensorRowSha256(lastTrtOutputs!.GetRequired("fetch_name_0"), row), ortRegions = ortResult[row].Regions.Count, tensorRtRegions = trtResult[row].Regions.Count, ortMask = ortResult[row].MaskWidth + "x" + ortResult[row].MaskHeight, tensorRtMask = trtResult[row].MaskWidth + "x" + trtResult[row].MaskHeight }).ToArray(),
-                    timing = new { warmup, iterations, p50Ms = p50, p95Ms = p95 },
+                    timing = new { warmup, iterations, p50Ms = p50, p95Ms = p95, samplesMs = samples.ToArray() },
                     boundary = "Exact PP-OCRv4 seal dynamic Batch=2 Engine build/provider execution, raw mask row binding and bounded ORT parity for this artifact on one Windows TensorRT host. ROI bands are execution probes without seal ground truth; no accuracy, throughput, cross-device portability or all-seal-model claim is made."
                 }, new JsonSerializerOptions { WriteIndented = true }));
                 TestContext.AddResultFile(report);

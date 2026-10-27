@@ -195,6 +195,7 @@ namespace DeploySharp.Visual.TensorRT.Tests
                         iouThreshold = .85,
                         p50Ms = Percentile(sorted, .50),
                         p95Ms = Percentile(sorted, .95),
+                        samplesMs = samples.ToArray(),
                         cudaArchitecture = backendOptions.CudaTargetArchitecture
                     });
                     Console.WriteLine("PADDLE_DOCUMENT_TENSORRT_TABLE_CELL model=" + item.Model + ";status=passed;detections=" + trtResult.Detections.Count + ";p50Ms=" + Percentile(sorted, .50).ToString("F3") + ";p95Ms=" + Percentile(sorted, .95).ToString("F3"));
