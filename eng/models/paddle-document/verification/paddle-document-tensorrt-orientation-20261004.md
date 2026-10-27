@@ -14,6 +14,7 @@ The opt-in `PaddleDocumentTensorRtExternalIntegrationTests.DocumentOrientationRu
 ## Result
 
 The DeploySharp TensorRT builder created an Engine of `10,270,852` bytes in `63,634.811 ms`; the steady-state protocol used 5 warmups, 50 measured iterations, batch 1, one Session and optimization level 3.
+The 50 total-time samples are now embedded in the JSON evidence. They were recovered from the original MSTest TRX (`trt-orientation-20261004-pass.trx`, SHA-256 `1987af5bd3e38921c7ed40e4425b95ab5f223eeb75a178e7545268710df99eb7`); the offline matrix audit recomputes both percentiles. This is evidence recovery, not a new inference run.
 
 | Metric | Result |
 |---|---:|

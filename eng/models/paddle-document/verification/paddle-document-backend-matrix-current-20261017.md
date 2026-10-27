@@ -1,6 +1,6 @@
 # PP-Structure backend status — current index
 
-Generated 2026-10-27T03:06:46Z from source revision 1d7edf67bbffcb12c4366ce518d0e4406f44574f. The authoritative matrix is [eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json](paddle-document-backend-matrix-20260929.json), whose artifact rows are intentionally preserved as the source of truth.
+Generated 2026-10-27T03:17:24Z from source revision 1d7edf67bbffcb12c4366ce518d0e4406f44574f. The authoritative matrix is [eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json](paddle-document-backend-matrix-20260929.json), whose artifact rows are intentionally preserved as the source of truth.
 
 This index covers **31 exact artifact/backend rows** on the named Windows host. It is an execution/contract index, not a claim that every PP-Structure task is production-ready.
 
@@ -42,7 +42,7 @@ All 33 matrix-level evidence references resolve locally. The audit does not vali
 ## Formal performance evidence coverage
 
 The following exact evidence bundles declare at least 5 warm-ups and 50 measured calls. This is a coverage index, not a ranking and not a substitute for a full 31-artifact × backend matrix.
-Of 69 registered JSON bundles, 53 embed numeric `samplesMs` arrays with the declared measurement count. Another 2 summary bundles link 8 tracked raw reports by SHA-256 and sample count; official classification P50/P95 are recomputed from those reports. The remaining 14 have no tracked raw samples linked by this index; separate local raw reports may still exist, so they must not be called lost or rerun by default.
+Of 69 registered JSON bundles, 54 embed numeric `samplesMs` arrays with the declared measurement count; timingMs P50/P95 are recomputed where present. Another 2 summary bundles link 8 tracked raw reports by SHA-256 and sample count; official classification P50/P95 are recomputed from those reports. The remaining 13 have no tracked raw samples linked by this index; separate local raw reports may still exist, so they must not be called lost or rerun by default.
 
 | Evidence bundle | Scope | Backends | Models | Protocol |
 | --- | --- | --- | --- | --- |

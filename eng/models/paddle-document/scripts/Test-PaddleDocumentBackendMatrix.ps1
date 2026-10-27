@@ -176,6 +176,16 @@ function Read-FormalPerformanceEvidence {
             throw "Evidence '$RelativePath' has $count samplesMs values, but declares $measurementCount measurements."
         }
     }
+    if ($null -ne $document.timingMs -and $null -ne $document.timingMs.samplesMs) {
+        $orderedSamples = @($document.timingMs.samplesMs | ForEach-Object { [double]$_ } | Sort-Object)
+        $p50 = $orderedSamples[[int][Math]::Ceiling($measurementCount * 0.5) - 1]
+        $p95 = $orderedSamples[[int][Math]::Ceiling($measurementCount * 0.95) - 1]
+        if ($null -eq $document.timingMs.p50 -or $null -eq $document.timingMs.p95 -or
+            [Math]::Abs($p50 - [double]$document.timingMs.p50) -gt 0.000001 -or
+            [Math]::Abs($p95 - [double]$document.timingMs.p95) -gt 0.000001) {
+            throw "Evidence '$RelativePath' does not reproduce its timingMs P50/P95."
+        }
+    }
     $linkedRawReportCount = 0
     foreach ($backend in @($document.backends)) {
         if ($null -eq $backend -or [string]::IsNullOrWhiteSpace([string]$backend.rawEvidence)) { continue }
@@ -470,7 +480,7 @@ $result = [ordered]@{
             shaLinkedRawReportCount = $linkedRawReportTotal
             unlinkedSummaryBundleCount = $unlinkedSummaryBundles.Count
             unlinkedSummaryEvidenceIds = @($unlinkedSummaryBundles | ForEach-Object { $_.id })
-            boundary = 'Embedded numeric samplesMs arrays are checked against declared counts. SHA-linked tracked raw reports are checked for hash and sample count; official classification reports also reproduce summary P50/P95. Other summary-only bundles may have separate local raw reports; their P50/P95 cannot be recomputed from the registered JSON alone.'
+            boundary = 'Embedded numeric samplesMs arrays are checked against declared counts; timingMs samples also reproduce summary P50/P95. SHA-linked tracked raw reports are checked for hash and sample count; official classification reports also reproduce summary P50/P95. Other summary-only bundles may have separate local raw reports; their P50/P95 cannot be recomputed from the registered JSON alone.'
         }
         boundary = 'Every currently passing primary release artifact/backend pair has a mapped formal evidence bundle. Two ORT-pass derived OpenVINO compatibility graphs lack standalone formal timing. The reports use different inputs and devices/profiles, so coverage does not establish a unified comparable performance matrix.'
     }
@@ -558,7 +568,7 @@ if ($missingEvidence.Count -eq 0) {
 [void]$builder.AppendLine('## Formal performance evidence coverage')
 [void]$builder.AppendLine()
 [void]$builder.AppendLine('The following exact evidence bundles declare at least 5 warm-ups and 50 measured calls. This is a coverage index, not a ranking and not a substitute for a full 31-artifact × backend matrix.')
-[void]$builder.AppendLine("Of $($formalPerformanceEvidence.Count) registered JSON bundles, $($sampledBundles.Count) embed numeric ``samplesMs`` arrays with the declared measurement count. Another $($linkedRawBundles.Count) summary bundles link $linkedRawReportTotal tracked raw reports by SHA-256 and sample count; official classification P50/P95 are recomputed from those reports. The remaining $($unlinkedSummaryBundles.Count) have no tracked raw samples linked by this index; separate local raw reports may still exist, so they must not be called lost or rerun by default.")
+[void]$builder.AppendLine("Of $($formalPerformanceEvidence.Count) registered JSON bundles, $($sampledBundles.Count) embed numeric ``samplesMs`` arrays with the declared measurement count; timingMs P50/P95 are recomputed where present. Another $($linkedRawBundles.Count) summary bundles link $linkedRawReportTotal tracked raw reports by SHA-256 and sample count; official classification P50/P95 are recomputed from those reports. The remaining $($unlinkedSummaryBundles.Count) have no tracked raw samples linked by this index; separate local raw reports may still exist, so they must not be called lost or rerun by default.")
 [void]$builder.AppendLine()
 [void]$builder.AppendLine('| Evidence bundle | Scope | Backends | Models | Protocol |')
 [void]$builder.AppendLine('| --- | --- | --- | --- | --- |')
