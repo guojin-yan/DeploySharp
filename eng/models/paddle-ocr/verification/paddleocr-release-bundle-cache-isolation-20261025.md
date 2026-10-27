@@ -49,3 +49,7 @@ VL 资产进入 `models-paddleocr` 时，应在 catalog 使用带模型前缀的
 ```
 
 实际四图、tokenizer、manifest 的大小和 SHA 必须来自同一导出批次；代码合同不会把伪资产或只有 catalog 的记录当作模型执行证据。
+
+## 2026-10-27 catalog 重试补充
+
+同一客户端现在会在共享 catalog 任务失败或取消后重新请求；成功结果仍只加载一次，单个等待者取消也不会中止其它调用方正在等待的共享请求。聚焦合同、全套 ModelFactory 测试和多目标框架编译结果见 [`paddleocr-release-catalog-retry-20261027.md`](paddleocr-release-catalog-retry-20261027.md)。这只修复瞬时元数据请求失败后的恢复能力，不代表大模型资产在线下载速度或完整传输已经验证。

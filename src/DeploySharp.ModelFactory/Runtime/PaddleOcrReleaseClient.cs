@@ -202,7 +202,12 @@ namespace JYPPX.DeploySharp.ModelFactory
         {
             EnsureUsable();
             Task<IReadOnlyList<PaddleOcrReleaseModel>> task;
-            lock (_gate) { if (_catalogTask == null) _catalogTask = LoadCatalogAsync(); task = _catalogTask; }
+            lock (_gate)
+            {
+                if (_catalogTask == null || _catalogTask.IsFaulted || _catalogTask.IsCanceled)
+                    _catalogTask = LoadCatalogAsync();
+                task = _catalogTask;
+            }
             return await WaitForCatalogAsync(task, cancellationToken).ConfigureAwait(false);
         }
 

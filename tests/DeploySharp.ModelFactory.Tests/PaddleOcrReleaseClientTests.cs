@@ -71,6 +71,56 @@ namespace DeploySharp.ModelFactory.Tests
         }
 
         [TestMethod]
+        public async Task RetriesCatalogAfterTransientFailureAndCachesSuccessfulResult()
+        {
+            const string catalog = "{\"corePaddleOcr\":[],\"ppStructure\":[]}";
+            using var directory = new TestDirectory();
+            var handler = new FailOnceCatalogHandler(Encoding.UTF8.GetBytes(catalog));
+            using var client = new PaddleOcrReleaseClient(new PaddleOcrReleaseClientOptions(directory.Path), new HttpClient(handler));
+
+            await Assert.ThrowsExactlyAsync<ModelFactoryException>(() => client.GetCatalogAsync());
+            Assert.AreEqual(0, Directory.GetFiles(directory.Path, "paddleocr-release-catalog.json", SearchOption.AllDirectories).Length);
+
+            Assert.AreEqual(0, (await client.GetCatalogAsync()).Count);
+            Assert.AreEqual(0, (await client.GetCatalogAsync()).Count);
+            Assert.AreEqual(2, handler.RequestCount);
+        }
+
+        [TestMethod]
+        public async Task CancelledCatalogWaiterDoesNotRestartSharedDownload()
+        {
+            const string catalog = "{\"corePaddleOcr\":[],\"ppStructure\":[]}";
+            using var directory = new TestDirectory();
+            var handler = new GatedCatalogHandler(Encoding.UTF8.GetBytes(catalog));
+            using var client = new PaddleOcrReleaseClient(new PaddleOcrReleaseClientOptions(directory.Path), new HttpClient(handler));
+            using var cancellation = new CancellationTokenSource();
+
+            Task<IReadOnlyList<PaddleOcrReleaseModel>> cancelled = client.GetCatalogAsync(cancellation.Token);
+            Task<IReadOnlyList<PaddleOcrReleaseModel>> continuing = client.GetCatalogAsync();
+            await handler.Started;
+            cancellation.Cancel();
+            await Assert.ThrowsExactlyAsync<OperationCanceledException>(() => cancelled);
+            handler.Release();
+
+            Assert.AreEqual(0, (await continuing).Count);
+            Assert.AreEqual(0, (await client.GetCatalogAsync()).Count);
+            Assert.AreEqual(1, handler.RequestCount);
+        }
+
+        [TestMethod]
+        public async Task RetriesCatalogAfterUnderlyingRequestCancellation()
+        {
+            const string catalog = "{\"corePaddleOcr\":[],\"ppStructure\":[]}";
+            using var directory = new TestDirectory();
+            var handler = new CancelOnceCatalogHandler(Encoding.UTF8.GetBytes(catalog));
+            using var client = new PaddleOcrReleaseClient(new PaddleOcrReleaseClientOptions(directory.Path), new HttpClient(handler));
+
+            await Assert.ThrowsAsync<OperationCanceledException>(() => client.GetCatalogAsync());
+            Assert.AreEqual(0, (await client.GetCatalogAsync()).Count);
+            Assert.AreEqual(2, handler.RequestCount);
+        }
+
+        [TestMethod]
         public async Task DownloadsOnlyDeclaredChart2TableBundleArtifactsAndReusesVerifiedOfflineCache()
         {
             var artifactRows = new[]
@@ -248,6 +298,58 @@ namespace DeploySharp.ModelFactory.Tests
                 Requested.Add(name);
                 if (!_responses.TryGetValue(name, out byte[]? bytes)) return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound) { RequestMessage = request });
                 return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { RequestMessage = request, Content = new ByteArrayContent(bytes) });
+            }
+        }
+
+        private sealed class FailOnceCatalogHandler : HttpMessageHandler
+        {
+            private readonly byte[] _catalog;
+            public FailOnceCatalogHandler(byte[] catalog) { _catalog = catalog; }
+            public int RequestCount { get; private set; }
+
+            protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+            {
+                RequestCount++;
+                return Task.FromResult(RequestCount == 1
+                    ? new HttpResponseMessage(HttpStatusCode.ServiceUnavailable) { RequestMessage = request }
+                    : new HttpResponseMessage(HttpStatusCode.OK) { RequestMessage = request, Content = new ByteArrayContent(_catalog) });
+            }
+        }
+
+        private sealed class GatedCatalogHandler : HttpMessageHandler
+        {
+            private readonly byte[] _catalog;
+            private readonly TaskCompletionSource<bool> _started = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            private readonly TaskCompletionSource<bool> _released = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            public GatedCatalogHandler(byte[] catalog) { _catalog = catalog; }
+            public Task Started => _started.Task;
+            public int RequestCount { get; private set; }
+            public void Release() => _released.TrySetResult(true);
+
+            protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+            {
+                RequestCount++;
+                _started.TrySetResult(true);
+                await _released.Task.ConfigureAwait(false);
+                return new HttpResponseMessage(HttpStatusCode.OK) { RequestMessage = request, Content = new ByteArrayContent(_catalog) };
+            }
+        }
+
+        private sealed class CancelOnceCatalogHandler : HttpMessageHandler
+        {
+            private readonly byte[] _catalog;
+            public CancelOnceCatalogHandler(byte[] catalog) { _catalog = catalog; }
+            public int RequestCount { get; private set; }
+
+            protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+            {
+                RequestCount++;
+                if (RequestCount == 1) return Task.FromCanceled<HttpResponseMessage>(new CancellationToken(true));
+                return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    RequestMessage = request,
+                    Content = new ByteArrayContent(_catalog)
+                });
             }
         }
     }
