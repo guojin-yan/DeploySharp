@@ -21,4 +21,6 @@ dotnet run --project samples/02-visual/paddle-structure-table/PaddleStructureTab
 
 `table-cell-geometry-outside-source:N/M` 表示 M 个 SLANeXt 结构区域中有 N 个原始顶点超出图像边界；对应区域的 `metadata.geometry-outside-source` 为 `true`。此时边界裁剪后的区域可能退化，不能直接拿它们裁图或绑定 OCR 文本。官方示例图中 13 个结构区域有 12 个越界，而 RT-DETR 的高分检测框仍位于真实表格网格上；13 对 13 的数量相同不代表位置匹配。当前案例只使用 SLANeXt 的 HTML 结构，不进行单元格框融合。详见 [几何核对记录](../../../eng/models/paddle-document/verification/slanext-cell-geometry-20261027.md)。
 
+案例额外输出 `table-cell-alignment.json`：它只在输入来源、结构单元格数量、检测框数量和逐行几何顺序都一致时，将 SLANeXt 的结构槽位关联到独立 RT-DETR 检测框。`Succeeded=false` 时 `Matches` 为空并列出诊断；跨行单元格当前明确不自动对齐。即便 `Succeeded=true`，也只是一个候选裁剪位置映射，不是已验证的单元格识别或表格准确率；HTML 仍不填 OCR 文字。官方图的单次运行与边界见[对齐合同记录](../../../eng/models/paddle-document/verification/paddle-structure-table-cell-alignment-20261027.md)。
+
 模型/后端的精确支持边界和正式复现证据见 [PP-Structure 教程](../../../docs/articles/visual-paddle-structure.md)。

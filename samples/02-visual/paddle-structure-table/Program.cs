@@ -3,6 +3,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using JYPPX.DeploySharp;
@@ -132,20 +133,41 @@ internal static class Program
         try { result = await pipeline.RunAsync(page, cancellationToken).ConfigureAwait(false); }
         finally { structure?.Dispose(); cells?.Dispose(); }
         PaddleDocumentTableResult table = result.GetRequired<PaddleDocumentTableResult>(PaddleDocumentModule.TableStructureRecognition);
+        PaddleDocumentRegionResult detectedCells = result.GetRequired<PaddleDocumentRegionResult>(PaddleDocumentModule.TableCellDetection);
+        PaddleDocumentTableCellAlignmentResult alignment = PaddleDocumentTableCellAligner.Align(table, detectedCells,
+            image.SourceSize.Width, image.SourceSize.Height);
         string tableType = SelectTableType(result.GetRequired<PaddleDocumentClassificationResult>(PaddleDocumentModule.TableClassification).Label, options.TableType);
         Directory.CreateDirectory(options.Output);
         string jsonPath = Path.Combine(options.Output, "table-result.json");
         string htmlPath = Path.Combine(options.Output, "table-result.html");
+        string alignmentPath = Path.Combine(options.Output, "table-cell-alignment.json");
         await File.WriteAllTextAsync(jsonPath, PaddleDocumentPipelineExport.ToJson(result), cancellationToken).ConfigureAwait(false);
+        var alignmentOutput = new
+        {
+            alignment.Succeeded,
+            alignment.RowCount,
+            alignment.StructureCellCount,
+            alignment.DetectionCount,
+            alignment.Diagnostics,
+            Matches = alignment.Matches.Select(match => new
+            {
+                match.RowIndex, match.CellIndexInRow, match.StructureCellIndex, match.DetectionIndex,
+                match.Score,
+                Bounds = new { match.Bounds.X, match.Bounds.Y, match.Bounds.Width, match.Bounds.Height }
+            })
+        };
+        await File.WriteAllTextAsync(alignmentPath, JsonSerializer.Serialize(alignmentOutput, new JsonSerializerOptions { WriteIndented = true }), cancellationToken).ConfigureAwait(false);
         string tableElement = table.Markup.IndexOf("<table", StringComparison.OrdinalIgnoreCase) >= 0
             ? table.Markup : "<table>" + table.Markup + "</table>";
         string htmlDocument = "<!doctype html><html><head><meta charset=\"utf-8\"><title>PP-Structure table</title></head><body>"
             + tableElement + "</body></html>";
         await File.WriteAllTextAsync(htmlPath, htmlDocument, cancellationToken).ConfigureAwait(false);
-        Console.WriteLine("Backend: " + options.Backend + "; table: " + tableType + "; detected cells: " + result.GetRequired<PaddleDocumentRegionResult>(PaddleDocumentModule.TableCellDetection).Regions.Count);
+        Console.WriteLine("Backend: " + options.Backend + "; table: " + tableType + "; detected cells: " + detectedCells.Regions.Count);
         Console.WriteLine("Structure tokens: " + table.Tokens.Count + "; regions: " + table.Regions.Count + "; warnings: " + string.Join(", ", table.Warnings));
+        Console.WriteLine("Cell alignment: " + (alignment.Succeeded ? "validated" : string.Join(", ", alignment.Diagnostics)));
         Console.WriteLine("JSON: " + jsonPath);
         Console.WriteLine("HTML: " + htmlPath);
+        Console.WriteLine("Alignment: " + alignmentPath);
     }
 
     private static BackendRegistry CreateRegistry(string backend)
