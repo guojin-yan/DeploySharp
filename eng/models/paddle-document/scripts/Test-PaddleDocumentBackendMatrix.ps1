@@ -203,6 +203,61 @@ function Read-FormalPerformanceEvidence {
         }
         $linkedRawReportCount++
     }
+    if (-not [string]::IsNullOrWhiteSpace([string]$document.trackedRawDirectory)) {
+        $rawFolderName = [string]$document.trackedRawDirectory
+        if ($rawFolderName -ne [IO.Path]::GetFileName($rawFolderName)) {
+            throw "Evidence '$RelativePath' has an invalid tracked raw directory."
+        }
+        $rawFolder = Join-Path (Split-Path -Parent $fullPath) $rawFolderName
+        $rows = @($document.rows)
+        if ($rows.Count -eq 0) { throw "Evidence '$RelativePath' has no rows for its tracked raw reports." }
+        foreach ($row in $rows) {
+            $rawName = [string]$row.rawReport
+            if ([string]::IsNullOrWhiteSpace($rawName) -or $rawName -ne [IO.Path]::GetFileName($rawName) -or
+                [string]::IsNullOrWhiteSpace([string]$row.rawReportSha256)) {
+                throw "Evidence '$RelativePath' has an invalid tracked raw report reference."
+            }
+            $rawPath = Join-Path $rawFolder $rawName
+            if (-not (Test-Path -LiteralPath $rawPath -PathType Leaf)) {
+                throw "Evidence '$RelativePath' references missing raw report '$rawName'."
+            }
+            $rawRelativePath = [IO.Path]::GetRelativePath($RepositoryRoot, $rawPath).Replace('\', '/')
+            if ($rawRelativePath.StartsWith('../', [StringComparison]::Ordinal) -or
+                -not (& git -C $RepositoryRoot ls-files --error-unmatch -- $rawRelativePath 2>$null)) {
+                throw "Raw report '$rawName' is not tracked within the repository."
+            }
+            $rawSha = (Get-FileHash -LiteralPath $rawPath -Algorithm SHA256).Hash.ToLowerInvariant()
+            if ($rawSha -ne [string]$row.rawReportSha256) {
+                throw "Raw report '$rawName' does not match its registered SHA-256."
+            }
+            $rawDocument = Get-Content -LiteralPath $rawPath -Raw | ConvertFrom-Json
+            $samples = @($rawDocument.samples)
+            if ($samples.Count -ne $measurementCount -or [string]$rawDocument.model -ne [string]$row.model -or
+                [string]$rawDocument.backend -ne [string]$row.backend -or
+                [string]$rawDocument.modelSha256 -ne [string]$row.modelSha256 -or
+                [string]$rawDocument.imageSha256 -ne [string]$row.imageSha256 -or
+                [int]$rawDocument.warmup -ne $warmupCount -or [int]$rawDocument.iterations -ne $measurementCount) {
+                throw "Raw report '$rawName' does not match its summary identity or protocol."
+            }
+            foreach ($metric in @('preprocessing', 'inference', 'postprocessing', 'total')) {
+                $sampleProperty = "${metric}Ms"
+                $values = @($samples | ForEach-Object {
+                    $value = $_.$sampleProperty
+                    if ($null -eq $value -or -not [double]::IsFinite([double]$value)) {
+                        throw "Raw report '$rawName' has an invalid $sampleProperty sample."
+                    }
+                    [double]$value
+                } | Sort-Object)
+                $p50 = $values[[int][Math]::Ceiling($measurementCount * 0.5) - 1]
+                $p95 = $values[[int][Math]::Ceiling($measurementCount * 0.95) - 1]
+                if ([Math]::Abs($p50 - [double]$row.$metric.p50Ms) -gt 0.000001 -or
+                    [Math]::Abs($p95 - [double]$row.$metric.p95Ms) -gt 0.000001) {
+                    throw "Raw report '$rawName' does not reproduce its $metric P50/P95."
+                }
+            }
+            $linkedRawReportCount++
+        }
+    }
     [ordered]@{
         id = $Id
         path = $RelativePath.Replace('\', '/')
@@ -415,7 +470,7 @@ $result = [ordered]@{
             shaLinkedRawReportCount = $linkedRawReportTotal
             unlinkedSummaryBundleCount = $unlinkedSummaryBundles.Count
             unlinkedSummaryEvidenceIds = @($unlinkedSummaryBundles | ForEach-Object { $_.id })
-            boundary = 'Embedded numeric samplesMs arrays are checked against declared counts. SHA-linked tracked raw reports are checked for hash and sample count. Other summary-only bundles may have separate local raw reports; their P50/P95 cannot be recomputed from the registered JSON alone.'
+            boundary = 'Embedded numeric samplesMs arrays are checked against declared counts. SHA-linked tracked raw reports are checked for hash and sample count; official classification reports also reproduce summary P50/P95. Other summary-only bundles may have separate local raw reports; their P50/P95 cannot be recomputed from the registered JSON alone.'
         }
         boundary = 'Every currently passing primary release artifact/backend pair has a mapped formal evidence bundle. Two ORT-pass derived OpenVINO compatibility graphs lack standalone formal timing. The reports use different inputs and devices/profiles, so coverage does not establish a unified comparable performance matrix.'
     }
@@ -503,7 +558,7 @@ if ($missingEvidence.Count -eq 0) {
 [void]$builder.AppendLine('## Formal performance evidence coverage')
 [void]$builder.AppendLine()
 [void]$builder.AppendLine('The following exact evidence bundles declare at least 5 warm-ups and 50 measured calls. This is a coverage index, not a ranking and not a substitute for a full 31-artifact × backend matrix.')
-[void]$builder.AppendLine("Of $($formalPerformanceEvidence.Count) registered JSON bundles, $($sampledBundles.Count) embed numeric ``samplesMs`` arrays with the declared measurement count. Another $($linkedRawBundles.Count) summary bundle links $linkedRawReportTotal tracked raw reports by SHA-256 and sample count. The remaining $($unlinkedSummaryBundles.Count) have no tracked raw samples linked by this index; separate local raw reports may still exist, so they must not be called lost or rerun by default.")
+[void]$builder.AppendLine("Of $($formalPerformanceEvidence.Count) registered JSON bundles, $($sampledBundles.Count) embed numeric ``samplesMs`` arrays with the declared measurement count. Another $($linkedRawBundles.Count) summary bundles link $linkedRawReportTotal tracked raw reports by SHA-256 and sample count; official classification P50/P95 are recomputed from those reports. The remaining $($unlinkedSummaryBundles.Count) have no tracked raw samples linked by this index; separate local raw reports may still exist, so they must not be called lost or rerun by default.")
 [void]$builder.AppendLine()
 [void]$builder.AppendLine('| Evidence bundle | Scope | Backends | Models | Protocol |')
 [void]$builder.AppendLine('| --- | --- | --- | --- | --- |')

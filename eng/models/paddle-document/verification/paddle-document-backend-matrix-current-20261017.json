@@ -1,6 +1,6 @@
 {
   "schemaVersion": "deploysharp-paddle-document-backend-matrix-summary-v1",
-  "generatedUtc": "2026-10-26T19:21:28Z",
+  "generatedUtc": "2026-10-27T03:06:46Z",
   "sourceRevision": "1d7edf67bbffcb12c4366ce518d0e4406f44574f",
   "sourceMatrix": {
     "path": "eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json",
@@ -147,7 +147,7 @@
         "warmupCount": 5,
         "measurementCount": 50,
         "inRepositorySampleArrayCount": 0,
-        "linkedRawReportCount": 0,
+        "linkedRawReportCount": 6,
         "sourceRevision": "5786d637a24391e3a7ebd90ba9b33608486df0ff"
       },
       {
@@ -2023,11 +2023,10 @@
         "seal-mobile-tensorrt11-dynamic-batch2",
         "seal-server-tensorrt11-dynamic-batch2"
       ],
-      "shaLinkedRawBundleCount": 1,
-      "shaLinkedRawReportCount": 2,
-      "unlinkedSummaryBundleCount": 15,
+      "shaLinkedRawBundleCount": 2,
+      "shaLinkedRawReportCount": 8,
+      "unlinkedSummaryBundleCount": 14,
       "unlinkedSummaryEvidenceIds": [
-        "official-classification",
         "document-orientation-tensorrt10-single-image",
         "table-classification-tensorrt10-single-image",
         "static-layout-tensorrt11",
@@ -2043,7 +2042,7 @@
         "seal-mobile-tensorrt11-dynamic-batch2",
         "seal-server-tensorrt11-dynamic-batch2"
       ],
-      "boundary": "Embedded numeric samplesMs arrays are checked against declared counts. SHA-linked tracked raw reports are checked for hash and sample count. Other summary-only bundles may have separate local raw reports; their P50/P95 cannot be recomputed from the registered JSON alone."
+      "boundary": "Embedded numeric samplesMs arrays are checked against declared counts. SHA-linked tracked raw reports are checked for hash and sample count; official classification reports also reproduce summary P50/P95. Other summary-only bundles may have separate local raw reports; their P50/P95 cannot be recomputed from the registered JSON alone."
     },
     "boundary": "Every currently passing primary release artifact/backend pair has a mapped formal evidence bundle. Two ORT-pass derived OpenVINO compatibility graphs lack standalone formal timing. The reports use different inputs and devices/profiles, so coverage does not establish a unified comparable performance matrix."
   },

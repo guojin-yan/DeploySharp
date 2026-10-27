@@ -19,3 +19,4 @@ eng/models/paddle-ocr/scripts/tests/test_paddleocr_vl_reference_summary.py text 
 eng/models/paddle-ocr/scripts/Run-PaddleOcrVlRealFormulaShards.sh text eol=lf
 eng/models/paddle-ocr/scripts/Run-PaddleOcrVlOfficialRealFormulaShards.sh text eol=lf
 eng/models/paddle-ocr/verification/paddleocr-vl-*.json text eol=lf
+eng/models/paddle-document/verification/paddle-document-official-classification-raw-20261017/*.json text eol=crlf

@@ -13,7 +13,7 @@ PaddleOCR-VL 的 [TensorRT 五图六任务验证](../../eng/models/paddle-ocr/ve
 - PaddleOCR 只记录完整 `det -> crop -> cls/orientation -> rec -> merge` 流水线；不会将单独的检测、分类或识别耗时当作完整 OCR 结果。
 - `通过` 表示本轮结果合同通过；“历史均值”只表示旧报告曾通过，不代表满足当前分位数协议。
 - 模型/后端是否支持、未测试或当前不支持的状态以[模型与后端验证矩阵](../model-backend-verification-matrix.md)为准；本页只列出已经得到有效耗时的组合。
-- PP-Structure 的[当前证据索引](../../eng/models/paddle-document/verification/paddle-document-backend-matrix-current-20261017.md)区分“登记了 5+50 协议报告”和“仓库内可追溯的逐次样本”：69 个 Bundle 中 53 个登记 JSON 内含测量次数匹配的 `samplesMs` 数组，另 1 个双页流水线摘要以 SHA-256 关联两份已提交的原始报告；其余 15 个尚无已登记的仓库内原始样本，可能另有本地报告。索引的 84/84 覆盖表示精确工件/后端有对应报告，不表示所有分位数均可独立复算，也不表示不同输入可直接排名。
+- PP-Structure 的[当前证据索引](../../eng/models/paddle-document/verification/paddle-document-backend-matrix-current-20261017.md)区分“登记了 5+50 协议报告”和“仓库内可追溯的逐次样本”：69 个 Bundle 中 53 个登记 JSON 内含测量次数匹配的 `samplesMs` 数组，另 2 个摘要以 SHA-256 关联八份已提交的原始报告，其中官方分类六行还逐行复算 P50/P95；其余 14 个尚无已登记的仓库内原始样本，可能另有本地报告。索引的 84/84 覆盖表示精确工件/后端有对应报告，不表示所有分位数均可独立复算，也不表示不同输入可直接排名。
 
 ## Windows 10.0.26200 / RTX 3060 Laptop / PaddleOCR-VL-1.6 Table TensorRT（2026-10-26）
 

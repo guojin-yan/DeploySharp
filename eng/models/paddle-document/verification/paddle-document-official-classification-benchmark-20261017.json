@@ -3,6 +3,7 @@
   "generatedUtc": "2026-10-17T08:14:01.0195184+00:00",
   "sourceRevision": "5786d637a24391e3a7ebd90ba9b33608486df0ff",
   "rawDirectory": "E:\\GitSpace\\DeploySharp-V2.0\\DeploySharp\\tests\\DeploySharp.Visual.OpenCV.Tests\\bin\\Release\\net10.0\\paddle-document",
+  "trackedRawDirectory": "paddle-document-official-classification-raw-20261017",
   "device": "JYPPX",
   "os": "Microsoft Windows NT 10.0.26200.0",
   "runtime": ".NET 10.0.12",

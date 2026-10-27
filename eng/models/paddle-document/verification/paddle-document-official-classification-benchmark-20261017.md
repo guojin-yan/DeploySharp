@@ -5,6 +5,7 @@ This report records the official document-orientation and table-classification e
 - Device: **JYPPX**; OS: Microsoft Windows NT 10.0.26200.0; runtime: .NET 10.0.12.
 - Source revision: 5786d637a24391e3a7ebd90ba9b33608486df0ff; rows: **6** (2 models × 3 backends).
 - Input contracts: `img_rot180_demo.jpg` for document orientation and `table_recognition.jpg` for table classification; image SHA-256 values are recorded in the JSON.
+- All six original per-call reports are tracked in `paddle-document-official-classification-raw-20261017/`. The matrix audit checks each report's SHA-256, 50 samples, identity and recomputed P50/P95 against the summary; the original test-output directory is not needed to audit these numbers.
 
 | Model | Backend | Score | Pre P50/P95 ms | Infer P50/P95 ms | Post P50/P95 ms | Total P50/P95 ms |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
