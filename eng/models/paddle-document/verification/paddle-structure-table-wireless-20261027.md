@@ -31,6 +31,20 @@ The Windows sample used local, SHA-recorded ONNX files. Its model directory cont
 
 For `524509`, ORT and OpenVINO produced the same structure payload and byte-identical structure-only HTML, SHA-256 `ca2a3ec47f8108033caaef2b1947c325f7e3a9a724133dcfd5e56ad732d860e2`. The OpenVINO run used its separately identified compatibility graph, not the original Loop graph. The `535543` ORT HTML SHA-256 is `390570c6adb727b12c3843c4041ed0429633b3aec70509f3d239be9d61d71ca8`. Outputs remain in `E:\DeploySharpEvidence\paddle-structure-table-wireless-20261027\{ort-524509,openvino-524509,ort-535543}`.
 
+## Focused detector-threshold diagnosis
+
+The `524509` ORT route was inspected twice more to determine whether the `44` versus `45` mismatch was only a threshold-boundary issue. These were diagnostic runs, not a threshold-tuning benchmark:
+
+| Detector threshold | Returned boxes | Alignment result | Interpretation |
+| ---: | ---: | --- | --- |
+| `0` | 300 | `detection-count-mismatch` | Exposes all decoder candidates and confirms that forcing an unfiltered list into the structure slots is invalid. |
+| `0.4` | 45 | `overlapping-cells:0` | Count equals the 45 structure cells, but the first ordered cell has overlapping detection candidates, so one-to-one alignment remains ambiguous. |
+| `0.5` (default) | 44 | `detection-count-mismatch` | Preserves the documented conservative default and skips cell OCR. |
+
+At threshold `0`, candidate 44 has score `0.50865054` and spans `x=1.91, y=2.03, width=65.72, height=39.05`; it overlaps the top-left header geometry. Candidate 45 has score `0.4161623` and bounds `x=68.38, y=1.70, width=40.12, height=16.46`. Including the latter makes the raw counts equal but does not resolve the former overlap. The SLANeXt result is unchanged at 45 cells / 67 tokens with `table-cell-geometry-outside-source:41/45`.
+
+The two additional output directories are `E:\DeploySharpEvidence\paddle-structure-table-wireless-20261027\ort-524509-threshold-zero` and `E:\DeploySharpEvidence\paddle-structure-table-wireless-20261027\ort-524509-threshold-040`. Their `table-cell-alignment.json` files record the exact refusal reasons. No recognizer Session was used because alignment did not succeed.
+
 Reproduce the first ORT run with the linked model files above:
 
 ```powershell
@@ -47,4 +61,4 @@ Change `--backend` to `openvino` and `--output` to `openvino-524509` for the sec
 
 ## Result boundary
 
-This closes the independently classified wireless **three-stage execution** check on two real images and the ORT/OpenVINO structure comparison on one image. It does **not** validate wireless cell OCR, filled HTML, annotated table accuracy, CER/WER or steady-state latency. The strict aligner correctly refused to guess which detected box corresponds to a structure slot. Loosening the score threshold or forcing a count match without annotated cell geometry would turn this into an unsupported OCR claim. The wired four-stage result remains documented separately in `paddle-structure-table-cell-ocr-20261027.md`.
+This closes the independently classified wireless **three-stage execution** check on two real images and the ORT/OpenVINO structure comparison on one image. It does **not** validate wireless cell OCR, filled HTML, annotated table accuracy, CER/WER or steady-state latency. The strict aligner correctly refused to guess which detected box corresponds to a structure slot. The `0.4` diagnosis proves that equal counts alone are insufficient, so the default remains `0.5`; lowering the threshold or forcing positional assignment without annotated cell geometry would turn this into an unsupported OCR claim. The wired four-stage result remains documented separately in `paddle-structure-table-cell-ocr-20261027.md`.
