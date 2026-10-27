@@ -1,6 +1,6 @@
 # 模型 × 后端验证矩阵
 
-本页只记录**精确模型工件**在各后端的当前运行状态。`✓` 表示已完成真实模型加载、推理和结果解码；`△` 表示只有部分合同或组件证据；`✗` 表示已经尝试且当前组合不能完成；`—` 表示没有适用工件。可下载、可构建或存在适配器都不等于推理通过。
+本页只记录**精确模型工件**在各后端的当前运行状态。`✓` 表示已完成真实模型加载、推理和结果解码；`△` 表示只有部分合同或组件证据；`✗` 表示已经尝试且当前组合不能完成；`—` 表示尚未验证或工件格式不适用。可下载、可构建或存在适配器都不等于推理通过。
 
 除 PaddleOCR-VL 行注明的 Linux x64 验证外，当前证据主要来自 Windows x64。更换模型文件、输入 shape、运行时、驱动或设备后需要重新验证。性能数据单独见[设备性能实测](articles/device-performance-benchmarks.md)，模型下载与状态语义见[模型支持指南](articles/model-support.md)。
 
@@ -8,9 +8,11 @@ SAM2/SAM3 视频、Whisper 完整发布 Bundle、Donut 原生多页/TensorRT、B
 
 ## 当前工件矩阵
 
+通用模型行使用 ModelFactory 主目录中的工件；其中 PP-OCRv5 的六条 Preview 绑定 `models-visual.1` 已发布的 ModelPack 和配套 ONNX。后文的 PP-OCR 全版本表使用 `models-paddleocr` 的工件，只有精确 SHA-256 相同的模型才能跨表复用验证状态。
+
 | 模型工件 | ONNX Runtime CPU | OpenVINO CPU | OpenCV DNN CPU | TensorRT CUDA | LlamaSharp |
 |---|:---:|:---:|:---:|:---:|:---:|
-| `yolo/v5/detect/s` | ✓ | ✓ | ✓ | ✓ | — |
+| `yolo/v5/detect/n` | ✓ | ✓ | ✓ | ✓ | — |
 | `yolo/v6/detect/s` | ✓ | ✓ | ✓ | ✓ | — |
 | `yolo/v7/detect/base` | ✓ | ✓ | ✓ | ✓ | — |
 | `yolo/v8/detect/n` | ✓ | ✓ | ✓ | ✓ | — |
@@ -39,36 +41,53 @@ SAM2/SAM3 视频、Whisper 完整发布 Bundle、Donut 原生多页/TensorRT、B
 | `rt-detr/r50vd-decoded-vector-ir` | — | ✓ | — | — | — |
 | `rt-detr/r50vd-decoded-vector-onnx` | ✓ | — | ✗ | ✓ | — |
 | `rt-detr/r50vd-raw-query` | ✓ | ✓ | ✓ | ✓ | — |
-| `paddleocr/ppocrv4/legacy-cls` | ✓ | ✓ | ✓ | ✓ | — |
-| `paddleocr/ppocrv4/mobile-det` | ✓ | ✓ | ✓ | ✓ | — |
-| `paddleocr/ppocrv4/mobile-rec` | ✓ | ✓ | ✓ | ✓ | — |
-| `paddleocr/ppocrv4/server-det` | ✓ | ✓ | ✓ | ✓ | — |
-| `paddleocr/ppocrv4/server-rec` | ✓ | ✓ | ✓ | ✓ | — |
 | `paddleocr/ppocrv5/mobile-cls` | ✓ | ✓ | ✓ | ✓ | — |
 | `paddleocr/ppocrv5/mobile-det` | ✓ | ✓ | ✓ | ✓ | — |
 | `paddleocr/ppocrv5/mobile-rec` | ✓ | ✓ | ✓ | ✓ | — |
-| `paddleocr/ppocrv5/server-cls` | ✓ | ✓ | ✓ | ✓ | — |
-| `paddleocr/ppocrv5/server-det` | ✓ | ✓ | ✓ | ✓ | — |
-| `paddleocr/ppocrv5/server-rec` | ✓ | ✓ | ✓ | ✓ | — |
-| `paddleocr/ppocrv6/tiny-det` | ✓ | ✓ | ✓ | ✓ | — |
-| `paddleocr/ppocrv6/tiny-rec` | ✓ | ✓ | ✓ | ✓ | — |
-| `paddleocr/ppocrv6/small-det` | ✓ | ✓ | ✓ | ✓ | — |
-| `paddleocr/ppocrv6/small-rec` | ✓ | ✓ | ✓ | ✓ | — |
-| `paddleocr/ppocrv6/medium-det` | ✓ | ✓ | ✓ | ✓ | — |
-| `paddleocr/ppocrv6/medium-rec` | ✓ | ✓ | ✓ | ✓ | — |
+| `paddleocr/ppocrv5/server-cls` | ✓ | ✓ | — | — | — |
+| `paddleocr/ppocrv5/server-det` | ✓ | ✓ | — | — | — |
+| `paddleocr/ppocrv5/server-rec` | ✓ | ✓ | — | — | — |
 | `paddleocr-vl/1.6`（实验性 ONNX/TensorRT Bundle） | ✓ | ✓ | ✗ | ✓ | — |
 | `anomalib/padim/mvtec-bottle` | ✓ | ✓ | ✓ | ✓ | — |
 | `bria/rmbg-1.4` | ✓ | ✓ | ✓ | ✓ | — |
-| `bria/rmbg-2.0`（ONNX FP32） | ✓ | — | ✗ | ✓ | — |
-| `bria/rmbg-2.0`（ONNX Dynamic INT8） | ✓ | — | ✗ | ✗ | — |
-| `llm/qwen2.5-0.5b-instruct-q4-k-m` | — | — | — | — | — |
-| `vision-language/clip-vit-b-32` | — | — | — | — | — |
-| `segmentation/sam-v1-vit-b` | — | — | — | — | — |
-| `generative-vision-language/blip-caption-base` | — | — | — | — | — |
+| `bria/rmbg-2.0` (`onnx.fp32`) | ✓ | — | ✗ | ✓ | — |
+| `bria/rmbg-2.0` (`onnx.dynamic-int8`) | ✓ | — | ✗ | ✗ | — |
+| `llm/qwen2.5-0.5b-instruct-q4-k-m` | — | — | — | — | ✓ |
+| `vision-language/clip-vit-b-32` | ✓ | ✓ | — | — | — |
+| `segmentation/sam-v1-vit-b` | ✓ | ✓ | — | — | — |
+| `generative-vision-language/blip-caption-base` | ✓ | ✓ | — | — | — |
 
-PP-OCR 的符号对应单个 DET、CLS 或 REC 工件。PP-OCRv4 Mobile/Server、PP-OCRv5 Mobile/Server、PP-OCRv6 Tiny/Small/Medium 另有完整 `det -> crop -> cls/orientation -> rec -> merge` 流水线验证；v6 使用明确登记的 v5 Mobile CLS。质量或性能结论仍须按完整流水线、数据集和后端分别读取。
+主目录 PP-OCRv5 的 ModelPack、ONNX、字典和许可证均绑定 `models-visual.1` 已发布资产，并执行大小与 SHA-256 校验。三个 Mobile 模型与 `models-paddleocr` 字节相同；三个 Server 模型字节不同，其 ORT/OpenVINO 状态来自这些精确工件保留的 Golden，OpenCV/TensorRT 仍标记未验证。不能把另一套 Server 模型的结果套用到本表。
+
+SAM v1、CLIP 和 BLIP Caption Base 的 `✓` 绑定公共 ModelPack 中的精确 ONNX SHA-256，并分别完成官方 Predictor、Embedding/Logit 或 Caption/Token Golden 对照。Qwen2.5 的 `✓` 绑定公共 GGUF SHA-256 与 LLamaSharp CPU 运行证据，覆盖生成、流式、取消、重复、并发冲突、释放和 Embedding；它不是通用 LLM 质量或其它原生后端声明。
 
 PaddleOCR-VL-1.6 使用四图 ONNX Bundle；TensorRT 使用带独立 Prefill 图的五图 Bundle。ORT CPU、OpenVINO CPU 和 TensorRT CUDA 已完成声明任务的生成与 EOS/文本合同，OpenCV DNN 因动态 Shape 和高阶辅助输入导入限制不支持。该行不表示任意页面质量、任意 TensorRT profile 或全设备端 KV 路径均已验证。
+
+## PP-OCR 全版本发布工件
+
+本表绑定 `PaddleOcrReleaseArtifacts` 登记的 `models-paddleocr` ONNX、字典和 SHA-256，由 `PaddleOcrReleaseClient` 获取。它与主目录中的同名 Preview 是不同的下载路径。
+
+| 模型工件 | ONNX Runtime CPU | OpenVINO CPU | OpenCV DNN CPU | TensorRT CUDA |
+|---|:---:|:---:|:---:|:---:|
+| `paddleocr/ppocrv4/legacy-cls` | ✓ | ✓ | ✓ | ✓ |
+| `paddleocr/ppocrv4/mobile-det` | ✓ | ✓ | ✓ | ✓ |
+| `paddleocr/ppocrv4/mobile-rec` | ✓ | ✓ | ✓ | ✓ |
+| `paddleocr/ppocrv4/server-det` | ✓ | ✓ | ✓ | ✓ |
+| `paddleocr/ppocrv4/server-rec` | ✓ | ✓ | ✓ | ✓ |
+| `paddleocr/ppocrv5/mobile-cls` | ✓ | ✓ | ✓ | ✓ |
+| `paddleocr/ppocrv5/mobile-det` | ✓ | ✓ | ✓ | ✓ |
+| `paddleocr/ppocrv5/mobile-rec` | ✓ | ✓ | ✓ | ✓ |
+| `paddleocr/ppocrv5/server-cls` | ✓ | ✓ | ✓ | ✓ |
+| `paddleocr/ppocrv5/server-det` | ✓ | ✓ | ✓ | ✓ |
+| `paddleocr/ppocrv5/server-rec` | ✓ | ✓ | ✓ | ✓ |
+| `paddleocr/ppocrv6/tiny-det` | ✓ | ✓ | ✓ | ✓ |
+| `paddleocr/ppocrv6/tiny-rec` | ✓ | ✓ | ✓ | ✓ |
+| `paddleocr/ppocrv6/small-det` | ✓ | ✓ | ✓ | ✓ |
+| `paddleocr/ppocrv6/small-rec` | ✓ | ✓ | ✓ | ✓ |
+| `paddleocr/ppocrv6/medium-det` | ✓ | ✓ | ✓ | ✓ |
+| `paddleocr/ppocrv6/medium-rec` | ✓ | ✓ | ✓ | ✓ |
+
+符号对应单个 DET、CLS 或 REC 工件。PP-OCRv4 Mobile/Server、PP-OCRv5 Mobile/Server、PP-OCRv6 Tiny/Small/Medium 另有完整 `det -> crop -> cls/orientation -> rec -> merge` 流水线验证；v6 使用明确登记的 v5 Mobile CLS。质量或性能结论仍须按完整流水线、数据集和后端分别读取。
 
 ## PP-Structure 精确资产
 

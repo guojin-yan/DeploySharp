@@ -2,8 +2,10 @@
   <PropertyGroup>
     <DeploySharpLibraryTargetFrameworks>net46;net461;net462;net47;net471;net472;net48;net481;netstandard2.0;netcoreapp3.1;net5.0;net6.0;net7.0;net8.0;net9.0;net10.0</DeploySharpLibraryTargetFrameworks>
     <DeploySharpVersionPrefix>2.0.0</DeploySharpVersionPrefix>
-    <DeploySharpVersionSuffix Condition="'$(DeploySharpVersionSuffix)' == ''">alpha.1</DeploySharpVersionSuffix>
-    <Version>$(DeploySharpVersionPrefix)-$(DeploySharpVersionSuffix)</Version>
+    <DeploySharpReleaseChannel Condition="'$(DeploySharpReleaseChannel)' == ''">stable</DeploySharpReleaseChannel>
+    <DeploySharpVersionSuffix Condition="'$(DeploySharpVersionSuffix)' == '' and '$(DeploySharpReleaseChannel)' != 'stable'">alpha.1</DeploySharpVersionSuffix>
+    <Version Condition="'$(DeploySharpReleaseChannel)' != 'stable'">$(DeploySharpVersionPrefix)-$(DeploySharpVersionSuffix)</Version>
+    <Version Condition="'$(DeploySharpReleaseChannel)' == 'stable'">$(DeploySharpVersionPrefix)</Version>
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>

@@ -43,15 +43,15 @@ The runtime-evidence value is copied from the published ModelPack extension. It 
 
 ## Backend verification
 
-Local verification date: 2026-08-25. Results are generated from the exact official-catalog artifact identity and SHA-256.
+Statuses are synchronized from the reviewed model/backend matrix for the exact official-catalog artifact. They summarize retained runtime evidence; regenerating this table does not rerun inference.
 
-| Artifact | ONNX Runtime CPU | OpenVINO CPU | OpenCV DNN | TensorRT | LLamaSharp |
+| Artifact | ONNX Runtime CPU | OpenVINO CPU | OpenCV DNN CPU | TensorRT CUDA | LlamaSharp |
 | --- | :---: | :---: | :---: | :---: | :---: |
 | onnx.fp32 | ✓ | — | ✗ | ✓ | — |
 | onnx.dynamic-int8 | ✓ | — | ✗ | ✗ | — |
 
-`✓` means build/load and real inference passed; `✗` means exact compatibility validation failed on the tested runtime; `—` means no matching local artifact or the artifact format does not apply.
+`✓` means real inference and result decoding passed; `△` means partial contract or component evidence; `✗` means the tested combination cannot complete; `—` means untested or not applicable. A pass does not imply dataset accuracy, all input shapes, or all devices.
 
-TensorRT note: `onnx.fp32` passed engine build and CUDA inference. `onnx.dynamic-int8` remains unsupported by TensorRT 11 because its exact graph contains `DynamicQuantizeLinear` and `ConvInteger`; use the fp32 variant for TensorRT.
+TensorRT note: `onnx.fp32` passed engine build and CUDA inference. `onnx.dynamic-int8` remains unsupported because its graph contains `DynamicQuantizeLinear` and `ConvInteger`; use the fp32 variant for TensorRT.
 
-See [the model/backend verification matrix](../../../../docs/model-backend-verification-matrix.md) for the tested machine, failure reasons, and reproduction commands.
+See [the model/backend verification matrix](../../../../docs/model-backend-verification-matrix.md) for the evidence scope, failure reasons, and links to reproduction instructions.

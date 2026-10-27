@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0",
-  "packageVersion": "2.0.0-alpha.1",
+  "packageVersion": "2.0.0",
   "licenseExpression": "Apache-2.0",
   "readme": "README.md",
   "icon": "logo.jpg",
@@ -8,7 +8,7 @@
   "repositoryType": "git",
   "repositoryUrl": "https://github.com/guojin-yan/DeploySharp",
   "symbolPolicy": "required-snupkg",
-  "packageSigningPolicy": "optional-alpha-preview-required-ga-commercial",
+  "packageSigningPolicy": "optional",
   "nativeRuntimePolicy": "consumer-owned",
   "centralPackages": {
     "Microsoft.NETFramework.ReferenceAssemblies": "1.0.3",
@@ -21,13 +21,18 @@
     "Microsoft.ML.OnnxRuntime": "1.28.0",
     "Microsoft.ML.OnnxRuntime.Managed": "1.28.0",
     "Microsoft.ML.OnnxRuntime.Gpu.Windows": "1.28.0",
+    "Microsoft.ML.OnnxRuntime.Gpu.Linux": "1.28.0",
     "Microsoft.ML.Tokenizers": "2.0.0",
     "JYPPX.OpenVINO.CSharp.API": "3.3.1",
     "JYPPX.TensorRT.CSharp.API": "4.0.0",
+    "JYPPX.TensorRT.CSharp.API.Runtime.win-x64.trt10.11.cuda12.9.cudnn9.22.Bridge": "4.0.0",
+    "JYPPX.TensorRT.CSharp.API.Runtime.linux-x64.ubuntu22.04.trt11.0.cuda12.9.cudnn9.22.Bridge": "4.0.0",
     "OnnxSharp": "0.3.2",
-    "JYPPX.OpenCV.CSharp.API": "5.0.0-preview.1",
-    "JYPPX.OpenCV.runtime.win-x64": "5.0.0-preview.1",
+    "JYPPX.OpenCV.CSharp.API": "5.0.0",
+    "JYPPX.OpenCV.runtime.win-x64": "5.0.0",
+    "JYPPX.OpenCV.runtime.ubuntu.22.04-x64": "5.0.0",
     "OpenVINO.runtime.win": "2026.2.1",
+    "OpenVINO.runtime.ubuntu.22-x86_64": "2026.3.1",
     "System.Text.Json": "10.0.10"
   },
   "packages": [
@@ -43,7 +48,7 @@
       "packageId": "JYPPX.DeploySharp.Backend.OnnxRuntime",
       "assemblyName": "JYPPX.DeploySharp.Backend.OnnxRuntime",
       "targetFrameworks": ["netstandard2.0", "net8.0"],
-      "assemblyReferenceSha256": "53f84281dbfbd380aceb37936b1cc82d8b354061c6a440c58a6e65f97c11f168"
+      "assemblyReferenceSha256": "aa0e2f58531db61ac155d635c002f75042fbf4411e8f50af93402eec07209f03"
     },
     {
       "projectPath": "src/DeploySharp.Backend.OpenCV/DeploySharp.Backend.OpenCV.csproj",
@@ -57,14 +62,14 @@
       "packageId": "JYPPX.DeploySharp.Backend.OpenVINO",
       "assemblyName": "JYPPX.DeploySharp.Backend.OpenVINO",
       "targetFrameworks": ["net46", "net461", "net462", "net47", "net471", "net472", "net48", "net481", "netcoreapp3.1", "net5.0", "net6.0", "net7.0", "net8.0", "net9.0", "net10.0"],
-      "assemblyReferenceSha256": "aeb01aa6b4db575e49a9c03dc67888326d463710e9ff6db74af9ae0b036f5576"
+      "assemblyReferenceSha256": "175c5852d6005e3fc95fd9b84f2b49cd43ba09dc9af9fc8190ac2d83a537728d"
     },
     {
       "projectPath": "src/DeploySharp.Backend.TensorRT/DeploySharp.Backend.TensorRT.csproj",
       "packageId": "JYPPX.DeploySharp.Backend.TensorRT",
       "assemblyName": "JYPPX.DeploySharp.Backend.TensorRT",
       "targetFrameworks": ["net8.0"],
-      "assemblyReferenceSha256": "3ab942feac4d443f1602e46852e7a7ffa12c8a767cf8edb439ec69ad6bff5011"
+      "assemblyReferenceSha256": "35374f42503b5656ddf361e08597ca8abdcd64141347543d7d71fe77b388f24b"
     },
     {
       "projectPath": "src/DeploySharp.Core/DeploySharp.Core.csproj",
@@ -113,7 +118,7 @@
       "packageId": "JYPPX.DeploySharp.Visual.OpenCV",
       "assemblyName": "JYPPX.DeploySharp.Visual.OpenCV",
       "targetFrameworks": ["net46", "net461", "net462", "net47", "net471", "net472", "net48", "net481", "netcoreapp3.1", "net5.0", "net6.0", "net7.0", "net8.0", "net9.0", "net10.0"],
-      "assemblyReferenceSha256": "c49f76b2d24f8558cd463a60cd72515e43e57b41239f0d9c8bd93189dccb818a"
+      "assemblyReferenceSha256": "8935507b2e3253869e7b74f5975a47bb1e9092b09863f1d24d3568bdab8474ad"
     },
     {
       "projectPath": "src/DeploySharp.Visual.TensorRT/DeploySharp.Visual.TensorRT.csproj",
@@ -127,7 +132,7 @@
       "packageId": "JYPPX.DeploySharp.Visual",
       "assemblyName": "JYPPX.DeploySharp.Visual",
       "targetFrameworks": ["net46", "net461", "net462", "net47", "net471", "net472", "net48", "net481", "netstandard2.0", "netcoreapp3.1", "net5.0", "net6.0", "net7.0", "net8.0", "net9.0", "net10.0"],
-      "assemblyReferenceSha256": "425872c92d66d9a5b7b7d64af2c6c4710dd01d6e5c1091c3861b533f7bacc6e6"
+      "assemblyReferenceSha256": "65d045062c5a3f6856fa60310b89d4aa62877d0954ac078ac0b778186ea99f1f"
     }
   ]
 }

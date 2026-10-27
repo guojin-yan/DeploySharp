@@ -67,4 +67,6 @@ VisionLanguageEmbeddingSession 拥有图像和文本两条后端会话。单个 
 
 ## 支持边界
 
+公共 CLIP ViT-B/32 双编码器已在 ONNX Runtime CPU 和 OpenVINO CPU 完成真实图文 Embedding、Logit 与检索对照；BLIP Caption Base 也已在这两个后端完成固定图像 Caption、EOS、Token 与 Logit 对照。该证据不能扩展到 SigLIP、SigLIP 2、BLIP VQA、BLIP-2 或 InstructBLIP。
+
 具体模型和后端状态以[模型支持指南](model-support.md)与[模型后端验证矩阵](../model-backend-verification-matrix.md)为准。TensorRT 需要匹配的双编码器 Engine；未有完整 Profile 的模型不应通过通用 CLIP 代码强行运行。性能比较请使用[设备性能实测](device-performance-benchmarks.md)中的统一条件。

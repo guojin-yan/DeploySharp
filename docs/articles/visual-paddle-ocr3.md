@@ -1,6 +1,6 @@
 # PaddleOCR 三模型流水线
 
-PaddleOCR 的检测、方向分类和文字识别是三个独立工件。`OcrPipeline` 将它们按“检测 → 文本行裁剪 → 可选方向分类 → 识别 → 坐标还原”串联，支持 ONNX Runtime、OpenVINO，以及具备匹配 Engine 和 CUDA 环境时的 TensorRT。
+PaddleOCR 的检测、方向分类和文字识别是三个独立工件。`OcrPipeline` 将它们按“检测 → 文本行裁剪 → 可选方向分类 → 识别 → 坐标还原”串联，支持 ONNX Runtime、OpenVINO、OpenCV DNN，以及具备匹配 Engine 和 CUDA 环境时的 TensorRT。逐模型合同和工件版本见[验证矩阵](../model-backend-verification-matrix.md)。
 
 ## 快速使用
 

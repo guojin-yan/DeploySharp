@@ -6,14 +6,14 @@
   "task": "text-orientation-classification",
   "modelVersion": "PP-OCRv5-server-cls-release",
   "exporter": {
-    "name": "PaddlePaddle official Hugging Face ONNX",
-    "version": "official-huggingface-revision",
-    "sourceRevision": "7fdcf3cf7061163eda7183b224aa334bd33068f7"
+    "name": "paddle2onnx",
+    "version": "2.0.2rc3",
+    "sourceRevision": "pypi-wheel-sha256-a76c241ea8102991b97061cad55b3e524ba01225a4c1f2031472b782df9f2562"
   },
   "source": {
-    "sourceUrl": "https://huggingface.co/PaddlePaddle/PP-LCNet_x1_0_textline_ori_onnx/resolve/7fdcf3cf7061163eda7183b224aa334bd33068f7/inference.onnx",
+    "sourceUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/PP-LCNet_x1_0_textline_ori_infer.tar",
     "projectUrl": "https://github.com/PaddlePaddle/PaddleOCR",
-    "revision": "sha256:38aa97cd4be591e0ad304e659f07ba30d946f27a63315433f6659c69c8778345",
+    "revision": "sha256:6171f69605215a85624d650e9079fa45f7c3eaf944296181bcc5395bf3ddc7f6",
     "author": "PaddlePaddle",
     "licenseExpression": "Apache-2.0",
     "licenseFile": "bundle/source/licenses/paddleocr.LICENSE.txt",
@@ -56,8 +56,8 @@
       "files": [
         {
           "relativePath": "bundle/model.onnx",
-          "sha256": "38aa97cd4be591e0ad304e659f07ba30d946f27a63315433f6659c69c8778345",
-          "size": 6777816,
+          "sha256": "d874cd926a8f9f66e886bbd8ad7747635802b6cc52d3b81b5892845fc84c616f",
+          "size": 6777308,
           "mediaType": "application/onnx",
           "role": "model"
         },
@@ -74,12 +74,11 @@
       "opset": 7,
       "portable": true,
       "extensions": {
-        "deploysharp.validation-status": "official-upstream-onnx-source;runtime-golden-refresh-required",
-        "deploysharp.artifact-provenance": "official-paddlepaddle-huggingface-onnx",
-        "deploysharp.official-onnx-sha256": "38aa97cd4be591e0ad304e659f07ba30d946f27a63315433f6659c69c8778345",
-        "deploysharp.release-admission": "alpha-preview-official-source-runtime-golden-refresh-required",
-        "deploysharp.official-onnx-revision": "7fdcf3cf7061163eda7183b224aa334bd33068f7",
-        "deploysharp.export-reproducibility": "not-applicable-official-onnx-download"
+        "deploysharp.validation-status": "local-ort-openvino-official-semantics-golden-verified",
+        "deploysharp.artifact-provenance": "byte-identical-local-export",
+        "deploysharp.source-inference-archive-sha256": "6171f69605215a85624d650e9079fa45f7c3eaf944296181bcc5395bf3ddc7f6",
+        "deploysharp.export-reproducibility": "byte-identical;paddle2onnx-2.0.2rc3;paddlepaddle-3.0.0.dev20250613;default-options",
+        "deploysharp.release-admission": "alpha-preview-redistributable-source-recorded"
       }
     }
   ],

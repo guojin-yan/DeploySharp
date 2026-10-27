@@ -6,14 +6,16 @@ uid: index
 
 DeploySharp V2 是面向 .NET 的模型部署工具。它通过显式后端、模型制品和运行时边界，提供视觉、语言与多模态推理能力。
 
-当前 `2.0.0-alpha.1` 是 Windows x64 工程预览版。V2 为全新 API，不提供与 V1 的源码、二进制、配置或行为兼容。
+当前源码正在准备 `2.0.0`；已公开的 NuGet 版本为 `2.0.0-alpha.1`。发布验证范围为 Windows x64。V2 为全新 API，不提供与 V1 的源码、二进制、配置或行为兼容。
+
+本站描述当前 V2 源码分支。预览版发布后新增的 API 需通过项目引用使用，直到包含这些改动的新包发布；已发布包的能力以对应版本的发布说明为准。
 
 ## 常用入口
 
 | 目标 | 文档 |
 | --- | --- |
 | 安装并运行首个推理 | [快速开始](articles/getting-started.md) / [安装与运行时](articles/installation.md) |
-| 了解当前版本与平台范围 | [2.0.0-alpha.1 发布说明](releases/2.0.0-alpha.1.md) / [平台与后端支持](articles/platform-support.md) |
+| 了解当前版本与平台范围 | [2.0.0 版本说明](releases/2.0.0.md) / [平台与后端支持](articles/platform-support.md) |
 | 选择模型与后端 | [模型支持状态](articles/model-support.md) / [模型与后端验证矩阵](model-backend-verification-matrix.md) |
 | 下载并校验模型 | [ModelFactory 与 CLI](articles/modelfactory-getting-started.md) |
 | 构建视觉任务 | [视觉任务指南](articles/visual-getting-started.md) |

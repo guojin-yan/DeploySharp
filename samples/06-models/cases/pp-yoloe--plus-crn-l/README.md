@@ -42,14 +42,14 @@ The runtime-evidence value is copied from the published ModelPack extension. It 
 
 ## Backend verification
 
-Local verification date: 2026-08-25. Results are generated from the exact official-catalog artifact identity and SHA-256.
+Statuses are synchronized from the reviewed model/backend matrix for the exact official-catalog artifact. They summarize retained runtime evidence; regenerating this table does not rerun inference.
 
-| Artifact | ONNX Runtime CPU | OpenVINO CPU | OpenCV DNN | TensorRT | LLamaSharp |
+| Artifact | ONNX Runtime CPU | OpenVINO CPU | OpenCV DNN CPU | TensorRT CUDA | LlamaSharp |
 | --- | :---: | :---: | :---: | :---: | :---: |
 | onnx.fp32 | ✓ | — | ✗ | ✓ | — |
 
-`✓` means build/load and real inference passed; `✗` means exact compatibility validation failed on the tested runtime; `—` means no matching local artifact or the artifact format does not apply.
+`✓` means real inference and result decoding passed; `△` means partial contract or component evidence; `✗` means the tested combination cannot complete; `—` means untested or not applicable. A pass does not imply dataset accuracy, all input shapes, or all devices.
 
-TensorRT note: the exact catalog ONNX SHA-256 was used. DeploySharp repairs the PaddleDetection opset-11 export's missing `Squeeze` axes in memory (`Gather(axis=1)` -> `axes=[1]`) before parsing, then builds and runs the TensorRT 11 engine without changing the source artifact.
+TensorRT note: DeploySharp repairs the PaddleDetection opset-11 export's missing `Squeeze` axes in memory (`Gather(axis=1)` -> `axes=[1]`) before parsing, without changing the exact catalog artifact on disk.
 
-See [the model/backend verification matrix](../../../../docs/model-backend-verification-matrix.md) for the tested machine, failure reasons, and reproduction commands.
+See [the model/backend verification matrix](../../../../docs/model-backend-verification-matrix.md) for the evidence scope, failure reasons, and links to reproduction instructions.

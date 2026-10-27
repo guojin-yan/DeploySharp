@@ -1,12 +1,14 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [string]$PackagePath
+    [string]$PackagePath,
+    [string]$BaselinePath = (Join-Path $PSScriptRoot 'release-candidate-packages.json')
 )
 
 $ErrorActionPreference = 'Stop'
 $resolvedPackage = (Resolve-Path -LiteralPath $PackagePath).Path
 $repositoryRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..\..')).Path
+$baseline = Get-Content -LiteralPath $BaselinePath -Raw | ConvertFrom-Json
 $frameworks = @(
     'net46', 'net461', 'net462', 'net47', 'net471', 'net472', 'net48', 'net481',
     'netstandard2.0', 'netcoreapp3.1', 'net5.0', 'net6.0', 'net7.0', 'net8.0', 'net9.0', 'net10.0'
@@ -33,6 +35,7 @@ function Get-FileSha256 {
 }
 
 $archive = [System.IO.Compression.ZipFile]::OpenRead($resolvedPackage)
+try {
 $entries = @{}
     foreach ($entry in $archive.Entries) {
         if ($entries.ContainsKey($entry.FullName)) { throw "Duplicate NuGet entry: $($entry.FullName)" }
@@ -54,6 +57,7 @@ $entries = @{}
             ($required -contains $name) -or
             ($name -eq '_rels/.rels') -or
             ($name -eq '[Content_Types].xml') -or
+            ($name -eq '.signature.p7s') -or
             ($name -match '^package/services/metadata/core-properties/[^/]+\.psmdcp$') -or
             ($name -match '^package/services/digital-signature/[^/]+\.p7s$')
         )
@@ -74,25 +78,40 @@ $entries = @{}
     $metadata = $nuspec.SelectSingleNode("/*[local-name()='package']/*[local-name()='metadata']")
     if ($null -eq $metadata) { throw 'NuGet metadata is missing.' }
     if ($metadata.SelectSingleNode("*[local-name()='id']").InnerText -ne 'JYPPX.DeploySharp.Visual') { throw 'Unexpected NuGet package ID.' }
-    if ($metadata.SelectSingleNode("*[local-name()='version']").InnerText -ne '2.0.0-alpha.1') { throw 'Unexpected NuGet package version.' }
+    if ($metadata.SelectSingleNode("*[local-name()='version']").InnerText -ne $baseline.packageVersion) { throw 'Unexpected NuGet package version.' }
     if ($metadata.SelectSingleNode("*[local-name()='icon']").InnerText -ne 'logo.jpg') { throw 'NuGet icon metadata is invalid.' }
     if ($metadata.SelectSingleNode("*[local-name()='readme']").InnerText -ne 'README.md') { throw 'NuGet README metadata is invalid.' }
-    $dependencies = @($nuspec.SelectNodes("//*[local-name()='dependency']"))
-    $coreDependencies = @($dependencies | Where-Object { $_.id -eq 'JYPPX.DeploySharp.Core' })
-    $tokenizerDependencies = @($dependencies | Where-Object { $_.id -eq 'Microsoft.ML.Tokenizers' })
-    if ($coreDependencies.Count -ne $frameworks.Count) { throw "Expected one Core dependency for each of $($frameworks.Count) TFM groups; found $($coreDependencies.Count)." }
-    if ($tokenizerDependencies.Count -ne 3) { throw "Expected Microsoft.ML.Tokenizers only for net8.0, net9.0, and net10.0; found $($tokenizerDependencies.Count) dependencies." }
-    foreach ($dependency in $coreDependencies) {
-        if ($dependency.version -ne '2.0.0-alpha.1') { throw "Unexpected Core dependency version: $($dependency.version)" }
-    }
-    foreach ($dependency in $tokenizerDependencies) {
-        if ($dependency.version -ne '2.0.0') { throw "Unexpected tokenizer dependency version: $($dependency.version)" }
-        $group = $dependency.ParentNode
-        if (@('net8.0', 'net9.0', 'net10.0') -notcontains $group.targetFramework) { throw "Tokenizer dependency is present on unsupported TFM: $($group.targetFramework)" }
-    }
-    if ($dependencies.Count -ne ($coreDependencies.Count + $tokenizerDependencies.Count)) {
-        throw 'Visual package contains an unexpected dependency.'
+    $groups = @($nuspec.SelectNodes("//*[local-name()='dependencies']/*[local-name()='group']"))
+    if ($groups.Count -ne $frameworks.Count) { throw 'Unexpected Visual dependency-group count.' }
+    $seenFrameworks = @{}
+    foreach ($group in $groups) {
+        $tfm = [string]$group.targetFramework
+        if ($seenFrameworks.ContainsKey($tfm)) { throw "Duplicate Visual dependency group: $tfm" }
+        $seenFrameworks.Add($tfm, $true)
+        $expected = @{ 'JYPPX.DeploySharp.Core' = [string]$baseline.packageVersion }
+        if ($tfm -in @('net8.0', 'net9.0', 'net10.0')) {
+            $expected.Add('Microsoft.ML.Tokenizers', [string]$baseline.centralPackages.'Microsoft.ML.Tokenizers')
+        }
+        # JSON is excluded on net46/net461 and supplied by the net10 framework.
+        if ($tfm -notin @('.NETFramework4.6', '.NETFramework4.6.1', 'net10.0')) {
+            $expected.Add('System.Text.Json', [string]$baseline.centralPackages.'System.Text.Json')
+            # Central transitive pinning promotes this managed compatibility package.
+            if ($tfm -notin @('net8.0', 'net9.0')) {
+                $expected.Add('Microsoft.Bcl.AsyncInterfaces', [string]$baseline.centralPackages.'Microsoft.Bcl.AsyncInterfaces')
+            }
+        }
+        $dependencies = @($group.SelectNodes("*[local-name()='dependency']"))
+        if ($dependencies.Count -ne $expected.Count) { throw "Unexpected Visual dependencies on $tfm." }
+        $seenIds = @{}
+        foreach ($dependency in $dependencies) {
+            $id = [string]$dependency.id
+            if (-not $expected.ContainsKey($id) -or $seenIds.ContainsKey($id) -or [string]$dependency.version -ne $expected[$id]) {
+                throw "Unexpected Visual dependency on ${tfm}: $id/$($dependency.version)."
+            }
+            $seenIds.Add($id, $true)
+        }
     }
 
 Write-Host "DEPLOYSHARP_VISUAL_PACKAGE_AUDIT_OK tfms=$($frameworks.Count) entries=$($entries.Count)"
-$archive.Dispose()
+}
+finally { $archive.Dispose() }

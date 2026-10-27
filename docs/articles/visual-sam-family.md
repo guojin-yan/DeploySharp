@@ -49,7 +49,7 @@ PromptableSegmentationResult result = session.Predict(
 
 开放词汇模型的文本 tokenizer、词表、嵌入和检测输出布局必须与 Profile 完全匹配。检测结果交给 Grounded-SAM 时，应使用 GroundedSamImageSession，由会话负责坐标变换和生命周期，不要手工复制框或低分辨率 mask。
 
-当前版本对 SAM v1 图像路径提供 ORT/OpenVINO CPU 合同；SAM 2/SAM 3 的视频 memory/tracker 尚没有完整的官方原生 Bundle，因此不提供伪造的视频兼容 API。CLIP/SigLIP 等图文模型请参阅视觉语言页面。
+公共 SAM v1 ViT-B Bundle 已在 ONNX Runtime CPU 和 OpenVINO CPU 完成点、框、Mask feedback 端到端推理及官方 Predictor 像素对照。SAM 2/SAM 3 的视频 memory/tracker 尚没有完整的官方原生 Bundle，因此不提供伪造的视频兼容 API。CLIP/SigLIP 等图文模型请参阅视觉语言页面。
 
 ## 输入与坐标
 

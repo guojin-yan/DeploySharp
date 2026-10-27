@@ -4,22 +4,33 @@ on:
   workflow_dispatch:
     inputs:
       package_version:
-        description: 'NuGet package version (alpha preview only)'
+        description: 'Reviewed package version; preview uses NuGet, stable uses all three channels'
         required: true
-        default: '2.0.0-alpha.1'
+        default: '2.0.0'
         type: string
+      publish:
+        description: 'Publish packages after validation (false only builds and checks artifacts)'
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: read
 
 concurrency:
-  group: nuget-publish-${{ inputs.package_version }}
+  group: deploysharp-package-release
   cancel-in-progress: false
 
 jobs:
-  publish:
+  release:
     runs-on: windows-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
+    permissions:
+      contents: write
+      packages: write
+    env:
+      PACKAGE_VERSION: ${{ inputs.package_version }}
+      PUBLISH_REQUESTED: ${{ inputs.publish }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -29,98 +40,153 @@ jobs:
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: 10.0.301
+          dotnet-version: 10.0.x
 
-      - name: Restore solution
-        run: dotnet restore DeploySharp.sln --locked-mode
+      - name: Validate version and prepare configuration
+        shell: pwsh
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ($env:GITHUB_REPOSITORY -ne 'guojin-yan/DeploySharp') { throw 'Publication is configured for guojin-yan/DeploySharp.' }
+          $baseline = Get-Content ./eng/pack/release-candidate-packages.json -Raw | ConvertFrom-Json
+          if ($env:PACKAGE_VERSION -ne $baseline.packageVersion) { throw 'Update and review the version, package baseline, and release evidence together before running this workflow.' }
+          $arguments = @{ PackageVersion = $env:PACKAGE_VERSION; OutputDirectory = (Join-Path $env:RUNNER_TEMP 'deploysharp-release-config') }
+          if ($env:PUBLISH_REQUESTED -eq 'true') {
+            if ([string]::IsNullOrWhiteSpace($env:NUGET_API_KEY)) { throw 'NUGET_API_KEY repository secret is missing.' }
+            $arguments.PublicationAuthorized = $true
+            $arguments.Approver = $env:GITHUB_ACTOR
+            $arguments.ApprovalReference = "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID"
+          }
+          ./eng/pack/New-ReleaseConfiguration.ps1 @arguments
+          if ($env:PACKAGE_VERSION -notmatch '-') {
+            if (-not (Test-Path "./docs/releases/$env:PACKAGE_VERSION.md")) { throw 'Stable release notes are missing.' }
+          }
 
-      - name: Build Release solution
-        run: dotnet build DeploySharp.sln -c Release --no-restore --verbosity minimal
+      - name: Restore and build
+        shell: pwsh
+        run: |
+          dotnet restore DeploySharp.sln --locked-mode
+          if ($LASTEXITCODE -ne 0) { throw 'Locked restore failed.' }
+          dotnet build DeploySharp.sln -c Release --no-restore -m:1 "-p:Version=$env:PACKAGE_VERSION" --verbosity minimal
+          if ($LASTEXITCODE -ne 0) { throw 'Release build failed.' }
 
-      - name: Run Release tests
+      - name: Run Release tests in independent hosts
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          # Run each test project in its own host. This keeps native runtime teardown isolated
-          # on Windows runners while preserving the complete solution test surface.
-          $projects = @(dotnet sln DeploySharp.sln list | Select-String '^tests\\.*Tests\\.*Tests\.csproj$' | ForEach-Object { $_.Line.Trim() })
+          $projects = @(dotnet sln DeploySharp.sln list | Select-String '^tests[\\/].*Tests[\\/].*Tests\.csproj$' | ForEach-Object { $_.Line.Trim() })
           if ($projects.Count -ne 14) { throw "Expected 14 release test projects; found $($projects.Count)." }
           foreach ($project in $projects) {
-            Write-Host "DEPLOYSHARP_TEST_PROJECT $project"
-            dotnet test $project -c Release --no-restore --no-build --verbosity minimal --blame-hang-timeout 2m
+            dotnet test $project -c Release --no-restore --no-build --verbosity minimal --filter 'TestCategory!=ExternalModels' --blame-hang-timeout 2m
             if ($LASTEXITCODE -ne 0) { throw "Release tests failed: $project" }
           }
 
-      - name: Build release packages
+      - name: Check model bindings and documentation
+        shell: pwsh
+        run: |
+          ./eng/models/ocr-anomaly-rmbg/Test-PaddleOcrReleaseAdmission.ps1
+          ./eng/model-catalog/Update-ModelCatalogTable.ps1 -Check
+          ./eng/model-catalog/New-ModelBackendVerificationMatrix.ps1 -Check
+          ./eng/platform/Test-PlatformSupportMatrix.ps1
+          dotnet tool restore
+          if ($LASTEXITCODE -ne 0) { throw 'Tool restore failed.' }
+          dotnet tool run docfx docs/docfx.json --warningsAsErrors
+          if ($LASTEXITCODE -ne 0) { throw 'Documentation build failed.' }
+
+      - name: Build packages and verify reproducibility
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
           $output = Join-Path $env:RUNNER_TEMP 'deploysharp-packages'
-          New-Item -ItemType Directory -Force -Path $output | Out-Null
-          $baseline = Get-Content ./eng/pack/release-candidate-packages.json -Raw | ConvertFrom-Json
-          if ([string]$baseline.packageVersion -ne '${{ inputs.package_version }}') { throw 'Release package baseline version mismatch.' }
-          foreach ($definition in @($baseline.packages)) {
-            dotnet pack $definition.projectPath -c Release --no-restore -o $output
+          New-Item -ItemType Directory -Path $output | Out-Null
+          $baselinePath = Join-Path $env:RUNNER_TEMP 'deploysharp-release-config/release-candidate-packages.json'
+          $baseline = Get-Content $baselinePath -Raw | ConvertFrom-Json
+          foreach ($definition in $baseline.packages) {
+            dotnet pack $definition.projectPath -c Release --no-restore --no-build -o $output "-p:Version=$env:PACKAGE_VERSION"
             if ($LASTEXITCODE -ne 0) { throw "Pack failed: $($definition.packageId)." }
           }
-          $nupkg = @(Get-ChildItem -LiteralPath $output -Filter '*.nupkg' | Where-Object Name -notlike '*.symbols.nupkg')
-          $snupkg = @(Get-ChildItem -LiteralPath $output -Filter '*.snupkg')
-          if ($nupkg.Count -ne 14 -or $snupkg.Count -ne 14) { throw "Expected 14 nupkg and 14 snupkg files; found $($nupkg.Count) and $($snupkg.Count)." }
-          "DEPLOYSHARP_PACKAGE_COUNT nupkg=$($nupkg.Count) snupkg=$($snupkg.Count)" | Write-Host
-
-      - name: Verify package reproducibility
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $output = Join-Path $env:RUNNER_TEMP 'deploysharp-packages'
           $comparison = Join-Path $env:RUNNER_TEMP 'deploysharp-package-repro'
-          ./eng/pack/Invoke-ReleasePackageReproducibility.ps1 -PackageDirectory $output -ComparisonPackageDirectory $comparison -RepositoryRoot (Get-Location)
+          ./eng/pack/Invoke-ReleasePackageReproducibility.ps1 -PackageDirectory $output -ComparisonPackageDirectory $comparison -BaselinePath $baselinePath
+          ./eng/pack/Test-ReleaseCandidatePackages.ps1 -PackageDirectory $output -ComparisonPackageDirectory $comparison -BaselinePath $baselinePath
+          ./eng/pack/Test-VisualNuGetPackage.ps1 -PackagePath (Join-Path $output "JYPPX.DeploySharp.Visual.$env:PACKAGE_VERSION.nupkg") -BaselinePath $baselinePath
 
-      - name: Validate release candidate packages
+      - name: Verify retained evidence and manual publication boundary
         shell: pwsh
         run: |
-          $output = Join-Path $env:RUNNER_TEMP 'deploysharp-packages'
-          ./eng/pack/Test-ReleaseCandidatePackages.ps1 -PackageDirectory $output -RepositoryRoot (Get-Location)
-
-      - name: Validate release evidence and authorization
-        shell: pwsh
-        run: |
-          $output = Join-Path $env:RUNNER_TEMP 'deploysharp-packages'
-          ./eng/pack/Test-ReleaseEvidence.ps1 -PackageDirectory $output -RepositoryRoot (Get-Location) -RequireReleaseEligible
-          ./eng/pack/Test-ReleaseAuthorization.ps1 -RequireReleaseEligible
-
-      - name: Upload NuGet packages
-        shell: pwsh
-        env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
-        run: |
-          $ErrorActionPreference = 'Stop'
-          if ([string]::IsNullOrWhiteSpace($env:NUGET_API_KEY)) { throw 'NUGET_API_KEY repository secret is missing.' }
-          $output = Join-Path $env:RUNNER_TEMP 'deploysharp-packages'
-          $packages = @(Get-ChildItem -LiteralPath $output -Filter '*.nupkg' | Where-Object Name -notlike '*.symbols.nupkg' | Sort-Object Name)
-          foreach ($package in $packages) {
-            dotnet nuget push $package.FullName --api-key $env:NUGET_API_KEY --source https://api.nuget.org/v3/index.json --skip-duplicate --timeout 300
-            if ($LASTEXITCODE -ne 0) { throw "NuGet package push failed: $($package.Name)." }
+          $config = Join-Path $env:RUNNER_TEMP 'deploysharp-release-config'
+          $arguments = @{
+            PackageDirectory = (Join-Path $env:RUNNER_TEMP 'deploysharp-packages')
+            BaselinePath = (Join-Path $config 'release-candidate-packages.json')
+            ReleaseAuthorizationPath = (Join-Path $config 'release-authorization.json')
           }
-          "DEPLOYSHARP_NUGET_PACKAGES_PUSHED count=$($packages.Count)" | Write-Host
+          if ($env:PUBLISH_REQUESTED -eq 'true') { $arguments.RequireReleaseEligible = $true }
+          ./eng/pack/Test-ReleaseEvidence.ps1 @arguments
+          ./eng/pack/Test-ReleaseAuthorization.ps1 -AuthorizationPath $arguments.ReleaseAuthorizationPath -BaselinePath $arguments.BaselinePath -RequireReleaseEligible:($env:PUBLISH_REQUESTED -eq 'true')
 
-      - name: Upload NuGet symbol packages
+      - name: Preserve validated artifacts and checksums
         shell: pwsh
-        env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         run: |
-          $ErrorActionPreference = 'Stop'
           $output = Join-Path $env:RUNNER_TEMP 'deploysharp-packages'
-          $symbols = @(Get-ChildItem -LiteralPath $output -Filter '*.snupkg' | Sort-Object Name)
-          foreach ($symbol in $symbols) {
-            dotnet nuget push $symbol.FullName --api-key $env:NUGET_API_KEY --source https://api.nuget.org/v3/index.json --skip-duplicate --timeout 300
-            if ($LASTEXITCODE -ne 0) { throw "NuGet symbol package push failed: $($symbol.Name)." }
-          }
-          "DEPLOYSHARP_NUGET_SYMBOLS_PUSHED count=$($symbols.Count)" | Write-Host
+          $lines = Get-ChildItem $output -File | Sort-Object Name | ForEach-Object { (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant() + '  ' + $_.Name }
+          [IO.File]::WriteAllLines((Join-Path $output 'SHA256SUMS'), $lines, [Text.UTF8Encoding]::new($false))
 
-      - name: Upload package artifacts for audit
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
-          name: deploysharp-nuget-${{ inputs.package_version }}
-          path: ${{ runner.temp }}/deploysharp-packages
+          name: deploysharp-packages-${{ inputs.package_version }}
+          path: |
+            ${{ runner.temp }}/deploysharp-packages
+            ${{ runner.temp }}/deploysharp-release-config
           retention-days: 14
+
+      - name: Stage stable GitHub Release
+        if: ${{ inputs.publish && !contains(inputs.package_version, '-') }}
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $tag = "v$env:PACKAGE_VERSION"
+          # A new immutable release is created once; retries must be reviewed before uploading.
+          gh release create $tag --repo $env:GITHUB_REPOSITORY --target $env:GITHUB_SHA --draft --title "DeploySharp $env:PACKAGE_VERSION" --notes-file "docs/releases/$env:PACKAGE_VERSION.md"
+          if ($LASTEXITCODE -ne 0) { throw 'Unable to create the draft release; existing tags/releases require review.' }
+          $files = @(Get-ChildItem (Join-Path $env:RUNNER_TEMP 'deploysharp-packages') -File | ForEach-Object FullName)
+          gh release upload $tag @files --repo $env:GITHUB_REPOSITORY
+          if ($LASTEXITCODE -ne 0) { throw 'GitHub Release asset upload failed.' }
+
+      - name: Publish NuGet packages and symbols
+        if: ${{ inputs.publish }}
+        shell: pwsh
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          $output = Join-Path $env:RUNNER_TEMP 'deploysharp-packages'
+          foreach ($package in Get-ChildItem $output -Filter '*.nupkg' | Sort-Object Name) {
+            dotnet nuget push $package.FullName --api-key $env:NUGET_API_KEY --source https://api.nuget.org/v3/index.json --no-symbols --skip-duplicate --timeout 300
+            if ($LASTEXITCODE -ne 0) { throw "NuGet push failed: $($package.Name)." }
+          }
+          foreach ($symbols in Get-ChildItem $output -Filter '*.snupkg' | Sort-Object Name) {
+            dotnet nuget push $symbols.FullName --api-key $env:NUGET_API_KEY --source https://api.nuget.org/v3/index.json --skip-duplicate --timeout 300
+            if ($LASTEXITCODE -ne 0) { throw "NuGet symbol push failed: $($symbols.Name)." }
+          }
+
+      - name: Publish stable packages to GitHub Packages
+        if: ${{ inputs.publish && !contains(inputs.package_version, '-') }}
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          $owner = ($env:GITHUB_REPOSITORY -split '/')[0]
+          foreach ($package in Get-ChildItem (Join-Path $env:RUNNER_TEMP 'deploysharp-packages') -Filter '*.nupkg' | Sort-Object Name) {
+            dotnet nuget push $package.FullName --api-key $env:GITHUB_TOKEN --source "https://nuget.pkg.github.com/$owner/index.json" --no-symbols --skip-duplicate --timeout 300
+            if ($LASTEXITCODE -ne 0) { throw "GitHub Packages push failed: $($package.Name)." }
+          }
+
+      - name: Publish completed stable GitHub Release
+        if: ${{ inputs.publish && !contains(inputs.package_version, '-') }}
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release edit "v$env:PACKAGE_VERSION" --repo $env:GITHUB_REPOSITORY --draft=false --latest
+          if ($LASTEXITCODE -ne 0) { throw 'Publishing the GitHub Release failed; the draft is retained.' }

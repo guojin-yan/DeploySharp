@@ -19,16 +19,6 @@ $licenseAssetName = 'paddleocr.LICENSE.txt'
 $dictionaryAssetName = 'ppocrv5_dict.txt'
 $dictionarySha256 = 'd1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b'
 $dictionarySize = 74012L
-$officialPaddleOcrAssets = @{
-    'mobile-det' = @{ Repository = 'PP-OCRv5_mobile_det_onnx'; Revision = 'e6f4fa85f00e168c862bc462aebca69eef9b3d3d'; Sha256 = 'a431985659dc921974177a95adcfbb90fd9e51989a5e04d70d0b75f597b6e61d'; Size = 4826518L }
-    'mobile-rec' = @{ Repository = 'PP-OCRv5_mobile_rec_onnx'; Revision = 'ed152b8b495f84de93cda5709d768548a9127622'; Sha256 = 'da72dc72ca4dc220df0dfde68c1dedc31c58d3e76a25871122e5056227d50092'; Size = 16534782L }
-    'mobile-cls' = @{ Repository = 'PP-LCNet_x0_25_textline_ori_onnx'; Revision = 'aea1f18d97338aaf84b463f90192f2820524a00a'; Sha256 = '94a6a0a0425f2b5f08b5df72086f2d72abe40f1d22f6d12d2cd83674f11f2ff3'; Size = 1019454L }
-    'server-det' = @{ Repository = 'PP-OCRv5_server_det_onnx'; Revision = 'dcf248c4dcc064c6d030db241255f9e8fbc6733a'; Sha256 = '10803475a591f7dc623e24670fb5752ec94d39a1f8cf069aac1b6f0ce19cfc85'; Size = 88116791L }
-    'server-rec' = @{ Repository = 'PP-OCRv5_server_rec_onnx'; Revision = 'b70df217f4fd99d14f970bad092cebe7d74cc4d1'; Sha256 = 'd9dc333c9c7b042c6dffb8e33d72b6f65c9c1d463d0a3c2f78174fea55e94752'; Size = 84503027L }
-    'server-cls' = @{ Repository = 'PP-LCNet_x1_0_textline_ori_onnx'; Revision = '7fdcf3cf7061163eda7183b224aa334bd33068f7'; Sha256 = '38aa97cd4be591e0ad304e659f07ba30d946f27a63315433f6659c69c8778345'; Size = 6777816L }
-}
-$officialDictionaryUrl = 'https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/2661c7c0ef5c613e8f93c6e93b2e052399f0f854/ppocr/utils/dict/ppocrv5_dict.txt'
-$officialLicenseUrl = 'https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/2661c7c0ef5c613e8f93c6e93b2e052399f0f854/LICENSE'
 
 $catalog = Get-Content -Raw -LiteralPath $catalogFile | ConvertFrom-Json
 $manifests = @(Get-ChildItem -LiteralPath $manifestDirectory -Filter '*.modelpack.json' -File |
@@ -57,19 +47,20 @@ foreach ($manifestFile in $manifests) {
         if ($file.role -eq 'license' -and ([string]$file.sha256).ToLowerInvariant() -ne $licenseSha256 -or $file.role -eq 'license' -and [long]$file.size -ne $licenseSize) { throw "License metadata mismatch: $($manifest.modelId)" }
     }
     $prefix = ([string]$manifest.modelId).Replace('/', '-')
-    $key = ([string]$manifest.modelId).Split('/')[-1]
-    if (-not $officialPaddleOcrAssets.ContainsKey($key)) { throw "Missing official ONNX source mapping for $key." }
-    $official = $officialPaddleOcrAssets[$key]
     $manifestAssetId = $prefix + '-modelpack'
     $assets = [System.Collections.Generic.List[object]]::new()
-    $manifestSha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $manifestFile.FullName).Hash.ToLowerInvariant()
+    # These immutable Release manifests were uploaded as UTF-8/CRLF. Reconstruct
+    # those bytes independently of Git's checkout line endings on Windows/Linux.
+    $manifestText = [IO.File]::ReadAllText($manifestFile.FullName).Replace("`r`n", "`n").Replace("`n", "`r`n")
+    $manifestBytes = [Text.Encoding]::UTF8.GetBytes($manifestText)
+    $manifestSha256 = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($manifestBytes)).ToLowerInvariant()
     $assets.Add([ordered]@{
         assetId = $manifestAssetId
         kind = 'manifest'
         releaseTag = $Tag
         downloadUrl = $releaseBase + $manifestFile.Name
         relativePath = $manifestFile.Name
-        size = [long]$manifestFile.Length
+        size = [long]$manifestBytes.Length
         sha256 = $manifestSha256
         mediaType = 'application/json'
         licenseExpression = 'Apache-2.0'
@@ -79,17 +70,14 @@ foreach ($manifestFile in $manifests) {
         $role = [string]$file.role
         $assetName = if ($role -eq 'model') { Get-ReleaseModelName ([string]$manifest.modelId) } elseif ($role -eq 'labels') { $dictionaryAssetName } elseif ($role -eq 'license') { $licenseAssetName } else { [IO.Path]::GetFileName([string]$file.relativePath) }
         $assetId = if ($role -eq 'model') { $prefix + '-model' } elseif ($role -eq 'labels') { $prefix + '-dictionary' } elseif ($role -eq 'license') { $prefix + '-license' } else { $prefix + '-other' }
-        $assetUrl = if ($role -eq 'model') { "https://huggingface.co/PaddlePaddle/$($official.Repository)/resolve/$($official.Revision)/inference.onnx" } elseif ($role -eq 'labels') { $officialDictionaryUrl } elseif ($role -eq 'license') { $officialLicenseUrl } else { $releaseBase + $assetName }
-        $assetSize = if ($role -eq 'model') { [long]$official.Size } elseif ($role -eq 'labels') { $dictionarySize } elseif ($role -eq 'license') { $licenseSize } else { [long]$file.size }
-        $assetSha256 = if ($role -eq 'model') { [string]$official.Sha256 } elseif ($role -eq 'labels') { $dictionarySha256 } elseif ($role -eq 'license') { $licenseSha256 } else { ([string]$file.sha256).ToLowerInvariant() }
         $assets.Add([ordered]@{
             assetId = $assetId
             kind = Get-AssetKind $role
             releaseTag = $Tag
-            downloadUrl = $assetUrl
+            downloadUrl = $releaseBase + $assetName
             relativePath = [string]$file.relativePath
-            size = $assetSize
-            sha256 = $assetSha256
+            size = [long]$file.size
+            sha256 = ([string]$file.sha256).ToLowerInvariant()
             mediaType = [string]$file.mediaType
             licenseExpression = 'Apache-2.0'
         })
@@ -103,7 +91,7 @@ foreach ($manifestFile in $manifests) {
         task = [string]$manifest.task
         modelVersion = [string]$manifest.modelVersion
         status = 'preview'
-        description = 'Public alpha-preview PP-OCRv5 ONNX bundle using revision-pinned official PaddlePaddle Hugging Face models, PaddleOCR dictionary/license files, and SHA-256 checksums.'
+        description = 'Published PP-OCRv5 ONNX bundle with a matching ModelPack, model, dictionary, license files, and SHA-256 checksums.'
         source = $manifest.source
         release = [ordered]@{ owner = 'guojin-yan'; repository = 'DeploySharp'; tag = $Tag; commit = $ReleaseCommit }
         artifacts = @([ordered]@{
@@ -137,15 +125,15 @@ $retained = @($catalog.entries | Where-Object { -not $knownIds.ContainsKey([stri
 $entries = @(@($retained) + @($generated) | Sort-Object { [string]$_.modelId })
 $document = [ordered]@{
     schemaVersion = [string]$catalog.schemaVersion
-    generatedAt = '2026-09-03T00:00:00Z'
+    generatedAt = [string]$catalog.generatedAt
     catalogRevision = $Tag
     sourceRepository = [string]$catalog.sourceRepository
     entries = $entries
 }
-$content = ($document | ConvertTo-Json -Depth 40) + [Environment]::NewLine
+$content = (($document | ConvertTo-Json -Depth 40) + "`n").Replace("`r`n", "`n")
 
 if ($Check) {
-    if ((Get-Content -Raw -LiteralPath $catalogFile) -ne $content) { throw "Generated PaddleOCR catalog is stale: $catalogFile" }
+    if (([IO.File]::ReadAllText($catalogFile)).Replace("`r`n", "`n") -ne $content) { throw "Generated PaddleOCR catalog is stale: $catalogFile" }
     Write-Output "DEPLOYSHARP_PADDLE_OCR_CATALOG_OK tag=$Tag models=$($generated.Count) entries=$($document.entries.Count)"
 } else {
     [IO.File]::WriteAllText($catalogFile, $content, [Text.UTF8Encoding]::new($false))

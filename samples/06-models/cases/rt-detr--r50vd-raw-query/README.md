@@ -42,14 +42,12 @@ The runtime-evidence value is copied from the published ModelPack extension. It 
 
 ## Backend verification
 
-Local verification date: 2026-08-25; OpenCV follow-up: 2026-09-01. Results are generated from the exact official-catalog artifact identity and SHA-256.
+Statuses are synchronized from the reviewed model/backend matrix for the exact official-catalog artifact. They summarize retained runtime evidence; regenerating this table does not rerun inference.
 
-| Artifact | ONNX Runtime CPU | OpenVINO CPU | OpenCV DNN | TensorRT | LLamaSharp |
+| Artifact | ONNX Runtime CPU | OpenVINO CPU | OpenCV DNN CPU | TensorRT CUDA | LlamaSharp |
 | --- | :---: | :---: | :---: | :---: | :---: |
 | onnx.fp32 | ✓ | ✓ | ✓ | ✓ | — |
 
-`✓` means build/load and real inference passed; `✗` means exact compatibility validation failed on the tested runtime; `—` means no matching local artifact or the artifact format does not apply.
+`✓` means real inference and result decoding passed; `△` means partial contract or component evidence; `✗` means the tested combination cannot complete; `—` means untested or not applicable. A pass does not imply dataset accuracy, all input shapes, or all devices.
 
-The OpenCV compatibility pass rewrites only proven scalar float constant `Expand` nodes to semantics-equivalent `ConstantOfShape` nodes. This avoids the non-finite broadcast output previously observed in this artifact's `full_like` subgraph. The complete Visual pipeline returned finite decoded results; a one-warm-up/three-iteration run measured `855.450 ms` steady total on the recorded development device.
-
-See [the model/backend verification matrix](../../../../docs/model-backend-verification-matrix.md) for the tested machine, failure reasons, and reproduction commands.
+See [the model/backend verification matrix](../../../../docs/model-backend-verification-matrix.md) for the evidence scope, failure reasons, and links to reproduction instructions.

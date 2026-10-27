@@ -22,15 +22,15 @@ function Assert-ExactSet {
 $expectedLevels = @('BuildOnly', 'ManagedTested', 'NativeSmoke', 'GoldenVerified', 'ReleaseSupported')
 $expectedPlatforms = @('windows-x64-cpu', 'linux-x64-cpu', 'linux-arm64-cpu', 'macos-cpu', 'windows-arm64-cpu', 'windows-x64-gpu', 'windows-npu')
 $allowedStatuses = @('tested', 'untested', 'planned', 'unsupported')
-if ([string]$matrix.schemaVersion -ne '1.0' -or [string]$matrix.releaseVersion -ne '2.0.0-alpha.1') { throw 'Platform support matrix schema or release version is invalid.' }
+$candidate = Get-Content -LiteralPath (Join-Path $repository 'eng\pack\release-candidate-packages.json') -Raw | ConvertFrom-Json
+if ([string]$matrix.schemaVersion -ne '1.0' -or [string]$matrix.releaseVersion -ne (([string]$candidate.packageVersion -split '-')[0])) { throw 'Platform support matrix schema or release version is invalid.' }
 Assert-ExactSet @($matrix.supportLevels) $expectedLevels 'Support levels'
 Assert-ExactSet @($matrix.platforms.platformId) $expectedPlatforms 'Platform IDs'
 if (@($matrix.platforms.platformId | Sort-Object -Unique).Count -ne @($matrix.platforms).Count) { throw 'Platform IDs must be unique.' }
 
 [xml]$centralDocument = Get-Content -LiteralPath (Join-Path $repository 'Directory.Packages.props') -Raw
 $centralVersions = @{}
-foreach ($node in @($centralDocument.SelectNodes("//*[local-name()='PackageVersion']"))) { $centralVersions[[string]$node.Include] = [string]$node.Version }
-$candidate = Get-Content -LiteralPath (Join-Path $repository 'eng\pack\release-candidate-packages.json') -Raw | ConvertFrom-Json
+foreach ($node in @($centralDocument.SelectNodes("//*[local-name()='PackageVersion' and @Include]"))) { $centralVersions[[string]$node.Include] = [string]$node.Version }
 $candidateIds = @($candidate.packages.packageId)
 $testedPlatform = @($matrix.platforms | Where-Object { $_.platformId -eq 'windows-x64-cpu' })
 if ($testedPlatform.Count -ne 1 -or [string]$testedPlatform[0].status -ne 'tested') { throw 'Windows x64 CPU must have a tested platform record.' }
@@ -55,7 +55,7 @@ foreach ($platform in @($matrix.platforms)) {
         $claimCount++
         $level = [string]$claim.level
         if ($expectedLevels -notcontains $level) { throw "Invalid support level: $($platform.platformId)/$($claim.packageId)/$level." }
-        if ($level -eq 'ReleaseSupported') { throw 'Alpha platform matrix cannot contain ReleaseSupported claims.' }
+        if ($level -eq 'ReleaseSupported') { throw 'Platform matrix cannot contain ReleaseSupported claims without dedicated release qualification evidence.' }
         $levelCounts[$level]++
         if ($candidateIds -notcontains [string]$claim.packageId) { throw "Unknown release package claim: $($claim.packageId)." }
         if ([string]::IsNullOrWhiteSpace([string]$claim.scope)) { throw "Platform claim scope is missing: $($claim.packageId)." }

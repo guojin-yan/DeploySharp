@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
     [string]$AuthorizationPath = (Join-Path $PSScriptRoot 'release-authorization.json'),
+    [string]$BaselinePath = (Join-Path $PSScriptRoot 'release-candidate-packages.json'),
     [switch]$RequireReleaseEligible
 )
 
@@ -9,12 +10,15 @@ $ErrorActionPreference = 'Stop'
 
 $path = (Resolve-Path -LiteralPath $AuthorizationPath).Path
 $authorization = Get-Content -LiteralPath $path -Raw | ConvertFrom-Json
-if ($authorization.schemaVersion -ne '1.0' -or $authorization.packageVersion -ne '2.0.0-alpha.1') {
+$baseline = Get-Content -LiteralPath $BaselinePath -Raw | ConvertFrom-Json
+if ($authorization.schemaVersion -ne '1.0' -or $authorization.packageVersion -ne $baseline.packageVersion) {
     throw 'Release authorization schema or package version is invalid.'
 }
-if ($authorization.publication.channel -ne 'nuget.org') { throw 'Release authorization channel is invalid.' }
-if ($authorization.packageSigning.status -eq 'not-required-alpha-preview' -and $authorization.packageSigning.scope -ne '2.0.0-alpha.1 personal open-source non-commercial preview only') {
-    throw 'The alpha-preview signing exception scope is invalid.'
+$expectedChannel = if ([string]$baseline.packageVersion -match '-') { 'nuget.org' } else { 'nuget.org+github-release+github-packages' }
+if ($authorization.publication.channel -ne $expectedChannel) { throw 'Release authorization channel is invalid for this version.' }
+if ([string]$baseline.packageSigningPolicy -notin @('required', 'optional')) { throw 'Invalid package signing policy.' }
+if ($authorization.packageSigning.status -eq 'not-required' -and $baseline.packageSigningPolicy -eq 'required') {
+    throw 'Required package signing cannot be waived by release authorization.'
 }
 if ($authorization.rawPackageReproducibility.status -ne 'established-before-signing' -or
     $authorization.rawPackageReproducibility.normalizer -ne 'eng/pack/Normalize-NuGetPackage.ps1' -or
@@ -44,8 +48,8 @@ switch ([string]$authorization.packageSigning.status) {
             throw 'Configured package signing requires a certificate SHA256 fingerprint and timestamp server.'
         }
     }
-    'not-configured' { $blockers.Add('package-signing-credential-not-configured') }
-    'not-required-alpha-preview' { }
+    'not-configured' { if ($baseline.packageSigningPolicy -eq 'required') { $blockers.Add('package-signing-credential-not-configured') } }
+    'not-required' { }
     default { throw "Unsupported package-signing state: $($authorization.packageSigning.status)." }
 }
 

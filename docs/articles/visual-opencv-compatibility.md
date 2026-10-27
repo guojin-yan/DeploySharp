@@ -9,8 +9,8 @@ DeploySharp.Backend.OpenCV 通过 OpenCV DNN 加载调用方持有的 ONNX 工�
 ```powershell
 dotnet add package JYPPX.DeploySharp.Visual --version 2.0.0-alpha.1
 dotnet add package JYPPX.DeploySharp.Visual.OpenCV --version 2.0.0-alpha.1
-dotnet add package JYPPX.OpenCV.CSharp.API --version 5.0.0-preview.1
-dotnet add package JYPPX.OpenCV.runtime.win-x64 --version 5.0.0-preview.1
+dotnet add package JYPPX.OpenCV.CSharp.API --version 5.0.0
+dotnet add package JYPPX.OpenCV.runtime.win-x64 --version 5.0.0
 ```
 
 需要 OpenCV DNN 推理时再安装 `JYPPX.DeploySharp.Backend.OpenCV`。DeploySharp 包不隐式携带 native DLL；最终应用必须选择与 RID、进程架构和托管包装器匹配的 runtime。
@@ -45,8 +45,8 @@ using PreparedVisualInput input =
 
 | 项目 | 当前值 |
 | --- | --- |
-| 托管包装器 | JYPPX.OpenCV.CSharp.API 5.0.0-preview.1 |
-| Windows native 包 | JYPPX.OpenCV.runtime.win-x64 5.0.0-preview.1 |
+| 托管包装器 | JYPPX.OpenCV.CSharp.API 5.0.0 |
+| Windows native 包 | JYPPX.OpenCV.runtime.win-x64 5.0.0 |
 | 输入 | NCHW Float32 图像；batch 和空间维度可固定或在运行时解析 |
 | 辅助输入 | 标量、向量、矩阵数值输入；Int64 会安全收窄到 OpenCV CV_32S |
 | 输出 | Float32、Boolean、Int8、UInt8、Int32、Int64 数值张量 |

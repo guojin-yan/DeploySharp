@@ -5,6 +5,7 @@ param(
     [string]$Repository = 'guojin-yan/DeploySharp',
     [string]$OutputPath,
     [string]$CachePath,
+    [SupportsWildcards()]
     [string]$ModelId,
     [switch]$UpdateReadmes,
     [switch]$DownloadAssets
@@ -157,7 +158,7 @@ function Write-VerificationSection {
 $headers = @{ Accept = 'application/vnd.github+json'; 'X-GitHub-Api-Version' = '2022-11-28'; 'User-Agent' = 'DeploySharp-model-case-audit' }
 $catalog = Get-Content -Raw -LiteralPath $CatalogPath | ConvertFrom-Json
 $script:CatalogRevision = [string]$catalog.catalogRevision
-$entries = @($catalog.entries | Where-Object { [string]::IsNullOrWhiteSpace($ModelId) -or $_.modelId -eq $ModelId })
+$entries = @($catalog.entries | Where-Object { [string]::IsNullOrWhiteSpace($ModelId) -or $_.modelId -like $ModelId })
 if ($entries.Count -eq 0) { throw "No catalog entry matched '$ModelId'." }
 
 $releaseCache = @{}

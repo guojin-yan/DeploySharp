@@ -1,4 +1,6 @@
 - name: 发布索引
   href: README.md
+- name: DeploySharp 2.0.0
+  href: 2.0.0.md
 - name: DeploySharp 2.0.0-alpha.1
   href: 2.0.0-alpha.1.md

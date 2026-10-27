@@ -10,6 +10,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $source = (Resolve-Path -LiteralPath $PackageDirectory).Path
 $gate = (Resolve-Path -LiteralPath $GatePath).Path
+$version = [string](Get-Content (Join-Path $PSScriptRoot 'release-candidate-packages.json') -Raw | ConvertFrom-Json).packageVersion
 if (Test-Path -LiteralPath $WorkingDirectory) { throw "Negative-test working directory already exists: $WorkingDirectory" }
 $work = [IO.Path]::GetFullPath($WorkingDirectory)
 New-Item -ItemType Directory -Path $work | Out-Null
@@ -73,11 +74,11 @@ function Assert-GateRejects {
 }
 
 $native = New-Scenario 'native-leak'
-Add-ZipEntry (Join-Path $native 'JYPPX.DeploySharp.Backend.LlamaSharp.2.0.0-alpha.1.nupkg') 'runtimes/win-x64/native/llama.dll' 'negative-native-probe'
+Add-ZipEntry (Join-Path $native "JYPPX.DeploySharp.Backend.LlamaSharp.$version.nupkg") 'runtimes/win-x64/native/llama.dll' 'negative-native-probe'
 Assert-GateRejects 'native-leak' $native 'Unexpected NuGet payload|Native payload leaked'
 
 $tfm = New-Scenario 'wrong-tfm'
-$corePackage = Join-Path $tfm 'JYPPX.DeploySharp.Core.2.0.0-alpha.1.nupkg'
+$corePackage = Join-Path $tfm "JYPPX.DeploySharp.Core.$version.nupkg"
 $sourceArchive = [IO.Compression.ZipFile]::OpenRead($corePackage)
 try {
     $sourceEntry = @($sourceArchive.Entries | Where-Object { $_.FullName -eq 'lib/net10.0/JYPPX.DeploySharp.Core.dll' })[0]
@@ -92,7 +93,7 @@ finally { $updateArchive.Dispose() }
 Assert-GateRejects 'wrong-tfm' $tfm 'package TFMs mismatch'
 
 $dependency = New-Scenario 'dependency-version'
-Update-Nuspec (Join-Path $dependency 'JYPPX.DeploySharp.ModelPack.Json.2.0.0-alpha.1.nupkg') {
+Update-Nuspec (Join-Path $dependency "JYPPX.DeploySharp.ModelPack.Json.$version.nupkg") {
     param($document)
     $node = @($document.SelectNodes("//*[local-name()='dependency' and @id='JYPPX.DeploySharp.Core']"))[0]
     $node.SetAttribute('version', '9.9.9')
@@ -100,7 +101,7 @@ Update-Nuspec (Join-Path $dependency 'JYPPX.DeploySharp.ModelPack.Json.2.0.0-alp
 Assert-GateRejects 'dependency-version' $dependency 'generated/package dependency graph mismatch'
 
 $metadata = New-Scenario 'missing-metadata'
-Update-Nuspec (Join-Path $metadata 'JYPPX.DeploySharp.ModelFactory.2.0.0-alpha.1.nupkg') {
+Update-Nuspec (Join-Path $metadata "JYPPX.DeploySharp.ModelFactory.$version.nupkg") {
     param($document)
     $node = @($document.SelectNodes("//*[local-name()='repository']"))[0]
     [void]$node.ParentNode.RemoveChild($node)
@@ -108,7 +109,7 @@ Update-Nuspec (Join-Path $metadata 'JYPPX.DeploySharp.ModelFactory.2.0.0-alpha.1
 Assert-GateRejects 'missing-metadata' $metadata 'repository metadata'
 
 $payload = New-Scenario 'unexpected-payload'
-Add-ZipEntry (Join-Path $payload 'JYPPX.DeploySharp.Core.2.0.0-alpha.1.nupkg') 'tools/probe.txt' 'unexpected-payload-probe'
+Add-ZipEntry (Join-Path $payload "JYPPX.DeploySharp.Core.$version.nupkg") 'tools/probe.txt' 'unexpected-payload-probe'
 Assert-GateRejects 'unexpected-payload' $payload 'Unexpected NuGet payload'
 
 Write-Output 'DEPLOYSHARP_RELEASE_PACKAGE_GATE_NEGATIVE_SUITE_OK scenarios=5'

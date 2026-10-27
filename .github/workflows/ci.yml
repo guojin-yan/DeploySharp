@@ -118,13 +118,16 @@ jobs:
       - run: dotnet test tests/DeploySharp.Backend.OpenCV.Tests/DeploySharp.Backend.OpenCV.Tests.csproj -c Release --no-restore
       - shell: pwsh
         run: pwsh -NoProfile -ExecutionPolicy Bypass -File ./eng/model-catalog/Update-ModelCatalogTable.ps1 -Check
+      - name: Check model-case backend tables against the reviewed matrix
+        shell: pwsh
+        run: pwsh -NoProfile -ExecutionPolicy Bypass -File ./eng/model-catalog/New-ModelBackendVerificationMatrix.ps1 -Check
       - name: Validate conservative platform support levels
         shell: pwsh
         run: pwsh -NoProfile -ExecutionPolicy Bypass -File ./eng/platform/Test-PlatformSupportMatrix.ps1
       - name: Reject platform support overclaims and evidence drift
         shell: pwsh
         run: pwsh -NoProfile -ExecutionPolicy Bypass -File ./eng/platform/Invoke-PlatformSupportMatrixNegativeTests.ps1 -WorkingDirectory "${{ runner.temp }}\deploysharp-platform-support-negative"
-      - name: Validate PP-OCRv5 mobile-cls algorithm-admission boundary
+      - name: Validate PP-OCRv5 published ModelPack and catalog bindings
         shell: pwsh
         run: pwsh -NoProfile -ExecutionPolicy Bypass -File ./eng/models/ocr-anomaly-rmbg/Test-PaddleOcrReleaseAdmission.ps1
       - shell: pwsh
@@ -144,7 +147,9 @@ jobs:
       - run: dotnet pack src/DeploySharp.ModelFactory/DeploySharp.ModelFactory.csproj -c Release --no-restore
       - run: dotnet pack src/DeploySharp.Visual/DeploySharp.Visual.csproj -c Release --no-restore
       - shell: pwsh
-        run: pwsh -NoProfile -ExecutionPolicy Bypass -File ./eng/pack/Test-VisualNuGetPackage.ps1 -PackagePath ./artifacts/packages/JYPPX.DeploySharp.Visual.2.0.0-alpha.1.nupkg
+        run: |
+          $version = (Get-Content ./eng/pack/release-candidate-packages.json -Raw | ConvertFrom-Json).packageVersion
+          ./eng/pack/Test-VisualNuGetPackage.ps1 -PackagePath "./artifacts/packages/JYPPX.DeploySharp.Visual.$version.nupkg"
       - run: dotnet pack src/DeploySharp.Visual.OpenCV/DeploySharp.Visual.OpenCV.csproj -c Release --no-restore
       - run: dotnet pack src/DeploySharp.Visual.TensorRT/DeploySharp.Visual.TensorRT.csproj -c Release --no-restore
       - run: dotnet pack src/DeploySharp.Multimodal/DeploySharp.Multimodal.csproj -c Release --no-restore

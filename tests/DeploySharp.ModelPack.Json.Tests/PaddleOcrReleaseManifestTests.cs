@@ -34,7 +34,7 @@ namespace DeploySharp.ModelPack.Json.Tests
                 ModelArtifactDocument artifact = document.Artifacts.Single();
                 Assert.AreEqual(ModelArtifactLocationKind.Directory, artifact.LocationKind);
                 Assert.AreEqual("bundle", artifact.Entrypoint);
-                Assert.AreEqual("alpha-preview-official-source-runtime-golden-refresh-required", artifact.Extensions["deploysharp.release-admission"]);
+                Assert.AreEqual("alpha-preview-redistributable-source-recorded", artifact.Extensions["deploysharp.release-admission"]);
                 Assert.IsTrue(artifact.Files.Any(value => value.Role == ModelFileRole.Model && value.RelativePath == "bundle/model.onnx"));
                 Assert.IsTrue(artifact.Files.Any(value => value.Role == ModelFileRole.License && value.RelativePath == "bundle/source/licenses/paddleocr.LICENSE.txt"));
             }

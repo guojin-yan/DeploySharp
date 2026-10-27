@@ -49,7 +49,7 @@ dotnet add package JYPPX.DeploySharp.Backend.OpenVINO --version 2.0.0-alpha.1
 # 或：dotnet add package JYPPX.DeploySharp.Backend.OpenCV --version 2.0.0-alpha.1
 ```
 
-应用还需要选择与目标 TFM/RID 匹配的 OpenVINO 或 OpenCV runtime。不要把 OpenCV preview runtime 与其他版本混用。
+应用还需要选择与目标 TFM/RID 匹配的 OpenVINO 或 OpenCV runtime。不要混用不同发布版本的 OpenCV 托管包与原生 runtime。
 
 ### TensorRT CUDA 视觉
 
@@ -74,7 +74,7 @@ dotnet add package JYPPX.DeploySharp.Extensibility --version 2.0.0-alpha.1
 
 ## 源码优先和 NuGet 消费
 
-当包还未发布到公共源时，可以在仓库内使用 `ProjectReference` 进行源码复现；包发布后再替换为上面的 `PackageReference`。无论哪种方式，都应锁定同一版本的 DeploySharp 包和第三方运行时，并检查 `docs/articles/platform-support.md` 中的目标框架与真实验证范围。
+公开的 `2.0.0-alpha.1` 可以直接使用 `PackageReference`。需要调试当前分支、修改库代码或验证尚未发布的改动时，可以在仓库内改用 `ProjectReference`；不要在同一应用中混用不同版本的 DeploySharp 包与项目引用。无论哪种方式，都应锁定同一版本的第三方运行时，并检查[平台与后端支持](platform-support.md)中的目标框架与真实验证范围。
 
 ## 选择顺序
 

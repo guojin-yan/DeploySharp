@@ -42,14 +42,12 @@ The runtime-evidence value is copied from the published ModelPack extension. It 
 
 ## Backend verification
 
-Local verification date: 2026-08-25; OpenCV follow-up: 2026-09-01. Results are generated from the exact official-catalog artifact identity and SHA-256.
+Statuses are synchronized from the reviewed model/backend matrix for the exact official-catalog artifact. They summarize retained runtime evidence; regenerating this table does not rerun inference.
 
-| Artifact | ONNX Runtime CPU | OpenVINO CPU | OpenCV DNN | TensorRT | LLamaSharp |
+| Artifact | ONNX Runtime CPU | OpenVINO CPU | OpenCV DNN CPU | TensorRT CUDA | LlamaSharp |
 | --- | :---: | :---: | :---: | :---: | :---: |
 | onnx.fp32 | ✓ | ✓ | ✓ | ✓ | — |
 
-`✓` means build/load and real inference passed; `✗` means exact compatibility validation failed on the tested runtime; `—` means no matching local artifact or the artifact format does not apply.
+`✓` means real inference and result decoding passed; `△` means partial contract or component evidence; `✗` means the tested combination cannot complete; `—` means untested or not applicable. A pass does not imply dataset accuracy, all input shapes, or all devices.
 
-OpenCV 5.0 cannot execute this artifact's graph-internal data-dependent NMS/Gather tail. The verified OpenCV contract instead binds raw head `onnx_node!/model/model.105/Concat_3` (`[1,25200,85]`) and runs DeploySharp managed decode/NMS. On `bus.jpg`, that path and ONNX Runtime's graph-internal end-to-end path both returned seven detections with the same classes and boxes at 0.001 precision; the maximum displayed score delta was approximately `0.000006`. This is an exact-artifact contract and is not inferred for other YOLOv7 exports.
-
-See [the model/backend verification matrix](../../../../docs/model-backend-verification-matrix.md) for the tested machine, failure reasons, and reproduction commands.
+See [the model/backend verification matrix](../../../../docs/model-backend-verification-matrix.md) for the evidence scope, failure reasons, and links to reproduction instructions.

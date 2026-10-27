@@ -17,6 +17,7 @@ $packages = (Resolve-Path -LiteralPath $PackageDirectory).Path
 $evidence = (Resolve-Path -LiteralPath $EvidenceDirectory).Path
 $gate = (Resolve-Path -LiteralPath $GatePath).Path
 $policy = (Resolve-Path -LiteralPath $ReleasePolicyPath).Path
+$version = [string](Get-Content (Join-Path $PSScriptRoot 'release-candidate-packages.json') -Raw | ConvertFrom-Json).packageVersion
 $packageCache = if ($PackageCacheDirectory) { (Resolve-Path -LiteralPath $PackageCacheDirectory).Path } else { $null }
 $work = [IO.Path]::GetFullPath($WorkingDirectory)
 if (Test-Path -LiteralPath $work) { throw "Negative-test working directory already exists: $work" }
@@ -81,8 +82,8 @@ function Assert-GateRejects {
         [string]$Name,
         [string]$ScenarioPackageDirectory,
         [string]$ScenarioEvidenceDirectory,
-        [string]$ScenarioPolicyPath = $policy,
-        [string]$ExpectedPattern
+        [string]$ExpectedPattern,
+        [string]$ScenarioPolicyPath = $policy
     )
     $message = $null
     try {
@@ -100,7 +101,7 @@ function Assert-GateRejects {
 }
 
 $licensePackages = New-PackageScenario 'license-missing'
-Update-Nuspec (Join-Path $licensePackages 'JYPPX.DeploySharp.Core.2.0.0-alpha.1.nupkg') {
+Update-Nuspec (Join-Path $licensePackages "JYPPX.DeploySharp.Core.$version.nupkg") {
     param($document)
     $node = @($document.SelectNodes("//*[local-name()='license']"))[0]
     [void]$node.ParentNode.RemoveChild($node)
@@ -115,7 +116,7 @@ Update-EvidenceJson (Join-Path $hashEvidence 'package-provenance-sbom.json') {
 Assert-GateRejects 'dependency-content-hash' $packages $hashEvidence 'Dependency content hash drift'
 
 $repositoryPackages = New-PackageScenario 'repository-commit'
-Update-Nuspec (Join-Path $repositoryPackages 'JYPPX.DeploySharp.ModelFactory.2.0.0-alpha.1.nupkg') {
+Update-Nuspec (Join-Path $repositoryPackages "JYPPX.DeploySharp.ModelFactory.$version.nupkg") {
     param($document)
     $node = @($document.SelectNodes("//*[local-name()='repository']"))[0]
     $node.SetAttribute('commit', ('0' * 40))
@@ -161,7 +162,7 @@ Assert-GateRejects 'third-party-notice-identity' $packages $noticeEvidence 'Thir
 $releaseBlockerEvidence = New-EvidenceScenario 'release-blocker'
 Update-EvidenceJson (Join-Path $releaseBlockerEvidence 'package-provenance-sbom.json') {
     param($document)
-    $document.releaseBlockers = @($document.releaseBlockers | Where-Object { $_ -ne 'publication-authority-not-granted' })
+    $document.releaseBlockers = @($document.releaseBlockers) + @('unexpected-release-blocker')
 }
 Assert-GateRejects 'release-blocker' $packages $releaseBlockerEvidence 'SBOM release blockers excluding worktree state'
 
@@ -182,8 +183,8 @@ Assert-GateRejects 'known-advisory-finding' $packages $advisoryEvidence 'SBOM al
 $policyScope = New-PolicyScenario 'policy-commercial-scope'
 Update-EvidenceJson $policyScope {
     param($document)
-    $document.profiles[0].distributionScope = 'commercial-release'
+    $document.profiles[0].distributionScope = 'invalid-scope'
 }
-Assert-GateRejects 'policy-commercial-scope' $packages $evidence $policyScope 'Alpha preview policy distribution scope is invalid'
+Assert-GateRejects 'policy-commercial-scope' $packages $evidence 'Release policy distribution scope or metadata policy is invalid' $policyScope
 
 Write-Output 'DEPLOYSHARP_RELEASE_EVIDENCE_NEGATIVE_SUITE_OK scenarios=12'

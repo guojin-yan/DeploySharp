@@ -1,25 +1,26 @@
 # 平台与后端支持
 
-本文是 DeploySharp 2.0.0-alpha.1 关于目标框架、操作系统和推理后端的唯一事实来源。这里的“可构建”仅表示托管程序集能够编译；只有完成真实模型推理验证的组合才算“已验证”。版本能力清单和已知阻断见 [2.0.0-alpha.1 发布说明](../releases/2.0.0-alpha.1.md)，本页不重复维护另一份发布状态表。
+本文是 DeploySharp 2.0.0 源码关于目标框架、操作系统和推理后端的统一入口。这里的“可构建”仅表示托管程序集能够编译；只有完成真实模型推理验证的组合才算“已验证”。版本能力清单和已知边界见 [2.0.0 版本说明](../releases/2.0.0.md)。
 
 ## 当前发布范围
 
 | 项目 | 当前状态 |
 | --- | --- |
-| Windows 10/11 x64 | Alpha 版本的主要开发与验证平台 |
+| Windows 10/11 x64 | 本版本的主要开发与验证平台 |
 | Linux x64 | 可以构建，尚未纳入本版本完整运行验证 |
 | macOS x64 / ARM64 | 可以构建，尚未纳入本版本完整运行验证 |
 | Windows ARM64 | 尚未纳入本版本验证 |
 
 跨平台使用时，还需要确认所选后端的原生库、驱动和模型格式在目标设备上可用。
 
-当前 Alpha 的发布基线是 Windows 10/11 x64。Linux、macOS、Windows ARM64、移动平台、NPU 和未验证的 GPU 组合可以构建或存在适配代码，但不作本版本的运行兼容性承诺。只有验证矩阵中标记为“通过”的精确模型、工件、输入合同和后端组合，才表示完成了真实推理验证。
+2.0.0 的发布验证范围是 Windows 10/11 x64。Linux、macOS、Windows ARM64、移动平台、NPU 和未验证的 GPU 组合可以构建或存在适配代码，但不作本版本的运行兼容性承诺。只有验证矩阵中标记为“通过”的精确模型、工件、输入合同和后端组合，才表示完成了真实推理验证。
 
 ## 目标框架
 
 | 包组 | 实际目标框架 |
 | --- | --- |
 | Core、Visual | <code>net46</code>-<code>net481</code>、<code>netstandard2.0</code>、<code>netcoreapp3.1</code>、<code>net5.0</code>-<code>net10.0</code> |
+| Extensibility | <code>net46</code>、<code>netstandard2.0</code>、<code>net8.0</code>、<code>net10.0</code> |
 | Visual.OpenCV、Backend.OpenCV、Backend.OpenVINO | <code>net46</code>-<code>net481</code>、<code>netcoreapp3.1</code>、<code>net5.0</code>-<code>net10.0</code>（不发布 <code>netstandard2.0</code>） |
 | LLM、Multimodal | <code>netstandard2.0</code>、<code>netcoreapp3.1</code>、<code>net5.0</code>-<code>net10.0</code> |
 | ModelPack.Json、ModelFactory | <code>netstandard2.0</code>、<code>net8.0</code>、<code>net9.0</code>、<code>net10.0</code> |
@@ -27,6 +28,8 @@
 | Backend.TensorRT、Visual.TensorRT | <code>net8.0</code> |
 
 建议新项目优先使用 .NET 10；需要兼容现有应用时可选择 .NET 8。Visual.TensorRT 和 Backend.TensorRT 当前只提供 net8.0 资产。
+
+目标框架表描述程序集资产，不能推断每个资产都有相同的功能范围：Visual 的 `net46`/`net461` 不包含 ROI、滑动窗口检测与配置 JSON；内置 PaddleOCR-VL tokenizer 和基于 Microsoft.ML.Tokenizers 的公式 tokenizer 要求 `net8.0`、`net9.0` 或 `net10.0`。此外，部分当前依赖对 `netcoreapp3.1`、`net5.0`、`net6.0`、`net7.0` 会产生厂商 TFM 支持警告；这些资产可以构建，但不属于依赖厂商已测试的运行配置。旧框架应用应逐项验证，优先使用 .NET 8/10。
 
 ## 推理后端
 

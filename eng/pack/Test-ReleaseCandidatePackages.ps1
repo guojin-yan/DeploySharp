@@ -18,7 +18,7 @@ $packageRoot = (Resolve-Path -LiteralPath $PackageDirectory).Path
 $comparisonRoot = if ([string]::IsNullOrWhiteSpace($ComparisonPackageDirectory)) { $null } else { (Resolve-Path -LiteralPath $ComparisonPackageDirectory).Path }
 $baseline = Get-Content -LiteralPath $BaselinePath -Raw | ConvertFrom-Json
 if ($baseline.schemaVersion -ne '1.0') { throw "Unsupported release package baseline schema: $($baseline.schemaVersion)." }
-if ([string]$baseline.packageSigningPolicy -notin @('required', 'optional-alpha-preview-required-ga-commercial')) { throw "Unsupported package signing policy: $($baseline.packageSigningPolicy)." }
+if ([string]$baseline.packageSigningPolicy -notin @('required', 'optional')) { throw "Unsupported package signing policy: $($baseline.packageSigningPolicy)." }
 $signingRequired = [string]$baseline.packageSigningPolicy -eq 'required'
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -162,7 +162,9 @@ function Test-NativeRuntimePackage {
 
 [xml]$central = Get-Content -LiteralPath (Join-Path $repository 'Directory.Packages.props') -Raw
 $actualCentral = @{}
-foreach ($node in @($central.SelectNodes("//*[local-name()='PackageVersion']"))) {
+# The baseline describes the default graph. Conditional Update entries select
+# alternate CUDA graphs and are not additional Include identities.
+foreach ($node in @($central.SelectNodes("//*[local-name()='PackageVersion' and @Include]"))) {
     $id = [string]$node.Include
     if ($actualCentral.ContainsKey($id)) { throw "Duplicate central package version: $id" }
     $actualCentral.Add($id, [string]$node.Version)

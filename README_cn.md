@@ -17,7 +17,7 @@
 <p align="center">
   <a href="docs/index.md"><img src="https://img.shields.io/badge/docs-DocFX-2f80ed" alt="DocFX 文档" /></a>
   <a href="https://www.nuget.org/packages/JYPPX.DeploySharp.Core/"><img src="https://img.shields.io/nuget/vpre/JYPPX.DeploySharp.Core.svg?label=NuGet" alt="DeploySharp 最新 NuGet 版本" /></a>
-  <a href="https://github.com/guojin-yan/DeploySharp/releases"><img src="https://img.shields.io/github/v/release/guojin-yan/DeploySharp?include_prereleases&amp;label=GitHub%20Release" alt="GitHub Release" /></a>
+  <a href="https://github.com/guojin-yan/DeploySharp/releases"><img src="https://img.shields.io/github/v/release/guojin-yan/DeploySharp?label=GitHub%20Release" alt="最新稳定 GitHub Release" /></a>
 </p>
 
 <p align="center"><a href="README.md">English</a> | <strong>简体中文</strong></p>
@@ -29,7 +29,7 @@ DeploySharp V2 为模型工件、类型化张量、Session、视觉流程、语�
 ## 📖 项目介绍
 
 - **稳定的应用契约：**模型身份、类型化张量、命名输入/输出、Session、诊断、取消和释放。
-- **完整推理工作流：**分类、检测、分割、姿态、OBB、OCR、异常、提示分割、视觉语言、LLM 和多模态路径。
+- **类型化工作流与扩展点：**覆盖分类、检测、分割、姿态、OBB、OCR、异常、提示分割、视觉语言、LLM 和多模态路径，各模型成熟度单独记录。
 - **显式后端所有权：**ONNX Runtime、OpenVINO、OpenCV DNN、TensorRT/CUDA 和 LLamaSharp 适配器，不会静默安装全部厂商运行时。
 - **可复现模型交付：**ModelPack 清单、工件大小/SHA-256 校验、版本化 Release 下载、离线缓存复用，以及可运行的模型案例。
 
@@ -42,13 +42,15 @@ V2 是全新 API 设计，不提供 V1 的源码、二进制、配置或行为�
 - Windows x64 上已完成 ONNX Runtime、OpenVINO、OpenCV DNN 与具名 TensorRT/CUDA 环境验证。
 - 支持会话池、批处理、视觉异步推理、滑动窗口检测和可复现实测工具。
 
-## 📢 当前更新：2.0.0-alpha.1
+## 📢 当前更新：2.0.0（待发布）
 
-<code>2.0.0-alpha.1</code> 是 DeploySharp V2 的首次工程预览版。目前以 Windows 10/11 x64 源码复现为主，公共 API 和包边界仍会继续调整。首发范围和已知边界见 [2.0.0-alpha.1 发布说明](docs/releases/2.0.0-alpha.1.md)。
+<code>2.0.0-alpha.1</code> 是 DeploySharp V2 的首个公开预览版，已经发布到 NuGet.org。当前发布验证基线为 Windows 10/11 x64；正式版发布前，公共 API 和包边界仍可能调整。首发范围和已知边界见 [2.0.0-alpha.1 发布说明](docs/releases/2.0.0-alpha.1.md)。
+
+当前源码正在准备 `2.0.0`，功能范围和使用限制见 [2.0.0 版本说明](docs/releases/2.0.0.md)。本 README 和使用指南以当前源码为准；预览版发布后新增的 API，在正式包发布前需要通过项目引用使用。已发布包的范围请以对应发布说明为准。
 
 ## 🚀 30 秒开始
 
-安装 Core 与所需后端包，源码复现时可直接使用本仓库项目引用：
+安装同版本的 Core 与所需后端包；需要验证仓库内尚未发布的改动时，再改用项目引用：
 
 ~~~powershell
 dotnet add package JYPPX.DeploySharp.Core --version 2.0.0-alpha.1
@@ -169,9 +171,25 @@ DeploySharp 预览包已发布到 NuGet.org。版本列直接读取 NuGet 数据
 
 ## 🤖 支持的模型
 
-模型目录覆盖 YOLO、DETR、PaddleOCR v5 Preview、PaDiM、BRIA RMBG、SAM、CLIP、BLIP 和 Qwen GGUF。PaddleOCR v4/v5/v6 核心 ONNX 模型与已转换的 PP-Structure 模型按单个资产存放在 [`models-paddleocr` Release](https://github.com/guojin-yan/DeploySharp/releases/tag/models-paddleocr)，用户只需下载所需模型；模型文件不嵌入 NuGet 包。
+下表按任务列出公开模型资产。“已完成后端验证”仅表示至少一个精确模型/后端组合存在真实推理证据，不表示所有后端均可运行。模型文件需单独下载，不会嵌入 NuGet 包。
 
-**PaddleOCR-VL 1.6 已提供实验性推理路径**，覆盖 OCR、表格、公式、图表、文字定位、印章、区域和多页编排。五图 ONNX Bundle 已作为[独立资产在线提供](https://github.com/guojin-yan/DeploySharp/releases/tag/models-paddleocr)，通过全新缓存下载、完整性校验与离线回读。原始四图已在 ONNX Runtime CPU/CUDA 与 OpenVINO CPU 完成六任务生成验证；派生五图路径也在 Windows TensorRT 10.11 使用设备专用 Engine 完成六个固定任务。下载验证未重新执行生成，任意 Engine Profile 和页面质量仍未验证。原始 vision/decoder 图在 OpenCV DNN 5.0 导入失败。使用方式与准确边界见[PaddleOCR 流水线教程](docs/articles/visual-paddle-ocr3.md)、[VL/PP-Structure 教程](docs/articles/visual-paddle-structure.md)、[模型支持指南](docs/articles/model-support.md)及[模型/后端验证矩阵](docs/model-backend-verification-matrix.md)。
+| 类型 | 完整模型名称 | 当前级别 |
+| --- | --- | --- |
+| 目标检测 | YOLOv5n Detect、YOLOv6s Detect、YOLOv7 Detect、YOLOv8n Detect、YOLOv9s Detect、YOLOv10n Detect、YOLO11n Detect、YOLO12n Detect、YOLOv13n Detect、YOLO26n Detect、DEIMv2 Detect、PP-YOLOE Plus CRN-L、RF-DETR Detect、Paddle RT-DETR R50vd decoded vector-count ONNX、Paddle RT-DETR R50vd decoded vector-count OpenVINO IR、RT-DETR R50vd raw-query ONNX | 已完成后端验证；不同导出图范围不同 |
+| 图像分类 | YOLOv8s Classification | 已完成后端验证 |
+| 实例分割 | YOLOv5s Segmentation、YOLOv8n Segmentation、YOLOv9c Segmentation、YOLO11s Segmentation、YOLO26s Segmentation、RF-DETR Segment | 已完成后端验证 |
+| 姿态估计 | YOLOv8s Pose、YOLO11s Pose、YOLO26s Pose | 已完成后端验证 |
+| 旋转框检测 | YOLOv8s Oriented Detection、YOLO11s Oriented Detection、YOLO26s Oriented Detection | 已完成后端验证 |
+| 核心 OCR | PP-OCRv4_mobile_det、PP-OCRv4_server_det、PP-OCRv4_mobile_rec、PP-OCRv4_server_rec、ch_ppocr_mobile_v2.0_cls；PP-OCRv5_mobile_det、PP-OCRv5_server_det、PP-OCRv5_mobile_rec、PP-OCRv5_server_rec、PP-LCNet_x0_25_textline_ori、PP-LCNet_x1_0_textline_ori；PP-OCRv6_tiny_det、PP-OCRv6_tiny_rec、PP-OCRv6_small_det、PP-OCRv6_small_rec、PP-OCRv6_medium_det、PP-OCRv6_medium_rec | 已完成后端验证；模型可单独下载 |
+| 文档预处理与版面 | PP-LCNet_x1_0_doc_ori、UVDoc、PP-DocLayout_plus-L、PP-DocLayout-L、PP-DocLayout-M、PP-DocLayout-S、PP-DocBlockLayout、PicoDet_layout_1x、PicoDet_layout_1x_table、PicoDet-S_layout_3cls、PicoDet-L_layout_3cls、PicoDet-S_layout_17cls、PicoDet-L_layout_17cls、RT-DETR-H_layout_3cls、RT-DETR-H_layout_17cls | 已完成后端验证；不同导出图范围不同 |
+| 表格、公式、印章与图表 | SLANeXt_wired、SLANeXt_wireless、PP-LCNet_x1_0_table_cls、RT-DETR-L_wired_table_cell_det、RT-DETR-L_wireless_table_cell_det、PP-FormulaNet_plus-S、PP-FormulaNet_plus-M、PP-FormulaNet_plus-L、PP-FormulaNet-S、PP-FormulaNet-L、UniMERNet、PP-OCRv4_mobile_seal_det、PP-OCRv4_server_seal_det、PP-Chart2Table | 已完成后端验证；存在明确的导入器限制 |
+| 实验性文档 VLM | PaddleOCR-VL 1.6 五图 Bundle | 实验性；仅有固定任务后端证据 |
+| 异常检测与背景移除 | Anomalib PaDiM MVTec AD Bottle、BRIA RMBG 1.4、BRIA RMBG 2.0 | 已完成后端验证；精度与后端范围不同 |
+| 可提示分割 | Meta SAM ViT-B ONNX prompt segmentation bundle | 已在 ONNX Runtime CPU、OpenVINO CPU 完成后端验证 |
+| 视觉语言 | OpenAI CLIP ViT-B/32 ONNX dual encoder、Salesforce BLIP Caption Base ONNX bundle | 已在 ONNX Runtime CPU、OpenVINO CPU 完成后端验证 |
+| 本地语言模型 | Qwen2.5 0.5B Instruct Q4_K_M | 已在 LlamaSharp CPU 完成后端验证 |
+
+当前支持范围和未来计划见[模型支持指南](docs/articles/model-support.md)，不可变资产见[官方模型目录](docs/articles/model-catalog.md)，精确运行证据见[模型/后端验证矩阵](docs/model-backend-verification-matrix.md)。PaddleOCR 与 PP-Structure 模型可从 [`models-paddleocr`](https://github.com/guojin-yan/DeploySharp/releases/tag/models-paddleocr) 按资产单独下载。
 
 
 ## 🧪 示例系列

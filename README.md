@@ -17,7 +17,7 @@
 <p align="center">
   <a href="docs/index.md"><img src="https://img.shields.io/badge/docs-DocFX-2f80ed" alt="DocFX documentation" /></a>
   <a href="https://www.nuget.org/packages/JYPPX.DeploySharp.Core/"><img src="https://img.shields.io/nuget/vpre/JYPPX.DeploySharp.Core.svg?label=NuGet" alt="Latest DeploySharp NuGet version" /></a>
-  <a href="https://github.com/guojin-yan/DeploySharp/releases"><img src="https://img.shields.io/github/v/release/guojin-yan/DeploySharp?include_prereleases&amp;label=GitHub%20Release" alt="GitHub Release" /></a>
+  <a href="https://github.com/guojin-yan/DeploySharp/releases"><img src="https://img.shields.io/github/v/release/guojin-yan/DeploySharp?label=GitHub%20Release" alt="Latest stable GitHub Release" /></a>
 </p>
 
 <p align="center"><strong>English</strong> | <a href="README_cn.md">简体中文</a></p>
@@ -29,7 +29,7 @@ DeploySharp V2 provides explicit contracts for model artifacts, typed tensors, s
 ## 📖 Introduction
 
 - **Stable application contracts:** model identity, typed tensors, named inputs/outputs, sessions, diagnostics, cancellation, and disposal.
-- **Complete inference workflows:** classification, detection, segmentation, pose, OBB, OCR, anomaly, promptable segmentation, vision-language, LLM, and multimodal paths.
+- **Typed workflows and extension points:** classification, detection, segmentation, pose, OBB, OCR, anomaly, promptable segmentation, vision-language, LLM, and multimodal paths, with model-level maturity documented separately.
 - **Explicit backend ownership:** ONNX Runtime, OpenVINO, OpenCV DNN, TensorRT/CUDA, and LLamaSharp adapters without silently installing every vendor runtime.
 - **Reproducible model delivery:** ModelPack manifests, artifact size/SHA-256 checks, versioned Release downloads, offline cache reuse, and a runnable model case.
 
@@ -42,13 +42,15 @@ The V2 API is a clean redesign and does not provide V1 source, binary, configura
 - Windows x64 verification for ONNX Runtime, OpenVINO, OpenCV DNN, and named TensorRT/CUDA environments.
 - Session pools, batching, asynchronous visual inference, sliding-window detection, and repeatable benchmark tooling.
 
-## 📢 Latest Update: 2.0.0-alpha.1
+## 📢 Latest Update: 2.0.0 (unreleased)
 
-<code>2.0.0-alpha.1</code> is the first DeploySharp V2 engineering preview, focused on source-first Windows 10/11 x64 reproduction while the public API and package surface settle. The complete scope and known boundaries are in the [release notes](docs/releases/2.0.0-alpha.1.md).
+<code>2.0.0-alpha.1</code> is the first public DeploySharp V2 preview and is available from NuGet.org. Its verified release baseline is Windows 10/11 x64; the public API and package surface may still change before the stable release. The complete scope and known boundaries are in the [release notes](docs/releases/2.0.0-alpha.1.md).
+
+The source branch is preparing `2.0.0`; see its [version notes](docs/releases/2.0.0.md) for scope and limitations. This README and the guides describe that source branch. APIs added after the preview require project references until the stable packages are published; check the matching release notes for a published package's scope.
 
 ## 🚀 Get Started In 30 Seconds
 
-Install the Core layer and the backend you need at the same version. Source-first reproduction can use project references from this repository.
+Install the Core layer and the backend you need at the same version. Contributors who need to test unreleased repository changes can use project references instead.
 
 ~~~powershell
 dotnet add package JYPPX.DeploySharp.Core --version 2.0.0-alpha.1
@@ -170,9 +172,25 @@ The complete framework list and backend evidence are in [platform and backend su
 
 ## 🤖 Supported Models
 
-The catalog covers YOLO, DETR, PaddleOCR v5 Preview, PaDiM, BRIA RMBG, SAM, CLIP, BLIP, and Qwen GGUF. The core PaddleOCR v4/v5/v6 ONNX collection and converted PP-Structure models are available as individual assets in the [`models-paddleocr` release](https://github.com/guojin-yan/DeploySharp/releases/tag/models-paddleocr); model assets are not embedded in the NuGet packages.
+The table lists public model assets by task. "Backend verified" means that at least one exact model/backend combination has real inference evidence; it never means every backend is supported. Model files are downloaded separately and are not embedded in NuGet packages.
 
-**PaddleOCR-VL 1.6 has an experimental inference path** for OCR, tables, formulas, charts, text spotting, seals, regions and multi-page documents. Its five-graph ONNX Bundle is [individually downloadable](https://github.com/guojin-yan/DeploySharp/releases/tag/models-paddleocr) and has passed fresh-cache download, integrity and offline-reopen checks. The original four graphs have six-task generation evidence on ONNX Runtime CPU/CUDA and OpenVINO CPU; the derived five-graph path completed the same fixed tasks on Windows TensorRT 10.11 with device-specific Engines. Download verification did not rerun generation, and arbitrary Engine profiles and page-level quality remain unverified. The original vision/decoder graphs fail to import in OpenCV DNN 5.0. See the [PaddleOCR guide](docs/articles/visual-paddle-ocr3.md), [VL/PP-Structure guide](docs/articles/visual-paddle-structure.md), [model support guide](docs/articles/model-support.md), and [backend matrix](docs/model-backend-verification-matrix.md) for exact scope.
+| Category | Complete model names | Current level |
+| --- | --- | --- |
+| Object detection | YOLOv5n Detect, YOLOv6s Detect, YOLOv7 Detect, YOLOv8n Detect, YOLOv9s Detect, YOLOv10n Detect, YOLO11n Detect, YOLO12n Detect, YOLOv13n Detect, YOLO26n Detect, DEIMv2 Detect, PP-YOLOE Plus CRN-L, RF-DETR Detect, Paddle RT-DETR R50vd decoded vector-count ONNX, Paddle RT-DETR R50vd decoded vector-count OpenVINO IR, RT-DETR R50vd raw-query ONNX | Backend verified; exact graph support varies |
+| Image classification | YOLOv8s Classification | Backend verified |
+| Instance segmentation | YOLOv5s Segmentation, YOLOv8n Segmentation, YOLOv9c Segmentation, YOLO11s Segmentation, YOLO26s Segmentation, RF-DETR Segment | Backend verified |
+| Pose estimation | YOLOv8s Pose, YOLO11s Pose, YOLO26s Pose | Backend verified |
+| Oriented detection | YOLOv8s Oriented Detection, YOLO11s Oriented Detection, YOLO26s Oriented Detection | Backend verified |
+| Core OCR | PP-OCRv4_mobile_det, PP-OCRv4_server_det, PP-OCRv4_mobile_rec, PP-OCRv4_server_rec, ch_ppocr_mobile_v2.0_cls; PP-OCRv5_mobile_det, PP-OCRv5_server_det, PP-OCRv5_mobile_rec, PP-OCRv5_server_rec, PP-LCNet_x0_25_textline_ori, PP-LCNet_x1_0_textline_ori; PP-OCRv6_tiny_det, PP-OCRv6_tiny_rec, PP-OCRv6_small_det, PP-OCRv6_small_rec, PP-OCRv6_medium_det, PP-OCRv6_medium_rec | Backend verified; individual assets |
+| Document preprocessing and layout | PP-LCNet_x1_0_doc_ori, UVDoc, PP-DocLayout_plus-L, PP-DocLayout-L, PP-DocLayout-M, PP-DocLayout-S, PP-DocBlockLayout, PicoDet_layout_1x, PicoDet_layout_1x_table, PicoDet-S_layout_3cls, PicoDet-L_layout_3cls, PicoDet-S_layout_17cls, PicoDet-L_layout_17cls, RT-DETR-H_layout_3cls, RT-DETR-H_layout_17cls | Backend verified; exact graph support varies |
+| Tables, formulas, seals, and charts | SLANeXt_wired, SLANeXt_wireless, PP-LCNet_x1_0_table_cls, RT-DETR-L_wired_table_cell_det, RT-DETR-L_wireless_table_cell_det, PP-FormulaNet_plus-S, PP-FormulaNet_plus-M, PP-FormulaNet_plus-L, PP-FormulaNet-S, PP-FormulaNet-L, UniMERNet, PP-OCRv4_mobile_seal_det, PP-OCRv4_server_seal_det, PP-Chart2Table | Backend verified with documented importer limits |
+| Experimental document VLM | PaddleOCR-VL 1.6 five-graph Bundle | Experimental; fixed-task backend evidence only |
+| Anomaly and background removal | Anomalib PaDiM MVTec AD Bottle, BRIA RMBG 1.4, BRIA RMBG 2.0 | Backend verified; precision/backend limits apply |
+| Promptable segmentation | Meta SAM ViT-B ONNX prompt segmentation bundle | Backend verified on ONNX Runtime CPU and OpenVINO CPU |
+| Vision-language | OpenAI CLIP ViT-B/32 ONNX dual encoder, Salesforce BLIP Caption Base ONNX bundle | Backend verified on ONNX Runtime CPU and OpenVINO CPU |
+| Local language model | Qwen2.5 0.5B Instruct Q4_K_M | Backend verified on LlamaSharp CPU |
+
+Use the [model support guide](docs/articles/model-support.md) for the detailed current and planned scope, the [official catalog](docs/articles/model-catalog.md) for immutable assets, and the [model/backend matrix](docs/model-backend-verification-matrix.md) for exact runtime evidence. PaddleOCR and PP-Structure assets are individually downloadable from [`models-paddleocr`](https://github.com/guojin-yan/DeploySharp/releases/tag/models-paddleocr).
 
 
 ## 🧪 Example Series

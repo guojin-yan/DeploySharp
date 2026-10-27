@@ -1,21 +1,21 @@
 {
   "schemaVersion": "1.0",
-  "packageVersion": "2.0.0-alpha.1",
+  "packageVersion": "2.0.0",
   "publication": {
-    "status": "authorized",
-    "channel": "nuget.org",
-    "approver": "Guojin Yan <guojin_yjs@cumt.edu.cn>",
-    "approvedAt": "2026-09-05T10:50:08+08:00",
-    "evidenceReference": "user-authorization: DeploySharp 2.0.0-alpha.1 NuGet.org preview only; GitHub Release and GitHub Packages reserved for GA",
-    "requiredEvidence": "An attributable release-owner approval that identifies the package version, NuGet channel, and publication scope."
+    "status": "not-authorized",
+    "channel": "nuget.org+github-release+github-packages",
+    "approver": null,
+    "approvedAt": null,
+    "evidenceReference": null,
+    "requiredEvidence": "Manual workflow dispatch with publish=true authorizes the selected version and its channels; local preparation does not publish."
   },
   "packageSigning": {
-    "status": "not-required-alpha-preview",
+    "status": "not-required",
     "certificateSha256Fingerprint": null,
     "timestampServer": null,
-    "scope": "2.0.0-alpha.1 personal open-source non-commercial preview only",
-    "requiredFor": "GA and commercial releases",
-    "requiredEvidence": "Alpha preview packages may remain unsigned. Configure a repository-signing certificate and timestamp authority before any GA or commercial release; do not commit the certificate or private key."
+    "scope": "open-source-release",
+    "requiredFor": "Only when packageSigningPolicy is explicitly set to required",
+    "requiredEvidence": "Package signing is optional for this open-source project. If enabled, keep certificates and private keys outside the repository."
   },
   "rawPackageReproducibility": {
     "status": "established-before-signing",

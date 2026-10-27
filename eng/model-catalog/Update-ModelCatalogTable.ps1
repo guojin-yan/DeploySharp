@@ -1,4 +1,4 @@
-﻿param(
+param(
     [string] $CatalogPath = "src/DeploySharp.ModelFactory/catalog/deploysharp-official-catalog.json",
     [string] $OutputPath = "docs/articles/model-catalog.md",
     [switch] $Check
@@ -12,9 +12,11 @@ $lines.Add('')
 $lines.Add('本表由 `src/DeploySharp.ModelFactory/catalog/deploysharp-official-catalog.json` 自动生成，请勿手工编辑表格行。')
 $lines.Add('')
 $entryCount = @($catalog.entries).Count
-$lines.Add(('当前目录包含 {0} 条 `preview` 记录。Preview 条目可以下载，并会在 ModelFactory 中按大小和 SHA-256 校验；查询时必须显式设置 `includePreview: true`。' -f $entryCount))
+$lines.Add(('当前目录包含 {0} 条 `preview` 记录。ModelFactory 按目录中的大小和 SHA-256 校验下载结果；查询时必须显式设置 `includePreview: true`。Preview 状态本身不保证远端资产当前仍与目录一致。' -f $entryCount))
 $lines.Add('')
-$lines.Add('模型清单和自有 ModelPack 描述仍绑定版本化 GitHub Release；PP-OCRv5 的模型文件改为固定 revision 的 PaddlePaddle Hugging Face ONNX 资产，识别字典和许可证改为固定 revision 的 PaddleOCR raw 文件。当前工作区已准备新的官方来源 ModelPack，但尚未发布新的 GitHub Release，因此旧 `models-visual.1` 清单不能与这些新模型字节混用。其它视觉模型使用 [`models-visual.1`](https://github.com/guojin-yan/DeploySharp/releases/tag/models-visual.1)，语言模型使用 [`models-llm.1`](https://github.com/guojin-yan/DeploySharp/releases/tag/models-llm.1)。')
+$lines.Add('PP-OCRv5 的 6 条主目录记录使用 `models-visual.1` 已发布且匹配的 ModelPack、ONNX 和配套文件，并校验精确大小与 SHA-256。需要完整 v4/v5/v6 集合时，可使用 [PaddleOCR 教程](visual-ocr.md)中的独立 `PaddleOcrReleaseClient`。两条路径的 Server 工件不同，必须分别使用各自的清单。')
+$lines.Add('')
+$lines.Add('本表只描述 ModelFactory 主目录中的不可变 ModelPack：视觉模型来自 [`models-visual.1`](https://github.com/guojin-yan/DeploySharp/releases/tag/models-visual.1)，语言模型来自 [`models-llm.1`](https://github.com/guojin-yan/DeploySharp/releases/tag/models-llm.1)。完整 PP-OCR v4/v5/v6、PP-Structure、PP-Chart2Table 和 PaddleOCR-VL 资产位于独立的 [`models-paddleocr`](https://github.com/guojin-yan/DeploySharp/releases/tag/models-paddleocr) 目录，并通过 `PaddleOcrReleaseClient` 获取。同名模型在不同 Release 中可能具有不同 revision、大小和 SHA-256，不能混用清单与模型字节。')
 $lines.Add('')
 $lines.Add('| 模型 ID | 模型族 / 任务 | 工件 | 格式 | 后端 | 精度 / 量化 | 可移植 | Release 标签 | 大小 | SHA256 | 下载 | 测试输入 | 许可标识 |')
 $lines.Add('|---|---|---|---|---|---|---|---|---:|---|---|---|---|')
@@ -45,7 +47,7 @@ if ($rows -eq 0) {
 }
 
 $lines.Add('')
-$lines.Add('目录中的条目对应版本化 ModelPack 清单；模型和 sidecar 可能来自固定 revision 的官方上游。下载时会校验清单、文件大小和 SHA-256。Preview 条目需要在查询中显式设置 `includePreview: true`。')
+$lines.Add('目录中的条目对应版本化 ModelPack 清单；模型和 sidecar 可能来自固定 revision 的官方上游。下载时会校验清单、文件大小和 SHA-256。Preview 条目需要在查询中显式设置 `includePreview: true`。`compatibleBackends` 只表示工件声明的候选适配器，不代表真实推理已经通过；运行证据以[模型与后端验证矩阵](../model-backend-verification-matrix.md)为准。')
 $content = ($lines -join "`n") + "`n"
 
 if ($Check) {

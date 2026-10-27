@@ -6,6 +6,7 @@ param(
     [string]$ComparisonPackageDirectory,
     [string]$RepositoryRoot,
     [string]$Configuration = 'Release',
+    [string]$BaselinePath = (Join-Path $PSScriptRoot 'release-candidate-packages.json'),
     [string]$CandidateGatePath = (Join-Path $PSScriptRoot 'Test-ReleaseCandidatePackages.ps1'),
     [string]$NormalizerPath = (Join-Path $PSScriptRoot 'Normalize-NuGetPackage.ps1')
 )
@@ -21,17 +22,16 @@ $gate = (Resolve-Path -LiteralPath $CandidateGatePath).Path
 $normalizer = (Resolve-Path -LiteralPath $NormalizerPath).Path
 if (Test-Path -LiteralPath $comparison) { throw "Comparison package directory already exists: $comparison" }
 
-$baselinePath = Join-Path $PSScriptRoot 'release-candidate-packages.json'
-$baseline = Get-Content -LiteralPath $baselinePath -Raw | ConvertFrom-Json
+$baseline = Get-Content -LiteralPath $BaselinePath -Raw | ConvertFrom-Json
 foreach ($definition in @($baseline.packages)) {
     $project = Join-Path $repository ([string]$definition.projectPath).Replace('/', [IO.Path]::DirectorySeparatorChar)
-    & dotnet pack $project -c $Configuration --no-restore -o $comparison
+    & dotnet pack $project -c $Configuration --no-restore -o $comparison "-p:Version=$($baseline.packageVersion)"
     if ($LASTEXITCODE -ne 0) { throw "Comparison pack failed: $($definition.packageId)." }
 }
 
 & $normalizer -PackageDirectory $primary
 & $normalizer -PackageDirectory $comparison
-$gateOutput = & $gate -PackageDirectory $primary -ComparisonPackageDirectory $comparison 2>&1 | Out-String
+$gateOutput = & $gate -PackageDirectory $primary -ComparisonPackageDirectory $comparison -BaselinePath $BaselinePath 2>&1 | Out-String
 if ($LASTEXITCODE -ne 0) { throw "Release candidate reproducibility gate failed: $gateOutput" }
 $expected = @($baseline.packages).Count
 if ($gateOutput -notmatch ("raw-identical=$expected/$expected")) {
