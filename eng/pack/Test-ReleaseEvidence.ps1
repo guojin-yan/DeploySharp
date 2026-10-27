@@ -1091,7 +1091,7 @@ else {
     Assert-SameKeySet @($expectedProvenance.releasePackages | ForEach-Object { $_.id }) @($provenance.releasePackages | ForEach-Object { $_.id }) 'SBOM release package set'
     Assert-SameKeySet @($expectedProvenance.managedDependencies | ForEach-Object { "$($_.id)/$($_.version)" }) @($provenance.managedDependencies | ForEach-Object { "$($_.id)/$($_.version)" }) 'SBOM managed dependency set'
     Assert-SameKeySet @($expectedProvenance.consumerOwnedNativeRuntimes | ForEach-Object { "$($_.id)/$($_.version)" }) @($provenance.consumerOwnedNativeRuntimes | ForEach-Object { "$($_.id)/$($_.version)" }) 'SBOM native ownership set'
-    Assert-SameKeySet @($expectedProvenance.knownAdvisoryFindings) @($provenance.knownAdvisoryFindings) 'SBOM alpha preview advisory findings'
+    Assert-SameKeySet @($expectedProvenance.knownAdvisoryFindings) @($provenance.knownAdvisoryFindings) 'SBOM dependency metadata findings'
     if ((Get-CanonicalJson $expectedProvenance.officialCatalog) -ne (Get-CanonicalJson $provenance.officialCatalog)) { throw 'Official catalog identity drift.' }
     if ((Get-CanonicalJson $expectedProvenance.thirdPartyNotices) -ne (Get-CanonicalJson $provenance.thirdPartyNotices)) { throw 'Third-party notice identity drift.' }
     if ((Get-CanonicalJson $expectedProvenance.releasePolicy) -ne (Get-CanonicalJson $provenance.releasePolicy)) { throw 'Release evidence policy drift.' }

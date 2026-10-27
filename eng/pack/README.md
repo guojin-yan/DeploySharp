@@ -8,7 +8,7 @@
 
 ```powershell
 dotnet restore DeploySharp.sln --locked-mode
-dotnet build DeploySharp.sln -c Release --no-restore
+dotnet build DeploySharp.sln -c Release --no-restore -m:1
 $baseline = Get-Content eng/pack/release-candidate-packages.json -Raw | ConvertFrom-Json
 foreach ($package in $baseline.packages) {
     dotnet pack $package.projectPath -c Release --no-build --no-restore -o <temporary-package-directory>
@@ -19,5 +19,7 @@ foreach ($package in $baseline.packages) {
 将 `<temporary-package-directory>` 替换为仓库外的临时目录。随后运行 `Test-ReleaseCandidatePackages.ps1` 和 `Test-ReleaseEvidence.ps1`。`-RequireReleaseEligible` 额外检查实际发布授权和工作树状态；普通验证不需要开启发布。
 
 `Test-ReleaseEvidence.ps1 -WriteBaseline -EvidenceDirectory <temporary-evidence-directory>` 仅生成候选证据。先比较依赖、API、PDB 和 SourceLink 的实际变化，再更新已审阅基线，不要仅为让检查通过而覆盖基线。原始测试日志、开发审计与临时产物保留在公开仓库外。
+
+`Invoke-ReleaseEvidenceNegativeTests.ps1` 默认执行全部异常场景；定位单项问题时可用 `-Scenario sourcelink-drift,api-signature` 选择场景，并为每次运行指定新的仓库外工作目录。
 
 NuGet 使用 Repository Secret `NUGET_API_KEY`；GitHub 两个渠道使用工作流 `GITHUB_TOKEN` 的 `contents: write` 与 `packages: write` 权限。现有 GitHub Package 必须允许本仓库工作流写入。包签名默认可选；如维护者主动切换为 `required`，必须配置证书并完成签名后才能通过检查。第三方依赖元数据属于信息记录，不引入模型许可证审批或非商业用途限制。

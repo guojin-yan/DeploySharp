@@ -8,7 +8,22 @@ param(
     [string]$WorkingDirectory,
     [string]$GatePath = (Join-Path $PSScriptRoot 'Test-ReleaseEvidence.ps1'),
     [string]$ReleasePolicyPath = (Join-Path $PSScriptRoot 'release-evidence-policy.json'),
-    [string]$PackageCacheDirectory
+    [string]$PackageCacheDirectory,
+    [ValidateSet(
+        'license-missing',
+        'dependency-content-hash',
+        'repository-commit',
+        'sourcelink-drift',
+        'api-signature',
+        'sbom-omission',
+        'official-catalog-identity',
+        'third-party-notice-identity',
+        'release-blocker',
+        'native-ownership',
+        'known-advisory-finding',
+        'policy-commercial-scope'
+    )]
+    [string[]]$Scenario
 )
 
 $ErrorActionPreference = 'Stop'
@@ -100,91 +115,110 @@ function Assert-GateRejects {
     Write-Output "DEPLOYSHARP_RELEASE_EVIDENCE_NEGATIVE_OK scenario=$Name"
 }
 
-$licensePackages = New-PackageScenario 'license-missing'
-Update-Nuspec (Join-Path $licensePackages "JYPPX.DeploySharp.Core.$version.nupkg") {
-    param($document)
-    $node = @($document.SelectNodes("//*[local-name()='license']"))[0]
-    [void]$node.ParentNode.RemoveChild($node)
+$scenarioTests = [ordered]@{
+    'license-missing' = {
+        $licensePackages = New-PackageScenario 'license-missing'
+        Update-Nuspec (Join-Path $licensePackages "JYPPX.DeploySharp.Core.$version.nupkg") {
+            param($document)
+            $node = @($document.SelectNodes("//*[local-name()='license']"))[0]
+            [void]$node.ParentNode.RemoveChild($node)
+        }
+        Assert-GateRejects 'license-missing' $licensePackages $evidence 'DeploySharp package license drift'
+    }
+    'dependency-content-hash' = {
+        $hashEvidence = New-EvidenceScenario 'dependency-content-hash'
+        Update-EvidenceJson (Join-Path $hashEvidence 'package-provenance-sbom.json') {
+            param($document)
+            $document.managedDependencies[0].resolvedContentHash = 'sha512-negative-content-hash'
+        }
+        Assert-GateRejects 'dependency-content-hash' $packages $hashEvidence 'Dependency content hash drift'
+    }
+    'repository-commit' = {
+        $repositoryPackages = New-PackageScenario 'repository-commit'
+        Update-Nuspec (Join-Path $repositoryPackages "JYPPX.DeploySharp.ModelFactory.$version.nupkg") {
+            param($document)
+            $node = @($document.SelectNodes("//*[local-name()='repository']"))[0]
+            $node.SetAttribute('commit', ('0' * 40))
+        }
+        Assert-GateRejects 'repository-commit' $repositoryPackages $evidence 'Repository commit drift'
+    }
+    'sourcelink-drift' = {
+        $symbolsEvidence = New-EvidenceScenario 'sourcelink-drift'
+        Update-EvidenceJson (Join-Path $symbolsEvidence 'release-symbols.json') {
+            param($document)
+            $document.assemblies[0].evidence.sourceLinkStatus = 'missing'
+            $document.assemblies[0].evidence.sourceLinkCommit = $null
+        }
+        Assert-GateRejects 'sourcelink-drift' $packages $symbolsEvidence 'PDB/SourceLink baseline drift'
+    }
+    'api-signature' = {
+        $apiEvidence = New-EvidenceScenario 'api-signature'
+        Update-EvidenceJson (Join-Path $apiEvidence 'public-api.json') {
+            param($document)
+            $document.packages[0].frameworks[0].surfaceMetadataSha256 = ('0' * 64)
+        }
+        Assert-GateRejects 'api-signature' $packages $apiEvidence 'Public API baseline drift'
+    }
+    'sbom-omission' = {
+        $omissionEvidence = New-EvidenceScenario 'sbom-omission'
+        Update-EvidenceJson (Join-Path $omissionEvidence 'package-provenance-sbom.json') {
+            param($document)
+            $document.managedDependencies = @($document.managedDependencies | Select-Object -Skip 1)
+        }
+        Assert-GateRejects 'sbom-omission' $packages $omissionEvidence 'SBOM managed dependency set.*drift'
+    }
+    'official-catalog-identity' = {
+        $catalogEvidence = New-EvidenceScenario 'official-catalog-identity'
+        Update-EvidenceJson (Join-Path $catalogEvidence 'package-provenance-sbom.json') {
+            param($document)
+            $document.officialCatalog.sha256 = ('0' * 64)
+        }
+        Assert-GateRejects 'official-catalog-identity' $packages $catalogEvidence 'Official catalog identity drift'
+    }
+    'third-party-notice-identity' = {
+        $noticeEvidence = New-EvidenceScenario 'third-party-notice-identity'
+        Update-EvidenceJson (Join-Path $noticeEvidence 'package-provenance-sbom.json') {
+            param($document)
+            $document.thirdPartyNotices.sha256 = ('0' * 64)
+        }
+        Assert-GateRejects 'third-party-notice-identity' $packages $noticeEvidence 'Third-party notice identity drift'
+    }
+    'release-blocker' = {
+        $releaseBlockerEvidence = New-EvidenceScenario 'release-blocker'
+        Update-EvidenceJson (Join-Path $releaseBlockerEvidence 'package-provenance-sbom.json') {
+            param($document)
+            $document.releaseBlockers = @($document.releaseBlockers) + @('unexpected-release-blocker')
+        }
+        Assert-GateRejects 'release-blocker' $packages $releaseBlockerEvidence 'SBOM release blockers excluding worktree state'
+    }
+    'native-ownership' = {
+        $nativeEvidence = New-EvidenceScenario 'native-ownership'
+        Update-EvidenceJson (Join-Path $nativeEvidence 'package-provenance-sbom.json') {
+            param($document)
+            $document.consumerOwnedNativeRuntimes[0].ownership = 'deploysharp-package'
+        }
+        Assert-GateRejects 'native-ownership' $packages $nativeEvidence 'Native ownership drift'
+    }
+    'known-advisory-finding' = {
+        $advisoryEvidence = New-EvidenceScenario 'known-advisory-finding'
+        Update-EvidenceJson (Join-Path $advisoryEvidence 'package-provenance-sbom.json') {
+            param($document)
+            $document.knownAdvisoryFindings = @($document.knownAdvisoryFindings | Select-Object -Skip 1)
+        }
+        Assert-GateRejects 'known-advisory-finding' $packages $advisoryEvidence 'SBOM dependency metadata findings'
+    }
+    'policy-commercial-scope' = {
+        $policyScope = New-PolicyScenario 'policy-commercial-scope'
+        Update-EvidenceJson $policyScope {
+            param($document)
+            $document.profiles[0].distributionScope = 'invalid-scope'
+        }
+        Assert-GateRejects 'policy-commercial-scope' $packages $evidence 'Release policy distribution scope or metadata policy is invalid' $policyScope
+    }
 }
-Assert-GateRejects 'license-missing' $licensePackages $evidence 'DeploySharp package license drift'
 
-$hashEvidence = New-EvidenceScenario 'dependency-content-hash'
-Update-EvidenceJson (Join-Path $hashEvidence 'package-provenance-sbom.json') {
-    param($document)
-    $document.managedDependencies[0].resolvedContentHash = 'sha512-negative-content-hash'
+$selectedScenarios = if ($Scenario) { @($Scenario | Select-Object -Unique) } else { @($scenarioTests.Keys) }
+foreach ($scenarioName in $selectedScenarios) {
+    & ($scenarioTests[$scenarioName])
 }
-Assert-GateRejects 'dependency-content-hash' $packages $hashEvidence 'Dependency content hash drift'
-
-$repositoryPackages = New-PackageScenario 'repository-commit'
-Update-Nuspec (Join-Path $repositoryPackages "JYPPX.DeploySharp.ModelFactory.$version.nupkg") {
-    param($document)
-    $node = @($document.SelectNodes("//*[local-name()='repository']"))[0]
-    $node.SetAttribute('commit', ('0' * 40))
-}
-Assert-GateRejects 'repository-commit' $repositoryPackages $evidence 'Repository commit drift'
-
-$symbolsEvidence = New-EvidenceScenario 'sourcelink-drift'
-Update-EvidenceJson (Join-Path $symbolsEvidence 'release-symbols.json') {
-    param($document)
-    $document.assemblies[0].evidence.sourceLinkStatus = 'missing'
-    $document.assemblies[0].evidence.sourceLinkCommit = $null
-}
-Assert-GateRejects 'sourcelink-drift' $packages $symbolsEvidence 'PDB/SourceLink baseline drift'
-
-$apiEvidence = New-EvidenceScenario 'api-signature'
-Update-EvidenceJson (Join-Path $apiEvidence 'public-api.json') {
-    param($document)
-    $document.packages[0].frameworks[0].surfaceMetadataSha256 = ('0' * 64)
-}
-Assert-GateRejects 'api-signature' $packages $apiEvidence 'Public API baseline drift'
-
-$omissionEvidence = New-EvidenceScenario 'sbom-omission'
-Update-EvidenceJson (Join-Path $omissionEvidence 'package-provenance-sbom.json') {
-    param($document)
-    $document.managedDependencies = @($document.managedDependencies | Select-Object -Skip 1)
-}
-Assert-GateRejects 'sbom-omission' $packages $omissionEvidence 'SBOM managed dependency set.*drift'
-
-$catalogEvidence = New-EvidenceScenario 'official-catalog-identity'
-Update-EvidenceJson (Join-Path $catalogEvidence 'package-provenance-sbom.json') {
-    param($document)
-    $document.officialCatalog.sha256 = ('0' * 64)
-}
-Assert-GateRejects 'official-catalog-identity' $packages $catalogEvidence 'Official catalog identity drift'
-
-$noticeEvidence = New-EvidenceScenario 'third-party-notice-identity'
-Update-EvidenceJson (Join-Path $noticeEvidence 'package-provenance-sbom.json') {
-    param($document)
-    $document.thirdPartyNotices.sha256 = ('0' * 64)
-}
-Assert-GateRejects 'third-party-notice-identity' $packages $noticeEvidence 'Third-party notice identity drift'
-
-$releaseBlockerEvidence = New-EvidenceScenario 'release-blocker'
-Update-EvidenceJson (Join-Path $releaseBlockerEvidence 'package-provenance-sbom.json') {
-    param($document)
-    $document.releaseBlockers = @($document.releaseBlockers) + @('unexpected-release-blocker')
-}
-Assert-GateRejects 'release-blocker' $packages $releaseBlockerEvidence 'SBOM release blockers excluding worktree state'
-
-$nativeEvidence = New-EvidenceScenario 'native-ownership'
-Update-EvidenceJson (Join-Path $nativeEvidence 'package-provenance-sbom.json') {
-    param($document)
-    $document.consumerOwnedNativeRuntimes[0].ownership = 'deploysharp-package'
-}
-Assert-GateRejects 'native-ownership' $packages $nativeEvidence 'Native ownership drift'
-
-$advisoryEvidence = New-EvidenceScenario 'known-advisory-finding'
-Update-EvidenceJson (Join-Path $advisoryEvidence 'package-provenance-sbom.json') {
-    param($document)
-    $document.knownAdvisoryFindings = @($document.knownAdvisoryFindings | Select-Object -Skip 1)
-}
-Assert-GateRejects 'known-advisory-finding' $packages $advisoryEvidence 'SBOM alpha preview advisory findings'
-
-$policyScope = New-PolicyScenario 'policy-commercial-scope'
-Update-EvidenceJson $policyScope {
-    param($document)
-    $document.profiles[0].distributionScope = 'invalid-scope'
-}
-Assert-GateRejects 'policy-commercial-scope' $packages $evidence 'Release policy distribution scope or metadata policy is invalid' $policyScope
-
-Write-Output 'DEPLOYSHARP_RELEASE_EVIDENCE_NEGATIVE_SUITE_OK scenarios=12'
+Write-Output "DEPLOYSHARP_RELEASE_EVIDENCE_NEGATIVE_SUITE_OK scenarios=$($selectedScenarios.Count)"
