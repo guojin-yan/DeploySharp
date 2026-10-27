@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using JYPPX.DeploySharp.Results;
@@ -153,6 +154,13 @@ namespace DeploySharp.Visual.Tests
             string json = PaddleDocumentPipelineExport.ToJson(pages);
             string markdown = PaddleDocumentPipelineExport.ToMarkdown(pages);
             StringAssert.Contains(json, "pageIndex");
+            using JsonDocument book = JsonDocument.Parse(json);
+            Assert.AreEqual(pages.Count, book.RootElement.GetArrayLength());
+            for (int index = 0; index < pages.Count; index++)
+            {
+                using JsonDocument singlePage = JsonDocument.Parse(PaddleDocumentPipelineExport.ToJson(pages[index]));
+                Assert.IsTrue(JsonElement.DeepEquals(singlePage.RootElement, book.RootElement[index]));
+            }
             StringAssert.Contains(markdown, "PP-Structure page 1");
         }
 

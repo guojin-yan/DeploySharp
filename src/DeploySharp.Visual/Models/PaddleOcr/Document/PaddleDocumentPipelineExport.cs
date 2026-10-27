@@ -13,7 +13,12 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
         public static string ToJson(PaddleDocumentPipelineResult result, bool indented = true)
         {
             if (result == null) throw new ArgumentNullException(nameof(result));
-            var document = new Dictionary<string, object?>
+            return JsonSerializer.Serialize(ToPageObject(result), new JsonSerializerOptions { WriteIndented = indented });
+        }
+
+        private static object ToPageObject(PaddleDocumentPipelineResult result)
+        {
+            return new Dictionary<string, object?>
             {
                 ["page"] = new Dictionary<string, object?>
                 {
@@ -24,7 +29,6 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                 ["timings"] = result.Timings.Select(value => new { module = value.Module.ToString(), elapsedMs = value.Elapsed.TotalMilliseconds }).ToArray(),
                 ["results"] = result.Results.Select(ToResultObject).ToArray()
             };
-            return JsonSerializer.Serialize(document, new JsonSerializerOptions { WriteIndented = indented });
         }
 
         /// <summary>Serializes multiple pages while preserving input order. / 按输入顺序序列化多页结果。</summary>
@@ -33,7 +37,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             if (results == null) throw new ArgumentNullException(nameof(results));
             var values = results.ToArray();
             if (values.Any(value => value == null)) throw new ArgumentException("Pipeline results cannot contain null values.", nameof(results));
-            return JsonSerializer.Serialize(values.Select(value => JsonSerializer.Deserialize<object>(ToJson(value, false))).ToArray(), new JsonSerializerOptions { WriteIndented = indented });
+            return JsonSerializer.Serialize(values.Select(ToPageObject).ToArray(), new JsonSerializerOptions { WriteIndented = indented });
         }
 
         /// <summary>Creates a compact human-readable page summary with stage timings and task payloads. / 创建包含阶段耗时和任务载荷的紧凑可读页面摘要。</summary>
