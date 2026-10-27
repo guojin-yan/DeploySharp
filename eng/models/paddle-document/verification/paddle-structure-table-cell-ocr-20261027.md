@@ -47,3 +47,19 @@ dotnet run --project samples/02-visual/paddle-structure-table/PaddleStructureTab
 OpenVINO returned `wired_table`, 13 cells, 24 structure tokens, the same `12/13` structure-box warning and successful 13/13 alignment. The 13 ordered OCR strings and detection indices match ORT exactly; maximum absolute confidence difference is `9.662e-5`. The final HTML is byte-identical, SHA-256 `d1b13e0ea842eb4ba3a9e077b260304cffd701dfdabc86b7d1cd08957409708c`. OpenVINO `table-cell-ocr.json` SHA-256 is `2b1631be67dccacc6cdcdd338226157cde69d4f88d02426de05527e3ab96a59a`. The JSON differs because it records the backend and raw confidence values.
 
 These are two backend runs on one official wired image, not annotated table accuracy, CER/WER, a wireless-table result, or a 5+50 performance measurement. The alignment remains conservative: rowspan, ambiguous rows, count/source mismatch or invalid boxes do not trigger OCR filling. Varied table layouts and Release-download end-to-end execution remain unverified for this four-stage task; component evidence must not be promoted to those claims.
+
+## Release catalog and offline cache path
+
+The same wired image was run through the sample's Release-client path with `--offline`, using an isolated cache at `E:\DeploySharpEvidence\paddle-structure-table-release-fresh-20261027\cache`. The catalog was fetched by the client from the `models-paddleocr` Release; `SHA256SUMS` was fetched with `gh release download`. The five model/dictionary files were seeded as NTFS hard links to the already SHA-verified local originals, not downloaded by this run. The seven remote Release asset digests (catalog, checksum list, classifier, cell detector, SLANeXt, recognizer and dictionary) were checked with the GitHub Release API and matched their local SHA-256 values. This is an **offline Release materialization test**, not a fresh end-to-end asset download.
+
+```powershell
+dotnet run --project samples/02-visual/paddle-structure-table/PaddleStructureTable.csproj -c Release -f net8.0 --no-build --no-restore -- `
+  --image E:\Model\PaddleDocument\validation\table_recognition.jpg `
+  --output E:\DeploySharpEvidence\paddle-structure-table-release-fresh-20261027\offline-result `
+  --cache E:\DeploySharpEvidence\paddle-structure-table-release-fresh-20261027\cache `
+  --offline --backend ort
+```
+
+The command exited `0`: 13 detected cells, 13 structure slots, 13/13 alignment and `table-cell-ocr.json` status `completed`. All 13 ordered texts and detection indices match the earlier local-model ORT run. The HTML SHA-256 is again `d1b13e0ea842eb4ba3a9e077b260304cffd701dfdabc86b7d1cd08957409708c`; the OCR JSON SHA-256 is again `64b31aecd9d7f9ca13b4dd4833f7c1ab7643dce725b68da079eabb7c3460053e`.
+
+An earlier online run in that previously empty cache downloaded the catalog and 6,772,807-byte classifier, then was cancelled while the 129,311,709-byte cell detector was still incomplete. A separate 1,024-byte range GET returned HTTP 206, and the remote asset's SHA-256 metadata matched the local original; neither observation proves that the complete large-asset transfer works on this connection. Full fresh-cache download of all four stages remains open. The first offline attempt also correctly failed at the recognizer because `SHA256SUMS` had not yet been cached; after fetching that real Release metadata, the identical command completed. No model execution or production code change was needed for this cache-completeness issue.

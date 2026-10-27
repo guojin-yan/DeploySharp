@@ -13,7 +13,7 @@ dotnet run --project samples/02-visual/paddle-structure-table/PaddleStructureTab
   --table-type auto --backend ort
 ```
 
-首次运行需要网络连接和 Windows x64 的 OpenCV/ONNX Runtime/OpenVINO native 运行库。模型可预先下载到缓存，之后给同一命令加 `--offline`。使用 OpenVINO 时将 `--backend ort` 改为 `--backend openvino`；SLANeXt 会自动选用 Release 中独立校验的 OpenVINO 兼容图，原始 ONNX 图不会被替换。
+首次运行需要网络连接和 Windows x64 的 OpenCV/ONNX Runtime/OpenVINO native 运行库。模型可预先下载到缓存，之后给同一命令加 `--offline`；识别字典还需要缓存 Release 的 `SHA256SUMS`。有线图的[离线 Release 缓存实测](../../../eng/models/paddle-document/verification/paddle-structure-table-cell-ocr-20261027.md)使用与远端摘要一致的模型硬链接，不等于从空缓存完成了大文件在线下载。使用 OpenVINO 时将 `--backend ort` 改为 `--backend openvino`；SLANeXt 会自动选用 Release 中独立校验的 OpenVINO 兼容图，原始 ONNX 图不会被替换。
 
 已有本地 ONNX 文件时可用 `--model-dir <目录>` 代替 Release 下载；该目录需有 `pp-lcnet-x1-0-table-cls.onnx`、所选类型的 `rt-detr-l-*-cell-det.onnx` 和 `slanext-*.onnx`。OpenVINO 需要同目录中的 `slanext-*-openvino-compat.onnx`。若对齐成功并启用文字填充，还需 `PP-OCRv5_mobile_rec.onnx` 和 `ppocrv5_dict.txt`；它们可放在同一目录，或分别通过 `--recognizer-model` 和 `--recognizer-dictionary` 指定。本地模型会记录实际 SHA，字典会校验预期 SHA；只有默认下载模式自动按 Release catalog 校验模型。`--model-dir` 不与 `--cache` 或 `--offline` 同用。
 
