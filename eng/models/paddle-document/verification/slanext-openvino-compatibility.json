@@ -8,7 +8,7 @@
     "releaseTag": "models-paddleocr",
     "originalAssets": [ "slanext-wired.onnx", "slanext-wireless.onnx" ],
     "derivedAssets": [ "slanext-wired-openvino-compat.onnx", "slanext-wireless-openvino-compat.onnx" ],
-    "status": "planned-separate-assets",
+    "status": "published-separate-assets",
     "rule": "Never replace or silently relabel the original Release ONNX. Consumers select the compatibility asset explicitly for OpenVINO."
   },
   "artifacts": [
@@ -24,7 +24,7 @@
       "releaseAssetName": "slanext-wired-openvino-compat.onnx",
       "transformation": "alpha-rename Loop-body formal parameters only; source graph and weights are unchanged",
       "openvinoStatus": "verified-by-ORT-and-decoder-parity",
-      "releaseStatus": "planned-separate-asset"
+      "releaseStatus": "published-separate-asset"
     },
     {
       "modelId": "paddle-table/slanext-wireless",
@@ -38,7 +38,7 @@
       "releaseAssetName": "slanext-wireless-openvino-compat.onnx",
       "transformation": "alpha-rename Loop-body formal parameters only; source graph and weights are unchanged",
       "openvinoStatus": "verified-by-ORT-and-decoder-parity",
-      "releaseStatus": "planned-separate-asset"
+      "releaseStatus": "published-separate-asset"
     }
   ]
 }

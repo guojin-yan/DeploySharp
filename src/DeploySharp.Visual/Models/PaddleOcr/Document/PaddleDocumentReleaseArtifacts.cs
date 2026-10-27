@@ -72,6 +72,8 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                 A("rt-detr-h-layout-17cls", "rt-detr-h-layout-17cls.onnx", PaddleDocumentModule.LayoutDetection, 492034253, "556ba39ce91419069135e8446e155edda3d5cd475632d6ea5cec0f4dc072b41a"),
                 A("slanext-wired", "slanext-wired.onnx", PaddleDocumentModule.TableStructureRecognition, 367743373, "0a6e063b56e35a434eb6669eb2342113c6bd76a6ce5acaa0331f370c9e00732f"),
                 A("slanext-wireless", "slanext-wireless.onnx", PaddleDocumentModule.TableStructureRecognition, 367743373, "5c79ee87cce6712f8f640394decce72157bd1df13c9bccf86d071bd07a6e9f97"),
+                A("slanext-wired-openvino-compat", "slanext-wired-openvino-compat.onnx", PaddleDocumentModule.TableStructureRecognition, 367743498, "2a72212d681400ea514edbf007ab669c32f69f5813c6cac5c3b557bff0581ef0"),
+                A("slanext-wireless-openvino-compat", "slanext-wireless-openvino-compat.onnx", PaddleDocumentModule.TableStructureRecognition, 367743498, "9769807f5505dd09a88dbeea9b2daa6f085dc5ad0df343b93026d3793a9353c6"),
                 A("pp-lcnet-x1-0-table-cls", "pp-lcnet-x1-0-table-cls.onnx", PaddleDocumentModule.TableClassification, 6772807, "04a862a81e3c466d6ce7ef8398ea2464e46dbbdbfaa53278ad2b42427be8eb45"),
                 A("rt-detr-l-wired-cell-det", "rt-detr-l-wired-cell-det.onnx", PaddleDocumentModule.TableCellDetection, 129311709, "c390d3c0252e7eeeca9bdaf67f77c9e37f2e25343e53edf2d7c0462f286c74d6"),
                 A("rt-detr-l-wireless-cell-det", "rt-detr-l-wireless-cell-det.onnx", PaddleDocumentModule.TableCellDetection, 129311709, "e141c8aa947ef0aea165c45d51caf6d2cccbca5f381ed9c8854f402570b296bf"),

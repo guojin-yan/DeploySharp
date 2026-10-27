@@ -915,7 +915,21 @@ dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Test
 | wired | `2a72212d681400ea514edbf007ab669c32f69f5813c6cac5c3b557bff0581ef0` |
 | wireless | `9769807f5505dd09a88dbeea9b2daa6f085dc5ad0df343b93026d3793a9353c6` |
 
-两个工件均通过 OpenVINO 对原始 ORT 的输出比较，浮点逐值容差 0.001，并执行表格 Decoder。兼容工件有独立兼容 ID、文件名和 SHA，不能沿用原始 Release 的 SHA；创建 `ModelArtifact` 时使用实际派生路径和哈希。发布策略是为 OpenVINO 单独上传 `slanext-wired-openvino-compat.onnx` 和 `slanext-wireless-openvino-compat.onnx`，保留原始 Release 图并由用户显式选择兼容资产；在这些资产上传前，清单状态为 `planned-separate-assets`，用户需本地生成。该输入不是表格标注集，HTML/单元格准确率仍需真实表格验证。
+两个工件均通过 OpenVINO 对原始 ORT 的输出比较，浮点逐值容差 0.001，并执行表格 Decoder。兼容工件有独立兼容 ID、文件名和 SHA，不能沿用原始 Release 的 SHA。现在可用 `PaddleOcrReleaseClient.GetModelAsync("paddle-table/slanext-wired-openvino-compat")` 或 `...wireless-openvino-compat` 按需下载并校验；原始 Release 图保留不变。表格 Profile 仍使用对应的官方模型描述符，绑定派生图时须显式提供下载结果的 SHA：
+
+```csharp
+using JYPPX.DeploySharp.ModelFactory;
+using JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document;
+
+string cacheRoot = @"E:\DeploySharpCache";
+using var client = new PaddleOcrReleaseClient(new PaddleOcrReleaseClientOptions(cacheRoot));
+var compatible = await client.GetModelAsync("paddle-table/slanext-wired-openvino-compat");
+var profile = PaddleDocumentProfiles.CreateTableStructure(
+    PaddleDocumentModelCatalog.Get("paddle-table/slanext-wired"));
+var artifact = profile.CreateArtifactWithSha256(compatible.ModelPath, compatible.Model.Sha256);
+```
+
+本地生成仍可用于离线复现。上述输入不是表格标注集，HTML/单元格准确率仍需真实表格验证。
 
 ### 弧形文本的能力边界
 

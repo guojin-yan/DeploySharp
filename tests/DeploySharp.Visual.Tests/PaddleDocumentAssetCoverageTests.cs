@@ -62,6 +62,29 @@ namespace DeploySharp.Visual.Tests
             }
         }
 
+        [TestMethod]
+        public void OpenVinoSlanextCompatibilityAssetsDoNotReplaceOfficialModels()
+        {
+            foreach (string variant in new[] { "wired", "wireless" })
+            {
+                string sourceId = "paddle-table/slanext-" + variant;
+                string compatibilityId = sourceId + "-openvino-compat";
+                PaddleDocumentReleaseArtifact source = PaddleDocumentModelCatalog.GetReleaseArtifact(sourceId);
+                PaddleDocumentReleaseArtifact compatibility = PaddleDocumentModelCatalog.GetReleaseArtifact(compatibilityId);
+
+                Assert.AreNotEqual(source.AssetName, compatibility.AssetName);
+                Assert.AreNotEqual(source.Sha256, compatibility.Sha256);
+                Assert.AreEqual(variant == "wired"
+                    ? "2a72212d681400ea514edbf007ab669c32f69f5813c6cac5c3b557bff0581ef0"
+                    : "9769807f5505dd09a88dbeea9b2daa6f085dc5ad0df343b93026d3793a9353c6", compatibility.Sha256);
+                Assert.AreEqual("models-paddleocr", compatibility.ReleaseTag);
+                Assert.AreEqual(367743498, compatibility.Size);
+                Assert.AreEqual(PaddleDocumentModule.TableStructureRecognition, compatibility.Module);
+                Assert.IsFalse(PaddleDocumentModelCatalog.Official.Any(model => model.ModelId == compatibilityId),
+                    "Derived compatibility graphs must not inflate the official model catalog.");
+            }
+        }
+
         private static string ResolveCatalogId(string releaseId)
         {
             if (string.Equals(releaseId, "ppocrv4-mobile-seal-det", StringComparison.OrdinalIgnoreCase)) return "paddle-seal/ppocrv4-mobile";
