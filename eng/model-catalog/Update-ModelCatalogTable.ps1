@@ -14,7 +14,7 @@ $lines.Add('')
 $entryCount = @($catalog.entries).Count
 $lines.Add(('当前目录包含 {0} 条 `preview` 记录。Preview 条目可以下载，并会在 ModelFactory 中按大小和 SHA-256 校验；查询时必须显式设置 `includePreview: true`。' -f $entryCount))
 $lines.Add('')
-$lines.Add('模型资产按模型族放在长期维护的 GitHub Release 集合中：视觉模型使用 [`models-visual.1`](https://github.com/guojin-yan/DeploySharp/releases/tag/models-visual.1)，语言模型使用 [`models-llm.1`](https://github.com/guojin-yan/DeploySharp/releases/tag/models-llm.1)。后续兼容模型直接追加到对应 Release，并在 Release notes 中按上传日期记录；只有发生不兼容的资产合同变化时才提升集合版本号。')
+$lines.Add('模型清单和自有 ModelPack 描述仍绑定版本化 GitHub Release；PP-OCRv5 的模型文件改为固定 revision 的 PaddlePaddle Hugging Face ONNX 资产，识别字典和许可证改为固定 revision 的 PaddleOCR raw 文件。当前工作区已准备新的官方来源 ModelPack，但尚未发布新的 GitHub Release，因此旧 `models-visual.1` 清单不能与这些新模型字节混用。其它视觉模型使用 [`models-visual.1`](https://github.com/guojin-yan/DeploySharp/releases/tag/models-visual.1)，语言模型使用 [`models-llm.1`](https://github.com/guojin-yan/DeploySharp/releases/tag/models-llm.1)。')
 $lines.Add('')
 $lines.Add('| 模型 ID | 模型族 / 任务 | 工件 | 格式 | 后端 | 精度 / 量化 | 可移植 | Release 标签 | 大小 | SHA256 | 下载 | 测试输入 | 许可标识 |')
 $lines.Add('|---|---|---|---|---|---|---|---|---:|---|---|---|---|')
@@ -45,7 +45,7 @@ if ($rows -eq 0) {
 }
 
 $lines.Add('')
-$lines.Add('目录中的条目对应已经发布到 GitHub Release 的 ModelFactory 资产；下载时会校验清单、文件大小和 SHA-256。Preview 条目需要在查询中显式设置 `includePreview: true`。')
+$lines.Add('目录中的条目对应版本化 ModelPack 清单；模型和 sidecar 可能来自固定 revision 的官方上游。下载时会校验清单、文件大小和 SHA-256。Preview 条目需要在查询中显式设置 `includePreview: true`。')
 $content = ($lines -join "`n") + "`n"
 
 if ($Check) {

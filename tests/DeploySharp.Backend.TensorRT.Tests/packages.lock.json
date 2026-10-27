@@ -43,8 +43,8 @@
       },
       "Google.Protobuf": {
         "type": "Transitive",
-        "resolved": "3.29.3",
-        "contentHash": "t7nZFFUFwigCwZ+nIXHDLweXvwIpsOXi+P7J7smPT/QjI3EKxnCzTQOhBqyEh6XEzc/pNH+bCFOOSjatrPt6Tw=="
+        "resolved": "3.30.2",
+        "contentHash": "Y2aOVLIt75yeeEWigg9V9YnjsEm53sADtLGq0gLhwaXpk3iu8tYSoauolyhenagA2sWno2TQ2WujI0HQd6s1Vw=="
       },
       "Microsoft.ApplicationInsights": {
         "type": "Transitive",
@@ -146,6 +146,34 @@
           "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )"
         }
       },
+      "JYPPX.DeploySharp.Visual": {
+        "type": "Project",
+        "dependencies": {
+          "JYPPX.DeploySharp.Core": "[2.0.0-alpha.1, )",
+          "Microsoft.ML.Tokenizers": "[2.0.0, )"
+        }
+      },
+      "JYPPX.DeploySharp.Visual.OpenCV": {
+        "type": "Project",
+        "dependencies": {
+          "JYPPX.DeploySharp.Visual": "[2.0.0-alpha.1, )",
+          "JYPPX.OpenCV.CSharp.API": "[5.0.0, )"
+        }
+      },
+      "JYPPX.DeploySharp.Visual.TensorRT": {
+        "type": "Project",
+        "dependencies": {
+          "JYPPX.DeploySharp.Backend.TensorRT": "[2.0.0-alpha.1, )",
+          "JYPPX.DeploySharp.Visual": "[2.0.0-alpha.1, )",
+          "JYPPX.DeploySharp.Visual.OpenCV": "[2.0.0-alpha.1, )"
+        }
+      },
+      "JYPPX.OpenCV.CSharp.API": {
+        "type": "CentralTransitive",
+        "requested": "[5.0.0, )",
+        "resolved": "5.0.0",
+        "contentHash": "j1QxEejIrat0Wt7bVlTEyWld4LlM6lxkERDPMX23opdTgXDH5LMOYSwcjKR4jq4/+NCH7cTf7SUrabNe0UZQVQ=="
+      },
       "JYPPX.TensorRT.CSharp.API": {
         "type": "CentralTransitive",
         "requested": "[4.0.0, )",
@@ -159,6 +187,15 @@
         "contentHash": "4ecKjwASHhAZXczK/xm5KU6MdvoIGfMd23UAwDbM9vfcfgqZgNqvFWPZPT0Elc1wu5vXWs2Kij1ZBmHCcv1UlA==",
         "dependencies": {
           "System.Numerics.Tensors": "9.0.0"
+        }
+      },
+      "Microsoft.ML.Tokenizers": {
+        "type": "CentralTransitive",
+        "requested": "[2.0.0, )",
+        "resolved": "2.0.0",
+        "contentHash": "+b8lT4cLLO/sBR2hjvE/qG6qrZG15h7/PBvnIrzTh4xDaAxdHUY6449rC+1pHzQUsBiCHZVbj+VMn+xS0sL7TA==",
+        "dependencies": {
+          "Google.Protobuf": "3.30.2"
         }
       },
       "OnnxSharp": {

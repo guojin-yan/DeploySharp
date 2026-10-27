@@ -21,8 +21,6 @@ docs/api/*.yml
 docs/api/.manifest
 docs/obj/
 TestResults/
-tests/clean-consumer/**/.packages/
-tests/clean-consumer/**/.packages-*/
 *.user
 *.suo
 *.nupkg

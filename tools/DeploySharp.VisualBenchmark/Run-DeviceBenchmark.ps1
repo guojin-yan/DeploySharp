@@ -78,10 +78,17 @@ function Invoke-NvidiaSmi {
 }
 
 function Resolve-TensorRtExecutable {
+    # An explicit SDK root must win over unrelated versions on PATH.
+    if (-not [string]::IsNullOrWhiteSpace($env:JYPPX_TENSORRT_ROOT)) {
+        $explicit = Get-ChildItem -LiteralPath $env:JYPPX_TENSORRT_ROOT -Recurse -File -Filter 'trtexec.exe' -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($null -ne $explicit) { return $explicit.FullName }
+        Write-Warning "trtexec.exe was not found under JYPPX_TENSORRT_ROOT=$env:JYPPX_TENSORRT_ROOT; automatic engine building is unavailable."
+        return $null
+    }
     $command = Get-Command trtexec.exe -ErrorAction SilentlyContinue
     if ($null -ne $command) { return $command.Source }
 
-    $roots = @($env:JYPPX_TENSORRT_ROOT, 'D:\TensorRt', 'C:\TensorRT', 'C:\Program Files\NVIDIA GPU Computing Toolkit\TensorRT') |
+    $roots = @($env:JYPPX_TENSORRT_ROOT, 'D:\TensorRt', 'C:\TensorRT', 'C:\Program Files\NVIDIA GPU Computing Toolkit\TensorRT', 'D:\Program Files') |
         Where-Object { -not [string]::IsNullOrWhiteSpace($_) -and (Test-Path -LiteralPath $_) }
     foreach ($root in $roots) {
         $candidate = Get-ChildItem -LiteralPath $root -Recurse -File -Filter 'trtexec.exe' -ErrorAction SilentlyContinue | Select-Object -First 1

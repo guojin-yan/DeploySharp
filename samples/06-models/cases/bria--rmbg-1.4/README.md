@@ -14,7 +14,7 @@ Run:
 dotnet run --project samples/06-models/release-inference/ModelReleaseInference.csproj -c Release -- --model-id bria/rmbg-1.4 --image <image>
 ```
 
-See samples/06-models/catalog-workflow/ModelFactoryCatalogInspection.csproj for the catalog-only verification path and tests/clean-consumer for task-specific native/runtime ownership gates.
+See `samples/06-models/catalog-workflow/ModelFactoryCatalogInspection.csproj` for catalog verification; runtime support is tracked in the backend verification record below.
 
 ## Verification record
 
