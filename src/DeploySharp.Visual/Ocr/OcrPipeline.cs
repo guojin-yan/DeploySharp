@@ -121,7 +121,7 @@ namespace JYPPX.DeploySharp.Visual
     public sealed partial class OcrPipeline : IDisposable
     {
         private readonly object _lifetimeGate = new object();
-        private readonly VisualPipeline _detector;
+        private readonly VisualPipeline? _detector;
         private readonly VisualPipeline _recognizer;
         private OcrOrientationPipeline? _regionOrientation;
         private TextCropProfile? _orientationCropProfile;
@@ -143,7 +143,7 @@ namespace JYPPX.DeploySharp.Visual
         {
             if (detectionBackendRegistry == null) throw new ArgumentNullException(nameof(detectionBackendRegistry));
             if (recognitionBackendRegistry == null) throw new ArgumentNullException(nameof(recognitionBackendRegistry));
-            DetectionSelection = detectionSelection ?? throw new ArgumentNullException(nameof(detectionSelection));
+            _detectionSelection = detectionSelection ?? throw new ArgumentNullException(nameof(detectionSelection));
             RecognitionSelection = recognitionSelection ?? throw new ArgumentNullException(nameof(recognitionSelection));
             if (detectionRequest == null) throw new ArgumentNullException(nameof(detectionRequest));
             if (recognitionRequest == null) throw new ArgumentNullException(nameof(recognitionRequest));
@@ -166,6 +166,33 @@ namespace JYPPX.DeploySharp.Visual
                 throw;
             }
         }
+
+        private readonly VisualProfileSelection? _detectionSelection;
+
+        private OcrPipeline(BackendRegistry backendRegistry, VisualProfileSelection recognitionSelection, BackendRequest recognitionRequest,
+            TextCropProfile cropProfile, OcrPipelineOptions? options, SessionOptions? recognitionSessionOptions)
+        {
+            if (backendRegistry == null) throw new ArgumentNullException(nameof(backendRegistry));
+            RecognitionSelection = recognitionSelection ?? throw new ArgumentNullException(nameof(recognitionSelection));
+            if (recognitionRequest == null) throw new ArgumentNullException(nameof(recognitionRequest));
+            _cropProfile = cropProfile ?? throw new ArgumentNullException(nameof(cropProfile));
+            _options = options ?? new OcrPipelineOptions();
+            ValidateRecognitionProfile(recognitionSelection.Profile, cropProfile, _options);
+            _operationGate = new SemaphoreSlim(_options.MaximumConcurrency, _options.MaximumConcurrency);
+            try { _recognizer = new VisualPipeline(backendRegistry, recognitionSelection, recognitionRequest, recognitionSessionOptions); }
+            catch
+            {
+                _operationGate.Dispose();
+                _disposeSource.Dispose();
+                throw;
+            }
+        }
+
+        /// <summary>Creates a recognizer-only pipeline without allocating a detector session. / 创建不分配检测器会话的仅识别流水线。</summary>
+        public static OcrPipeline CreateRecognitionOnly(BackendRegistry backendRegistry, VisualProfileSelection recognitionSelection,
+            BackendRequest recognitionRequest, TextCropProfile cropProfile, OcrPipelineOptions? options = null,
+            SessionOptions? recognitionSessionOptions = null)
+            => new OcrPipeline(backendRegistry, recognitionSelection, recognitionRequest, cropProfile, options, recognitionSessionOptions);
 
         /// <summary>Creates and owns detector, per-text-region orientation classifier, and recognizer sessions. / 创建并拥有检测器、逐文本区域方向分类器与识别器会话。</summary>
         public OcrPipeline(BackendRegistry backendRegistry, VisualProfileSelection detectionSelection, BackendRequest detectionRequest, VisualProfileSelection orientationSelection, BackendRequest orientationRequest, TextCropProfile orientationCropProfile, VisualProfileSelection recognitionSelection, BackendRequest recognitionRequest, TextCropProfile recognitionCropProfile, OcrPipelineOptions? options = null, SessionOptions? detectionSessionOptions = null, SessionOptions? orientationSessionOptions = null, SessionOptions? recognitionSessionOptions = null, OcrOrientationRejectionPolicy orientationRejectionPolicy = OcrOrientationRejectionPolicy.Fail)
@@ -191,7 +218,8 @@ namespace JYPPX.DeploySharp.Visual
         }
 
         /// <summary>Gets detector selection. / 获取检测器选择。</summary>
-        public VisualProfileSelection DetectionSelection { get; }
+        public VisualProfileSelection DetectionSelection => _detectionSelection
+            ?? throw new InvalidOperationException("A recognizer-only pipeline has no detector selection.");
         /// <summary>Gets recognizer selection. / 获取识别器选择。</summary>
         public VisualProfileSelection RecognitionSelection { get; }
         /// <summary>Gets crop profile. / 获取裁剪 Profile。</summary>
@@ -468,7 +496,7 @@ namespace JYPPX.DeploySharp.Visual
                 for (; acquired < _options.MaximumConcurrency; acquired++) _operationGate.Wait();
                 _regionOrientation?.Dispose();
                 _recognizer.Dispose();
-                _detector.Dispose();
+                _detector?.Dispose();
             }
             finally
             {
@@ -481,6 +509,7 @@ namespace JYPPX.DeploySharp.Visual
         private async Task<OcrResult> ExecuteAsync(IOcrImageInput input, OcrOrientationResult? orientation, OcrExecutionOptions execution, CancellationToken callerToken)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
+            if (_detector == null) throw new InvalidOperationException("This pipeline was created for recognition only. Call RecognizeOnlyAsync.");
             CancellationToken disposeToken = CaptureDisposeToken();
             bool entered = false;
             OcrPipelineStage stage = OcrPipelineStage.Input;
@@ -978,8 +1007,13 @@ namespace JYPPX.DeploySharp.Visual
         private static void ValidateProfiles(VisualModelProfile detection, VisualModelProfile recognition, TextCropProfile crop, OcrPipelineOptions options)
         {
             if (detection.Task != VisualTaskId.TextDetection) throw new OcrPipelineException(VisualErrorCodes.ProfileInvalid, "The detector profile must use the text-detection task.", OcrPipelineStage.Input, profileId: detection.ProfileId, modelId: detection.ModelId);
-            if (recognition.Task != VisualTaskId.TextRecognition) throw new OcrPipelineException(VisualErrorCodes.ProfileInvalid, "The recognizer profile must use the text-recognition task.", OcrPipelineStage.Input, profileId: recognition.ProfileId, modelId: recognition.ModelId);
             if (detection.Input.MinimumBatch != 1 || detection.Input.MaximumBatch < 1) throw new OcrPipelineException(VisualErrorCodes.ProfileInvalid, "The detector profile must accept batch one.", OcrPipelineStage.Input, profileId: detection.ProfileId, modelId: detection.ModelId);
+            ValidateRecognitionProfile(recognition, crop, options);
+        }
+
+        private static void ValidateRecognitionProfile(VisualModelProfile recognition, TextCropProfile crop, OcrPipelineOptions options)
+        {
+            if (recognition.Task != VisualTaskId.TextRecognition) throw new OcrPipelineException(VisualErrorCodes.ProfileInvalid, "The recognizer profile must use the text-recognition task.", OcrPipelineStage.Input, profileId: recognition.ProfileId, modelId: recognition.ModelId);
             int heightIndex = recognition.Input.Layout == VisualTensorLayout.Nchw ? 2 : recognition.Input.Layout == VisualTensorLayout.Nhwc ? 1 : -1;
             int widthIndex = recognition.Input.Layout == VisualTensorLayout.Nchw ? 3 : recognition.Input.Layout == VisualTensorLayout.Nhwc ? 2 : -1;
             if (heightIndex < 0) throw new OcrPipelineException(VisualErrorCodes.ProfileInvalid, "OCR recognition requires a batched NCHW or NHWC profile.", OcrPipelineStage.Input, profileId: recognition.ProfileId, modelId: recognition.ModelId);

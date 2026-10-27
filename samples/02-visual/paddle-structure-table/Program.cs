@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Threading;
@@ -10,16 +12,20 @@ using JYPPX.DeploySharp;
 using JYPPX.DeploySharp.Backends.OnnxRuntime;
 using JYPPX.DeploySharp.Backends.OpenVINO;
 using JYPPX.DeploySharp.ModelFactory;
+using JYPPX.DeploySharp.Geometry;
 using JYPPX.DeploySharp.Models;
 using JYPPX.DeploySharp.Registry;
 using JYPPX.DeploySharp.Results;
 using JYPPX.DeploySharp.Results.Vision;
 using JYPPX.DeploySharp.Visual;
+using JYPPX.DeploySharp.Visual.Models.PaddleOcr;
 using JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document;
 using JYPPX.DeploySharp.Visual.OpenCV;
+using OcrTextRegion = JYPPX.DeploySharp.Visual.TextRegion;
 
 internal static class Program
 {
+    private const string V5DictionarySha = "d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b";
     private static async Task<int> Main(string[] args)
     {
         if (args.Contains("--help", StringComparer.OrdinalIgnoreCase))
@@ -141,6 +147,7 @@ internal static class Program
         string jsonPath = Path.Combine(options.Output, "table-result.json");
         string htmlPath = Path.Combine(options.Output, "table-result.html");
         string alignmentPath = Path.Combine(options.Output, "table-cell-alignment.json");
+        string ocrPath = Path.Combine(options.Output, "table-cell-ocr.json");
         await File.WriteAllTextAsync(jsonPath, PaddleDocumentPipelineExport.ToJson(result), cancellationToken).ConfigureAwait(false);
         var alignmentOutput = new
         {
@@ -157,8 +164,28 @@ internal static class Program
             })
         };
         await File.WriteAllTextAsync(alignmentPath, JsonSerializer.Serialize(alignmentOutput, new JsonSerializerOptions { WriteIndented = true }), cancellationToken).ConfigureAwait(false);
-        string tableElement = table.Markup.IndexOf("<table", StringComparison.OrdinalIgnoreCase) >= 0
-            ? table.Markup : "<table>" + table.Markup + "</table>";
+        bool invalidMarkup = alignment.Diagnostics.Any(value => value == "invalid-structure-markup" ||
+            value == "structure-too-long" || value == "incomplete-structure");
+        string tableElement = invalidMarkup
+            ? "<pre>" + WebUtility.HtmlEncode(table.Markup) + "</pre>"
+            : "<table>" + table.Markup + "</table>";
+        object ocrOutput = new { status = "skipped", reason = options.StructureOnly ? "structure-only" : string.Join(",", alignment.Diagnostics) };
+        Exception? ocrFailure = null;
+        if (alignment.Succeeded && !options.StructureOnly)
+        {
+            try
+            {
+                (string filled, object output) = await RecognizeCellsAsync(image, alignment, table, options, release, request, backendId, cancellationToken).ConfigureAwait(false);
+                tableElement = filled;
+                ocrOutput = output;
+            }
+            catch (Exception exception) when (exception is not OperationCanceledException)
+            {
+                ocrFailure = exception;
+                ocrOutput = new { status = "failed", reason = exception.Message };
+            }
+        }
+        await File.WriteAllTextAsync(ocrPath, JsonSerializer.Serialize(ocrOutput, new JsonSerializerOptions { WriteIndented = true }), cancellationToken).ConfigureAwait(false);
         string htmlDocument = "<!doctype html><html><head><meta charset=\"utf-8\"><title>PP-Structure table</title></head><body>"
             + tableElement + "</body></html>";
         await File.WriteAllTextAsync(htmlPath, htmlDocument, cancellationToken).ConfigureAwait(false);
@@ -168,6 +195,75 @@ internal static class Program
         Console.WriteLine("JSON: " + jsonPath);
         Console.WriteLine("HTML: " + htmlPath);
         Console.WriteLine("Alignment: " + alignmentPath);
+        Console.WriteLine("Cell OCR: " + ocrPath);
+        if (ocrFailure != null) throw new InvalidOperationException("Table cell OCR failed; the structure-only HTML and diagnostic JSON remain available.", ocrFailure);
+    }
+
+    private static async Task<(string Html, object Output)> RecognizeCellsAsync(OpenCvDecodedRoiImage image,
+        PaddleDocumentTableCellAlignmentResult alignment, PaddleDocumentTableResult table, Options options,
+        PaddleOcrReleaseClient? release, BackendRequest request, BackendId backendId, CancellationToken cancellationToken)
+    {
+        const string modelId = "paddleocr/ppocrv5/mobile-rec";
+        string dictionaryPath;
+        ModelFile model;
+        if (options.ModelDirectory == null)
+        {
+            PaddleOcrReleaseModelMaterialization downloaded = await (release ?? throw new InvalidOperationException("Release client is unavailable."))
+                .GetModelAsync("ppocrv5/mobile-rec", cancellationToken: cancellationToken).ConfigureAwait(false);
+            model = ModelFile.FromRelease(downloaded);
+            dictionaryPath = downloaded.DictionaryPath ?? throw new InvalidOperationException("The PP-OCRv5 recognition dictionary is missing from the Release asset.");
+        }
+        else
+        {
+            model = ModelFile.FromLocal(options.RecognizerModel ?? Path.Combine(options.ModelDirectory, "PP-OCRv5_mobile_rec.onnx"));
+            dictionaryPath = options.RecognizerDictionary ?? Path.Combine(options.ModelDirectory, "ppocrv5_dict.txt");
+        }
+        OcrCharacterSet characters = PaddleOcrProfiles.LoadCharacterSet(dictionaryPath, "paddle-structure-table.v5", "v5", true, V5DictionarySha);
+        PaddleOcrModelDescriptor descriptor = PaddleOcrModelCatalog.Find(new ModelId(modelId));
+        PaddleOcrReleaseArtifact releaseArtifact = descriptor.ReleaseArtifact ?? throw new InvalidOperationException("The PP-OCRv5 recognizer is not registered.");
+        var artifact = new PaddleOcrArtifactContract(releaseArtifact.Opset, model.Sha256, "", "", "",
+            "official-inference-v1", "deploysharp-ocr-ctc-v2", dictionarySha256: V5DictionarySha);
+        PaddleOcrProfile profile = PaddleOcrModelCatalog.CreateProfile(descriptor, artifact, characters, maximumBatch: 16);
+        using var registry = CreateRegistry(options.Backend);
+        var profiles = new VisualProfileRegistry();
+        profiles.Register(profile.VisualProfile);
+        profiles.Freeze();
+        VisualProfileSelection selection = profiles.Select(profile.CreateArtifact(model.Path, backendId), registry, request, VisualTaskId.TextRecognition);
+        using OcrPipeline recognizer = OcrPipeline.CreateRecognitionOnly(registry, selection, request, profile.CropProfile!,
+            new OcrPipelineOptions(maximumRegions: 512, maximumRecognitionBatch: 16));
+        using IOcrRecognitionImageInput input = image.CreateRecognitionInput();
+        var regions = new List<OcrTextRegion>(alignment.Matches.Count);
+        foreach (PaddleDocumentTableCellMatch match in alignment.Matches)
+        {
+            RectangleF box = match.Bounds;
+            float left = Math.Max(0, box.X);
+            float top = Math.Max(0, box.Y);
+            float right = Math.Min(image.SourceSize.Width, box.Right);
+            float bottom = Math.Min(image.SourceSize.Height, box.Bottom);
+            if (right - left < 1 || bottom - top < 1) throw new InvalidOperationException("A detected cell has no usable crop area.");
+            var quad = new TextQuadrilateral(new PointF(left, top), new PointF(right, top),
+                new PointF(right, bottom), new PointF(left, bottom), TextCornerOrder.TopLeftClockwise);
+            regions.Add(new OcrTextRegion(match.StructureCellIndex, match.Score, quad.Polygon, quad));
+        }
+        IReadOnlyList<OcrRegionResult> recognized = await recognizer.RecognizeOnlyAsync(input, regions, cancellationToken).ConfigureAwait(false);
+        if (recognized.Count != alignment.Matches.Count) throw new InvalidOperationException("The recognizer returned an incomplete cell batch.");
+        string[] texts = new string[recognized.Count];
+        for (int index = 0; index < recognized.Count; index++)
+        {
+            if (recognized[index].Region.SourceIndex != index) throw new InvalidOperationException("The recognizer changed cell order.");
+            texts[index] = recognized[index].Recognition.Text;
+        }
+        string html = PaddleDocumentTableCellAligner.FillMarkup(table, alignment, texts);
+        object output = new
+        {
+            status = "completed", modelId, modelSha256 = model.Sha256, dictionarySha256 = V5DictionarySha,
+            backend = options.Backend, cells = alignment.Matches.Select((match, index) => new
+            {
+                match.StructureCellIndex, match.DetectionIndex, text = texts[index],
+                confidence = recognized[index].Recognition.Confidence
+            })
+        };
+        return (html, output);
     }
 
     private static BackendRegistry CreateRegistry(string backend)
@@ -211,7 +307,7 @@ internal static class Program
     }
 
     private static void PrintUsage() => Console.WriteLine(
-        "Usage: dotnet run --project samples/02-visual/paddle-structure-table -- --image <path> --output <directory> [--table-type auto|wired|wireless] [--backend ort|openvino] [--cell-score-threshold 0..1] [--cache <directory> | --model-dir <directory>] [--offline]");
+        "Usage: dotnet run --project samples/02-visual/paddle-structure-table -- --image <path> --output <directory> [--table-type auto|wired|wireless] [--backend ort|openvino] [--cell-score-threshold 0..1] [--structure-only] [--cache <directory> | --model-dir <directory> [--recognizer-model <onnx> --recognizer-dictionary <txt>]] [--offline]");
 
     private sealed class ModelFile
     {
@@ -229,8 +325,8 @@ internal static class Program
 
     private sealed class Options
     {
-        private Options(string image, string output, string tableType, string backend, float cellScoreThreshold, string cache, string? modelDirectory, bool offline)
-        { Image = image; Output = output; TableType = tableType; Backend = backend; CellScoreThreshold = cellScoreThreshold; Cache = cache; ModelDirectory = modelDirectory; Offline = offline; }
+        private Options(string image, string output, string tableType, string backend, float cellScoreThreshold, string cache, string? modelDirectory, string? recognizerModel, string? recognizerDictionary, bool offline, bool structureOnly)
+        { Image = image; Output = output; TableType = tableType; Backend = backend; CellScoreThreshold = cellScoreThreshold; Cache = cache; ModelDirectory = modelDirectory; RecognizerModel = recognizerModel; RecognizerDictionary = recognizerDictionary; Offline = offline; StructureOnly = structureOnly; }
 
         public string Image { get; }
         public string Output { get; }
@@ -239,18 +335,22 @@ internal static class Program
         public float CellScoreThreshold { get; }
         public string Cache { get; }
         public string? ModelDirectory { get; }
+        public string? RecognizerModel { get; }
+        public string? RecognizerDictionary { get; }
         public bool Offline { get; }
+        public bool StructureOnly { get; }
 
         public static Options Parse(string[] args)
         {
-            string? image = null, output = null, cache = null, modelDirectory = null;
+            string? image = null, output = null, cache = null, modelDirectory = null, recognizerModel = null, recognizerDictionary = null;
             string tableType = "auto", backend = "ort";
             float cellScoreThreshold = 0.5f;
-            bool offline = false;
+            bool offline = false, structureOnly = false;
             for (int index = 0; index < args.Length; index++)
             {
                 string key = args[index];
                 if (key == "--offline") { offline = true; continue; }
+                if (key == "--structure-only") { structureOnly = true; continue; }
                 if (index + 1 >= args.Length) throw new ArgumentException("Missing value for " + key);
                 string value = args[++index];
                 switch (key)
@@ -266,6 +366,8 @@ internal static class Program
                         break;
                     case "--cache": cache = value; break;
                     case "--model-dir": modelDirectory = value; break;
+                    case "--recognizer-model": recognizerModel = value; break;
+                    case "--recognizer-dictionary": recognizerDictionary = value; break;
                     default: throw new ArgumentException("Unknown option: " + key);
                 }
             }
@@ -273,9 +375,13 @@ internal static class Program
             if (tableType != "auto" && tableType != "wired" && tableType != "wireless") throw new ArgumentException("--table-type must be auto, wired or wireless.");
             if (backend != "ort" && backend != "openvino") throw new ArgumentException("--backend must be ort or openvino.");
             if (modelDirectory != null && (offline || cache != null)) throw new ArgumentException("--model-dir cannot be combined with --offline or --cache.");
+            if ((recognizerModel == null) != (recognizerDictionary == null) || (recognizerModel != null && modelDirectory == null))
+                throw new ArgumentException("--recognizer-model and --recognizer-dictionary must be used together with --model-dir.");
             return new Options(Path.GetFullPath(image), Path.GetFullPath(output), tableType, backend, cellScoreThreshold,
                 Path.GetFullPath(cache ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "DeploySharp", "models")),
-                modelDirectory == null ? null : Path.GetFullPath(modelDirectory), offline);
+                modelDirectory == null ? null : Path.GetFullPath(modelDirectory),
+                recognizerModel == null ? null : Path.GetFullPath(recognizerModel),
+                recognizerDictionary == null ? null : Path.GetFullPath(recognizerDictionary), offline, structureOnly);
         }
     }
 }

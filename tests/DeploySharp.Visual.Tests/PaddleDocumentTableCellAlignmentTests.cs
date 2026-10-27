@@ -83,6 +83,23 @@ namespace DeploySharp.Visual.Tests
             Assert.AreEqual(0, result.Matches.Count);
         }
 
+        [TestMethod]
+        public void FillsOnlyVerifiedCellsAndEscapesRecognizedText()
+        {
+            PaddleDocumentTableResult structure = Structure("<tr><td></td><td></td></tr>", 2);
+            PaddleDocumentTableCellAlignmentResult alignment = PaddleDocumentTableCellAligner.Align(structure,
+                Detections(Region(50, 0, 50, 25), Region(0, 0, 50, 25)), 100, 60);
+            Assert.IsTrue(alignment.Succeeded);
+
+            string markup = PaddleDocumentTableCellAligner.FillMarkup(structure, alignment, new[] { "A & B", "<script>" });
+            StringAssert.Contains(markup, "<td>A &amp; B</td>");
+            StringAssert.Contains(markup, "<td>&lt;script&gt;</td>");
+            Assert.ThrowsExactly<InvalidOperationException>(() => PaddleDocumentTableCellAligner.FillMarkup(
+                Structure("<tr><td></td><td></td></tr>", 2), alignment, new[] { "A", "B" }));
+            Assert.ThrowsExactly<InvalidOperationException>(() => PaddleDocumentTableCellAligner.FillMarkup(structure,
+                PaddleDocumentTableCellAligner.Align(structure, Detections(Region(0, 0, 50, 25)), 100, 60), new[] { "A", "B" }));
+        }
+
         private static PaddleDocumentTableResult Structure(string markup, int cells, IReadOnlyList<string>? warnings = null)
         {
             var regions = new PaddleDocumentRegion[cells];

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using JYPPX.DeploySharp.Geometry;
 using JYPPX.DeploySharp.Tensors;
+using JYPPX.DeploySharp.Visual;
 using JYPPX.OpenCvSharp.Core;
 
 namespace JYPPX.DeploySharp.Visual.OpenCV
@@ -34,6 +35,19 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             if (prepare == null) throw new ArgumentNullException(nameof(prepare));
             EnterPreparation();
             try { return prepare(_decoded); }
+            finally { ExitPreparation(); }
+        }
+
+        /// <summary>Creates a recognition-only OCR view sharing the decoded pixels without another decode or image copy. / 创建共享已解码像素的仅识别 OCR 视图，不再解码或复制图像。</summary>
+        public IOcrRecognitionImageInput CreateRecognitionInput()
+        {
+            EnterPreparation();
+            try
+            {
+                Mat view = _decoded.SubMat(new Rect(0, 0, SourceSize.Width, SourceSize.Height));
+                try { return new OpenCvOcrImageInput(view); }
+                catch { view.Dispose(); throw; }
+            }
             finally { ExitPreparation(); }
         }
 

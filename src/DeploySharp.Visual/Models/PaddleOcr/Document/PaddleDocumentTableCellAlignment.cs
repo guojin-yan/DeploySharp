@@ -35,13 +35,14 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
     /// <summary>Reports whether row-order geometry was sufficient to associate all detected cells. / 报告行序几何是否足以关联全部检测单元格。</summary>
     public sealed class PaddleDocumentTableCellAlignmentResult
     {
-        internal PaddleDocumentTableCellAlignmentResult(int rowCount, int structureCellCount, int detectionCount, IReadOnlyList<PaddleDocumentTableCellMatch> matches, IReadOnlyList<string> diagnostics)
+        internal PaddleDocumentTableCellAlignmentResult(int rowCount, int structureCellCount, int detectionCount, IReadOnlyList<PaddleDocumentTableCellMatch> matches, IReadOnlyList<string> diagnostics, PaddleDocumentTableResult? structure)
         {
             RowCount = rowCount;
             StructureCellCount = structureCellCount;
             DetectionCount = detectionCount;
             Matches = matches;
             Diagnostics = diagnostics;
+            Structure = structure;
         }
 
         public bool Succeeded => Diagnostics.Count == 0;
@@ -50,11 +51,36 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
         public int DetectionCount { get; }
         public IReadOnlyList<PaddleDocumentTableCellMatch> Matches { get; }
         public IReadOnlyList<string> Diagnostics { get; }
+        internal PaddleDocumentTableResult? Structure { get; }
     }
 
     /// <summary>Matches SLANeXt structure cells to independent detector boxes only when source, counts and row geometry agree. / 仅在来源、数量与行几何一致时匹配 SLANeXt 结构单元格和独立检测框。</summary>
     public static class PaddleDocumentTableCellAligner
     {
+        /// <summary>Fills verified structure slots with OCR text, escaping cell content as HTML. / 将 OCR 文字写入已验证的结构槽位，并转义单元格内容。</summary>
+        public static string FillMarkup(PaddleDocumentTableResult structure, PaddleDocumentTableCellAlignmentResult alignment, IReadOnlyList<string> texts)
+        {
+            if (structure == null) throw new ArgumentNullException(nameof(structure));
+            if (alignment == null) throw new ArgumentNullException(nameof(alignment));
+            if (texts == null) throw new ArgumentNullException(nameof(texts));
+            if (!alignment.Succeeded || !ReferenceEquals(alignment.Structure, structure) ||
+                alignment.Matches.Count != alignment.StructureCellCount || texts.Count != alignment.StructureCellCount)
+                throw new InvalidOperationException("Complete cell alignment and one OCR text per structure cell are required.");
+            bool hasRowSpan;
+            int[] rows = ParseRowLengths(structure.Markup, out hasRowSpan);
+            if (hasRowSpan || rows.Length != alignment.RowCount || rows.Sum() != alignment.StructureCellCount)
+                throw new InvalidOperationException("The table structure no longer matches the verified cell alignment.");
+            var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = 65552 };
+            using var reader = XmlReader.Create(new StringReader("<table>" + structure.Markup + "</table>"), settings);
+            XElement root = XElement.Load(reader);
+            XElement[] cells = root.Descendants().Where(cell => cell.Name == "td" || cell.Name == "th").ToArray();
+            if (cells.Length != texts.Count) throw new InvalidOperationException("The table cell count changed during rendering.");
+            foreach (PaddleDocumentTableCellMatch match in alignment.Matches)
+                cells[match.StructureCellIndex].Value = texts[match.StructureCellIndex]
+                    ?? throw new ArgumentException("OCR text cannot be null.", nameof(texts));
+            return root.ToString(SaveOptions.DisableFormatting);
+        }
+
         public static PaddleDocumentTableCellAlignmentResult Align(PaddleDocumentTableResult structure, PaddleDocumentRegionResult detections, int sourceWidth, int sourceHeight)
         {
             if (structure == null) throw new ArgumentNullException(nameof(structure));
@@ -66,7 +92,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
 
             PaddleDocumentTableCellAlignmentResult Failure(string diagnostic, int rows = 0, int cells = 0)
                 => new PaddleDocumentTableCellAlignmentResult(rows, cells, detections.Regions.Count,
-                    Array.Empty<PaddleDocumentTableCellMatch>(), new[] { diagnostic });
+                    Array.Empty<PaddleDocumentTableCellMatch>(), new[] { diagnostic }, null);
 
             if (structure.Metadata.PageIndex != detections.Metadata.PageIndex ||
                 !string.Equals(structure.Metadata.InputSha256, detections.Metadata.InputSha256, StringComparison.OrdinalIgnoreCase))
@@ -127,7 +153,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                 offset += length;
             }
             return new PaddleDocumentTableCellAlignmentResult(rowLengths.Length, cellCount, detections.Regions.Count,
-                matches.AsReadOnly(), Array.Empty<string>());
+                matches.AsReadOnly(), Array.Empty<string>(), structure);
         }
 
         private static int[] ParseRowLengths(string markup, out bool hasRowSpan)

@@ -120,20 +120,31 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
         private readonly ExactFloatArrayPool _recognitionTensorPool = new ExactFloatArrayPool(32 * 1024 * 1024, 8);
         private bool _disposed;
 
+        private readonly PreparedVisualInput? _detectionInput;
+
         internal OpenCvOcrImageInput(Mat source, PreparedVisualInput detectionInput, string correctedInputName, OpenCvPreprocessOptions correctedInputOptions, string? inputId)
         {
             _source = source ?? throw new ArgumentNullException(nameof(source));
-            DetectionInput = detectionInput ?? throw new ArgumentNullException(nameof(detectionInput));
+            _detectionInput = detectionInput ?? throw new ArgumentNullException(nameof(detectionInput));
             _correctedInputName = string.IsNullOrWhiteSpace(correctedInputName) ? throw new ArgumentException("A corrected input name is required.", nameof(correctedInputName)) : correctedInputName;
             _correctedInputOptions = correctedInputOptions ?? throw new ArgumentNullException(nameof(correctedInputOptions));
             _inputId = inputId;
             SourceSize = new VisualSize(source.Cols, source.Rows);
         }
 
+        internal OpenCvOcrImageInput(Mat source)
+        {
+            _source = source ?? throw new ArgumentNullException(nameof(source));
+            SourceSize = new VisualSize(source.Cols, source.Rows);
+            _correctedInputName = "x";
+            _correctedInputOptions = new OpenCvPreprocessOptions(SourceSize);
+        }
+
         /// <summary>Gets source image size. / 获取源图尺寸。</summary>
         public VisualSize SourceSize { get; }
         /// <summary>Gets prepared detector input. / 获取已准备检测器输入。</summary>
-        public PreparedVisualInput DetectionInput { get; }
+        public PreparedVisualInput DetectionInput => _detectionInput
+            ?? throw new InvalidOperationException("This image input was created for recognition only.");
 
         /// <summary>Reads bounded source-pixel diagnostics under the image lifetime lock without another decode, crop or copy. / 在图像生命周期锁内读取有界源像素诊断，不再次解码、裁剪或复制。</summary>
         public OcrPixelQualityDiagnostics AssessPixelQuality(TextRegion? region, OcrPixelQualityOptions options, CancellationToken cancellationToken)
@@ -276,7 +287,7 @@ namespace JYPPX.DeploySharp.Visual.OpenCV
             {
                 if (_disposed) return;
                 _disposed = true;
-                DetectionInput.Dispose();
+                _detectionInput?.Dispose();
                 _source?.Dispose();
                 _source = null;
             }

@@ -78,6 +78,8 @@ OcrResult result = pipeline.Run(input);
 
 检测通常使用一个 Session；方向分类和识别可以分别配置独立 Session 池，并使用动态 batch 一次处理多条文本行。`maximumRecognitionBatch` 控制单批行数，Session 池大小控制并发通道数；剩余批次等待空闲通道，不共享 native predictor 或 TensorRT execution context。每个阶段使用固定数量 worker 调度批次，不会为一页中的全部识别批次预先创建 Task；准备、后端或解码失败/取消后会停止分配尚未开始的批次，并等待已进入后端的 batch 安全退出。
 
+已有调用方提供的文本框时，可用 `OcrPipeline.CreateRecognitionOnly(registry, recognitionSelection, recognitionRequest, cropProfile)` 创建仅含 REC Session 的管线，再调用 `RecognizeOnlyAsync(input, regions)`；`Run/RunAsync` 仅适用于含 DET 的完整管线。多模块共用一张图片时，`OpenCvDecodedRoiImage.CreateRecognitionInput()` 会生成共享原生像素的识别视图，调用方分别释放视图和页面持有者；此路径不重新解码，也不准备无用的检测张量。[表格案例](../../samples/02-visual/paddle-structure-table/README.md)展示了结构/检测框对齐后的批量识别和安全 HTML 填字。
+
 推荐的调度顺序是：检测完成后立即把 crop 描述排入有界队列；方向分类和识别各自从队列取满一个 batch；一个阶段的 Session 忙碌时让其他独立 Session 接管，不增加无限线程。设备显存不足时优先降低 Session 数，再降低 batch；batch 太小会增加提交开销，batch 太大则会增加 padding 和尾批等待。
 
 在 RTX 2060 的 TensorRT CUDA 实测中，`demo_1.jpg` 的稳定最优组合为：v4 mobile `batch=8 / 2` 个阶段 Session、v5 mobile `batch=8 / 2`、v6 tiny `batch=8 / 1`、v6 small `batch=8 / 2`、v6 medium `batch=8 / 2`。对应完整流水线 P50/P95 为 v4 `32.505/37.394 ms`、v5 `46.090/50.015 ms`、v6 tiny `19.527/20.339 ms`、v6 small `31.511/36.351 ms`、v6 medium `80.692/85.247 ms`；这些数字只适用于该设备、Engine、输入和测试协议，详见[设备性能实测](device-performance-benchmarks.md)。

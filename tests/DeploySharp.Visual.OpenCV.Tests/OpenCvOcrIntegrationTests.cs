@@ -321,6 +321,20 @@ namespace DeploySharp.Visual.OpenCV.Tests
             return new TextCropRequest(new TextRegion(0, .95f, corners.Polygon, corners, orientation), profile);
         }
 
+        [TestMethod]
+        public void DecodedRoiImageCreatesRecognitionViewWithoutDetectorTensor()
+        {
+            IOcrRecognitionImageInput view;
+            using (OpenCvDecodedRoiImage decoded = new OpenCvVisualInputFactory().DecodeForRois(OpenCvImageSource.FromFile(Fixture("ocr.png"))))
+            {
+                view = decoded.CreateRecognitionInput();
+                Assert.AreEqual(decoded.SourceSize, view.SourceSize);
+            }
+            using (view)
+            using (PreparedVisualInput batch = view.PrepareRecognitionBatch("crops", new[] { Request(TextOrientation.Degrees0, CropProfile()) }, CancellationToken.None))
+                Assert.AreEqual(1, batch.BatchSize);
+        }
+
         private static TextCropProfile CropProfile() => new TextCropProfile("tests/opencv-ocr-crop.v1", 8, OcrRecognitionWidthMode.Fixed, 16, 16);
 
         private static VisualModelProfile DetectorProfile()

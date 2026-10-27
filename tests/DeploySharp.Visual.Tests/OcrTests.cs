@@ -334,6 +334,25 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
+        public async Task RecognitionOnlyFactoryDoesNotCreateDetectorSession()
+        {
+            using OcrFixture fixture = CreateOcrFixture();
+            int detectorSessions = fixture.DetectionProvider.CreatedSessions.Count;
+            var request = new BackendRequest(BackendCapabilities.TensorInference, fixture.RecognitionProvider.Descriptor.Id);
+            using var recognizer = OcrPipeline.CreateRecognitionOnly(fixture.Registry, fixture.Pipeline.RecognitionSelection,
+                request, fixture.Pipeline.CropProfile, fixture.Pipeline.Options);
+            using var input = new FakeOcrImageInput();
+
+            Assert.AreEqual(detectorSessions, fixture.DetectionProvider.CreatedSessions.Count);
+            Assert.ThrowsExactly<InvalidOperationException>(() => _ = recognizer.DetectionSelection);
+            Assert.ThrowsExactly<InvalidOperationException>(() => recognizer.Run(input));
+            IReadOnlyList<OcrRegionResult> results = await recognizer.RecognizeOnlyAsync(input, new[] { Region(0, 0, 0, 20, 10) });
+            Assert.AreEqual(1, results.Count);
+            Assert.IsTrue(results[0].Recognition.Text.Length > 0);
+            Assert.AreEqual(detectorSessions, fixture.DetectionProvider.CreatedSessions.Count);
+        }
+
+        [TestMethod]
         public async Task RecognitionOnlySlidingWindowPlansAndMergesOverWidthRegions()
         {
             using OcrFixture fixture = CreateOcrFixture(
