@@ -27,7 +27,7 @@ namespace DeploySharp.Visual.OpenCV.Tests;
 [DoNotParallelize]
 public sealed class PaddleOcrVlFormalLatencyIntegrationTests
 {
-    private const string DefaultReference = @"eng\models\paddle-ocr\verification\paddleocr-vl-six-task-reference-linux-20261023.json";
+    private const string DefaultReference = @"tests\assets\paddleocr-vl\six-task-reference.json";
 
     public TestContext TestContext { get; set; } = null!;
 

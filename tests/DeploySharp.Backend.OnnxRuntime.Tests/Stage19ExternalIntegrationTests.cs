@@ -23,12 +23,12 @@ namespace DeploySharp.Backend.OnnxRuntime.Tests
         {
             RequireExternal();
             PaddleOcrProfile detector = PaddleOcrProfiles.CreateDetection(new ModelId("external/ppocrv5-mobile-det"), PaddleArtifact(11, "1eb7b4f7ab657ebd1c66d5f79bca7497f29768a2e3c15e52daecbba1a8e4a039"));
-            VisualInferenceResult detection = Run(detector.VisualProfile, detector.CreateArtifact(RequireFile(@"E:\Model\ocr\ppocrv5\PP-OCRv5_mobile_det_onnx.onnx"), OnnxRuntimeBackendProvider.BackendId), Input("x", 32, 32));
+            VisualInferenceResult detection = Run(detector.VisualProfile, detector.CreateArtifact(RequireFile(@"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_mobile_det.onnx"), OnnxRuntimeBackendProvider.BackendId), Input("x", 32, 32));
             Assert.IsInstanceOfType<TextDetectionResult>(detection.Value);
 
-            OcrCharacterSet characters = PaddleOcrProfiles.LoadCharacterSet(RequireFile(@"E:\Model\ocr\ppocrv5\ppocrv5_dict.txt"), "external.ppocrv5", "v5", true, "d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b");
+            OcrCharacterSet characters = PaddleOcrProfiles.LoadCharacterSet(RequireFile(@"E:\Model\paddleocr\PP-OCRv5\ppocrv5_dict.txt"), "external.ppocrv5", "v5", true, "d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b");
             PaddleOcrProfile recognizer = PaddleOcrProfiles.CreateRecognition(new ModelId("external/ppocrv5-mobile-rec"), PaddleArtifact(7, "f2fb81dc0cf6bf07736e7422bab38c6636e776bc8b5bc8c8d3c7d7322cd8f3a9", "d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b"), characters);
-            VisualInferenceResult recognition = Run(recognizer.VisualProfile, recognizer.CreateArtifact(RequireFile(@"E:\Model\ocr\ppocrv5\PP-OCRv5_mobile_rec_onnx.onnx"), OnnxRuntimeBackendProvider.BackendId), Input("x", 320, 48));
+            VisualInferenceResult recognition = Run(recognizer.VisualProfile, recognizer.CreateArtifact(RequireFile(@"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_mobile_rec.onnx"), OnnxRuntimeBackendProvider.BackendId), Input("x", 320, 48));
             Assert.IsInstanceOfType<TextRecognitionBatchResult>(recognition.Value);
             Assert.AreEqual(1, ((TextRecognitionBatchResult)recognition.Value).Items.Count);
         }
@@ -38,12 +38,12 @@ namespace DeploySharp.Backend.OnnxRuntime.Tests
         public void PaddleOcrServerDetectionAndRecognitionRunOnRealCpuOrt()
         {
             RequireExternal();
-            PaddleOcrProfile detector = PaddleOcrProfiles.CreateDetection(new ModelId("external/ppocrv5-server-det"), PaddleArtifact(11, "9a910baffbefb807ff2f7bfaa72910e3e470bd17014d798386d87bb46f442839"));
-            Assert.IsInstanceOfType<TextDetectionResult>(Run(detector.VisualProfile, detector.CreateArtifact(RequireFile(@"E:\Model\ocr\ppocrv5\PP-OCRv5_server_det_onnx.onnx"), OnnxRuntimeBackendProvider.BackendId), Input("x", 32, 32)).Value);
+            PaddleOcrProfile detector = PaddleOcrProfiles.CreateDetection(new ModelId("external/ppocrv5-server-det"), PaddleArtifact(11, "0c4ff76f78feb3e4b4e9b3030df350234f570027e1ec9cfe5bbb7a596cb57f47"));
+            Assert.IsInstanceOfType<TextDetectionResult>(Run(detector.VisualProfile, detector.CreateArtifact(RequireFile(@"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_server_det.onnx"), OnnxRuntimeBackendProvider.BackendId), Input("x", 32, 32)).Value);
 
-            OcrCharacterSet characters = PaddleOcrProfiles.LoadCharacterSet(RequireFile(@"E:\Model\ocr\ppocrv5\ppocrv5_dict.txt"), "external.ppocrv5", "v5", true, "d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b");
-            PaddleOcrProfile recognizer = PaddleOcrProfiles.CreateRecognition(new ModelId("external/ppocrv5-server-rec"), PaddleArtifact(10, "5c4927aa0736ab598025a37b71daae061363642b1848a90a0cb1e02e2ce823d7", "d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b"), characters);
-            Assert.IsInstanceOfType<TextRecognitionBatchResult>(Run(recognizer.VisualProfile, recognizer.CreateArtifact(RequireFile(@"E:\Model\ocr\ppocrv5\PP-OCRv5_server_rec_onnx.onnx"), OnnxRuntimeBackendProvider.BackendId), Input("x", 320, 48)).Value);
+            OcrCharacterSet characters = PaddleOcrProfiles.LoadCharacterSet(RequireFile(@"E:\Model\paddleocr\PP-OCRv5\ppocrv5_dict.txt"), "external.ppocrv5", "v5", true, "d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b");
+            PaddleOcrProfile recognizer = PaddleOcrProfiles.CreateRecognition(new ModelId("external/ppocrv5-server-rec"), PaddleArtifact(10, "12ec4f2b7266afcca07063786238e1538c8f19656cb2b6bbc0f4b9c492c2667a", "d1979e9f794c464c0d2e0b70a7fe14dd978e9dc644c0e71f14158cdf8342af1b"), characters);
+            Assert.IsInstanceOfType<TextRecognitionBatchResult>(Run(recognizer.VisualProfile, recognizer.CreateArtifact(RequireFile(@"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_server_rec.onnx"), OnnxRuntimeBackendProvider.BackendId), Input("x", 320, 48)).Value);
         }
 
         [TestMethod]

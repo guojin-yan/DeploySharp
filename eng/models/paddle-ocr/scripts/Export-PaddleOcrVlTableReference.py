@@ -39,8 +39,8 @@ CONSTANTS = {
     "NON_CAPTURING_TAG_GROUP", "OTSL_FIND_PATTERN",
 }
 REPORTS = (
-    "eng/models/paddle-ocr/verification/paddleocr-vl-six-task-reference-linux-20261023.json",
-    "eng/models/paddle-ocr/verification/paddleocr-vl-detected-crop-official-reference-20261024.json",
+    "tests/assets/paddleocr-vl/six-task-reference.json",
+    "tests/assets/paddleocr-vl/detected-crop-reference.json",
 )
 
 

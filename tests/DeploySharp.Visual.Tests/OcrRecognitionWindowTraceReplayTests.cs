@@ -31,9 +31,9 @@ public sealed class OcrRecognitionWindowTraceReplayTests
         string tracePath = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_SEAM_REPLAY_TRACE")
             ?? Path.Combine(repo, "artifacts/paddleocr-natural-wide-gt-20261023-final/paddleocr-hiertext-natural-wide-gt-20261023072131.local-traces.json");
         string candidatePath = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_SEAM_REPLAY_CANDIDATES")
-            ?? Path.Combine(repo, "eng/models/paddle-ocr/verification/hiertext-natural-wide-coverage-a2-20261017.json");
+            ?? Path.Combine(repo, "tests/assets/paddleocr/natural-wide-selection.json");
         string baselinePath = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_SEAM_REPLAY_BASELINE")
-            ?? Path.Combine(repo, "eng/models/paddle-ocr/verification/paddleocr-hiertext-natural-wide-gt-20261023.json");
+            ?? Path.Combine(repo, "tests/assets/paddleocr/natural-wide-baseline.json");
         string traceSha = HashFile(tracePath);
         Assert.AreEqual(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_SEAM_REPLAY_TRACE_SHA") ?? TraceSha, traceSha);
         Assert.AreEqual(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_SEAM_REPLAY_CANDIDATES_SHA")
@@ -184,10 +184,6 @@ public sealed class OcrRecognitionWindowTraceReplayTests
     private static string Hash(string value) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value))).ToLowerInvariant();
     private static string HashFile(string path) { using FileStream stream = File.OpenRead(path); return Convert.ToHexString(SHA256.HashData(stream)).ToLowerInvariant(); }
     private static string FindRepo()
-    {
-        for (DirectoryInfo? dir = new DirectoryInfo(AppContext.BaseDirectory); dir != null; dir = dir.Parent)
-            if (File.Exists(Path.Combine(dir.FullName, "eng/models/paddle-ocr/verification/hiertext-natural-wide-coverage-a2-20261017.json"))) return dir.FullName;
-        throw new DirectoryNotFoundException("Cannot locate pinned natural-wide candidates.");
-    }
+        => RepositoryTestFiles.Root;
     private sealed record ReplayCase(string Backend, string Model, string Key, string Stratum, string Expected, string Baseline, TextRegion Region, OcrRecognitionWindowResult[] Windows);
 }

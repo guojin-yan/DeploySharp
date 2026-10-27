@@ -21,14 +21,7 @@ public sealed class PaddleOcrVlPositionPlanTests
     });
 
     private static JsonDocument Reference(string name)
-    {
-        for (DirectoryInfo? current = new(AppContext.BaseDirectory); current != null; current = current.Parent)
-        {
-            string path = Path.Combine(current.FullName, "eng/models/paddle-ocr/verification", name);
-            if (File.Exists(path)) return JsonDocument.Parse(File.ReadAllBytes(path));
-        }
-        throw new FileNotFoundException("The independent official position reference is missing.", name);
-    }
+        => JsonDocument.Parse(File.ReadAllBytes(RepositoryTestFiles.Find(Path.Combine("tests", "assets", "paddleocr-vl", name))));
 
     [TestMethod]
     [DataRow("ocr-demo-1", PaddleOcrVlTask.TextRecognition)]
@@ -39,13 +32,13 @@ public sealed class PaddleOcrVlPositionPlanTests
     [DataRow("seal-official-example", PaddleOcrVlTask.SealRecognition)]
     public void RealImagePrefillAndDecodeMatchBothPinnedUpstreamImplementations(string id, PaddleOcrVlTask task)
     {
-        using JsonDocument images = Reference("paddleocr-vl-six-task-reference-linux-20261023.json");
+        using JsonDocument images = Reference("six-task-reference.json");
         JsonElement image = images.RootElement.GetProperty("cases").EnumerateArray().Single(row => row.GetProperty("id").GetString() == id);
         JsonElement size = image.GetProperty("sourceSize");
         PaddleOcrVlTokenSequence prompt = Tokenizer.Value.EncodePrompt(PaddleOcrVlInputPlanning.PlanOfficialV16(
             new VisualSize(size[0].GetInt32(), size[1].GetInt32()), task));
         PaddleOcrVlPositionPlan positions = PaddleOcrVlPositionPlan.Create(prompt);
-        using JsonDocument expected = Reference("paddleocr-vl-position-parity-20261023.json");
+        using JsonDocument expected = Reference("position-reference.json");
         Assert.AreEqual("all-positions-exact", expected.RootElement.GetProperty("status").GetString());
         JsonElement vector = expected.RootElement.GetProperty("cases").EnumerateArray().Single(row => row.GetProperty("id").GetString() == id);
         Assert.IsTrue(vector.GetProperty("allThreeEqual").GetBoolean());

@@ -19,8 +19,6 @@
   <ItemGroup>
     <Content Include="..\..\eng\models\yolo\yolo-detection-support.json" Link="fixtures\yolo-detection-support.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\eng\models\detr\portable-detector-support.json" Link="fixtures\portable-detector-support.json" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\..\eng\models\ocr-anomaly-rmbg\stage19-support.json" Link="fixtures\stage19-support.json" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\..\eng\models\ocr-anomaly-rmbg\stage20-support.json" Link="fixtures\stage20-support.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\eng\models\ocr-anomaly-rmbg\paddleocr-license-redistribution-review.json" Link="fixtures\paddleocr-license-redistribution-review.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\eng\models\ocr-anomaly-rmbg\paddleocr-release-admission.json" Link="fixtures\paddleocr-release-admission.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\eng\models\sam\sam-family-support.json" Link="fixtures\sam-family-support.json" CopyToOutputDirectory="PreserveNewest" />
@@ -33,6 +31,5 @@
     <Content Include="..\..\eng\models\vision\releases\blip-caption-base.modelpack.json" Link="fixtures\blip-caption-base.public.modelpack.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\eng\models\yolo\releases\*.modelpack.json" Link="fixtures\yolo-releases\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\eng\models\detr\releases\*.modelpack.json" Link="fixtures\detr-releases\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\..\eng\models\next-publication-candidates.json" Link="fixtures\next-publication-candidates.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

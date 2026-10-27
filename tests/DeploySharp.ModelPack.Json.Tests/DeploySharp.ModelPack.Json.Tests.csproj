@@ -32,7 +32,6 @@
     <Content Include="..\..\eng\models\document-understanding\manifests\*.modelpack.json" Link="fixtures\document-understanding\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\eng\models\audio-speech\manifests\*.modelpack.json" Link="fixtures\audio-speech\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\eng\models\llm\manifests\*.modelpack.json" Link="fixtures\llm\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="..\..\eng\models\llm\evidence\*.txt" Link="fixtures\llm\evidence\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\assets\onnxruntime\text-detection.onnx" Link="fixtures\onnx\text-detection.onnx" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\assets\onnxruntime\text-recognition-ctc.onnx" Link="fixtures\onnx\text-recognition-ctc.onnx" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\assets\onnxruntime\text-orientation.onnx" Link="fixtures\onnx\text-orientation.onnx" CopyToOutputDirectory="PreserveNewest" />

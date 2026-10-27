@@ -25,7 +25,7 @@ public sealed class PaddleOcrVlSpottingParserTests
     [TestMethod]
     public void MatchesEveryUnmodifiedOfficialReferencePointAndTextIncludingRealEosOutput()
     {
-        string path = Find("eng/models/paddle-ocr/verification/paddleocr-vl-spotting-official-reference-20261024.json");
+        string path = Find("tests/assets/paddleocr-vl/spotting-reference.json");
         using var document = JsonDocument.Parse(File.ReadAllBytes(path));
         JsonElement root = document.RootElement;
         Assert.AreEqual("deploysharp-paddleocr-vl-official-spotting-reference-v1", root.GetProperty("schemaVersion").GetString());
@@ -304,12 +304,5 @@ public sealed class PaddleOcrVlSpottingParserTests
     }
     private static string Hash(byte[] bytes) => Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
     private static string Find(string relative)
-    {
-        for (DirectoryInfo? current = new(AppContext.BaseDirectory); current != null; current = current.Parent)
-        {
-            string path = Path.Combine(current.FullName, relative);
-            if (File.Exists(path)) return path;
-        }
-        throw new FileNotFoundException("Pinned Spotting reference is missing.", relative);
-    }
+        => RepositoryTestFiles.Find(relative);
 }

@@ -21,7 +21,7 @@ SOURCE_SHA256 = "63bf7d0ccf03225dd6be582e2b25628283e2eed0ad0b1c7864e086e3b95f923
 SOURCE_BLOB = "601dfbfae08c97b0b4cf227ea8a9d8360627cd12"
 CHECKPOINT = "c5630abae1d940eafe0697512a0325494b02ab42"
 CONSTANTS = {"ANNOT_TEXT_RE", "LOC_BLOCK_RE", "LOC_ITEM_RE", "LOC_TOKEN_RE"}
-REPORT = "eng/models/paddle-ocr/verification/paddleocr-vl-six-task-reference-linux-20261023.json"
+REPORT = "tests/assets/paddleocr-vl/six-task-reference.json"
 
 
 def digest(path: Path) -> str:

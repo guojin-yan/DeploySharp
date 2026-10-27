@@ -173,11 +173,12 @@ function markdown(report) {
 }
 
 function parseArguments(args) {
+  const artifactRoot = path.join(repositoryRoot, 'artifacts', 'formula-render-quality');
   const options = {
     datasetRoot: 'F:\\OCRBenchmarkTesting\\datasets\\realFormula-zenodo-11296815\\extracted\\realFormula-public',
-    verificationRoot: path.join(repositoryRoot, 'eng', 'models', 'paddle-document', 'verification'),
-    outputJson: path.join(repositoryRoot, 'eng', 'models', 'paddle-document', 'verification', 'formula-realformula-numeric-equivalence-20261018.json'),
-    outputMarkdown: path.join(repositoryRoot, 'eng', 'models', 'paddle-document', 'verification', 'formula-realformula-numeric-equivalence-20261018.md'),
+    verificationRoot: path.join(artifactRoot, 'input'),
+    outputJson: path.join(artifactRoot, 'semantic-quality.json'),
+    outputMarkdown: path.join(artifactRoot, 'semantic-quality.md'),
     sampleCount: 24,
     vlReport: null
   };

@@ -27,17 +27,8 @@ public sealed class PaddleOcrVlTokenizerTests
         return root!;
     }
 
-    private static JsonDocument Reference(string name = "eng/models/paddle-ocr/verification/paddleocr-vl-tokenizer-reference-20261023.json")
-    {
-        DirectoryInfo? current = new(AppContext.BaseDirectory);
-        while (current != null)
-        {
-            string path = Path.Combine(current.FullName, name);
-            if (File.Exists(path)) return JsonDocument.Parse(File.ReadAllBytes(path));
-            current = current.Parent;
-        }
-        throw new FileNotFoundException("The independent official tokenizer reference is missing.", name);
-    }
+    private static JsonDocument Reference(string name = "tests/assets/paddleocr-vl/tokenizer-reference.json")
+        => JsonDocument.Parse(File.ReadAllBytes(RepositoryTestFiles.Find(name)));
 
     [TestMethod]
     [DataRow("ocr-demo-1", PaddleOcrVlTask.TextRecognition)]
@@ -49,7 +40,7 @@ public sealed class PaddleOcrVlTokenizerTests
     public void RealImagePromptsAndGeneratedCompletionsMatchThePythonReference(string id, PaddleOcrVlTask task)
     {
         PaddleOcrVlTokenizer tokenizer = Tokenizer.Value;
-        using JsonDocument reference = Reference("eng/models/paddle-ocr/verification/paddleocr-vl-six-task-reference-linux-20261023.json");
+        using JsonDocument reference = Reference("tests/assets/paddleocr-vl/six-task-reference.json");
         Assert.AreEqual("reference-generation-complete", reference.RootElement.GetProperty("status").GetString());
         JsonElement row = reference.RootElement.GetProperty("cases").EnumerateArray().Single(value => value.GetProperty("id").GetString() == id);
         JsonElement sourceSize = row.GetProperty("sourceSize");

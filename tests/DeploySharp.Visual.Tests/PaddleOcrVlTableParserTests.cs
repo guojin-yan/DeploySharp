@@ -19,7 +19,7 @@ namespace DeploySharp.Visual.Tests;
 [TestClass]
 public sealed class PaddleOcrVlTableParserTests
 {
-    private const string ReferencePath = "eng/models/paddle-ocr/verification/paddleocr-vl-otsl-official-reference-20261024.json";
+    private const string ReferencePath = "tests/assets/paddleocr-vl/table-reference.json";
 
     [TestMethod]
     public void LogicalCellsAndHtmlMatchPinnedUnmodifiedOfficialConverterIncludingTwoRealGenerations()
@@ -27,7 +27,7 @@ public sealed class PaddleOcrVlTableParserTests
         using JsonDocument report = JsonDocument.Parse(File.ReadAllBytes(Find(ReferencePath)));
         Assert.AreEqual("4c968d30b9d0d4a693d9eaaef0881c20f8d7d0e0", report.RootElement.GetProperty("upstream").GetProperty("revision").GetString());
         Assert.AreEqual("63bf7d0ccf03225dd6be582e2b25628283e2eed0ad0b1c7864e086e3b95f923a", report.RootElement.GetProperty("upstream").GetProperty("sourceSha256").GetString());
-        Assert.AreEqual(report.RootElement.GetProperty("inputCorpusSha256").GetString(), Sha(File.ReadAllBytes(Find("eng/models/paddle-ocr/verification/paddleocr-vl-otsl-inputs-20261024.json"))));
+        Assert.AreEqual(report.RootElement.GetProperty("inputCorpusSha256").GetString(), Sha(File.ReadAllBytes(Find("tests/assets/paddleocr-vl/table-inputs.json"))));
         Assert.AreEqual(report.RootElement.GetProperty("scriptSha256").GetString(), Sha(File.ReadAllBytes(Find("eng/models/paddle-ocr/scripts/Export-PaddleOcrVlTableReference.py"))));
         foreach (JsonElement source in report.RootElement.GetProperty("generationReports").EnumerateArray())
             Assert.AreEqual(source.GetProperty("sha256").GetString(), Sha(File.ReadAllBytes(Find(source.GetProperty("path").GetString()!))));
@@ -240,14 +240,7 @@ public sealed class PaddleOcrVlTableParserTests
             "test-generator", TimeSpan.Zero, new string('a', 64), 7);
 
     private static string Find(string relative)
-    {
-        for (DirectoryInfo? current = new(AppContext.BaseDirectory); current != null; current = current.Parent)
-        {
-            string path = Path.Combine(current.FullName, relative);
-            if (File.Exists(path)) return path;
-        }
-        throw new FileNotFoundException("Pinned table reference is missing.", relative);
-    }
+        => RepositoryTestFiles.Find(relative);
 
     private static string Sha(byte[] bytes) => Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
 }

@@ -1,0 +1,1345 @@
+{
+  "schemaVersion": "deploysharp-paddleocr-vl-official-otsl-reference-v1",
+  "generatedUtc": "2026-10-24T09:55:36.010255+00:00",
+  "upstream": {
+    "repository": "PaddlePaddle/PaddleX",
+    "revision": "4c968d30b9d0d4a693d9eaaef0881c20f8d7d0e0",
+    "path": "paddlex/inference/pipelines/paddleocr_vl/uilts.py",
+    "sourceSha256": "63bf7d0ccf03225dd6be582e2b25628283e2eed0ad0b1c7864e086e3b95f923a",
+    "gitBlob": "601dfbfae08c97b0b4cf227ea8a9d8360627cd12",
+    "selectedDefinitions": [
+      "NON_CAPTURING_TAG_GROUP",
+      "OTSL_ECEL",
+      "OTSL_FCEL",
+      "OTSL_FIND_PATTERN",
+      "OTSL_LCEL",
+      "OTSL_NL",
+      "OTSL_UCEL",
+      "OTSL_XCEL",
+      "TableCell",
+      "TableData",
+      "convert_otsl_to_html",
+      "export_to_html",
+      "otsl_extract_tokens_and_text",
+      "otsl_pad_to_sqr_v2",
+      "otsl_parse_texts"
+    ]
+  },
+  "scriptSha256": "4164bc3fa56507619ee6b82aafc1ed4ec582208687834dca3df906a939594478",
+  "inputCorpusSha256": "140699f3c46618c43d8aefbc46422349853fb514ca0778a9787c97bacebfffe7",
+  "generationReports": [
+    {
+      "path": "tests/assets/paddleocr-vl/six-task-reference.json",
+      "sha256": "aaa5ace39098c307e27107562045994aabdd952fcf8dc1cb388be87e6f58eb79"
+    },
+    {
+      "path": "tests/assets/paddleocr-vl/detected-crop-reference.json",
+      "sha256": "7a1e96a09b729f056e1690629046689c7b9d6ffa584026b097f2acfb073f36dc"
+    }
+  ],
+  "environment": {
+    "python": "3.10.12",
+    "pydantic": "2.12.3"
+  },
+  "boundary": "Official parser comparison on 12 synthetic and two existing real generated tables; no new inference, labeled table quality or backend claim.",
+  "cases": [
+    {
+      "id": "basic-unicode-escaping",
+      "rawText": "<fcel> \u540d\u79f0 <fcel><script>alert(\"x\")</script> & 'value'<nl><ecel><fcel>\u7b2c\u4e8c\u884c\n\u4fdd\u7559\u6362\u884c<nl>",
+      "requiresRepair": false,
+      "origin": "synthetic-parser-case",
+      "rawTextSha256": "6a47e6da4c2d9cf9eed8f678676d8e9b99e3ec2aa064f604610fcf1a6a206eb8",
+      "normalizedOtsl": "<fcel> \u540d\u79f0 <fcel><script>alert(\"x\")</script> & 'value'<nl><ecel><fcel>\u7b2c\u4e8c\u884c\n\u4fdd\u7559\u6362\u884c<nl>",
+      "rowCount": 2,
+      "columnCount": 2,
+      "html": "<table><tr><td>\u540d\u79f0</td><td>&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt; &amp; &#x27;value&#x27;</td></tr><tr><td></td><td>\u7b2c\u4e8c\u884c\n\u4fdd\u7559\u6362\u884c</td></tr></table>",
+      "cells": [
+        {
+          "row": 0,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "\u540d\u79f0",
+          "isEmpty": false
+        },
+        {
+          "row": 0,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "<script>alert(\"x\")</script> & 'value'",
+          "isEmpty": false
+        },
+        {
+          "row": 1,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 1,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "\u7b2c\u4e8c\u884c\n\u4fdd\u7559\u6362\u884c",
+          "isEmpty": false
+        }
+      ]
+    },
+    {
+      "id": "horizontal-merge",
+      "rawText": "<fcel>A<lcel><lcel><nl><fcel>B<fcel>C<fcel>D<nl>",
+      "requiresRepair": false,
+      "origin": "synthetic-parser-case",
+      "rawTextSha256": "df73f6a556516614549499c23bea88d69e520d52336b6e56bda0a2611b25c089",
+      "normalizedOtsl": "<fcel>A<lcel><lcel><nl><fcel>B<fcel>C<fcel>D<nl>",
+      "rowCount": 2,
+      "columnCount": 3,
+      "html": "<table><tr><td colspan=\"3\">A</td></tr><tr><td>B</td><td>C</td><td>D</td></tr></table>",
+      "cells": [
+        {
+          "row": 0,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 3,
+          "text": "A",
+          "isEmpty": false
+        },
+        {
+          "row": 1,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "B",
+          "isEmpty": false
+        },
+        {
+          "row": 1,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "C",
+          "isEmpty": false
+        },
+        {
+          "row": 1,
+          "column": 2,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "D",
+          "isEmpty": false
+        }
+      ]
+    },
+    {
+      "id": "vertical-merge",
+      "rawText": "<fcel>A<fcel>B<nl><ucel><fcel>C<nl><ucel><fcel>D<nl>",
+      "requiresRepair": false,
+      "origin": "synthetic-parser-case",
+      "rawTextSha256": "ca12dd3f0083312532fe001ef8ed7f430f200d15928ad7627c9861f283eba113",
+      "normalizedOtsl": "<fcel>A<fcel>B<nl><ucel><fcel>C<nl><ucel><fcel>D<nl>",
+      "rowCount": 3,
+      "columnCount": 2,
+      "html": "<table><tr><td rowspan=\"3\">A</td><td>B</td></tr><tr><td>C</td></tr><tr><td>D</td></tr></table>",
+      "cells": [
+        {
+          "row": 0,
+          "column": 0,
+          "rowSpan": 3,
+          "columnSpan": 1,
+          "text": "A",
+          "isEmpty": false
+        },
+        {
+          "row": 0,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "B",
+          "isEmpty": false
+        },
+        {
+          "row": 1,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "C",
+          "isEmpty": false
+        },
+        {
+          "row": 2,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "D",
+          "isEmpty": false
+        }
+      ]
+    },
+    {
+      "id": "rectangular-merge",
+      "rawText": "<fcel>A<lcel><fcel>B<nl><ucel><xcel><fcel>C<nl><fcel>D<fcel>E<fcel>F<nl>",
+      "requiresRepair": false,
+      "origin": "synthetic-parser-case",
+      "rawTextSha256": "3f49e17752b042749558ea7ecce7f7c8075b33317f518b0ba13b178e85a448bd",
+      "normalizedOtsl": "<fcel>A<lcel><fcel>B<nl><ucel><xcel><fcel>C<nl><fcel>D<fcel>E<fcel>F<nl>",
+      "rowCount": 3,
+      "columnCount": 3,
+      "html": "<table><tr><td rowspan=\"2\" colspan=\"2\">A</td><td>B</td></tr><tr><td>C</td></tr><tr><td>D</td><td>E</td><td>F</td></tr></table>",
+      "cells": [
+        {
+          "row": 0,
+          "column": 0,
+          "rowSpan": 2,
+          "columnSpan": 2,
+          "text": "A",
+          "isEmpty": false
+        },
+        {
+          "row": 0,
+          "column": 2,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "B",
+          "isEmpty": false
+        },
+        {
+          "row": 1,
+          "column": 2,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "C",
+          "isEmpty": false
+        },
+        {
+          "row": 2,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "D",
+          "isEmpty": false
+        },
+        {
+          "row": 2,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "E",
+          "isEmpty": false
+        },
+        {
+          "row": 2,
+          "column": 2,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "F",
+          "isEmpty": false
+        }
+      ]
+    },
+    {
+      "id": "merged-empty-anchor",
+      "rawText": "<ecel><lcel><fcel>A<nl><ucel><xcel><ecel><nl>",
+      "requiresRepair": false,
+      "origin": "synthetic-parser-case",
+      "rawTextSha256": "e2b1c1224a8840c01c5cf840732cf89ecee4ccdcd2e4644e1ab90dd24ed8c7fe",
+      "normalizedOtsl": "<ecel><lcel><fcel>A<nl><ucel><xcel><ecel><nl>",
+      "rowCount": 2,
+      "columnCount": 3,
+      "html": "<table><tr><td rowspan=\"2\" colspan=\"2\"></td><td>A</td></tr><tr><td></td></tr></table>",
+      "cells": [
+        {
+          "row": 0,
+          "column": 0,
+          "rowSpan": 2,
+          "columnSpan": 2,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 0,
+          "column": 2,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "A",
+          "isEmpty": false
+        },
+        {
+          "row": 1,
+          "column": 2,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "",
+          "isEmpty": true
+        }
+      ]
+    },
+    {
+      "id": "optional-final-separator",
+      "rawText": "<fcel>A<fcel>B<nl><fcel>C<fcel>D",
+      "requiresRepair": false,
+      "origin": "synthetic-parser-case",
+      "rawTextSha256": "87f987d95ed2a3090769e25eb4a4faf8a87b1f31118a85ddc107749e97425c17",
+      "normalizedOtsl": "<fcel>A<fcel>B<nl><fcel>C<fcel>D<nl>",
+      "rowCount": 2,
+      "columnCount": 2,
+      "html": "<table><tr><td>A</td><td>B</td></tr><tr><td>C</td><td>D</td></tr></table>",
+      "cells": [
+        {
+          "row": 0,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "A",
+          "isEmpty": false
+        },
+        {
+          "row": 0,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "B",
+          "isEmpty": false
+        },
+        {
+          "row": 1,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "C",
+          "isEmpty": false
+        },
+        {
+          "row": 1,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "D",
+          "isEmpty": false
+        }
+      ]
+    },
+    {
+      "id": "one-row-whitespace",
+      "rawText": " \n<fcel>  A\t \n<lcel><ecel> \t",
+      "requiresRepair": false,
+      "origin": "synthetic-parser-case",
+      "rawTextSha256": "44567235c070acbe3cf81297cc5df2f526f53a9d49a9758d5fbd9cdda4471db3",
+      "normalizedOtsl": "<fcel>  A\t \n<lcel><ecel><nl>",
+      "rowCount": 1,
+      "columnCount": 3,
+      "html": "<table><tr><td colspan=\"2\">A</td><td></td></tr></table>",
+      "cells": [
+        {
+          "row": 0,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 2,
+          "text": "A",
+          "isEmpty": false
+        },
+        {
+          "row": 0,
+          "column": 2,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "",
+          "isEmpty": true
+        }
+      ]
+    },
+    {
+      "id": "ragged-padding",
+      "rawText": "<fcel>A<fcel>B<fcel>C<nl><fcel>D<nl><fcel>E<fcel>F<nl>",
+      "requiresRepair": true,
+      "origin": "synthetic-parser-case",
+      "rawTextSha256": "ef0f73d9f90f55f2dd4e834917a32e398e3c9cce310fed4a15bffb20d14ee655",
+      "normalizedOtsl": "<fcel>A<fcel>B<fcel>C<nl><fcel>D<ecel><ecel><nl><fcel>E<fcel>F<ecel><nl>",
+      "rowCount": 3,
+      "columnCount": 3,
+      "html": "<table><tr><td>A</td><td>B</td><td>C</td></tr><tr><td>D</td><td></td><td></td></tr><tr><td>E</td><td>F</td><td></td></tr></table>",
+      "cells": [
+        {
+          "row": 0,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "A",
+          "isEmpty": false
+        },
+        {
+          "row": 0,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "B",
+          "isEmpty": false
+        },
+        {
+          "row": 0,
+          "column": 2,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "C",
+          "isEmpty": false
+        },
+        {
+          "row": 1,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "D",
+          "isEmpty": false
+        },
+        {
+          "row": 1,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 1,
+          "column": 2,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 2,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "E",
+          "isEmpty": false
+        },
+        {
+          "row": 2,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "F",
+          "isEmpty": false
+        },
+        {
+          "row": 2,
+          "column": 2,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "",
+          "isEmpty": true
+        }
+      ]
+    },
+    {
+      "id": "ragged-trimming",
+      "rawText": "<fcel>A<lcel><ecel><nl><fcel>B<ecel><nl><fcel>C<ecel><nl>",
+      "requiresRepair": true,
+      "origin": "synthetic-parser-case",
+      "rawTextSha256": "336434e169a95fb0cccc3b19d56640570c89b4bd6bd582a3a13e89b95a94f385",
+      "normalizedOtsl": "<fcel>A<lcel><nl><fcel>B<ecel><nl><fcel>C<ecel><nl>",
+      "rowCount": 3,
+      "columnCount": 2,
+      "html": "<table><tr><td colspan=\"2\">A</td></tr><tr><td>B</td><td></td></tr><tr><td>C</td><td></td></tr></table>",
+      "cells": [
+        {
+          "row": 0,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 2,
+          "text": "A",
+          "isEmpty": false
+        },
+        {
+          "row": 1,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "B",
+          "isEmpty": false
+        },
+        {
+          "row": 1,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 2,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "C",
+          "isEmpty": false
+        },
+        {
+          "row": 2,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "",
+          "isEmpty": true
+        }
+      ]
+    },
+    {
+      "id": "minimum-cost-tie",
+      "rawText": "<fcel>A<ecel><ecel><nl><fcel>B<ecel><nl>",
+      "requiresRepair": true,
+      "origin": "synthetic-parser-case",
+      "rawTextSha256": "a05e58b77d3e0dc77b4aa6c5a52baf63c193b9c3280af59c131b93f13f954e8e",
+      "normalizedOtsl": "<fcel>A<ecel><nl><fcel>B<ecel><nl>",
+      "rowCount": 2,
+      "columnCount": 2,
+      "html": "<table><tr><td>A</td><td></td></tr><tr><td>B</td><td></td></tr></table>",
+      "cells": [
+        {
+          "row": 0,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "A",
+          "isEmpty": false
+        },
+        {
+          "row": 0,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 1,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "B",
+          "isEmpty": false
+        },
+        {
+          "row": 1,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "",
+          "isEmpty": true
+        }
+      ]
+    },
+    {
+      "id": "padding-and-trimming",
+      "rawText": "<fcel>A<nl><fcel>B<ecel><nl><fcel>C<ecel><ecel><ecel><nl>",
+      "requiresRepair": true,
+      "origin": "synthetic-parser-case",
+      "rawTextSha256": "1a616fe163c9e0f48df7f5091944847589acc5d5759759e7dfc14cc4a1b0d029",
+      "normalizedOtsl": "<fcel>A<ecel><nl><fcel>B<ecel><nl><fcel>C<ecel><nl>",
+      "rowCount": 3,
+      "columnCount": 2,
+      "html": "<table><tr><td>A</td><td></td></tr><tr><td>B</td><td></td></tr><tr><td>C</td><td></td></tr></table>",
+      "cells": [
+        {
+          "row": 0,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "A",
+          "isEmpty": false
+        },
+        {
+          "row": 0,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 1,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "B",
+          "isEmpty": false
+        },
+        {
+          "row": 1,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 2,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "C",
+          "isEmpty": false
+        },
+        {
+          "row": 2,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "",
+          "isEmpty": true
+        }
+      ]
+    },
+    {
+      "id": "empty-rows",
+      "rawText": "<nl><fcel>A<nl><nl><fcel>B<nl>",
+      "requiresRepair": true,
+      "origin": "synthetic-parser-case",
+      "rawTextSha256": "79fe7d823f5ee7c98048ad3ea54b9924bae781afe2d26f2ade14b409f2adc1db",
+      "normalizedOtsl": "<fcel>A<nl><fcel>B<nl>",
+      "rowCount": 2,
+      "columnCount": 1,
+      "html": "<table><tr><td>A</td></tr><tr><td>B</td></tr></table>",
+      "cells": [
+        {
+          "row": 0,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "A",
+          "isEmpty": false
+        },
+        {
+          "row": 1,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "B",
+          "isEmpty": false
+        }
+      ]
+    },
+    {
+      "id": "table-official-example",
+      "rawText": "<fcel>CRuncover<lcel><lcel><lcel><nl><fcel>Dres<fcel>\u8fde\u7eed\u5de5\u4f5c3<fcel>\u53d6\u51fa\u6765\u653e\u5728\u7f51\u4e0a\uff0c\u6ca1\u60f3<fcel>\u6c5f\u3001\u9ccc\u6c5f\u7b49\u516b\u5927<nl><fcel>Abstr<ecel><fcel>rSrivi<fcel>$709.<nl><fcel>cludingGiv<fcel>2.72<fcel>Ingcubic<fcel>$744.78<nl>",
+      "requiresRepair": false,
+      "origin": "tests/assets/paddleocr-vl/six-task-reference.json",
+      "inputSha256": "acd113bb3a89b488941ee0962776a28e45897fa2802cd306ec3bb68d9043115c",
+      "generationStopReason": "eos",
+      "rawTextSha256": "530b7ee0b72aa3d8599d1fbbba2b2cf3856c57ddbe7a0a0c0dfba1df396d7d1f",
+      "normalizedOtsl": "<fcel>CRuncover<lcel><lcel><lcel><nl><fcel>Dres<fcel>\u8fde\u7eed\u5de5\u4f5c3<fcel>\u53d6\u51fa\u6765\u653e\u5728\u7f51\u4e0a\uff0c\u6ca1\u60f3<fcel>\u6c5f\u3001\u9ccc\u6c5f\u7b49\u516b\u5927<nl><fcel>Abstr<ecel><fcel>rSrivi<fcel>$709.<nl><fcel>cludingGiv<fcel>2.72<fcel>Ingcubic<fcel>$744.78<nl>",
+      "rowCount": 4,
+      "columnCount": 4,
+      "html": "<table><tr><td colspan=\"4\">CRuncover</td></tr><tr><td>Dres</td><td>\u8fde\u7eed\u5de5\u4f5c3</td><td>\u53d6\u51fa\u6765\u653e\u5728\u7f51\u4e0a\uff0c\u6ca1\u60f3</td><td>\u6c5f\u3001\u9ccc\u6c5f\u7b49\u516b\u5927</td></tr><tr><td>Abstr</td><td></td><td>rSrivi</td><td>$709.</td></tr><tr><td>cludingGiv</td><td>2.72</td><td>Ingcubic</td><td>$744.78</td></tr></table>",
+      "cells": [
+        {
+          "row": 0,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 4,
+          "text": "CRuncover",
+          "isEmpty": false
+        },
+        {
+          "row": 1,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "Dres",
+          "isEmpty": false
+        },
+        {
+          "row": 1,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "\u8fde\u7eed\u5de5\u4f5c3",
+          "isEmpty": false
+        },
+        {
+          "row": 1,
+          "column": 2,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "\u53d6\u51fa\u6765\u653e\u5728\u7f51\u4e0a\uff0c\u6ca1\u60f3",
+          "isEmpty": false
+        },
+        {
+          "row": 1,
+          "column": 3,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "\u6c5f\u3001\u9ccc\u6c5f\u7b49\u516b\u5927",
+          "isEmpty": false
+        },
+        {
+          "row": 2,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "Abstr",
+          "isEmpty": false
+        },
+        {
+          "row": 2,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 2,
+          "column": 2,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "rSrivi",
+          "isEmpty": false
+        },
+        {
+          "row": 2,
+          "column": 3,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "$709.",
+          "isEmpty": false
+        },
+        {
+          "row": 3,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "cludingGiv",
+          "isEmpty": false
+        },
+        {
+          "row": 3,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "2.72",
+          "isEmpty": false
+        },
+        {
+          "row": 3,
+          "column": 2,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "Ingcubic",
+          "isEmpty": false
+        },
+        {
+          "row": 3,
+          "column": 3,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "$744.78",
+          "isEmpty": false
+        }
+      ]
+    },
+    {
+      "id": "page-7-region-0",
+      "rawText": "<fcel>PURCHASE REQUISITION<lcel><lcel><lcel><fcel>P.O. Box 1534 REV.10/79\nLT-10-79<fcel>DATE\nApril 19, 1988<nl><fcel>\u2610 Purchasing Purchase<lcel><lcel><lcel><ucel><ucel><nl><fcel>\u2610 Stationary<lcel><fcel>PLEASE INCLUDE ONLY ONE TYPE OF MATERIAL ON THIS REQUISITION<lcel><ucel><ucel><nl><fcel>VENDOR<fcel>FOR PURCHASING DEPARTMENT USE ONLY<lcel><lcel><fcel>ORDER NO.<lcel><nl><fcel>Piedmont Research Laboratory 2748 Patterson Ave., Greensboro, NC 27407<lcel><lcel><lcel><fcel>Prev. or Recommended Supplier<lcel><nl><fcel>TERMS NET 15 F.O.B. N/A VIA N/A<lcel><lcel><lcel><fcel>DATE WANTED\nAs required<lcel><nl><fcel>SHIP TO (DEPT. BRANCH) Lorillard Research Center N. A. Thaggard<lcel><lcel><lcel><ucel><xcel><nl><fcel>420 English St., Greensboro, NC 27405<lcel><lcel><lcel><lcel><lcel><nl><fcel>QUANTITY<fcel>CODE<fcel>DESCRIPTION<lcel><lcel><fcel>UNIT PRICE<nl><ecel><fcel>This is your authorization to prepare cigarette smoke condensate<lcel><lcel><lcel><lcel><nl><ecel><fcel>according to the protocol \"Standard Operating Procedure for the<lcel><lcel><lcel><lcel><nl><ecel><fcel>Preparation of Smoke Condensate for Mouse Skin Bioassay,\"<lcel><lcel><fcel>for the<lcel><nl><ecel><fcel>period April 1, 1988 through December 31, 1988. Condensate will be<lcel><lcel><lcel><lcel><nl><ecel><fcel>prepared according to a time schedule provided by Lorillard. The<lcel><lcel><lcel><lcel><nl><ecel><fcel>fixed price for condensate collection will be at a rate of<lcel><lcel><lcel><lcel><nl><ecel><fcel>$1,750/10,000 cigarettes smoked. Piedmont will pay the cost of<lcel><lcel><lcel><lcel><nl><ecel><fcel>consumable supplies. This work is to be conducted in accordance<lcel><lcel><lcel><lcel><nl><ecel><fcel>with the December 10, 1984 formal agreement between Piedmont Reseach<lcel><lcel><lcel><lcel><nl><ecel><fcel>Laboratories and Lorillard. All work is to be coordinated with our<lcel><lcel><lcel><lcel><nl><ecel><fcel>Mr. Neil Thaggard (919) 373-6628.<lcel><lcel><ecel><lcel><nl><ecel><ecel><ecel><lcel><ecel><lcel><nl><ecel><ecel><ecel><lcel><ecel><lcel><nl><ecel><ecel><ecel><lcel><ecel><lcel><nl><ecel><ecel><ecel><lcel><ecel><lcel><nl><fcel>FOLLOW UP DATE<lcel><fcel>REQUISITION NO.<lcel><fcel>ISSUED BY<lcel><nl><ecel><lcel><ecel><lcel><ecel><lcel><nl><fcel>BUDGET NO.<lcel><fcel>ACCT. NO.<fcel>DEPT. NO.<fcel>APPROVED BY<lcel><nl><ecel><lcel><fcel>4111<fcel>8700<fcel>H. M. Mummeyer<lcel><nl>",
+      "requiresRepair": false,
+      "origin": "tests/assets/paddleocr-vl/detected-crop-reference.json",
+      "inputSha256": "7a0a51809036a29cb7449be47b3714c89792ce89ac3b839a6d0a6feba2babf3c",
+      "generationStopReason": "eos",
+      "rawTextSha256": "8bbfdeb0b37852f65d7e52fc1206140dee9de4df29ea26fdfd25dce44597d6df",
+      "normalizedOtsl": "<fcel>PURCHASE REQUISITION<lcel><lcel><lcel><fcel>P.O. Box 1534 REV.10/79\nLT-10-79<fcel>DATE\nApril 19, 1988<nl><fcel>\u2610 Purchasing Purchase<lcel><lcel><lcel><ucel><ucel><nl><fcel>\u2610 Stationary<lcel><fcel>PLEASE INCLUDE ONLY ONE TYPE OF MATERIAL ON THIS REQUISITION<lcel><ucel><ucel><nl><fcel>VENDOR<fcel>FOR PURCHASING DEPARTMENT USE ONLY<lcel><lcel><fcel>ORDER NO.<lcel><nl><fcel>Piedmont Research Laboratory 2748 Patterson Ave., Greensboro, NC 27407<lcel><lcel><lcel><fcel>Prev. or Recommended Supplier<lcel><nl><fcel>TERMS NET 15 F.O.B. N/A VIA N/A<lcel><lcel><lcel><fcel>DATE WANTED\nAs required<lcel><nl><fcel>SHIP TO (DEPT. BRANCH) Lorillard Research Center N. A. Thaggard<lcel><lcel><lcel><ucel><xcel><nl><fcel>420 English St., Greensboro, NC 27405<lcel><lcel><lcel><lcel><lcel><nl><fcel>QUANTITY<fcel>CODE<fcel>DESCRIPTION<lcel><lcel><fcel>UNIT PRICE<nl><ecel><fcel>This is your authorization to prepare cigarette smoke condensate<lcel><lcel><lcel><lcel><nl><ecel><fcel>according to the protocol \"Standard Operating Procedure for the<lcel><lcel><lcel><lcel><nl><ecel><fcel>Preparation of Smoke Condensate for Mouse Skin Bioassay,\"<lcel><lcel><fcel>for the<lcel><nl><ecel><fcel>period April 1, 1988 through December 31, 1988. Condensate will be<lcel><lcel><lcel><lcel><nl><ecel><fcel>prepared according to a time schedule provided by Lorillard. The<lcel><lcel><lcel><lcel><nl><ecel><fcel>fixed price for condensate collection will be at a rate of<lcel><lcel><lcel><lcel><nl><ecel><fcel>$1,750/10,000 cigarettes smoked. Piedmont will pay the cost of<lcel><lcel><lcel><lcel><nl><ecel><fcel>consumable supplies. This work is to be conducted in accordance<lcel><lcel><lcel><lcel><nl><ecel><fcel>with the December 10, 1984 formal agreement between Piedmont Reseach<lcel><lcel><lcel><lcel><nl><ecel><fcel>Laboratories and Lorillard. All work is to be coordinated with our<lcel><lcel><lcel><lcel><nl><ecel><fcel>Mr. Neil Thaggard (919) 373-6628.<lcel><lcel><ecel><lcel><nl><ecel><ecel><ecel><lcel><ecel><lcel><nl><ecel><ecel><ecel><lcel><ecel><lcel><nl><ecel><ecel><ecel><lcel><ecel><lcel><nl><ecel><ecel><ecel><lcel><ecel><lcel><nl><fcel>FOLLOW UP DATE<lcel><fcel>REQUISITION NO.<lcel><fcel>ISSUED BY<lcel><nl><ecel><lcel><ecel><lcel><ecel><lcel><nl><fcel>BUDGET NO.<lcel><fcel>ACCT. NO.<fcel>DEPT. NO.<fcel>APPROVED BY<lcel><nl><ecel><lcel><fcel>4111<fcel>8700<fcel>H. M. Mummeyer<lcel><nl>",
+      "rowCount": 28,
+      "columnCount": 6,
+      "html": "<table><tr><td colspan=\"4\">PURCHASE REQUISITION</td><td rowspan=\"3\">P.O. Box 1534 REV.10/79\nLT-10-79</td><td rowspan=\"3\">DATE\nApril 19, 1988</td></tr><tr><td colspan=\"4\">\u2610 Purchasing Purchase</td></tr><tr><td colspan=\"2\">\u2610 Stationary</td><td colspan=\"2\">PLEASE INCLUDE ONLY ONE TYPE OF MATERIAL ON THIS REQUISITION</td></tr><tr><td>VENDOR</td><td colspan=\"3\">FOR PURCHASING DEPARTMENT USE ONLY</td><td colspan=\"2\">ORDER NO.</td></tr><tr><td colspan=\"4\">Piedmont Research Laboratory 2748 Patterson Ave., Greensboro, NC 27407</td><td colspan=\"2\">Prev. or Recommended Supplier</td></tr><tr><td colspan=\"4\">TERMS NET 15 F.O.B. N/A VIA N/A</td><td rowspan=\"2\" colspan=\"2\">DATE WANTED\nAs required</td></tr><tr><td colspan=\"4\">SHIP TO (DEPT. BRANCH) Lorillard Research Center N. A. Thaggard</td></tr><tr><td colspan=\"6\">420 English St., Greensboro, NC 27405</td></tr><tr><td>QUANTITY</td><td>CODE</td><td colspan=\"3\">DESCRIPTION</td><td>UNIT PRICE</td></tr><tr><td></td><td colspan=\"5\">This is your authorization to prepare cigarette smoke condensate</td></tr><tr><td></td><td colspan=\"5\">according to the protocol &quot;Standard Operating Procedure for the</td></tr><tr><td></td><td colspan=\"3\">Preparation of Smoke Condensate for Mouse Skin Bioassay,&quot;</td><td colspan=\"2\">for the</td></tr><tr><td></td><td colspan=\"5\">period April 1, 1988 through December 31, 1988. Condensate will be</td></tr><tr><td></td><td colspan=\"5\">prepared according to a time schedule provided by Lorillard. The</td></tr><tr><td></td><td colspan=\"5\">fixed price for condensate collection will be at a rate of</td></tr><tr><td></td><td colspan=\"5\">$1,750/10,000 cigarettes smoked. Piedmont will pay the cost of</td></tr><tr><td></td><td colspan=\"5\">consumable supplies. This work is to be conducted in accordance</td></tr><tr><td></td><td colspan=\"5\">with the December 10, 1984 formal agreement between Piedmont Reseach</td></tr><tr><td></td><td colspan=\"5\">Laboratories and Lorillard. All work is to be coordinated with our</td></tr><tr><td></td><td colspan=\"3\">Mr. Neil Thaggard (919) 373-6628.</td><td colspan=\"2\"></td></tr><tr><td></td><td></td><td colspan=\"2\"></td><td colspan=\"2\"></td></tr><tr><td></td><td></td><td colspan=\"2\"></td><td colspan=\"2\"></td></tr><tr><td></td><td></td><td colspan=\"2\"></td><td colspan=\"2\"></td></tr><tr><td></td><td></td><td colspan=\"2\"></td><td colspan=\"2\"></td></tr><tr><td colspan=\"2\">FOLLOW UP DATE</td><td colspan=\"2\">REQUISITION NO.</td><td colspan=\"2\">ISSUED BY</td></tr><tr><td colspan=\"2\"></td><td colspan=\"2\"></td><td colspan=\"2\"></td></tr><tr><td colspan=\"2\">BUDGET NO.</td><td>ACCT. NO.</td><td>DEPT. NO.</td><td colspan=\"2\">APPROVED BY</td></tr><tr><td colspan=\"2\"></td><td>4111</td><td>8700</td><td colspan=\"2\">H. M. Mummeyer</td></tr></table>",
+      "cells": [
+        {
+          "row": 0,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 4,
+          "text": "PURCHASE REQUISITION",
+          "isEmpty": false
+        },
+        {
+          "row": 0,
+          "column": 4,
+          "rowSpan": 3,
+          "columnSpan": 1,
+          "text": "P.O. Box 1534 REV.10/79\nLT-10-79",
+          "isEmpty": false
+        },
+        {
+          "row": 0,
+          "column": 5,
+          "rowSpan": 3,
+          "columnSpan": 1,
+          "text": "DATE\nApril 19, 1988",
+          "isEmpty": false
+        },
+        {
+          "row": 1,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 4,
+          "text": "\u2610 Purchasing Purchase",
+          "isEmpty": false
+        },
+        {
+          "row": 2,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 2,
+          "text": "\u2610 Stationary",
+          "isEmpty": false
+        },
+        {
+          "row": 2,
+          "column": 2,
+          "rowSpan": 1,
+          "columnSpan": 2,
+          "text": "PLEASE INCLUDE ONLY ONE TYPE OF MATERIAL ON THIS REQUISITION",
+          "isEmpty": false
+        },
+        {
+          "row": 3,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "VENDOR",
+          "isEmpty": false
+        },
+        {
+          "row": 3,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 3,
+          "text": "FOR PURCHASING DEPARTMENT USE ONLY",
+          "isEmpty": false
+        },
+        {
+          "row": 3,
+          "column": 4,
+          "rowSpan": 1,
+          "columnSpan": 2,
+          "text": "ORDER NO.",
+          "isEmpty": false
+        },
+        {
+          "row": 4,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 4,
+          "text": "Piedmont Research Laboratory 2748 Patterson Ave., Greensboro, NC 27407",
+          "isEmpty": false
+        },
+        {
+          "row": 4,
+          "column": 4,
+          "rowSpan": 1,
+          "columnSpan": 2,
+          "text": "Prev. or Recommended Supplier",
+          "isEmpty": false
+        },
+        {
+          "row": 5,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 4,
+          "text": "TERMS NET 15 F.O.B. N/A VIA N/A",
+          "isEmpty": false
+        },
+        {
+          "row": 5,
+          "column": 4,
+          "rowSpan": 2,
+          "columnSpan": 2,
+          "text": "DATE WANTED\nAs required",
+          "isEmpty": false
+        },
+        {
+          "row": 6,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 4,
+          "text": "SHIP TO (DEPT. BRANCH) Lorillard Research Center N. A. Thaggard",
+          "isEmpty": false
+        },
+        {
+          "row": 7,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 6,
+          "text": "420 English St., Greensboro, NC 27405",
+          "isEmpty": false
+        },
+        {
+          "row": 8,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "QUANTITY",
+          "isEmpty": false
+        },
+        {
+          "row": 8,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "CODE",
+          "isEmpty": false
+        },
+        {
+          "row": 8,
+          "column": 2,
+          "rowSpan": 1,
+          "columnSpan": 3,
+          "text": "DESCRIPTION",
+          "isEmpty": false
+        },
+        {
+          "row": 8,
+          "column": 5,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "UNIT PRICE",
+          "isEmpty": false
+        },
+        {
+          "row": 9,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 9,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 5,
+          "text": "This is your authorization to prepare cigarette smoke condensate",
+          "isEmpty": false
+        },
+        {
+          "row": 10,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 10,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 5,
+          "text": "according to the protocol \"Standard Operating Procedure for the",
+          "isEmpty": false
+        },
+        {
+          "row": 11,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 11,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 3,
+          "text": "Preparation of Smoke Condensate for Mouse Skin Bioassay,\"",
+          "isEmpty": false
+        },
+        {
+          "row": 11,
+          "column": 4,
+          "rowSpan": 1,
+          "columnSpan": 2,
+          "text": "for the",
+          "isEmpty": false
+        },
+        {
+          "row": 12,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 12,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 5,
+          "text": "period April 1, 1988 through December 31, 1988. Condensate will be",
+          "isEmpty": false
+        },
+        {
+          "row": 13,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 13,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 5,
+          "text": "prepared according to a time schedule provided by Lorillard. The",
+          "isEmpty": false
+        },
+        {
+          "row": 14,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 14,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 5,
+          "text": "fixed price for condensate collection will be at a rate of",
+          "isEmpty": false
+        },
+        {
+          "row": 15,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 15,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 5,
+          "text": "$1,750/10,000 cigarettes smoked. Piedmont will pay the cost of",
+          "isEmpty": false
+        },
+        {
+          "row": 16,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 16,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 5,
+          "text": "consumable supplies. This work is to be conducted in accordance",
+          "isEmpty": false
+        },
+        {
+          "row": 17,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 17,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 5,
+          "text": "with the December 10, 1984 formal agreement between Piedmont Reseach",
+          "isEmpty": false
+        },
+        {
+          "row": 18,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 18,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 5,
+          "text": "Laboratories and Lorillard. All work is to be coordinated with our",
+          "isEmpty": false
+        },
+        {
+          "row": 19,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 19,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 3,
+          "text": "Mr. Neil Thaggard (919) 373-6628.",
+          "isEmpty": false
+        },
+        {
+          "row": 19,
+          "column": 4,
+          "rowSpan": 1,
+          "columnSpan": 2,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 20,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 20,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 20,
+          "column": 2,
+          "rowSpan": 1,
+          "columnSpan": 2,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 20,
+          "column": 4,
+          "rowSpan": 1,
+          "columnSpan": 2,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 21,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 21,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 21,
+          "column": 2,
+          "rowSpan": 1,
+          "columnSpan": 2,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 21,
+          "column": 4,
+          "rowSpan": 1,
+          "columnSpan": 2,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 22,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 22,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 22,
+          "column": 2,
+          "rowSpan": 1,
+          "columnSpan": 2,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 22,
+          "column": 4,
+          "rowSpan": 1,
+          "columnSpan": 2,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 23,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 23,
+          "column": 1,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 23,
+          "column": 2,
+          "rowSpan": 1,
+          "columnSpan": 2,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 23,
+          "column": 4,
+          "rowSpan": 1,
+          "columnSpan": 2,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 24,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 2,
+          "text": "FOLLOW UP DATE",
+          "isEmpty": false
+        },
+        {
+          "row": 24,
+          "column": 2,
+          "rowSpan": 1,
+          "columnSpan": 2,
+          "text": "REQUISITION NO.",
+          "isEmpty": false
+        },
+        {
+          "row": 24,
+          "column": 4,
+          "rowSpan": 1,
+          "columnSpan": 2,
+          "text": "ISSUED BY",
+          "isEmpty": false
+        },
+        {
+          "row": 25,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 2,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 25,
+          "column": 2,
+          "rowSpan": 1,
+          "columnSpan": 2,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 25,
+          "column": 4,
+          "rowSpan": 1,
+          "columnSpan": 2,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 26,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 2,
+          "text": "BUDGET NO.",
+          "isEmpty": false
+        },
+        {
+          "row": 26,
+          "column": 2,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "ACCT. NO.",
+          "isEmpty": false
+        },
+        {
+          "row": 26,
+          "column": 3,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "DEPT. NO.",
+          "isEmpty": false
+        },
+        {
+          "row": 26,
+          "column": 4,
+          "rowSpan": 1,
+          "columnSpan": 2,
+          "text": "APPROVED BY",
+          "isEmpty": false
+        },
+        {
+          "row": 27,
+          "column": 0,
+          "rowSpan": 1,
+          "columnSpan": 2,
+          "text": "",
+          "isEmpty": true
+        },
+        {
+          "row": 27,
+          "column": 2,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "4111",
+          "isEmpty": false
+        },
+        {
+          "row": 27,
+          "column": 3,
+          "rowSpan": 1,
+          "columnSpan": 1,
+          "text": "8700",
+          "isEmpty": false
+        },
+        {
+          "row": 27,
+          "column": 4,
+          "rowSpan": 1,
+          "columnSpan": 2,
+          "text": "H. M. Mummeyer",
+          "isEmpty": false
+        }
+      ]
+    }
+  ]
+}

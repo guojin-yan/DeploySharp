@@ -16,9 +16,9 @@ namespace DeploySharp.Backend.OnnxRuntime.Tests
     public sealed class Stage20PaddleOcrClassificationIntegrationTests
     {
         [TestMethod]
-        [DataRow(false, "mobile", "DEPLOYSHARP_STAGE20_PADDLE_OCR_CLS_MODEL", @"E:\Model\ocr\ppocrv5\PP-OCRv5_mobile_cls_onnx.onnx", "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2")]
-        [DataRow(false, "server", "DEPLOYSHARP_STAGE20_PADDLE_OCR_SERVER_CLS_MODEL", @"E:\Model\ocr\ppocrv5-1\PP-OCRv5_server_cls_onnx.onnx", "d874cd926a8f9f66e886bbd8ad7747635802b6cc52d3b81b5892845fc84c616f")]
-        [DataRow(true, "legacy", "DEPLOYSHARP_STAGE20_PADDLE_OCR_LEGACY_CLS_MODEL", @"E:\Model\ocr\ppocrv4\PP-OCRv4_mobile_cls_onnx.onnx", "f4bb53707100c5f3d59ba834eb05bb400369f20aed35d4b26807b1bfadd2a70e")]
+        [DataRow(false, "mobile", "DEPLOYSHARP_STAGE20_PADDLE_OCR_CLS_MODEL", @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_mobile_cls.onnx", "dd8b2b61983d76ab230a58da9e0e0e84956b71c3877f2ce6e438fe22d74d2cf2")]
+        [DataRow(false, "server", "DEPLOYSHARP_STAGE20_PADDLE_OCR_SERVER_CLS_MODEL", @"E:\Model\paddleocr\PP-OCRv5\PP-OCRv5_server_cls.onnx", "38aa97cd4be591e0ad304e659f07ba30d946f27a63315433f6659c69c8778345")]
+        [DataRow(true, "legacy", "DEPLOYSHARP_STAGE20_PADDLE_OCR_LEGACY_CLS_MODEL", @"E:\Model\paddleocr\PP-OCRv4\PP-OCRv4_mobile_cls.onnx", "f4bb53707100c5f3d59ba834eb05bb400369f20aed35d4b26807b1bfadd2a70e")]
         [TestCategory("ExternalModels")]
         public void EveryLocalClassificationContractRunsOnRealCpuOrt(bool legacy, string variant, string environmentVariable, string fallbackPath, string sha256)
         {

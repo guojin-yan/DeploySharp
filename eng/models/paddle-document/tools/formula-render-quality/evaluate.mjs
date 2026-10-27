@@ -297,13 +297,14 @@ function parseArguments(args) {
     values.set(name.slice(2), value);
   }
   const cwd = process.cwd();
+  const artifactRoot = path.join(cwd, 'artifacts/formula-render-quality');
   const rasterWidth = parseBoundedInteger(values.get('raster-width') ?? '2048', 'raster-width', 256, 4096);
   const rasterHeight = parseBoundedInteger(values.get('raster-height') ?? '128', 'raster-height', 32, 512);
   return {
     datasetRoot: path.resolve(values.get('dataset-root') ?? 'F:/OCRBenchmarkTesting/datasets/realFormula-zenodo-11296815/extracted/realFormula-public'),
-    verificationRoot: path.resolve(values.get('verification-root') ?? path.join(cwd, 'eng/models/paddle-document/verification')),
-    outputJson: path.resolve(values.get('output-json') ?? path.join(cwd, 'eng/models/paddle-document/verification/formula-realformula-render-quality-20261013.json')),
-    outputMarkdown: path.resolve(values.get('output-markdown') ?? path.join(cwd, 'eng/models/paddle-document/verification/formula-realformula-render-quality-20261013.md')),
+    verificationRoot: path.resolve(values.get('verification-root') ?? path.join(artifactRoot, 'input')),
+    outputJson: path.resolve(values.get('output-json') ?? path.join(artifactRoot, 'render-quality.json')),
+    outputMarkdown: path.resolve(values.get('output-markdown') ?? path.join(artifactRoot, 'render-quality.md')),
     vlReport: values.has('vl-report') ? path.resolve(values.get('vl-report')) : null,
     rasterWidth,
     rasterHeight

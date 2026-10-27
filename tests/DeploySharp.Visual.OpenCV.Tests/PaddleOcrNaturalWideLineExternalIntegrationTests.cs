@@ -53,7 +53,7 @@ public sealed class PaddleOcrNaturalWideLineExternalIntegrationTests
         string split = Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_NATURAL_WIDE_SPLIT") ?? "validation";
         if (split is not ("validation" or "test" or "train")) throw new ArgumentException("Choose the validation, test or train HierText split.");
         string candidatePath = RequireFile(Environment.GetEnvironmentVariable("DEPLOYSHARP_PADDLEOCR_NATURAL_WIDE_CANDIDATES")
-            ?? (split == "validation" ? Path.Combine(FindRepoRoot(), "eng/models/paddle-ocr/verification/hiertext-natural-wide-coverage-a2-20261017.json")
+            ?? (split == "validation" ? Path.Combine(FindRepoRoot(), "tests/assets/paddleocr/natural-wide-selection.json")
                 : throw new ArgumentException("Set DEPLOYSHARP_PADDLEOCR_NATURAL_WIDE_CANDIDATES for the test or train split.")));
         string annotationPath = RequireFile(Path.Combine(datasetRoot, "artifacts/cache/hiertext/" + split + "-" + Revision + ".jsonl.gz"));
         string expectedAnnotationSha = split switch { "test" => TestAnnotationSha, "train" => TrainAnnotationSha, _ => AnnotationSha };
@@ -407,7 +407,7 @@ public sealed class PaddleOcrNaturalWideLineExternalIntegrationTests
     private static string FindRepoRoot()
     {
         for (DirectoryInfo? dir = new DirectoryInfo(AppContext.BaseDirectory); dir != null; dir = dir.Parent)
-            if (File.Exists(Path.Combine(dir.FullName, "eng/models/paddle-ocr/verification/hiertext-natural-wide-coverage-a2-20261017.json"))) return dir.FullName;
+            if (File.Exists(Path.Combine(dir.FullName, "tests/assets/paddleocr/natural-wide-selection.json"))) return dir.FullName;
         throw new DirectoryNotFoundException("Set DEPLOYSHARP_PADDLEOCR_NATURAL_WIDE_CANDIDATES to the pinned candidate JSON.");
     }
 
