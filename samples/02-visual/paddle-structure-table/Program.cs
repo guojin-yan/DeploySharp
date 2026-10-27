@@ -52,36 +52,16 @@ internal static class Program
 
     private static async Task RunAsync(Options options, CancellationToken cancellationToken)
     {
-        string tableType = options.TableType + "_table";
-        string cellId = "paddle-table/rt-detr-l-" + options.TableType + "-cell-det";
-        string structureId = "paddle-table/slanext-" + options.TableType;
-        string releaseStructureId = options.Backend == "openvino" ? structureId + "-openvino-compat" : structureId;
-        ModelFile classificationModel;
-        ModelFile cellModel;
-        ModelFile structureModel;
-        if (options.ModelDirectory != null)
-        {
-            classificationModel = ModelFile.FromLocal(Path.Combine(options.ModelDirectory, "pp-lcnet-x1-0-table-cls.onnx"));
-            cellModel = ModelFile.FromLocal(Path.Combine(options.ModelDirectory, "rt-detr-l-" + options.TableType + "-cell-det.onnx"));
-            structureModel = ModelFile.FromLocal(Path.Combine(options.ModelDirectory,
-                options.Backend == "openvino" ? "slanext-" + options.TableType + "-openvino-compat.onnx" : "slanext-" + options.TableType + ".onnx"));
-        }
-        else
-        {
-            using var release = new PaddleOcrReleaseClient(new PaddleOcrReleaseClientOptions(options.Cache, offline: options.Offline));
-            classificationModel = ModelFile.FromRelease(await release.GetModelAsync("paddle-table/pp-lcnet-x1-0-table-cls", cancellationToken: cancellationToken).ConfigureAwait(false));
-            cellModel = ModelFile.FromRelease(await release.GetModelAsync(cellId, cancellationToken: cancellationToken).ConfigureAwait(false));
-            structureModel = ModelFile.FromRelease(await release.GetModelAsync(releaseStructureId, cancellationToken: cancellationToken).ConfigureAwait(false));
-        }
+        using PaddleOcrReleaseClient? release = options.ModelDirectory == null
+            ? new PaddleOcrReleaseClient(new PaddleOcrReleaseClientOptions(options.Cache, offline: options.Offline))
+            : null;
+        var imageSource = OpenCvImageSource.FromFile(options.Image);
+        ModelFile classificationModel = await ResolveModelAsync("paddle-table/pp-lcnet-x1-0-table-cls",
+            "pp-lcnet-x1-0-table-cls.onnx", options, release, cancellationToken).ConfigureAwait(false);
 
         PaddleDocumentModelDescriptor classificationDescriptor = PaddleDocumentModelCatalog.Get("paddle-table/pp-lcnet-x1-0-table-cls");
-        PaddleDocumentModelDescriptor cellDescriptor = PaddleDocumentModelCatalog.Get(cellId);
-        PaddleDocumentModelDescriptor structureDescriptor = PaddleDocumentModelCatalog.Get(structureId);
         PaddleDocumentProfile classificationProfile = PaddleDocumentProfiles.CreateClassification(classificationDescriptor,
             new[] { "wired_table", "wireless_table" }, VisualTaskId.TableClassification, modelSize: new VisualSize(224, 224));
-        PaddleDocumentProfile cellProfile = PaddleDocumentProfiles.CreatePaddleNmsRegions(cellDescriptor,
-            new[] { "table-cell" }, new VisualSize(640, 640), includeGeometryInputs: true, scoreThreshold: 0);
-        PaddleDocumentProfile structureProfile = PaddleDocumentProfiles.CreateTableStructure(structureDescriptor, modelSize: new VisualSize(512, 512));
 
         using var classificationRegistry = CreateRegistry(options.Backend);
         using var cellRegistry = CreateRegistry(options.Backend);
@@ -89,10 +69,9 @@ internal static class Program
         BackendId backendId = options.Backend == "openvino" ? OpenVinoBackendProvider.BackendId : OnnxRuntimeBackendProvider.BackendId;
         var request = new BackendRequest(BackendCapabilities.TensorInference, backendId, options.Backend == "openvino" ? "CPU" : "cpu");
         using VisualPipeline classification = CreatePipeline(classificationRegistry, classificationProfile, classificationModel, request, backendId);
-        using VisualPipeline cells = CreatePipeline(cellRegistry, cellProfile, cellModel, request, backendId);
-        using VisualPipeline structure = CreatePipeline(structureRegistry, structureProfile, structureModel, request, backendId);
+        VisualPipeline? cells = null;
+        VisualPipeline? structure = null;
 
-        var imageSource = OpenCvImageSource.FromFile(options.Image);
         var inputFactory = new OpenCvVisualInputFactory();
         using OpenCvDecodedRoiImage image = inputFactory.DecodeForRois(imageSource, cancellationToken);
         var page = new PaddleDocumentPage(image, image.SourceSize);
@@ -112,8 +91,14 @@ internal static class Program
             new[] { PaddleDocumentModule.TableClassification }, async (context, token) =>
             {
                 PaddleDocumentClassificationResult selected = context.TryGet<PaddleDocumentClassificationResult>(PaddleDocumentModule.TableClassification)!;
-                if (selected.Label != tableType)
-                    throw new InvalidOperationException("Classifier selected '" + selected.Label + "', but --table-type is '" + options.TableType + "'. Rerun with the matching table type.");
+                string tableType = SelectTableType(selected.Label, options.TableType);
+                string cellId = "paddle-table/rt-detr-l-" + tableType + "-cell-det";
+                PaddleDocumentModelDescriptor cellDescriptor = PaddleDocumentModelCatalog.Get(cellId);
+                PaddleDocumentProfile cellProfile = PaddleDocumentProfiles.CreatePaddleNmsRegions(cellDescriptor,
+                    new[] { "table-cell" }, new VisualSize(640, 640), includeGeometryInputs: true, scoreThreshold: 0);
+                string filename = "rt-detr-l-" + tableType + "-cell-det.onnx";
+                ModelFile cellModel = await ResolveModelAsync(cellId, filename, options, release, token).ConfigureAwait(false);
+                cells = CreatePipeline(cellRegistry, cellProfile, cellModel, request, backendId);
                 using PreparedVisualInput input = OpenCvPaddleDocumentPreprocessing.CreateFromPage(image, cellProfile, sourceSha, token);
                 VisualInferenceResult inference = await cells.RunAsync(input, cancellationToken: token).ConfigureAwait(false);
                 DetectionResult value = inference.GetValue<DetectionResult>();
@@ -124,6 +109,15 @@ internal static class Program
         var structureStage = new PaddleDocumentDependentStage(PaddleDocumentModule.TableStructureRecognition,
             new[] { PaddleDocumentModule.TableCellDetection }, async (context, token) =>
             {
+                PaddleDocumentClassificationResult selected = context.TryGet<PaddleDocumentClassificationResult>(PaddleDocumentModule.TableClassification)!;
+                string tableType = SelectTableType(selected.Label, options.TableType);
+                string structureId = "paddle-table/slanext-" + tableType;
+                string releaseStructureId = options.Backend == "openvino" ? structureId + "-openvino-compat" : structureId;
+                string filename = options.Backend == "openvino" ? "slanext-" + tableType + "-openvino-compat.onnx" : "slanext-" + tableType + ".onnx";
+                PaddleDocumentModelDescriptor structureDescriptor = PaddleDocumentModelCatalog.Get(structureId);
+                PaddleDocumentProfile structureProfile = PaddleDocumentProfiles.CreateTableStructure(structureDescriptor, modelSize: new VisualSize(512, 512));
+                ModelFile structureModel = await ResolveModelAsync(releaseStructureId, filename, options, release, token).ConfigureAwait(false);
+                structure = CreatePipeline(structureRegistry, structureProfile, structureModel, request, backendId);
                 using PreparedVisualInput input = OpenCvPaddleDocumentPreprocessing.CreateFromPage(image, structureProfile, sourceSha, token);
                 VisualInferenceResult inference = await structure.RunAsync(input, cancellationToken: token).ConfigureAwait(false);
                 PaddleDocumentTableResult value = inference.GetValue<PaddleDocumentTableResult>();
@@ -133,8 +127,11 @@ internal static class Program
             });
 
         var pipeline = new PaddleDocumentPipeline(new IPaddleDocumentPipelineStage[] { structureStage, cellStage, classificationStage });
-        PaddleDocumentPipelineResult result = await pipeline.RunAsync(page, cancellationToken).ConfigureAwait(false);
+        PaddleDocumentPipelineResult result;
+        try { result = await pipeline.RunAsync(page, cancellationToken).ConfigureAwait(false); }
+        finally { structure?.Dispose(); cells?.Dispose(); }
         PaddleDocumentTableResult table = result.GetRequired<PaddleDocumentTableResult>(PaddleDocumentModule.TableStructureRecognition);
+        string tableType = SelectTableType(result.GetRequired<PaddleDocumentClassificationResult>(PaddleDocumentModule.TableClassification).Label, options.TableType);
         Directory.CreateDirectory(options.Output);
         string jsonPath = Path.Combine(options.Output, "table-result.json");
         string htmlPath = Path.Combine(options.Output, "table-result.html");
@@ -168,8 +165,30 @@ internal static class Program
         return new VisualPipeline(registry, profiles.Select(artifact, registry, request, profile.VisualProfile.Task), request);
     }
 
+    private static async Task<ModelFile> ResolveModelAsync(string releaseId, string localName, Options options,
+        PaddleOcrReleaseClient? release, CancellationToken cancellationToken)
+    {
+        if (options.ModelDirectory != null) return ModelFile.FromLocal(Path.Combine(options.ModelDirectory, localName));
+        PaddleOcrReleaseModelMaterialization materialized = await (release ?? throw new InvalidOperationException("Release client is unavailable."))
+            .GetModelAsync(releaseId, cancellationToken: cancellationToken).ConfigureAwait(false);
+        return ModelFile.FromRelease(materialized);
+    }
+
+    private static string SelectTableType(string label, string requested)
+    {
+        string selected = label switch
+        {
+            "wired_table" => "wired",
+            "wireless_table" => "wireless",
+            _ => throw new InvalidOperationException("The table classifier returned an unsupported label: " + label)
+        };
+        if (requested != "auto" && requested != selected)
+            throw new InvalidOperationException("Classifier selected '" + label + "', but --table-type is '" + requested + "'. Rerun with the matching table type or use auto.");
+        return selected;
+    }
+
     private static void PrintUsage() => Console.WriteLine(
-        "Usage: dotnet run --project samples/02-visual/paddle-structure-table -- --image <path> --output <directory> [--table-type wired|wireless] [--backend ort|openvino] [--cache <directory> | --model-dir <directory>] [--offline]");
+        "Usage: dotnet run --project samples/02-visual/paddle-structure-table -- --image <path> --output <directory> [--table-type auto|wired|wireless] [--backend ort|openvino] [--cache <directory> | --model-dir <directory>] [--offline]");
 
     private sealed class ModelFile
     {
@@ -201,7 +220,7 @@ internal static class Program
         public static Options Parse(string[] args)
         {
             string? image = null, output = null, cache = null, modelDirectory = null;
-            string tableType = "wired", backend = "ort";
+            string tableType = "auto", backend = "ort";
             bool offline = false;
             for (int index = 0; index < args.Length; index++)
             {
@@ -221,7 +240,7 @@ internal static class Program
                 }
             }
             if (string.IsNullOrWhiteSpace(image) || string.IsNullOrWhiteSpace(output)) throw new ArgumentException("--image and --output are required.");
-            if (tableType != "wired" && tableType != "wireless") throw new ArgumentException("--table-type must be wired or wireless.");
+            if (tableType != "auto" && tableType != "wired" && tableType != "wireless") throw new ArgumentException("--table-type must be auto, wired or wireless.");
             if (backend != "ort" && backend != "openvino") throw new ArgumentException("--backend must be ort or openvino.");
             if (modelDirectory != null && (offline || cache != null)) throw new ArgumentException("--model-dir cannot be combined with --offline or --cache.");
             return new Options(Path.GetFullPath(image), Path.GetFullPath(output), tableType, backend,

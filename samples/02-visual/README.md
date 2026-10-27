@@ -14,4 +14,4 @@ The [PaddleOCR-VL ONNX sample](paddleocr-vl-onnx/README.md) downloads and verifi
 
 The [PaddleOCR-VL document sample](paddleocr-vl-document/README.md) accepts actual images and caller-supplied page regions, decodes each page once, runs the real crops through the same VL generator, preserves page/region provenance, and exports JSON/Markdown with cancellation and bounded page concurrency. Its `Auto` mode selects OCR/table/formula/chart/seal tasks by the supplied layout category, supports custom mappings, and preserves skipped regions and original indices.
 
-The [PP-Structure table sample](paddle-structure-table/README.md) runs table classification, cell detection, and SLANeXt HTML on a user image with ONNX Runtime CPU or OpenVINO CPU. It downloads only the three selected model assets and exports page JSON plus HTML.
+The [PP-Structure table sample](paddle-structure-table/README.md) runs table classification, cell detection, and SLANeXt HTML on a user image with ONNX Runtime CPU or OpenVINO CPU. It automatically selects wired or wireless assets after classification, downloads only the three needed models, and exports page JSON plus HTML.
