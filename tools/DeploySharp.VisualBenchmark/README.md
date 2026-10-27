@@ -24,10 +24,10 @@ Set `DEPLOYSHARP_BENCHMARK_RESULT_DETAILS=1` for a controlled correctness compar
 
 For the exact admitted YOLOv7 artifact, `--backend opencv-dnn` binds the verified raw head `onnx_node!/model/model.105/Concat_3` and uses DeploySharp managed decode/NMS because OpenCV 5.0 cannot propagate the graph-internal data-dependent NMS/Gather output shape. Other backends retain the graph's end-to-end output. This selection is tied to the benchmark's recorded artifact SHA and is not a generic layer-name guess.
 
-For the remote Windows test host:
+Example using repository-relative model and result directories:
 
 ```powershell
-dotnet run --project tools/DeploySharp.VisualBenchmark/DeploySharp.VisualBenchmark.csproj -c Release -- --kind all --image E:\DeploySharp-Remote\data\image\bus.jpg --model-yolov8n E:\DeploySharp-Remote\models\vision\yolo\yolov8\yolov8n.onnx --model-yolov8n-seg E:\DeploySharp-Remote\models\vision\yolo\yolov8\yolov8n-seg.onnx --model-yolov8s-pose E:\DeploySharp-Remote\models\vision\yolo\yolov8\yolov8s-pose.onnx --model-yolov8s-obb E:\DeploySharp-Remote\models\vision\yolo\yolov8\yolov8s-obb.onnx --model-padim E:\DeploySharp-Remote\models\anomalib\Padim\model\padim.onnx --model-rmbg14 E:\DeploySharp-Remote\models\RMBG\bria-rmbg-1.4.onnx --backend all --mode both --warmup 3 --iterations 10 --output E:\DeploySharp-Remote\artifacts\visual-baseline.csv
+dotnet run --project tools/DeploySharp.VisualBenchmark/DeploySharp.VisualBenchmark.csproj -c Release -- --kind all --image .\images\bus.jpg --model-yolov8n .\models\vision\yolov8n.onnx --model-yolov8n-seg .\models\vision\yolov8n-seg.onnx --model-yolov8s-pose .\models\vision\yolov8s-pose.onnx --model-yolov8s-obb .\models\vision\yolov8s-obb.onnx --model-padim .\models\anomaly\padim.onnx --model-rmbg14 .\models\rmbg\bria-rmbg-1.4.onnx --backend all --mode both --warmup 5 --iterations 50 --output .\results\visual-baseline.csv
 ```
 
 Use `--backend onnxruntime-cuda` to request the official `Microsoft.ML.OnnxRuntime.Gpu.Windows` provider on CUDA device 0. An `unavailable` result records provider/device initialization failure (for example CUDA error 801) and never falls back to CPU. `opencv-dnn` rows marked `unsupported` were actually imported and run until OpenCV DNN rejected an unsupported ONNX operator or shape. They are not skipped measurements.

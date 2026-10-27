@@ -40,6 +40,32 @@
 
 同一个模型并不一定适用于所有后端。选择前请同时检查模型格式、动态输入、辅助输入、前后处理合同和运行时版本。
 
+## 安装组合的判断方式
+
+平台兼容性需要同时满足三层条件：
+
+1. **托管层**：应用目标框架能够引用 DeploySharp 包；
+2. **原生层**：对应 RID 的 runtime、驱动和 ABI 能在进程中加载；
+3. **模型层**：工件格式、输入输出合同、动态 shape 和 decoder 在该后端有证据。
+
+例如，`net8.0` 项目成功还原 `Backend.TensorRT` 只说明托管层通过；没有与 GPU、CUDA、TensorRT 版本匹配的 Engine 和 DLL，不能称为 TensorRT 可用。相反，ONNX Runtime CPU 可能在没有 GPU 的机器上完成完整验证，但仍应记录 CPU 型号和线程配置。
+
+## 新设备的最小验证
+
+在新 Windows x64 设备上，建议按顺序执行：
+
+```powershell
+dotnet --info
+dotnet run --project tools/DeploySharp.VisualBenchmark/DeploySharp.VisualBenchmark.csproj -c Release -- --backend onnxruntime --kind all
+dotnet run --project tools/DeploySharp.PaddleOcrBenchmark/DeploySharp.PaddleOcrBenchmark.csproj -c Release
+```
+
+然后再测试 OpenVINO、OpenCV 或 TensorRT。每个后端都应保存 preflight 输出、模型/测试图 SHA-256 和失败原因；“未安装”“未测试”和“导入器不支持”在矩阵中分别记录。
+
+## 目标框架消费注意事项
+
+直接构建 TFM 与应用能够间接消费的 TFM 不是同一概念。应用选择兼容资产后仍需验证图像库和 native runtime；旧 .NET Framework 应用尤其要检查 TLS、文件路径编码和 x64 进程。不要为绕过一次还原错误而把所有包改成 `netstandard2.0`，这会掩盖后端真实约束。
+
 ## 如何判断是否可用
 
 - 查看[模型支持状态](model-support.md)，确认模型族已进入公开范围。
@@ -52,5 +78,5 @@
 - [安装指南](installation.md)
 - [ONNX Runtime 入门](onnxruntime-getting-started.md)
 - [OpenVINO 入门](openvino-getting-started.md)
-- [OpenCV DNN 入门](visual-opencv-getting-started.md)
+- [OpenCV 图像输入与 DNN 后端](visual-opencv-compatibility.md)
 - [TensorRT CUDA 视觉推理](tensorrt-cuda-visual.md)

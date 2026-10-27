@@ -42,3 +42,21 @@ DeploySharp 将稳定契约、领域流程、托管后端适配器和厂商原�
 `RunDevice` 绑定调用方拥有的 `CudaMemory`，将工作入队到调用方的 `CudaStream`，并返回执行租约。调用方可以连续提交 CUDA 归一化、Letterbox、透视裁剪、TensorRT 推理和 CTC 紧凑解码，最后统一同步；普通 `Dispose()` 仍提供带同步的安全默认行为。
 
 `TensorRtCudaOcrKernels` 支持融合归一化/Letterbox、四边形单应裁剪和 CTC argmax/blank collapse/置信度计算，仅回传紧凑 token、长度和置信度。JPEG/PNG 解码与 token 到字符串的转换仍在主机完成。非 TensorRT 后端继续使用现有 CPU 前处理和托管解码路径。
+
+## 一次请求的所有权边界
+
+```text
+文件/流 -> 图像适配器 -> PreparedVisualInput -> 后端 Session
+                                             -> raw outputs -> decoder -> 结果对象
+```
+
+- 图像适配器拥有解码过程中的临时 native 图像；`PreparedVisualInput` 返回后由调用方负责 Dispose。
+- Session 只借用输入张量，在 `Run` 返回前不能释放或复用其 backing buffer；返回的 `InferenceOutputs` 是调用方拥有的结果。
+- decoder 不应持有 OpenCV `Mat`、native request 或后端输出指针；它应复制必要值，并在上限检查后生成自有结果。
+- Session 池拥有 Session 的释放顺序；调用方只释放租约，不直接 Dispose 被池管理的底层 Session。
+
+这条边界解释了为什么“把一个 `Mat` 传进异步任务后立刻 Dispose”或“多个线程共享一个可变 request”会产生偶发崩溃。视频流水线应让每帧拥有独立输入，或使用明确的引用计数/租约。
+
+## 扩展点选择
+
+要接入新模型，优先顺序通常是：已有 Profile 参数覆盖 -> 新建 `VisualModelProfile` -> 新建 decoder/schema -> 新建后端适配器。不要为了支持一个输出布局把 Core 改成依赖某个推理库，也不要把模型专用规则藏进通用 `Tensor`。新增公共 API 时同时补合同测试、错误码、取消/Dispose 测试和至少一个真实工件复现。

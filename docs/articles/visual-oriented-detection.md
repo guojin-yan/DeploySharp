@@ -34,11 +34,34 @@ var decoder = new DirectOrientedDetectionDecoder(
 
 将 decoder 绑定到 VisualTaskId.OrientedObjectDetection 的 VisualModelProfile。四边形必须四点有限、互异、严格凸且不自交；规范化要求调用方声明顶点方向，不会自动排序未知导出布局。
 
+## 角度合同不能省略
+
+OBB 最常见的错误不是 NMS，而是角度定义不同。Profile 必须同时写明：
+
+- 角度单位是度还是弧度；
+- 正方向是顺时针还是逆时针；
+- 角度范围是 `[-pi/2, pi/2)`、`[0, pi)` 还是模型自己的范围；
+- 宽高是否允许交换，顶点从哪个角开始，顺序是顺时针还是逆时针；
+- 坐标是模型像素、归一化值还是源图像素。
+
+如果导出工具在宽高交换时同步加减 90 度，必须在 schema 中保持同样的约定。不要先把四点转换为轴对齐矩形再做 NMS，否则相邻旋转目标可能被错误合并。
+
 ## 坐标、NMS 与 Batch
 
 每个模型空间顶点通过 ImageTransform.ToSource 还原到源图。Resize、Letterbox、Crop 和归一化坐标共用同一变换；源图四边形是权威结果，不会额外拟合一个旋转矩形。默认 NMS 是确定性的，分数相同按源索引排序。
 
 只有 Profile 和 decoder 同时声明 [B,...] 动态合同时才支持真正模型 Batch。否则使用 RunManyAsync 或独立 session 池；每个 native 上下文必须独立创建。
+
+## 调试和质量检查
+
+开发阶段可在 decoder 前保存一份模型空间四边形，在 `ImageTransform.ToSource` 后再保存一份源图四边形。逐点检查：
+
+1. 四点是否仍为有限值且不自交；
+2. 面积是否为正，是否因裁剪变成退化多边形；
+3. 角度是否仍在 schema 声明范围；
+4. NMS 前后候选数量是否符合阈值预期。
+
+性能测试时分开统计候选解析、旋转 IoU/NMS 和坐标还原。大量候选时应设置 `maximumCandidates`，先按分数做有限筛选，再分配四边形对象；不要为最终会被阈值淘汰的候选创建完整结果。
 
 ## 后端与限制
 

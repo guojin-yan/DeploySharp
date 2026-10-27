@@ -54,7 +54,22 @@ float[] scores = (float[])outputs.GetRequired("scores").Buffer;
 
 使用 OpenVINO IR 时，将格式写为 `openvino-ir`，并把 `.xml` 作为入口文件；同目录的 `.bin` 是必需文件。`ModelPack.Json` 清单应列出所有文件的相对路径、字节大小和 SHA256，验证完成后再选择后端。不要把 `.xml` 单独复制到部署目录。
 
-ONNX 文件可以直接交给 OpenVINO 适配器转换并加载，但应在目标设备上固定输入形状和精度，再按[设备性能实测](device-performance-benchmarks.md)的口径测量。动态维度、字符串张量、`Float16`、`BFloat16` 和零秩输入是否可用取决于模型图与当前托管包装器；遇到不匹配时，先查看[OpenVINO 兼容性](openvino-compatibility.md)中的诊断说明。
+ONNX 文件可以直接交给 OpenVINO 适配器转换并加载，但应在目标设备上固定输入形状和精度，再按[设备性能实测](device-performance-benchmarks.md)的口径测量。动态维度、字符串张量、`Float16`、`BFloat16` 和零秩输入是否可用取决于模型图与当前托管包装器。
+
+## 设备、缓存与动态形状
+
+应用应把设备作为配置，而不是写死在模型 Profile 中：
+
+```csharp
+backends.UseOpenVino(new OpenVinoOptions(
+    device: "CPU",
+    cacheDirectory: Path.Combine(cacheRoot, "openvino"),
+    enableProfiling: false));
+```
+
+先用 `CPU` 验证模型合同，再尝试 `AUTO`、GPU 或 NPU。首次加载包含前端转换和编译，不能与稳态推理混在同一组数字中。缓存目录应按 Runtime、设备和模型 SHA-256 隔离；更换模型、Runtime 或驱动后不要复用旧编译缓存。
+
+动态模型在每次调用时仍必须提供完整、具体的张量形状。视频尺寸稳定时，优先在上层使用固定 `Resize`/`Letterbox`，避免反复 reshape。多输入模型必须按名称绑定图像、尺寸、尺度因子或文本张量；不要依赖端口顺序。
 
 ## Visual 使用
 
@@ -68,5 +83,6 @@ ONNX 文件可以直接交给 OpenVINO 适配器转换并加载，但应在目�
 - 输入名称或形状错误：从 `session.Metadata` 读取真实名称、元素类型和维度，逐项构造 `InferenceInputs`。
 - IR 缺少 `.bin`：补齐同版本导出的权重文件，并在 ModelPack 清单中声明它。
 - 动态形状不匹配：先为目标分辨率建立静态 Profile；只有模型和后端都声明支持时才启用动态尺寸。
+- 结果与 ORT 不一致：先复用同一份 `PreparedVisualInput`，比较输出形状和原始数值，再检查颜色、归一化、padding、输出布局与 decoder 阈值。
 
-更多模型状态请查看[模型支持指南](model-support.md)，各模型与后端的单元格以[模型与后端验证矩阵](../model-backend-verification-matrix.md)为准。
+“模型可加载”不等于任务已端到端通过。更多模型状态请查看[模型支持指南](model-support.md)，各模型与后端的单元格以[模型与后端验证矩阵](../model-backend-verification-matrix.md)为准。

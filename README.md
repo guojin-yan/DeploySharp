@@ -16,7 +16,7 @@
 
 <p align="center">
   <a href="docs/index.md"><img src="https://img.shields.io/badge/docs-DocFX-2f80ed" alt="DocFX documentation" /></a>
-  <a href="docs/releases/2.0.0-alpha.1.md"><img src="https://img.shields.io/badge/release-2.0.0--alpha.1-f59e0b" alt="DeploySharp 2.0.0-alpha.1" /></a>
+  <a href="https://www.nuget.org/packages/JYPPX.DeploySharp.Core/"><img src="https://img.shields.io/nuget/vpre/JYPPX.DeploySharp.Core.svg?label=NuGet" alt="Latest DeploySharp NuGet version" /></a>
   <a href="https://github.com/guojin-yan/DeploySharp/releases"><img src="https://img.shields.io/github/v/release/guojin-yan/DeploySharp?include_prereleases&amp;label=GitHub%20Release" alt="GitHub Release" /></a>
 </p>
 
@@ -115,28 +115,28 @@ See the [detailed package combination and installation guide](docs/articles/pack
 
 ## 🌐 Public Packages And Release Assets
 
-DeploySharp packages are not yet published to nuget.org. The exact package IDs and `2.0.0-alpha.1` candidate version remain visible here; each NuGet badge points to its real package page and will show the published version automatically after the first release.
+DeploySharp preview packages are available on NuGet.org. The version column reads NuGet directly, so it updates automatically when a new version is published without another README edit.
 
-| Package | Candidate version | NuGet.org | Purpose |
-| --- | --- | --- | --- |
-| `JYPPX.DeploySharp.Core` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Core.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Core) | Core contracts and backend registration |
-| `JYPPX.DeploySharp.Extensibility` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Extensibility.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Extensibility) | Plugin descriptors, runtime probes, and options schemas |
-| `JYPPX.DeploySharp.Visual` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Visual.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Visual) | Visual profiles, preprocessing, and decoders |
-| `JYPPX.DeploySharp.Visual.OpenCV` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Visual.OpenCV.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Visual.OpenCV) | OpenCV image preparation |
-| `JYPPX.DeploySharp.Visual.TensorRT` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Visual.TensorRT.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Visual.TensorRT) | CUDA preprocessing and TensorRT visual pipelines |
-| `JYPPX.DeploySharp.LLM` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.LLM.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.LLM) | LLM generation and embedding contracts |
-| `JYPPX.DeploySharp.Multimodal` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Multimodal.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Multimodal) | Ordered multimodal orchestration |
-| `JYPPX.DeploySharp.ModelPack.Json` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.ModelPack.Json.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.ModelPack.Json) | Model manifests and integrity validation |
-| `JYPPX.DeploySharp.ModelFactory` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.ModelFactory.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.ModelFactory) | Catalog selection, download, cache, and offline reuse |
-| `JYPPX.DeploySharp.Backend.OnnxRuntime` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Backend.OnnxRuntime.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.OnnxRuntime) | ONNX Runtime named-tensor adapter |
-| `JYPPX.DeploySharp.Backend.OpenVINO` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Backend.OpenVINO.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.OpenVINO) | OpenVINO named-tensor adapter |
-| `JYPPX.DeploySharp.Backend.OpenCV` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Backend.OpenCV.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.OpenCV) | OpenCV DNN adapter |
-| `JYPPX.DeploySharp.Backend.TensorRT` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Backend.TensorRT.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.TensorRT) | TensorRT inference and ONNX-to-engine boundary |
-| `JYPPX.DeploySharp.Backend.LlamaSharp` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Backend.LlamaSharp.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.LlamaSharp) | LLamaSharp GGUF generation and embeddings |
+| Package | NuGet version | Purpose |
+| --- | --- | --- |
+| [`JYPPX.DeploySharp.Core`](https://www.nuget.org/packages/JYPPX.DeploySharp.Core/) | [![NuGet version](https://img.shields.io/nuget/vpre/JYPPX.DeploySharp.Core.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Core/) | Core contracts and backend registration |
+| [`JYPPX.DeploySharp.Extensibility`](https://www.nuget.org/packages/JYPPX.DeploySharp.Extensibility/) | [![NuGet version](https://img.shields.io/nuget/vpre/JYPPX.DeploySharp.Extensibility.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Extensibility/) | Plugin descriptors, runtime probes, and options schemas |
+| [`JYPPX.DeploySharp.Visual`](https://www.nuget.org/packages/JYPPX.DeploySharp.Visual/) | [![NuGet version](https://img.shields.io/nuget/vpre/JYPPX.DeploySharp.Visual.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Visual/) | Visual profiles, preprocessing, and decoders |
+| [`JYPPX.DeploySharp.Visual.OpenCV`](https://www.nuget.org/packages/JYPPX.DeploySharp.Visual.OpenCV/) | [![NuGet version](https://img.shields.io/nuget/vpre/JYPPX.DeploySharp.Visual.OpenCV.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Visual.OpenCV/) | OpenCV image preparation |
+| [`JYPPX.DeploySharp.Visual.TensorRT`](https://www.nuget.org/packages/JYPPX.DeploySharp.Visual.TensorRT/) | [![NuGet version](https://img.shields.io/nuget/vpre/JYPPX.DeploySharp.Visual.TensorRT.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Visual.TensorRT/) | CUDA preprocessing and TensorRT visual pipelines |
+| [`JYPPX.DeploySharp.LLM`](https://www.nuget.org/packages/JYPPX.DeploySharp.LLM/) | [![NuGet version](https://img.shields.io/nuget/vpre/JYPPX.DeploySharp.LLM.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.LLM/) | LLM generation and embedding contracts |
+| [`JYPPX.DeploySharp.Multimodal`](https://www.nuget.org/packages/JYPPX.DeploySharp.Multimodal/) | [![NuGet version](https://img.shields.io/nuget/vpre/JYPPX.DeploySharp.Multimodal.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Multimodal/) | Ordered multimodal orchestration |
+| [`JYPPX.DeploySharp.ModelPack.Json`](https://www.nuget.org/packages/JYPPX.DeploySharp.ModelPack.Json/) | [![NuGet version](https://img.shields.io/nuget/vpre/JYPPX.DeploySharp.ModelPack.Json.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.ModelPack.Json/) | Model manifests and integrity validation |
+| [`JYPPX.DeploySharp.ModelFactory`](https://www.nuget.org/packages/JYPPX.DeploySharp.ModelFactory/) | [![NuGet version](https://img.shields.io/nuget/vpre/JYPPX.DeploySharp.ModelFactory.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.ModelFactory/) | Catalog selection, download, cache, and offline reuse |
+| [`JYPPX.DeploySharp.Backend.OnnxRuntime`](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.OnnxRuntime/) | [![NuGet version](https://img.shields.io/nuget/vpre/JYPPX.DeploySharp.Backend.OnnxRuntime.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.OnnxRuntime/) | ONNX Runtime named-tensor adapter |
+| [`JYPPX.DeploySharp.Backend.OpenVINO`](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.OpenVINO/) | [![NuGet version](https://img.shields.io/nuget/vpre/JYPPX.DeploySharp.Backend.OpenVINO.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.OpenVINO/) | OpenVINO named-tensor adapter |
+| [`JYPPX.DeploySharp.Backend.OpenCV`](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.OpenCV/) | [![NuGet version](https://img.shields.io/nuget/vpre/JYPPX.DeploySharp.Backend.OpenCV.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.OpenCV/) | OpenCV DNN adapter |
+| [`JYPPX.DeploySharp.Backend.TensorRT`](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.TensorRT/) | [![NuGet version](https://img.shields.io/nuget/vpre/JYPPX.DeploySharp.Backend.TensorRT.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.TensorRT/) | TensorRT inference and ONNX-to-engine boundary |
+| [`JYPPX.DeploySharp.Backend.LlamaSharp`](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.LlamaSharp/) | [![NuGet version](https://img.shields.io/nuget/vpre/JYPPX.DeploySharp.Backend.LlamaSharp.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.LlamaSharp/) | LLamaSharp GGUF generation and embeddings |
 
 | Publication channel | Current status | Assets |
 | --- | --- | --- |
-| [NuGet.org](https://www.nuget.org/) | DeploySharp packages await their first publication | Public managed package feed |
+| [NuGet.org](https://www.nuget.org/packages?q=JYPPX.DeploySharp) | Preview packages published | Public managed package feed |
 | [GitHub Packages](https://github.com/guojin-yan/DeploySharp/packages) | DeploySharp packages await their first publication | Package mirror |
 | [GitHub Releases](https://github.com/guojin-yan/DeploySharp/releases) | Used for model artifact delivery | Immutable ModelPack assets and verification metadata |
 
@@ -196,9 +196,11 @@ See the [sample learning path](samples/README.md).
 | Documentation index | [docs/index.md](docs/index.md) | Public DocFX entry point |
 | First release notes | [2.0.0-alpha.1](docs/releases/2.0.0-alpha.1.md) | Release scope and known boundaries |
 | Usage tutorial | [Usage tutorial](docs/articles/usage-tutorial.md) | Code-first tensor and visual workflows |
+| Custom visual models | [Custom model and preprocessing guide](docs/articles/visual-custom-model.md) | Typed preprocessing, result decoding, and geometry/normalization overrides |
 | Platform/backend support | [Support table](docs/articles/platform-support.md) | Target framework and verification boundaries |
 | Model support | [Model guide](docs/articles/model-support.md) | Catalog IDs, families, and status semantics |
 | Device measurements | [Named-device results](docs/articles/device-performance-benchmarks.md) | Reproducible environment and timing records |
+| Visual ROI | [ROI guide](docs/articles/visual-roi-configuration.md) · [Device benchmarks](docs/articles/device-performance-benchmarks.md#roi-与滑动窗口) | Geometry, crop/filter/sliding windows, JSON updates and video events; per-backend validation boundaries |
 
 ## 🔨 Build From Source
 

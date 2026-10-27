@@ -50,7 +50,7 @@ dotnet run --project samples/06-models/release-inference/ModelReleaseInference.c
 
 The catalog-to-case mapping is checked with: `pwsh -NoProfile -File eng/model-catalog/Test-ModelSampleCoverage.ps1`.
 
-All 42 model case READMEs now include a release verification record. Run the complete online audit with pwsh -NoProfile -File eng/model-catalog/Test-PublishedModelCases.ps1 -UpdateReadmes -CachePath E:/DeploySharpModelAudit/metadata; add -ModelId <id> for one case or -DownloadAssets for a full local asset download and SHA256 check. The full published payload is about 6.2 GB, so payload downloads are opt-in.
+All 42 model case READMEs now include a release verification record. Run the complete online audit with `pwsh -NoProfile -File eng/model-catalog/Test-PublishedModelCases.ps1 -UpdateReadmes -CachePath "$env:TEMP\DeploySharpModelAudit\metadata"`; add `-ModelId <id>` for one case or `-DownloadAssets` for a full local asset download and SHA256 check. The full published payload is about 6.2 GB, so payload downloads are opt-in.
 
 ## Ownership and evidence / 所有权与证据
 

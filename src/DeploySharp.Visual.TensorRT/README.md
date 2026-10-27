@@ -28,4 +28,4 @@ PaddleChart2TableGenerationResult result = session.Generate(
     maximumNewTokens: 256);
 ```
 
-The bundle must contain four `tensorrt-engine` artifacts. The checked RTX 3060 Laptop sample produced the same complete table with strict FP32 language plans and with TF32 tactics enabled; TF32 is an optional measured plan variant, not a dataset-wide precision guarantee. See the [Chart2Table validation record](../../eng/models/paddle-document/verification/chart2table-component-validation.json) for graph/plan hashes, output, and timing boundaries.
+The bundle must contain four `tensorrt-engine` artifacts. The checked RTX 3060 Laptop sample produced the same complete table with strict FP32 language plans and with TF32 tactics enabled; TF32 is an optional measured plan variant, not a dataset-wide precision guarantee. See the Chart2Table validation record for graph/plan hashes, output, and timing boundaries.

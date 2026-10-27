@@ -1,529 +1,167 @@
 # 设备性能实测
 
-本文只记录具名设备、明确模型制品和固定测试口径下的推理结果。数字是特定设备上的观测值，不构成其他硬件、模型版本或运行时配置的性能承诺。
+本页汇总 DeploySharp 在具名设备上的可复现观测值，帮助用户估算后端选择和容量。数字只适用于表中模型、输入、运行时和计时范围，不是硬件排名或跨设备性能承诺。模型是否受支持仍以[模型与后端验证矩阵](../model-backend-verification-matrix.md)为准。
 
-PaddleOCR-VL 的 [TensorRT 五图六任务验证](../../eng/models/paddle-ocr/verification/paddleocr-vl-tensorrt-five-graph-20261026.md)记录了单次生成耗时及精确 Token/文本结果；后续仅对固定 Table 输入补充了 [TensorRT 原路径与设备端 KV 的重复延迟记录](../../eng/models/paddle-ocr/verification/paddleocr-vl-tensorrt-device-kv-20261026.md)。其它五项没有 TensorRT 正式 P50/P95；不同后端的分开运行也不构成受控性能排名。
+## 测试协议
 
-## 统一口径
+| 项目 | 规则 |
+| --- | --- |
+| 标准输入 | 视觉使用 `bus.jpg`，OCR 使用 `ocr-demo.jpg`；报告保存输入 SHA-256 |
+| 稳态 | 复用已创建的 Session 和已准备输入；包含后端执行、decoder 与编排 |
+| 端到端 | 额外包含读取、解码和预处理；不包含模型下载、TensorRT Engine 构建或进程启动 |
+| 重复次数 | 正式记录使用 5 次预热、50 次测量，并从原始样本计算 P50/P95 |
+| 身份 | 保存 DeploySharp commit、模型/Engine/输入 SHA-256、runtime、驱动和设备 |
+| 并发 | 记录真实 Batch、独立 Session/context 数、stream、预取和动态 shape |
+| GPU 状态 | 记录功耗策略、锁频或 Boost 状态；未采集时明确写“未锁频/未知” |
+| 正确性 | 测速前检查输出合同；OCR 记录完整 `det -> crop -> cls -> rec -> merge` |
+| 缺失数据 | 没有原始样本、commit 或哈希的旧结果只列为“历史参考” |
 
-- 视觉模型的 `steady` 结果复用已解码、已准备的输入，包含后端执行与 DeploySharp 后处理，不包含模型加载、OpenVINO 编译、TensorRT engine 构建和 CUDA 初始化。`cold` 结果才包含一次输入解码和预处理。
-- 标准输入名固定为视觉 `data/bus.jpg`、OCR `data/ocr-demo.jpg`；设备可以把文件复制到其他路径，但报告必须同时记录输入 SHA-256。历史 RTX 2060 OCR 记录使用 `E:\Data\ocr\demo_1.jpg`，视为同一标准输入的路径别名；若没有 SHA-256 不能与新记录做字节级比较。
-- 标准协议为 5 次预热、50 次计时；每次计时都记录总耗时和预处理/推理/后处理分段耗时，并从原始样本计算 mean、P50、P95。只有原始报告确实采集了分位数时才填写数值，不能用 mean 推算。
-- 每个设备小节必须记录 DeploySharp commit SHA、模型制品 SHA-256、输入 SHA-256、运行时版本、batch/Session、CPU/GPU 功耗与锁频状态。历史便携包缺少这些字段时明确标注“未记录”，不与标准记录混排。
-- PaddleOCR 只记录完整 `det -> crop -> cls/orientation -> rec -> merge` 流水线；不会将单独的检测、分类或识别耗时当作完整 OCR 结果。
-- `通过` 表示本轮结果合同通过；“历史均值”只表示旧报告曾通过，不代表满足当前分位数协议。
-- 模型/后端是否支持、未测试或当前不支持的状态以[模型与后端验证矩阵](../model-backend-verification-matrix.md)为准；本页只列出已经得到有效耗时的组合。
-- PP-Structure 的[当前证据索引](../../eng/models/paddle-document/verification/paddle-document-backend-matrix-current-20261017.md)区分“登记了 5+50 协议报告”和“仓库内可追溯的逐次样本”：69 个 Bundle 中 54 个登记 JSON 内含测量次数匹配的 `samplesMs` 数组（含从旧 TRX 回收的 TensorRT 文档方向分类逐次样本），另 2 个摘要以 SHA-256 关联八份已提交的原始报告，其中官方分类六行还逐行复算 P50/P95；其余 13 个尚无已登记的仓库内原始样本，可能另有本地报告。索引的 84/84 覆盖表示精确工件/后端有对应报告，不表示所有分位数均可独立复算，也不表示不同输入可直接排名。
-- 剩余 13 个 TensorRT 历史摘要的[逐类审计](../../eng/models/paddle-document/verification/paddle-document-summary-only-sample-audit-20261027.md)已定位到旧测试入口没有输出逐次列表；入口现已保留未来运行的 `samplesMs`，但旧 P50/P95 不会因此自动变成可复算数据。没有为补表重新运行模型。
+各阶段的分位数不能相加得到总分位数。跨后端比较必须使用同一模型、输入、精度、shape、结果复制范围和 cold/steady 口径。
 
-## Windows 10.0.26200 / RTX 3060 Laptop / PaddleOCR-VL-1.6 Table TensorRT（2026-10-26）
-
-固定官方 Table 输入、同一组五图 Engine 和一个 Session；每次生成均达到 EOS，71 个 Token 和文本逐项与参考相同。两条 5+50 路径均不计 Engine/Session 加载、调用方图像准备和报告落盘；GPU 未锁频，运行顺序和程序集版本不同。逐次样本、Engine/Input SHA 与最终构建短复测见 [设备端 KV 验证报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-tensorrt-device-kv-20261026.md)。
-
-| 路径 | Wall P50（ms） | Wall P95（ms） | Session P50（ms） | Session P95（ms） | 预热 / 测量 | 状态 |
-| --- | ---: | ---: | ---: | ---: | ---: | --- |
-| TensorRT，主机 KV | 20,360.0165 | 23,810.9774 | 20,359.5002 | 23,809.9229 | 5 / 50 | 通过 |
-| TensorRT，设备端 KV（最终守卫修正前构建） | 9,329.2314 | 9,650.9849 | 9,324.0775 | 9,645.9727 | 5 / 50 | 通过 |
-| TensorRT，设备端 KV（最终构建短复测） | 9,106.1978 | 9,150.6258 | 9,102.0617 | 9,145.4740 | 1 / 5 | 通过，不等同 5+50 |
-
-这只是固定 1.6 表格任务的两组观测，不能把差值作为严格加速比，也不能外推到其它任务、输入尺寸、显卡、完整页面或模型精度；其它后端的数字在各自章节独立记录。
-
-## Windows 10.0.26200 / PaddleOCR-VL-1.6 Table CPU 切片（2026-10-25）
-
-该切片使用固定 PaddleOCR-VL-1.6 四图 Bundle、官方 Table 输入和托管 RGB Processor，在 16 逻辑处理器的 Windows 10.0.26200 主机上执行 5 次预热、50 次测量。每次都检查 EOS、71 个 Token 和完整文本与官方参考一致；模型和 Session 创建不计入耗时，输入 Patch 在测量中复用。完整模型/输入 SHA、运行时、逐次样本和边界见 [正式延迟报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-formal-latency-table-20261025.md)。
-
-| 模型 / 任务 | 后端 | Wall P50（ms） | Wall P95（ms） | Session P50（ms） | Session P95（ms） | 预热 / 测量 | 状态 |
-| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
-| PaddleOCR-VL-1.6 Table | ONNX Runtime CPU | 7,268.069 | 7,709.583 | 7,266.868 | 7,708.445 | 5 / 50 | 通过 |
-| PaddleOCR-VL-1.6 Table | OpenVINO CPU | 6,787.859 | 7,318.409 | 6,787.332 | 7,317.973 | 5 / 50 | 通过 |
-
-这只是一个任务和一台 CPU 主机的正式重复延迟切片，不是 VL 全任务性能矩阵、后端排名、锁频结果或 GPU/TensorRT/OpenCV 结论。其它 VL 任务需要单独测量，Spotting 的长序列成本和显存边界保持单独记录。
-
-## Windows 10.0.26200 / PaddleOCR-VL-1.6 OCR CPU 切片（2026-10-25）
-
-同一 Bundle、同一托管 RGB Processor 和同一主机上，OCR 任务执行 5 次预热、50 次测量；每次检查 EOS、162 个 Token 及完整文本与官方参考一致。模型和 Session 创建不计入耗时，输入 Patch 在测量中复用。完整协议和逐次样本见 [OCR 正式延迟报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-formal-latency-ocr-20261025.md)。
-
-| 模型 / 任务 | 后端 | Wall P50（ms） | Wall P95（ms） | Session P50（ms） | Session P95（ms） | 预热 / 测量 | 状态 |
-| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
-| PaddleOCR-VL-1.6 OCR | ONNX Runtime CPU | 19,163.912 | 22,211.472 | 19,157.991 | 22,209.748 | 5 / 50 | 通过 |
-| PaddleOCR-VL-1.6 OCR | OpenVINO CPU | 20,744.661 | 23,868.052 | 20,743.887 | 23,866.677 | 5 / 50 | 通过 |
-
-这仍是一项固定单图任务的 CPU 延迟记录，不能代表 VL 其它任务、页面级质量、GPU/TensorRT/OpenCV DNN 或跨设备排名。
-
-## Windows 10.0.26200 / PaddleOCR-VL-1.6 Formula CPU 切片（2026-10-25）
-
-Formula 任务沿用同一四图 Bundle、托管 RGB Processor、单 Session 和 `5 warm-up + 50 measured` 协议；每次均检查 EOS、80 个 Token 及完整文本与官方参考一致。详细环境、逐次样本和边界见 [Formula 正式延迟报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-formal-latency-formula-20261025.md)。
-
-| 模型 / 任务 | 后端 | Wall P50（ms） | Wall P95（ms） | Session P50（ms） | Session P95（ms） | 预热 / 测量 | 状态 |
-| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
-| PaddleOCR-VL-1.6 Formula | ONNX Runtime CPU | 8,446.139 | 8,878.795 | 8,445.385 | 8,877.865 | 5 / 50 | 通过 |
-| PaddleOCR-VL-1.6 Formula | OpenVINO CPU | 8,186.035 | 8,600.807 | 8,185.575 | 8,600.297 | 5 / 50 | 通过 |
-
-该切片描述生成延迟和 Token 一致性，不是公式语义准确率、渲染等价性、GPU 性能或完整 VL 矩阵。
-
-## Windows 10.0.26200 / PaddleOCR-VL-1.6 Chart CPU 切片（2026-10-25）
-
-Chart 任务沿用同一四图 Bundle、托管 RGB Processor、单 Session 和 `5 warm-up + 50 measured` 协议；每次均检查 EOS、137 个 Token 及完整文本与官方参考一致。详细环境、逐次样本和边界见 [Chart 正式延迟报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-formal-latency-chart-20261025.md)。
-
-| 模型 / 任务 | 后端 | Wall P50（ms） | Wall P95（ms） | Session P50（ms） | Session P95（ms） | 预热 / 测量 | 状态 |
-| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
-| PaddleOCR-VL-1.6 Chart | ONNX Runtime CPU | 22,372.818 | 24,391.971 | 22,370.785 | 24,390.048 | 5 / 50 | 通过 |
-| PaddleOCR-VL-1.6 Chart | OpenVINO CPU | 22,076.120 | 25,688.664 | 22,074.872 | 25,687.257 | 5 / 50 | 通过 |
-
-该切片描述生成延迟和 Token 一致性，不是 ChartQA split accuracy、图表语义正确性、GPU 性能或完整 VL 矩阵。
-
-## Windows 10.0.26200 / PaddleOCR-VL-1.6 Seal CPU 切片（2026-10-25）
-
-Seal 任务沿用同一四图 Bundle、托管 RGB Processor、单 Session 和 `5 warm-up + 50 measured` 协议；每次均检查 EOS、29 个 Token 及完整文本与官方参考一致。详细环境、逐次样本和边界见 [Seal 正式延迟报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-formal-latency-seal-20261025.md)。
-
-| 模型 / 任务 | 后端 | Wall P50（ms） | Wall P95（ms） | Session P50（ms） | Session P95（ms） | 预热 / 测量 | 状态 |
-| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
-| PaddleOCR-VL-1.6 Seal | ONNX Runtime CPU | 20,141.041 | 20,739.562 | 20,138.735 | 20,736.816 | 5 / 50 | 通过 |
-| PaddleOCR-VL-1.6 Seal | OpenVINO CPU | 12,785.056 | 15,429.444 | 12,783.900 | 15,428.241 | 5 / 50 | 通过 |
-
-该切片描述生成延迟和 Token 一致性，不是印章检测/识别准确率、GPU 性能或完整 VL 矩阵。
-
-## Windows 10.0.26200 / PaddleOCR-VL-1.6 Spotting CPU 有界切片（2026-10-25）
-
-Spotting 的官方生成序列明显长于其它 VL 任务，因此采用单独的 `1 warm-up + 5 measured` 有界协议；每次均检查 EOS、286 个 Token 和完整文本与官方参考一致。完整环境、输入 SHA、逐次样本和边界见 [Spotting 有界延迟报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-formal-latency-spotting-20261025.md)。
-
-| 模型 / 任务 | 后端 | Wall P50（ms） | Wall P95（ms） | Session P50（ms） | Session P95（ms） | 预热 / 测量 | 状态 |
-| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
-| PaddleOCR-VL-1.6 Spotting | ONNX Runtime CPU | 132,459.805 | 134,999.906 | 132,422.615 | 134,963.577 | 1 / 5 | 通过 |
-| PaddleOCR-VL-1.6 Spotting | OpenVINO CPU | 106,346.339 | 112,527.683 | 106,319.102 | 112,468.801 | 1 / 5 | 通过 |
-
-该行是长序列的有界 CPU 观察，不纳入其它任务的标准 `5+50` 统计，也不是 Spotting 准确率、GPU/TensorRT/OpenCV DNN 或跨设备性能结论。
-
-## Windows 10.0.26200 / RTX 3060 Laptop / PaddleOCR-VL-1.6 Spotting ORT CUDA（2026-10-25）
-
-Spotting 是长序列任务，本次使用 `1 warm-up + 5 measured` 的独立协议；同一四图 Bundle、同一托管 RGB 输入和单 Session 均复用。每次生成都达到 EOS，286 个 Token 与完整文本和官方参考一致。模型/Session 创建、调用方预处理不计入耗时，GPU 时钟未锁定。
-
-| 模型 / 任务 | 后端 | Wall P50（ms） | Wall P95（ms） | Session P50（ms） | Session P95（ms） | 预热 / 测量 | 状态 |
-| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
-| PaddleOCR-VL-1.6 Spotting | ONNX Runtime CUDA | 178,731.687 | 212,603.536 | 178,644.882 | 212,526.093 | 1 / 5 | 通过 |
-
-完整环境、输入/Bundle SHA、逐次样本和边界见 [ORT CUDA Spotting 正式延迟报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-formal-latency-onnxruntime-cuda-spotting-20261025.md)。这是固定任务的 ORT CUDA 观察，不代表 TensorRT/OpenCV DNN、设备端 KV/logits、锁频性能、跨设备排名或长期稳定性；长序列成本也不应外推到普通 OCR。
-
-## Windows 10 / RTX 2060
-
-### 测试环境
+## Windows / Ryzen 7 5800H / RTX 3060 Laptop
 
 | 项目 | 配置 |
 | --- | --- |
-| 测试日期 | 2026-08-28 至 2026-09-02 |
-| 代码版本 | DeploySharp `2.0.0-alpha.1` 测试构建；历史报告未记录 commit SHA |
-| 操作系统 | Windows 10 x64，build `10.0.19045.6466` |
-| CPU / 内存 | 本轮结果未记录 |
-| GPU | NVIDIA GeForce RTX 2060，6 GB |
-| NVIDIA 驱动 | `576.02` |
-| CUDA / cuDNN / TensorRT | CUDA `12.9`、cuDNN `9.22`、TensorRT `11.0.0.114` |
-| .NET | SDK `10.0.301`；运行时验证使用 .NET `8.0.28` |
-| 视觉输入 | 标准 `data/bus.jpg`；历史报告未保存输入 SHA-256 |
-| OCR 输入 | 标准 `data/ocr-demo.jpg` 的路径别名 `E:\Data\ocr\demo_1.jpg`；历史报告未保存输入 SHA-256 |
-
-### 视觉模型：CPU 后端历史均值
-
-口径：历史记录每个模型 5 次预热、20 次计时，复用已准备的输入。原始报告没有 P50/P95 和 commit/input SHA，因此只作为方向性均值基线，不满足当前标准协议。
-
-| 模型 | 任务 | 后端 | 精度 | 输入规格 | 平均推理时间（ms） | P50（ms） | P95（ms） | 状态 |
-| --- | --- | --- | --- | --- | ---: | ---: | ---: | --- |
-| YOLOv8n | 检测 | ONNX Runtime CPU | FP32 | 已准备 `bus.jpg` | 37.660 | 未记录 | 未记录 | 通过 |
-| YOLOv8n | 检测 | OpenVINO CPU | FP32 | 已准备 `bus.jpg` | 26.859 | 未记录 | 未记录 | 通过 |
-| YOLOv8n | 检测 | OpenCV DNN CPU | FP32 | 已准备 `bus.jpg` | 70.809 | 未记录 | 未记录 | 通过 |
-| YOLOv8n-seg | 分割 | ONNX Runtime CPU | FP32 | 已准备 `bus.jpg` | 64.977 | 未记录 | 未记录 | 通过 |
-| YOLOv8n-seg | 分割 | OpenVINO CPU | FP32 | 已准备 `bus.jpg` | 48.912 | 未记录 | 未记录 | 通过 |
-| YOLOv8n-seg | 分割 | OpenCV DNN CPU | FP32 | 已准备 `bus.jpg` | 352.975 | 未记录 | 未记录 | 通过 |
-| YOLOv8s-pose | 姿态 | ONNX Runtime CPU | FP32 | 已准备 `bus.jpg` | 100.708 | 未记录 | 未记录 | 通过 |
-| YOLOv8s-pose | 姿态 | OpenVINO CPU | FP32 | 已准备 `bus.jpg` | 88.393 | 未记录 | 未记录 | 通过 |
-| YOLOv8s-pose | 姿态 | OpenCV DNN CPU | FP32 | 已准备 `bus.jpg` | 165.670 | 未记录 | 未记录 | 通过 |
-| YOLOv8s-obb | 旋转框 | ONNX Runtime CPU | FP32 | 已准备 `bus.jpg` | 313.107 | 未记录 | 未记录 | 通过 |
-| YOLOv8s-obb | 旋转框 | OpenVINO CPU | FP32 | 已准备 `bus.jpg` | 229.729 | 未记录 | 未记录 | 通过 |
-| YOLOv8s-obb | 旋转框 | OpenCV DNN CPU | FP32 | 已准备 `bus.jpg` | 432.015 | 未记录 | 未记录 | 通过 |
-| PaDiM | 异常检测 | ONNX Runtime CPU | FP32 | 已准备 `bus.jpg` | 35.699 | 未记录 | 未记录 | 通过 |
-| PaDiM | 异常检测 | OpenVINO CPU | FP32 | 已准备 `bus.jpg` | 33.566 | 未记录 | 未记录 | 通过 |
-| PaDiM | 异常检测 | OpenCV DNN CPU | FP32 | 已准备 `bus.jpg` | 53.771 | 未记录 | 未记录 | 通过 |
-| BRIA RMBG 1.4 | 背景移除 | ONNX Runtime CPU | FP32 | 已准备 `bus.jpg` | 1167.398 | 未记录 | 未记录 | 通过 |
-| BRIA RMBG 1.4 | 背景移除 | OpenVINO CPU | FP32 | 已准备 `bus.jpg` | 924.965 | 未记录 | 未记录 | 通过 |
-| BRIA RMBG 1.4 | 背景移除 | OpenCV DNN CPU | FP32 | 已准备 `bus.jpg` | 1419.603 | 未记录 | 未记录 | 通过 |
-
-### 视觉模型：TensorRT CUDA 稳态口径
-
-口径：每个模型 10 次预热、50 次计时，TensorRT 11 CUDA 视觉流水线，FP32，复用已准备的 `bus.jpg` 输入。
-
-| 模型 | 任务 | 后端 | 精度 | 输入规格 | 平均推理时间（ms） | P50（ms） | P95（ms） | 状态 |
-| --- | --- | --- | --- | --- | ---: | ---: | ---: | --- |
-| YOLOv8n | 检测 | TensorRT CUDA | FP32 | 已准备 `bus.jpg` | 8.760 | 未记录 | 未记录 | 通过 |
-| YOLOv8n-seg | 分割 | TensorRT CUDA | FP32 | 已准备 `bus.jpg` | 20.628 | 未记录 | 未记录 | 通过 |
-| YOLOv8s-pose | 姿态 | TensorRT CUDA | FP32 | 已准备 `bus.jpg` | 10.023 | 未记录 | 未记录 | 通过 |
-| YOLOv8s-obb | 旋转框 | TensorRT CUDA | FP32 | 已准备 `bus.jpg` | 19.207 | 未记录 | 未记录 | 通过 |
-| PaDiM | 异常检测 | TensorRT CUDA | FP32 | 已准备 `bus.jpg` | 11.642 | 未记录 | 未记录 | 通过 |
-| BRIA RMBG 1.4 | 背景移除 | TensorRT CUDA | FP32 | 已准备 `bus.jpg` | 60.995 | 未记录 | 未记录 | 通过 |
-
-### 视觉模型：2026-09-02 标准分位数复测
-
-来源为 `artifacts/remote-test/visual-followup-20260902.csv`（ORT/OpenVINO）和 `artifacts/remote-test/visual-tensorrt-cuda-postopt-final-20260829.csv`（TensorRT CUDA）。两份原始文件均使用已准备的 `bus.jpg`，并采集了 mean/P50/P95，但没有在 CSV 中记录输入 SHA、commit SHA 或 warmup/iteration 参数；因此这里保留设备实测分位数，后续复测必须补齐这些字段。计时包含后端推理、DeploySharp 后处理和编排，不包含模型加载。
-
-| 模型 | 后端 | 总耗时 mean（ms） | P50（ms） | P95（ms） | 预处理 mean（ms） | 推理 mean（ms） | 后处理 mean（ms） |
-| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| YOLOv8n | ONNX Runtime CPU | 75.614 | 70.890 | 102.120 | 0.000 | 70.226 | 5.358 |
-| YOLOv8n-seg | ONNX Runtime CPU | 124.587 | 113.310 | 184.715 | 0.000 | 103.680 | 20.876 |
-| YOLOv8s-pose | ONNX Runtime CPU | 115.745 | 114.023 | 143.346 | 0.000 | 115.137 | 0.583 |
-| YOLOv8s-obb | ONNX Runtime CPU | 315.670 | 300.786 | 374.823 | 0.000 | 314.185 | 1.470 |
-| PaDiM | ONNX Runtime CPU | 31.782 | 30.325 | 40.253 | 0.000 | 27.082 | 4.683 |
-| BRIA RMBG 1.4 | ONNX Runtime CPU | 1229.172 | 1227.256 | 1349.439 | 0.000 | 1223.891 | 5.267 |
-| YOLOv8n | OpenVINO CPU | 30.443 | 29.642 | 36.281 | 0.000 | 28.021 | 2.416 |
-| YOLOv8n-seg | OpenVINO CPU | 44.778 | 44.768 | 45.531 | 0.000 | 34.840 | 9.932 |
-| YOLOv8s-pose | OpenVINO CPU | 78.919 | 79.005 | 79.546 | 0.000 | 78.409 | 0.505 |
-| YOLOv8s-obb | OpenVINO CPU | 209.306 | 208.923 | 211.929 | 0.000 | 207.900 | 1.402 |
-| PaDiM | OpenVINO CPU | 32.558 | 31.997 | 35.080 | 0.000 | 28.645 | 3.907 |
-| BRIA RMBG 1.4 | OpenVINO CPU | 864.636 | 849.476 | 924.939 | 0.000 | 860.165 | 4.465 |
-| YOLOv8n | TensorRT CUDA | 8.695 | 8.584 | 10.178 | 0.760 | 5.172 | 2.135 |
-| YOLOv8n-seg | TensorRT CUDA | 20.723 | 20.640 | 21.496 | 0.978 | 10.481 | 8.591 |
-| YOLOv8s-pose | TensorRT CUDA | 9.973 | 9.693 | 11.035 | 0.729 | 8.263 | 0.341 |
-| YOLOv8s-obb | TensorRT CUDA | 19.201 | 19.155 | 19.546 | 0.836 | 16.512 | 1.210 |
-| PaDiM | TensorRT CUDA | 11.548 | 11.280 | 12.663 | 0.826 | 6.311 | 3.711 |
-| BRIA RMBG 1.4 | TensorRT CUDA | 61.014 | 60.991 | 61.725 | 0.954 | 54.871 | 4.494 |
-
-这组标准分位数记录没有 GPU 遥测，因此不能判断每次运行是否处于固定 P0/锁频状态；后续 GPU 记录必须同时保存时钟、功耗上限和 thermal/hardware slowdown 字段。
-
-## Windows 11 / Ryzen 7 5800H / RTX 3060 Laptop：PaddleOCR TensorRT 10.11
-
-本机 `demo_1.jpg` 上 v4/v5/v6 七组核心模型的 ORT CPU、OpenVINO CPU 和 OpenCV DNN CPU 正式 5/50 矩阵见 [`paddleocr-core-3backend-demo1-matrix-20260924.md`](../../eng/models/paddle-ocr/verification/paddleocr-core-3backend-demo1-matrix-20260924.md)。该矩阵包含 21 个精确模型×后端组合，并保留区域数、结果 SHA、阶段耗时、P50/P95 与相邻环境记录。
-
-三张本地 OCR 图像的 v5 mobile ORT/OpenVINO/OpenCV DNN 正式 5/50 矩阵已生成：[`paddleocr-v5-mobile-3backend-matrix-20260924.md`](../../eng/models/paddle-ocr/verification/paddleocr-v5-mobile-3backend-matrix-20260924.md)。该矩阵保留每张图的区域数、结果 SHA、平均值、P50/P95 和相邻 `.environment.json` 协议；不同图片的区域数量不同，耗时不能简单横向比较。
-
-2026-09-29 在具名设备 `JYPPX` 实测。系统 Windows 11 `10.0.26200`，16 个逻辑处理器，GPU 为 RTX 3060 Laptop，驱动 `576.02`。运行时为 .NET `10.0.12`、CUDA `12.9`、cuDNN `9.22`、TensorRT `10.11.0.33-cu12` 和 API 10 bridge。该轮没有同步采集 GPU 遥测，不能确认锁频或功耗限制。
-
-口径：TensorRT `10.11.0.33-cu12` 重建的动态 Engine，输入 `E:\Data\ocr\demo_1.jpg`（SHA-256 `ec81d595407ccb61eb2d4d90e74d976469febb41a74cdbc8dbb8429b1e768f5c`），5 次预热、50 次计时，batch 8、2 个独立阶段 Session，复用已准备输入。检测阶段每张图执行一次；识别阶段按宽度分组后执行动态 batch。所有记录均返回 16 个文本区域。原始 CSV 和 `.environment.json` 保存在本机 `artifacts/local-model-benchmarks`；可审计摘要和模型/Engine SHA-256 见 [`paddleocr-tensorrt10.11-formal-20260929.json`](../../eng/models/paddle-ocr/verification/paddleocr-tensorrt10.11-formal-20260929.json)。
-
-| 模型 | 任务 | 后端 | 精度 | 输入规格 | 平均推理时间（ms） | P50（ms） | P95（ms） | 状态 |
-| --- | --- | --- | --- | --- | ---: | ---: | ---: | --- |
-| PP-OCRv4 mobile | 完整 OCR 流水线 | TensorRT | graph-defined | `demo_1.jpg`；batch 8；2 个阶段 Session | 29.775 | 29.775 | 34.304 | 通过 |
-| PP-OCRv4 server | 完整 OCR 流水线 | TensorRT | graph-defined | `demo_1.jpg`；batch 8；2 个阶段 Session | 114.605 | 114.205 | 118.435 | 通过 |
-| PP-OCRv5 mobile | 完整 OCR 流水线 | TensorRT | graph-defined | `demo_1.jpg`；batch 8；2 个阶段 Session | 47.107 | 46.474 | 55.036 | 通过 |
-| PP-OCRv5 server | 完整 OCR 流水线 | TensorRT | graph-defined | `demo_1.jpg`；batch 8；2 个阶段 Session | 91.054 | 90.797 | 93.476 | 通过 |
-| PP-OCRv6 tiny | 完整 OCR 流水线 | TensorRT | graph-defined | `demo_1.jpg`；batch 8；2 个阶段 Session | 16.917 | 16.743 | 18.399 | 通过 |
-| PP-OCRv6 small | 完整 OCR 流水线 | TensorRT | graph-defined | `demo_1.jpg`；batch 8；2 个阶段 Session | 28.688 | 27.311 | 36.788 | 通过 |
-| PP-OCRv6 medium | 完整 OCR 流水线 | TensorRT | graph-defined | `demo_1.jpg`；batch 8；2 个阶段 Session | 66.340 | 64.387 | 77.434 | 通过 |
-
-本轮先用 `trtexec` 验证每个重建 Engine 可以由 TensorRT 10.11 反序列化，再通过 DeploySharp bridge 执行完整流水线；因此修复了原有 TensorRT 10.10/10.11 序列化版本不匹配导致的 `deserializeCudaEngine` 空对象假失败。表中平均值、P50/P95 来自各自正式 CSV，分段时间不能相加后当作总耗时。该轮没有同步采集 GPU 遥测，不能据此宣称锁频或功耗状态；设备、runtime、bridge、输入和所有模型/Engine SHA 以汇总 JSON 为准。Engine 与 TensorRT 序列化版本、GPU 架构和 profile 绑定，换设备或 TensorRT minor 版本必须重新构建。
-
-### PP-OCRv6 Small OpenCV DNN 宽度分桶诊断（2026-10-26）
-
-同一台 Ryzen 7 5800H 主机、同一 `demo_1.jpg` 和完整流水线，OpenCV DNN CPU 使用静态 REC Batch=1、两个独立阶段 Session、Clamp320、复用输入；两组均为 5 次预热 + 50 次测量。动态宽度的 P50/P95 为 `1061.834/1156.418 ms`，显式 `48,64,96,128,192,256,320` 分桶后为 `974.565/1244.388 ms`；有序文字 SHA 相同，实际张量宽度种类 `5→3`，托管分配/次下降 `22.78%`。P50 改善但 P95 回退；这是单图顺序对照，不替代上表 TensorRT 的不同 Batch/Engine 口径，更不能声称稳定提速或默认应启用。完整模型/输入/程序集 SHA、CSV、验证结果及 241 条标注行的质量取舍见[专项报告](../../eng/models/paddle-ocr/verification/paddleocr-width-bucket-quality-performance-20261026.md)。
-
-## Windows 10 / Intel Core i7-14700KF / RTX 5060 Ti
-
-### 测试环境
-
-| 项目 | 配置 |
-| --- | --- |
-| 测试日期 | 2026-08-30 |
-| 代码版本 | 便携测试包运行 `20260830-092323`；历史包未记录 commit SHA，不能与当前标准协议直接比较 |
-| 操作系统 | Windows 10 x64，build `10.0.26200` |
-| CPU | Intel Core i7-14700KF，20 个物理核心 / 28 个逻辑处理器，报告基准频率 `3.4 GHz` |
-| 内存 | `34,127,826,944` bytes（约 32 GB） |
-| GPU | NVIDIA GeForce RTX 5060 Ti，`16,311 MiB` |
-| NVIDIA 驱动 | `581.57` |
-| CUDA / TensorRT / cuDNN | CUDA `12.9`、TensorRT API `11`、`compute_120`；cuDNN 版本未记录 |
-| .NET | .NET `10.0.9` x64 |
-| 视觉输入 | 便携包 `data/bus.jpg`；输入 SHA-256 未记录 |
-| OCR 输入 | 便携包 `data/ocr-demo.jpg`；输入 SHA-256 未记录，不能证明与 `demo_1.jpg` 字节相同 |
-
-### 视觉模型稳态口径
-
-口径：历史便携包每个模型 3 次预热、10 次计时，复用已准备的 `data/bus.jpg` 输入，FP32，模型加载不计入。该轮原始数据未记录 P50/P95、commit SHA 或输入 SHA，因此表中数值仅作历史均值参考；未通过组合见验证矩阵。后续同设备复测使用统一的 5/50 协议。
-
-| 模型 | 任务 | 后端 | 精度 | 输入规格 | 平均推理时间（ms） | P50（ms） | P95（ms） | 状态 |
-| --- | --- | --- | --- | --- | ---: | ---: | ---: | --- |
-| DEIMv2 | 检测 | ONNX Runtime CPU | FP32 | 已准备 `data/bus.jpg` | 116.007 | 未记录 | 未记录 | 通过 |
-| DEIMv2 | 检测 | OpenVINO CPU | FP32 | 已准备 `data/bus.jpg` | 114.377 | 未记录 | 未记录 | 通过 |
-| DEIMv2 | 检测 | TensorRT | FP32 | 已准备 `data/bus.jpg` | 9.351 | 未记录 | 未记录 | 通过 |
-| PaDiM | 异常检测 | ONNX Runtime CPU / CUDA / OpenVINO / OpenCV DNN / TensorRT / TensorRT CUDA | FP32 | 已准备 `data/bus.jpg` | 15.626 / 5.355 / 13.407 / 31.107 / 3.989 / 4.060 | 未记录 | 未记录 | 通过 |
-| PP-YOLOE | 检测 | ONNX Runtime CPU / CUDA | FP32 | 已准备 `data/bus.jpg` | 101.953 / 33.058 | 未记录 | 未记录 | 通过 |
-| RF-DETR | 检测 | ONNX Runtime CPU | FP32 | 已准备 `data/bus.jpg` | 90.999 | 未记录 | 未记录 | 通过 |
-| BRIA RMBG 1.4 | 背景移除 | ONNX Runtime CPU / CUDA / OpenVINO / OpenCV DNN / TensorRT / TensorRT CUDA | FP32 | 已准备 `data/bus.jpg` | 364.413 / 42.940 / 366.734 / 933.514 / 25.141 / 22.756 | 未记录 | 未记录 | 通过 |
-| BRIA RMBG 2.0 | 背景移除 | ONNX Runtime CPU / CUDA / OpenVINO / TensorRT | FP32 | 已准备 `data/bus.jpg` | 7864.023 / 538.860 / 7424.923 / 201.242 | 未记录 | 未记录 | 通过 |
-| RT-DETR decoded ONNX | 检测 | ONNX Runtime CPU / CUDA / OpenVINO / TensorRT | FP32 | 已准备 `data/bus.jpg` | 223.501 / 17.359 / 168.562 / 10.653 | 未记录 | 未记录 | 通过 |
-| RT-DETR raw | 检测 | ONNX Runtime CPU / CUDA / OpenVINO / TensorRT | FP32 | 已准备 `data/bus.jpg` | 236.975 / 17.456 / 181.107 / 10.843 | 未记录 | 未记录 | 通过 |
-| YOLO11n | 检测 | ONNX Runtime CPU / CUDA / OpenVINO / TensorRT / TensorRT CUDA | FP32 | 已准备 `data/bus.jpg` | 15.949 / 6.860 / 12.374 / 5.116 / 4.437 | 未记录 | 未记录 | 通过 |
-| YOLO11s-obb | 旋转框 | ONNX Runtime CPU / CUDA / OpenVINO / OpenCV DNN / TensorRT / TensorRT CUDA | FP32 | 已准备 `data/bus.jpg` | 83.408 / 11.841 / 90.739 / 264.354 / 6.938 / 7.149 | 未记录 | 未记录 | 通过 |
-| YOLO11s-pose | 姿态 | ONNX Runtime CPU / CUDA / OpenVINO / OpenCV DNN / TensorRT / TensorRT CUDA | FP32 | 已准备 `data/bus.jpg` | 30.114 / 6.940 / 30.870 / 108.119 / 3.991 / 3.970 | 未记录 | 未记录 | 通过 |
-| YOLO11s-seg | 分割 | ONNX Runtime CPU / CUDA / OpenVINO / OpenCV DNN / TensorRT / TensorRT CUDA | FP32 | 已准备 `data/bus.jpg` | 50.831 / 15.143 / 47.799 / 238.904 / 12.787 / 5.339 | 未记录 | 未记录 | 通过 |
-| YOLO12n | 检测 | ONNX Runtime CPU / CUDA / OpenVINO / TensorRT / TensorRT CUDA | FP32 | 已准备 `data/bus.jpg` | 20.590 / 8.167 / 13.965 / 5.511 / 5.944 | 未记录 | 未记录 | 通过 |
-| YOLO13n | 检测 | ONNX Runtime CPU / CUDA / OpenVINO / TensorRT / TensorRT CUDA | FP32 | 已准备 `data/bus.jpg` | 24.885 / 9.641 / 16.565 / 6.488 / 6.379 | 未记录 | 未记录 | 通过 |
-| YOLO26n | 检测 | ONNX Runtime CPU / CUDA / OpenVINO / TensorRT / TensorRT CUDA | FP32 | 已准备 `data/bus.jpg` | 12.048 / 5.105 / 9.936 / 2.224 / 2.876 | 未记录 | 未记录 | 通过 |
-| YOLO26s-obb | 旋转框 | ONNX Runtime CPU / CUDA / OpenVINO / OpenCV DNN / TensorRT / TensorRT CUDA | FP32 | 已准备 `data/bus.jpg` | 77.658 / 11.134 / 76.032 / 291.134 / 5.665 / 5.959 | 未记录 | 未记录 | 通过 |
-| YOLO26s-pose | 姿态 | ONNX Runtime CPU / CUDA / OpenVINO / OpenCV DNN / TensorRT / TensorRT CUDA | FP32 | 已准备 `data/bus.jpg` | 29.639 / 6.949 / 30.166 / 120.952 / 3.242 / 3.460 | 未记录 | 未记录 | 通过 |
-| YOLO26s-seg | 分割 | ONNX Runtime CPU / CUDA / OpenVINO / OpenCV DNN / TensorRT / TensorRT CUDA | FP32 | 已准备 `data/bus.jpg` | 50.530 / 13.658 / 46.112 / 239.468 / 9.504 / 5.168 | 未记录 | 未记录 | 通过 |
-| YOLOv5n | 检测 | ONNX Runtime CPU / CUDA / OpenVINO / TensorRT / TensorRT CUDA | FP32 | 已准备 `data/bus.jpg` | 11.358 / 7.351 / 11.200 / 5.860 / 5.054 | 未记录 | 未记录 | 通过 |
-| YOLOv5s-seg | 分割 | ONNX Runtime CPU / CUDA / OpenVINO / OpenCV DNN / TensorRT / TensorRT CUDA | FP32 | 已准备 `data/bus.jpg` | 40.219 / 17.866 / 42.873 / 166.592 / 16.489 / 5.481 | 未记录 | 未记录 | 通过 |
-| YOLOv6s | 检测 | ONNX Runtime CPU / CUDA / OpenVINO / TensorRT / TensorRT CUDA | FP32 | 已准备 `data/bus.jpg` | 36.644 / 7.740 / 42.558 / 7.996 / 6.035 | 未记录 | 未记录 | 通过 |
-| YOLOv7 | 检测 | ONNX Runtime CPU / CUDA / OpenVINO / TensorRT | FP32 | 已准备 `data/bus.jpg` | 101.047 / 13.212 / 117.984 / 9.461 | 未记录 | 未记录 | 通过 |
-| YOLOv8n | 检测 | ONNX Runtime CPU / CUDA / OpenVINO / TensorRT / TensorRT CUDA | FP32 | 已准备 `data/bus.jpg` | 15.281 / 6.682 / 13.342 / 5.050 / 4.004 | 未记录 | 未记录 | 通过 |
-| YOLOv8n-seg | 分割 | ONNX Runtime CPU / CUDA / OpenVINO / OpenCV DNN / TensorRT / TensorRT CUDA | FP32 | 已准备 `data/bus.jpg` | 27.082 / 14.819 / 24.921 / 130.889 / 11.867 / 4.229 | 未记录 | 未记录 | 通过 |
-| YOLOv8s-cls | 分类 | ONNX Runtime CPU / CUDA / OpenVINO / OpenCV DNN / TensorRT | FP32 | 已准备 `data/bus.jpg` | 2.324 / 1.738 / 2.608 / 8.486 / 0.766 | 未记录 | 未记录 | 通过 |
-| YOLOv8s-obb | 旋转框 | ONNX Runtime CPU / CUDA / OpenVINO / OpenCV DNN / TensorRT / TensorRT CUDA | FP32 | 已准备 `data/bus.jpg` | 91.536 / 11.695 / 92.086 / 272.182 / 7.006 / 7.327 | 未记录 | 未记录 | 通过 |
-| YOLOv8s-pose | 姿态 | ONNX Runtime CPU / CUDA / OpenVINO / OpenCV DNN / TensorRT / TensorRT CUDA | FP32 | 已准备 `data/bus.jpg` | 33.200 / 6.857 / 35.262 / 126.708 / 4.007 / 4.172 | 未记录 | 未记录 | 通过 |
-| YOLOv9c-seg | 分割 | ONNX Runtime CPU / CUDA / OpenVINO / OpenCV DNN / TensorRT / TensorRT CUDA | FP32 | 已准备 `data/bus.jpg` | 155.974 / 23.471 / 168.321 / 382.681 / 20.181 / 13.325 | 未记录 | 未记录 | 通过 |
-| YOLOv9s | 检测 | ONNX Runtime CPU / CUDA / OpenVINO / TensorRT / TensorRT CUDA | FP32 | 已准备 `data/bus.jpg` | 36.799 / 12.627 / 34.758 / 7.026 / 6.736 | 未记录 | 未记录 | 通过 |
-
-同一行中的后端与耗时按照列出的相同顺序一一对应；该压缩表达只用于保留同一模型、同一口径下已通过的全部后端数据，并不代表这些后端使用同一执行设备。
-
-### PaddleOCR 完整流水线口径
-
-口径：输入 `data/ocr-demo.jpg`，每个组合 5 次预热、10 次计时；自动搜索独立阶段 Session 数量 `1,2,4` 与识别 batch `1,2,4,8,16`，记录最优稳定完整流水线总耗时。`输入规格`列中的 batch 与 Session 是选中的组合；P50/P95 未记录。
-
-| 模型 | 任务 | 后端 | 精度 | 输入规格 | 平均推理时间（ms） | P50（ms） | P95（ms） | 状态 |
-| --- | --- | --- | --- | --- | ---: | ---: | ---: | --- |
-| PP-OCRv4 mobile | 完整 OCR 流水线 | ONNX Runtime CPU | FP32 | `ocr-demo.jpg`；batch 2；4 个 Session | 1113.508 | 未记录 | 未记录 | 通过 |
-| PP-OCRv4 mobile | 完整 OCR 流水线 | ONNX Runtime CUDA | FP32 | `ocr-demo.jpg`；batch 8；2 个 Session | 92.502 | 未记录 | 未记录 | 通过 |
-| PP-OCRv4 mobile | 完整 OCR 流水线 | OpenCV DNN CPU | FP32 | `ocr-demo.jpg`；batch 1；4 个 Session | 629.645 | 未记录 | 未记录 | 通过 |
-| PP-OCRv4 mobile | 完整 OCR 流水线 | TensorRT | FP32 | `ocr-demo.jpg`；batch 8；2 个 Session | 20.872 | 未记录 | 未记录 | 通过 |
-| PP-OCRv5 mobile | 完整 OCR 流水线 | ONNX Runtime CPU | FP32 | `ocr-demo.jpg`；batch 2；4 个 Session | 993.741 | 未记录 | 未记录 | 通过 |
-| PP-OCRv5 mobile | 完整 OCR 流水线 | ONNX Runtime CUDA | FP32 | `ocr-demo.jpg`；batch 4；4 个 Session | 85.914 | 未记录 | 未记录 | 通过 |
-| PP-OCRv5 mobile | 完整 OCR 流水线 | OpenCV DNN CPU | FP32 | `ocr-demo.jpg`；batch 2；4 个 Session | 579.912 | 未记录 | 未记录 | 通过 |
-| PP-OCRv5 mobile | 完整 OCR 流水线 | TensorRT | FP32 | `ocr-demo.jpg`；batch 8；2 个 Session | 21.357 | 未记录 | 未记录 | 通过 |
-| PP-OCRv6 tiny | 完整 OCR 流水线 | ONNX Runtime CPU | FP32 | `ocr-demo.jpg`；batch 1；2 个 Session | 419.364 | 未记录 | 未记录 | 通过 |
-| PP-OCRv6 tiny | 完整 OCR 流水线 | ONNX Runtime CUDA | FP32 | `ocr-demo.jpg`；batch 16；1 个 Session | 50.408 | 未记录 | 未记录 | 通过 |
-| PP-OCRv6 tiny | 完整 OCR 流水线 | OpenCV DNN CPU | FP32 | `ocr-demo.jpg`；batch 2；4 个 Session | 265.286 | 未记录 | 未记录 | 通过 |
-| PP-OCRv6 tiny | 完整 OCR 流水线 | TensorRT | FP32 | `ocr-demo.jpg`；batch 16；1 个 Session | 14.851 | 未记录 | 未记录 | 通过 |
-| PP-OCRv6 small | 完整 OCR 流水线 | ONNX Runtime CPU | FP32 | `ocr-demo.jpg`；batch 2；4 个 Session | 658.259 | 未记录 | 未记录 | 通过 |
-| PP-OCRv6 small | 完整 OCR 流水线 | ONNX Runtime CUDA | FP32 | `ocr-demo.jpg`；batch 4；4 个 Session | 81.061 | 未记录 | 未记录 | 通过 |
-| PP-OCRv6 small | 完整 OCR 流水线 | OpenCV DNN CPU | FP32 | `ocr-demo.jpg`；batch 4；4 个 Session | 519.439 | 未记录 | 未记录 | 通过 |
-| PP-OCRv6 small | 完整 OCR 流水线 | TensorRT | FP32 | `ocr-demo.jpg`；batch 8；2 个 Session | 18.825 | 未记录 | 未记录 | 通过 |
-| PP-OCRv6 medium | 完整 OCR 流水线 | ONNX Runtime CPU | FP32 | `ocr-demo.jpg`；batch 2；4 个 Session | 1397.720 | 未记录 | 未记录 | 通过 |
-| PP-OCRv6 medium | 完整 OCR 流水线 | ONNX Runtime CUDA | FP32 | `ocr-demo.jpg`；batch 4；4 个 Session | 106.863 | 未记录 | 未记录 | 通过 |
-| PP-OCRv6 medium | 完整 OCR 流水线 | OpenCV DNN CPU | FP32 | `ocr-demo.jpg`；batch 4；4 个 Session | 1381.233 | 未记录 | 未记录 | 通过 |
-| PP-OCRv6 medium | 完整 OCR 流水线 | TensorRT | FP32 | `ocr-demo.jpg`；batch 4；4 个 Session | 33.983 | 未记录 | 未记录 | 通过 |
-
-## Windows 11 / Ryzen 7 5800H / RTX 3060 Laptop：PP-Structure 分类
-
-2026-09-21 本机 `JYPPX` 实测。系统 Windows 11 `10.0.26200`，16 个逻辑处理器、约 15.86 GiB 可用物理内存容量，GPU 为 RTX 3060 Laptop，驱动 `576.02`。源码基准 `f0575bbb182d2b72a0a4f542c3bb4401ed865ad7` 加本轮未提交的预处理/Decoder 修复；数字不代表该提交单独构建的结果。
-
-运行时：.NET 10，ORT `1.28.0`、OpenVINO Windows `2026.2.1`、OpenCV `5.0.0`；GPU 路径使用 TensorRT `11.0.0.114-cu12`、CUDA `12.9`、cuDNN `9.22` 和本地 TRT 11 bridge。未主动设置锁频或功耗上限；`nvidia-smi` 的功耗上限和应用时钟字段返回 N/A，因此不能确认机器没有固件/电源限制。测试期间不同时运行其它模型基准，但未隔离所有桌面负载。
-
-本节是 **PP-LCNet 单模块**，不是 OCR 或 PP-Structure 全页面时间。batch=1、Session=1；Release 构建，5 次预热、50 次测量，nearest-rank P50/P95。CPU 路径使用 `DOTNET_TieredCompilation=0` 防止短测试中途切换 JIT 层级；TensorRT 测试保留运行时默认 JIT，故也不是严格相同执行协议下的后端排名。每轮复用已解码图像并重新执行预处理、推理和后处理，包含传输、排除磁盘解码/加载/编译/Engine 构建。TensorRT 为 RuntimeDefault 精度、构建优化级别 3，不能宣称所有层均为 FP32。
-
-| 模型 / 输入 | 后端 | 预处理 P50 ms | 推理 P50 ms | 后处理 P50 ms | 总 P50 ms | 总 P95 ms |
-| --- | --- | ---: | ---: | ---: | ---: | ---: |
-| 文档方向 / `img_rot180_demo.jpg` | ORT CPU | 1.200 | 2.906 | 0.010 | 4.105 | 6.353 |
-| 文档方向 / 同上 | OpenVINO CPU | 0.703 | 1.351 | 0.009 | 2.201 | 3.714 |
-| 文档方向 / 同上 | OpenCV DNN CPU | 0.908 | 4.679 | 0.018 | 5.651 | 6.534 |
-| 文档方向 / 同上 | TensorRT CUDA 预处理 | 见原始 TRX 分段样本 | 见原始 TRX | 见原始 TRX | 1.318 | 1.921 |
-| 表格分类 / `table_recognition.jpg` | ORT CPU | 1.006 | 2.641 | 0.009 | 3.818 | 5.867 |
-| 表格分类 / 同上 | OpenVINO CPU | 0.875 | 1.821 | 0.011 | 2.836 | 5.024 |
-| 表格分类 / 同上 | OpenCV DNN CPU | 0.764 | 4.348 | 0.017 | 5.171 | 6.353 |
-| 表格分类 / 同上 | TensorRT CUDA 预处理 | 见外部测试 JSON | 见外部测试 JSON | 见外部测试 JSON | 1.212 | 1.331 |
-
-各分段分位数不应相加后当作总分位数。上表取最后一次带完整协议记录的运行，未从不同运行中逐项挑选最小值。分类标签均与官方示例一致；CPU 文档方向分数约 `0.89236`、表格分类约 `0.844209`，CUDA 方向分数约 `0.894656`，表格分类约 `0.851693`。方向同 Engine 的 CPU 预处理分数差约 `0.002430`；表格分类 TensorRT 与 ORT 的绝对分数差为 `0.007485`，在外部测试合同规定的 `0.01` 内。TensorRT 结果使用 TRT 11 bridge（SHA `a94d1e5fe4454c9402979ae050f7a64d74c7f51bd6bb2d74936531f608a9ef6`）重新测得，旧的 TRT 10/错误 bridge 记录不再作为当前基线。这些是小规模回归，不是数据集准确率。
-
-### PP-Structure 版面分析：TensorRT NMS 稳态口径
-
-`pp-doclayout-l` 在同一设备上补充了真正的 TensorRT 版面模型实测。输入为 `E:\Data\image\bus.jpg`，ONNX SHA `d65ead6d31c0535b99b7976840f038ba2e7e7be060476d0c413f72dca86b78a9`，TensorRT 11 Engine SHA `c6acaedc9f3ed2996e012d1fd6b45c5eb061877d2ac3aa0f77bde34f65e9a0ba`（155,392,076 bytes）。动态 `image`、`im_shape`、`scale_factor` profile，构建优化级别 3；5 次预热、50 次测量，OpenCV CPU 准备输入，TensorRT 执行网络和图内 Paddle NMS，ORT CPU 用于结果对照。
-
-| 模型 / 输入 | 后端 | 候选 / 置信度过滤 | 结果一致性 | 总 P50 ms | 总 P95 ms |
-| --- | --- | ---: | --- | ---: | ---: |
-| `pp-doclayout-l` / `bus.jpg` | TensorRT CUDA | 300 / 9（score ≥ 0.05） | 与 ORT 高置信度结果：score ≤ 0.01、源坐标 ≤ 1.5 px | 19.414 | 25.876 |
-
-该数据是 CPU 准备输入的 TensorRT NMS 指标，不是 CUDA 端到端预处理结果；Engine 与 GPU 架构及 TensorRT/CUDA/cuDNN 版本绑定，换设备必须重新构建。当前没有把这一个工件的结果外推到其它 PP-Structure 模型。
-
-### PP-Structure 版面分析：OpenCV DNN CPU 稳态口径
-
-2026-10-17 在同一 `JYPPX` Windows 10 主机上，使用 `pp-doclayout-l.onnx`、`pp-docblocklayout.onnx`、`pp-doclayout-plus-l.onnx` 和 `bus.jpg` 补充了 OpenCV DNN 的正式 `5 warm-up + 50 measured` 单图证据。每次测量复用同一个已准备输入和一个 Session，计时包含 OpenCV DNN 执行与 DeploySharp Paddle NMS Decoder，不包含图片解码/预处理、模型加载、Session 创建、哈希和一次性 ORT parity 参考。OpenCV 的 CPU 时钟不涉及 GPU 锁频。
-
-| 模型 / 输入 | 后端 | Batch / Session | 高置信度 parity | P50 ms | P95 ms | Mean ms |
-| --- | --- | ---: | --- | ---: | ---: | ---: |
-| `pp-doclayout-l` / `bus.jpg` | OpenCV DNN CPU | 1 / 1 | 1 个区域；score ≤ `0.001`、坐标 ≤ `0.5 px`（ORT 对照） | 682.4541 | 750.4633 | 693.4330 |
-| `pp-docblocklayout` / `bus.jpg` | OpenCV DNN CPU | 1 / 1 | 1 个区域；score ≤ `0.001`、坐标 ≤ `0.5 px`（ORT 对照） | 725.7605 | 859.4460 | 729.7552 |
-| `pp-doclayout-plus-l` / `bus.jpg` | OpenCV DNN CPU | 1 / 1 | 1 个区域；score ≤ `0.001`、坐标 ≤ `0.5 px`（ORT 对照） | 1043.8911 | 1167.5941 | 1066.9535 |
-| `rt-detr-h-layout-3cls` / `bus.jpg` | OpenCV DNN CPU | 1 / 1 | 1 个区域；score ≤ `0.001`、坐标 ≤ `0.5 px`（ORT 对照） | 1927.6786 | 2115.1677 | 1952.4688 |
-| `rt-detr-h-layout-17cls` / `bus.jpg` | OpenCV DNN CPU | 1 / 1 | 1 个区域；score ≤ `0.001`、坐标 ≤ `0.5 px`（ORT 对照） | 1952.2599 | 2263.1756 | 2009.1699 |
-| `rt-detr-l-wired-cell-det` / `bus.jpg` | OpenCV DNN CPU | 1 / 1 | 2 个区域；score ≤ `0.001`、坐标 ≤ `0.5 px`（ORT 对照） | 675.4472 | 730.0830 | 686.7020 |
-| `rt-detr-l-wireless-cell-det` / `bus.jpg` | OpenCV DNN CPU | 1 / 1 | 3 个区域；score ≤ `0.001`、坐标 ≤ `0.5 px`（ORT 对照） | 675.4522 | 820.8428 | 693.5238 |
-
-`pp-doclayout-l`、`pp-docblocklayout`、`pp-doclayout-plus-l`、RT-DETR-H 3 类、RT-DETR-H 17 类的模型 SHA-256 分别为 `d65ead6d31c0535b99b7976840f038ba2e7e7be060476d0c413f72dca86b78a9`、`abbf5febf79a35c9f329b4f591d440c7a4b3ae90cbb042bc8835900b49582218`、`d67689f6325ec0d4cc812308dbd1c84bc801e76731c0f183297013d6b59e0048`、`e003528247ea0324eba25c94127a1ff5ef48f8a83ae725a8f42f8f0a1d551d8b`、`556ba39ce91419069135e8446e155edda3d5cd475632d6ea5cec0f4dc072b41a`；输入 SHA-256 均为 `33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c`。OpenCV importer 对未请求的 `fetch_name_1` 输出记录了诊断，但选定的 `fetch_name_0` 执行和有界 parity 均通过；这不外推到其它导出或 importer 版本。完整逐次样本见 [`pp-doclayout-l`](../../eng/models/paddle-document/verification/paddle-document-opencv-pp-doclayout-l-benchmark-20261017.md)、[`pp-docblocklayout`](../../eng/models/paddle-document/verification/paddle-document-opencv-pp-docblocklayout-benchmark-20261017.md)、[`pp-doclayout-plus-l`](../../eng/models/paddle-document/verification/paddle-document-opencv-pp-doclayout-plus-l-benchmark-20261017.md)、[`RT-DETR 3 类`](../../eng/models/paddle-document/verification/paddle-document-opencv-rt-detr-h-layout-3cls-benchmark-20261017.md) 和 [`RT-DETR 17 类`](../../eng/models/paddle-document/verification/paddle-document-opencv-rt-detr-h-layout-17cls-benchmark-20261017.md) 报告及对应 JSON。
-两个 RT-DETR-L 表格单元检测器的模型 SHA-256 分别为 `c390d3c0252e7eeeca9bdaf67f77c9e37f2e25343e53edf2d7c0462f286c74d6` 和 `e141c8aa947ef0aea165c45d51caf6d2cccbca5f381ed9c8854f402570b296bf`；详细报告见 [`wired-cell`](../../eng/models/paddle-document/verification/paddle-document-opencv-rt-detr-l-wired-cell-det-benchmark-20261018.md) 与 [`wireless-cell`](../../eng/models/paddle-document/verification/paddle-document-opencv-rt-detr-l-wireless-cell-det-benchmark-20261018.md)。
-
-### PP-Structure 印章检测：OpenCV DNN CPU 稳态口径
-
-2026-10-18 在同一 `JYPPX` Windows 10 主机上，使用 `E:\Data\ocr\demo_1.jpg` 对 PP-OCRv4 mobile/server 印章概率图模型执行正式 `5 warm-up + 50 measured` 单图测试。每次测量复用同一个已准备输入和一个 Session，计时包含 OpenCV DNN 执行与专用 `PaddleDocumentSealDecoder`，不包含图片解码/预处理、模型加载、Session 创建、哈希和一次性 ORT 参考。该图片没有人工印章标注；区域数仅作为运行诊断。
-
-| 模型 / 输入 | 后端 | Batch / Session | 输出与 ORT 参考 | P50 ms | P95 ms | Mean ms |
-| --- | --- | ---: | --- | ---: | ---: | ---: |
-| `ppocrv4-mobile-seal-det` / `demo_1.jpg` | OpenCV DNN CPU | 1 / 1 | 224×224 mask；OpenCV 0 区域、ORT 0 区域；不声明 raw-map 数值 parity | 52.8776 | 59.4496 | 53.3504 |
-| `ppocrv4-server-seal-det` / `demo_1.jpg` | OpenCV DNN CPU | 1 / 1 | 224×224 mask；OpenCV 1 区域、ORT 1 区域；不声明 raw-map 数值 parity | 298.2772 | 329.3094 | 299.3065 |
-
-模型 SHA-256 分别为 `e4b20a5c47c70dbe67cebfdad970124e8c43b0c23cfa4eda5e17f77ef51f9199` 和 `f9448c3ffd73f778ad312de10d5ae4df03dbd6b162638bf07fa0880a21a634c7`；完整样本见 [`mobile 报告`](../../eng/models/paddle-document/verification/paddle-document-opencv-ppocrv4-mobile-seal-det-benchmark-20261018.md)、[`server 报告`](../../eng/models/paddle-document/verification/paddle-document-opencv-ppocrv4-server-seal-det-benchmark-20261018.md) 及对应 JSON。该证据只覆盖这两个精确 ONNX 工件和当前 OpenCV runtime，不外推为印章数据集准确率或跨设备性能。
-
-### PP-Structure 版面/表格/印章：OpenVINO CPU 稳态口径
-
-截至 2026-10-18，当前矩阵标记为 `openvinoCpu=pass` 的 23 个精确模型/后端组合均已登记正式性能证据。版面和单元检测使用 `bus.jpg` 或仓库表格样本，印章使用 `demo_1.jpg`；每次复用同一个 `PreparedVisualInput` 和单 Session。计时包含 OpenVINO 执行与对应 Paddle Decoder，不包含图片解码/预处理、模型加载、Session 创建和一次性 ORT 参考。本节列出已完成的一组版面/单元/印章单图记录；表格流水线、分类、UVDoc、SLANeXt compatibility 和 Chart2Table 另见本页其它小节及当前矩阵索引。
-
-| 模型 / 输入 | Batch / Session | 输出合同与 ORT 边界 | P50 ms | P95 ms |
-| --- | ---: | --- | ---: | ---: |
-| `pp-doclayout-l` / `bus.jpg` | 1 / 1 | 300 候选，1 个高置信度；ORT count/score/坐标合同通过 | 348.3297 | 772.7077 |
-| `pp-docblocklayout` / `bus.jpg` | 1 / 1 | 300 候选，1 个高置信度；ORT count/score/坐标合同通过 | 388.4808 | 1184.8846 |
-| `pp-doclayout-plus-l` / `bus.jpg` | 1 / 1 | 800×800，300 候选，1 个高置信度；ORT 合同通过 | 516.4424 | 670.7747 |
-| `rt-detr-h-layout-3cls` / `bus.jpg` | 1 / 1 | 300 候选，1 个高置信度；ORT 合同通过 | 1489.2549 | 2120.9085 |
-| `rt-detr-h-layout-17cls` / `bus.jpg` | 1 / 1 | 300 候选，1 个高置信度；ORT 合同通过 | 1434.2061 | 1974.4991 |
-| `rt-detr-l-wired-cell-det` / `table_recognition.jpg` | 1 / 1 | 300 候选，13 个高置信度；ORT 合同通过 | 370.1529 | 483.6616 |
-| `rt-detr-l-wireless-cell-det` / `table_recognition.jpg` | 1 / 1 | 300 候选，13 个高置信度；ORT 合同通过 | 369.8421 | 460.1698 |
-| `ppocrv4-mobile-seal-det` / `demo_1.jpg` | 1 / 1 | 224×224 mask，0 区域；只声明形状/Decoder 合同 | 5.8319 | 9.7357 |
-| `ppocrv4-server-seal-det` / `demo_1.jpg` | 1 / 1 | 224×224 mask，1 区域；只声明形状/Decoder 合同 | 126.2519 | 170.5854 |
-
-本轮新增的 8 个静态版面工件如下；PicoDet/PP-DocLayout-M/S 的输入合同使用各自导出声明的 `scale_factor`，不强行绑定不存在的 `im_shape`：
-
-| 模型 / 输入 | Batch / Session | 输出与 ORT 边界 | P50 ms | P95 ms |
-| --- | ---: | --- | ---: | ---: |
-| `pp-doclayout-m` / `bus.jpg` | 1 / 1 | 100 候选，28 个高置信度；ORT/OpenVINO 高置信度集合 28/28 有界匹配 | 57.0756 | 82.5714 |
-| `pp-doclayout-s` / `bus.jpg` | 1 / 1 | 100 候选，48 个高置信度；ORT/OpenVINO 高置信度集合 48/48 有界匹配 | 9.7144 | 12.9484 |
-| `picodet-layout-1x` / `bus.jpg` | 1 / 1 | 18 候选，5 个高置信度；ORT/OpenVINO 高置信度集合 5/5 有界匹配 | 26.1031 | 69.0613 |
-| `picodet-layout-1x-table` / `bus.jpg` | 1 / 1 | 3 候选；两边均无 ≥0.05 候选 | 23.1889 | 26.3338 |
-| `picodet-s-layout-3cls` / `bus.jpg` | 1 / 1 | 66 候选，25 个高置信度；ORT/OpenVINO 高置信度集合 25/25 有界匹配 | 9.4186 | 12.3624 |
-| `picodet-l-layout-3cls` / `bus.jpg` | 1 / 1 | 76 候选，22 个高置信度；ORT/OpenVINO 高置信度集合 22/22 有界匹配 | 53.0734 | 62.0237 |
-| `picodet-s-layout-17cls` / `bus.jpg` | 1 / 1 | 77 候选，4 个高置信度；ORT/OpenVINO 高置信度集合 4/4 有界匹配 | 10.0184 | 12.7814 |
-| `picodet-l-layout-17cls` / `bus.jpg` | 1 / 1 | 63 候选，11 个高置信度；ORT/OpenVINO 高置信度集合 11/11 有界匹配 | 57.4080 | 125.1531 |
-
-上述数据是指定 Windows 主机与 OpenVINO `2026.2.1` 的精确工件观测值，不是跨设备排名、数据集精度或所有 PP-Structure 模型的性能承诺。印章样本没有人工真值；OpenVINO 与 ORT 不做原始概率图数值 parity 宣称。逐模型的输入/模型 SHA、逐次样本和边界说明见本节已列出的 9 个既有报告，以及新增的 [`PP-DocLayout-M`](../../eng/models/paddle-document/verification/paddle-document-openvino-pp-doclayout-m-benchmark-20261018.md)、[`PP-DocLayout-S`](../../eng/models/paddle-document/verification/paddle-document-openvino-pp-doclayout-s-benchmark-20261018.md)、[`PicoDet layout-1x`](../../eng/models/paddle-document/verification/paddle-document-openvino-picodet-layout-1x-benchmark-20261018.md)、[`PicoDet layout-1x-table`](../../eng/models/paddle-document/verification/paddle-document-openvino-picodet-layout-1x-table-benchmark-20261018.md)、[`PicoDet-S 3 类`](../../eng/models/paddle-document/verification/paddle-document-openvino-picodet-s-layout-3cls-benchmark-20261018.md)、[`PicoDet-L 3 类`](../../eng/models/paddle-document/verification/paddle-document-openvino-picodet-l-layout-3cls-benchmark-20261018.md)、[`PicoDet-S 17 类`](../../eng/models/paddle-document/verification/paddle-document-openvino-picodet-s-layout-17cls-benchmark-20261018.md) 和 [`PicoDet-L 17 类`](../../eng/models/paddle-document/verification/paddle-document-openvino-picodet-l-layout-17cls-benchmark-20261018.md)。
-
-### PP-Structure 静态版面：ONNX Runtime CPU 对照基线
-
-2026-10-18 在同一 `JYPPX` Windows 10 主机上，以 ONNX Runtime CPU 对八个 PP-DocLayout/PicoDet 静态版面工件执行正式 `5 warm-up + 50 measured`。测试复用与 OpenVINO 静态版面基线相同的 `bus.jpg`、尺寸/标签/scale-factor profile、PreparedVisualInput 和 Paddle NMS decoder；分别使用一个 Session，计时包含 ORT 执行与 decoder，排除预处理、模型/Session 创建和一次性 OpenVINO 参考。
-
-| 模型 | 输入 | 候选数 | ORT/OpenVINO 高置信度匹配 | P50 ms | P95 ms |
-| --- | --- | ---: | ---: | ---: | ---: |
-| `pp-doclayout-m` | `[1,3,640,640]` | 100 | 28/28 | 159.81 | 189.70 |
-| `pp-doclayout-s` | `[1,3,480,480]` | 100 | 48/48 | 22.75 | 26.66 |
-| `picodet-layout-1x` | `[1,3,800,608]` | 18 | 5/5 | 72.59 | 96.87 |
-| `picodet-layout-1x-table` | `[1,3,800,608]` | 3 | 0/0 | 73.93 | 84.24 |
-| `picodet-s-layout-3cls` | `[1,3,480,480]` | 66 | 25/25 | 20.57 | 22.44 |
-| `picodet-l-layout-3cls` | `[1,3,640,640]` | 76 | 22/22 | 144.83 | 220.83 |
-| `picodet-s-layout-17cls` | `[1,3,480,480]` | 77 | 4/4 | 20.56 | 22.58 |
-| `picodet-l-layout-17cls` | `[1,3,640,640]` | 63 | 11/11 | 155.52 | 173.58 |
-
-八项的执行合同和有界 parity 均通过；table-only PicoDet 在本次图像上两边都没有 `score ≥ 0.05` 的候选，`0/0` 不构成准确率结论。此轮 Windows 使用 Balanced 电源计划，CPU 未锁频。P95 中有调度抖动，因此不要将结果解读为锁频极限值；机器报告保留了全部原始样本，详见[汇总报告](../../eng/models/paddle-document/verification/paddle-document-ort-static-layout-benchmark-20261018.md)与八个 JSON。该结果是当前主机的精确工件延迟/Decoder 合同证据，不代表数据集精度、跨设备排名或其它导出图。
-
-### PP-Structure 区域/表格单元/印章：ONNX Runtime CPU 对照基线
-
-2026-10-18 对七个区域/单元检测工件和两个 PP-OCRv4 印章工件完成正式 `5 warm-up + 50 measured` ORT CPU 基线。版面使用 `bus.jpg`，表格单元使用 `table_recognition.jpg`，印章使用 `demo_1.jpg`；每次复用一个已准备输入和一个 ORT Session。区域模型与 OpenVINO 的高置信度结果按类别、分数和坐标容差匹配；印章只比较 mask 形状和 Decoder 区域数。
-
-| 模型 | 输入 | 合同对照 | P50 ms | P95 ms |
-| --- | --- | --- | ---: | ---: |
-| `pp-doclayout-l` | `bus.jpg` | 1/1 高置信度区域 | 476.69 | 555.68 |
-| `pp-docblocklayout` | `bus.jpg` | 1/1 高置信度区域 | 471.97 | 525.26 |
-| `pp-doclayout-plus-l` | `bus.jpg` | 1/1 高置信度区域 | 727.38 | 1115.24 |
-| `rt-detr-h-layout-3cls` | `bus.jpg` | 1/1 高置信度区域 | 1612.83 | 1856.54 |
-| `rt-detr-h-layout-17cls` | `bus.jpg` | 1/1 高置信度区域 | 1612.95 | 2255.31 |
-| `rt-detr-l-wired-cell-det` | `table_recognition.jpg` | 13/13 高置信度单元 | 451.93 | 481.81 |
-| `rt-detr-l-wireless-cell-det` | `table_recognition.jpg` | 13/13 高置信度单元 | 481.58 | 565.51 |
-| `ppocrv4-mobile-seal-det` | `demo_1.jpg` | `224×224` mask，区域 0/0 | 9.43 | 10.98 |
-| `ppocrv4-server-seal-det` | `demo_1.jpg` | `224×224` mask，区域 1/1 | 124.62 | 134.89 |
-
-九项均通过执行和声明的结果合同。印章图片没有人工真值，区域数不是召回率；Windows 使用 Balanced 电源计划且 CPU 未锁频。完整设备信息、模型/输入 SHA 和 50 个原始样本见[区域/印章 ORT 汇总](../../eng/models/paddle-document/verification/paddle-document-ort-region-benchmark-20261018.md)及其逐模型 JSON。结果不代表数据集准确率、锁频极限、跨设备排名或相邻导出图。
-
-### PP-Structure 公式识别：六模型 ONNX Runtime CPU 正式基线
-
-2026-10-18 使用同一个官方 `general_formula_rec_001.png`，对六个公式 ONNX 工件分别复用一份准备好的输入和一个 ORT CPU Session，执行 `5 warm-up + 50 measured`。计时包含自回归 `session.Run` 与公式 Decoder，不包含图像加载/预处理、Session 创建和报告写入；每次调用都校验 token 数、token ID SHA、EOS 状态、LaTeX 长度与 LaTeX SHA 保持稳定。
-
-| 模型 | 输入 | token 数 | P50 ms | P95 ms | mean ms |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| PP-FormulaNet Plus-S | 384×384 | 197 | 390.54 | 617.81 | 426.55 |
-| PP-FormulaNet Plus-M | 384×384 | 197 | 2,421.44 | 2,728.27 | 2,445.04 |
-| PP-FormulaNet Plus-L | 768×768 | 197 | 4,686.38 | 5,013.51 | 4,716.15 |
-| PP-FormulaNet-S | 384×384 | 213 | 425.34 | 462.82 | 429.87 |
-| PP-FormulaNet-L | 768×768 | 197 | 4,644.89 | 5,421.60 | 4,751.15 |
-| UniMERNet | 672×192 | 208 | 11,796.76 | 12,938.26 | 11,918.61 |
-
-环境为 JYPPX、Windows 10.0.26200、Ryzen 7 5800H、.NET 10.0.12、ORT 1.28.0；电源计划为 Balanced，CPU 未锁频，未采集时钟遥测。UniMERNet 和两个大尺寸 FormulaNet 的自回归延迟明显较高，但不是异常就能单凭本基准下定论；逐次 50 样本、模型/Tokenizer/输入 SHA 见[机器报告](../../eng/models/paddle-document/verification/paddle-document-ort-formula-benchmark-20261018.json)。本基准使用单张图，只表示精确工件上的稳定执行和单图延迟，**不表示公式准确率或数学语义等价**；六模型的 121 样本 realFormula 质量门仍 blocked，OpenVINO、OpenCV DNN 和 TensorRT 支持状态也未改变。完整方法与复现入口见[公式基准报告](../../eng/models/paddle-document/verification/paddle-document-ort-formula-benchmark-20261018.md)。
-
-UVDoc 的独立正式 `5 warm-up + 50 measured` 基准使用同一主机、`bus.jpg`、单 Session 和 `PaddleDocumentUnwarpingDecoder`。ORT CPU 与 OpenVINO CPU 均输出有限 `640×640×3` 张量，raw-output 最大/平均绝对差为 `0.0730591/0.00176066`，满足本次声明的 `0.2/0.01` 有界比较门槛。ORT CPU P50/P95 为 `148.5798/157.3663 ms`，OpenVINO CPU P50/P95 为 `102.5192/128.0841 ms`。计时排除输入准备、模型/Session 创建和一次性参考后端；有界数值差不等同像素等价或视觉质量通过。完整模型/输入 SHA 和 50 个样本见 [`ORT UVDoc benchmark`](../../eng/models/paddle-document/verification/paddle-document-ort-uvdoc-benchmark-20261018.md)、[`OpenVINO UVDoc benchmark`](../../eng/models/paddle-document/verification/paddle-document-openvino-uvdoc-benchmark-20261018.md) 及对应 JSON。
-
-SLANeXt wireless 的 OpenVINO 正式性能记录使用派生的 `slanext-wireless-openvino-compat.onnx`，并逐轮校验官方源图 ORT 参考的 token/cell 数和 HTML SHA。该单图任务返回 24 个结构 token、13 个 cell，HTML 哈希一致；P50/P95 为 `794.1322/962.2685 ms`。计时包含 OpenVINO 与表格结构 Decoder，排除输入准备、模型/Session 创建和一次性 ORT 参考。此结果只适用于兼容图和当前主机，不意味着原始 SLANeXt Loop 图可被当前 OpenVINO importer 直接加载，也不是表格准确率或 cell recall 结论。详见 [逐模型报告](../../eng/models/paddle-document/verification/paddle-document-openvino-slanext-wireless-benchmark-20261018.md) 和 [机器报告](../../eng/models/paddle-document/verification/paddle-document-openvino-slanext-wireless-benchmark-20261018.json)。
-
-同一 `table_recognition.jpg` 上，官方 wireless SLANeXt 源图已补充 ONNX Runtime CPU 正式 `5 warm-up + 50 measured` 基准。ORT 端返回 24 个结构 token、13 个 cell，并与 OpenVINO 兼容图的 HTML SHA 完全一致；P50/P95 为 `966.4126/1402.3464 ms`。计时包含 ORT 执行与表格结构 Decoder，排除输入准备、模型/Session 创建和一次性 OpenVINO 兼容图参考。该记录证明源图在 ORT CPU 上的执行和结构一致性，不把 OpenVINO compatibility 图的支持外推到原始图，也不是表格准确率或 cell recall 结论。详见 [ORT 逐模型报告](../../eng/models/paddle-document/verification/paddle-document-ort-slanext-wireless-benchmark-20261018.md) 和 [机器报告](../../eng/models/paddle-document/verification/paddle-document-ort-slanext-wireless-benchmark-20261018.json)。
-
-### PP-Structure 表格分类：TensorRT CUDA 稳态口径
-
-`pp-lcnet-x1-0-table-cls.onnx` 使用 `E:\Model\PaddleDocument\validation\table_recognition.jpg`，TensorRT 11 API、CUDA 12.9、cuDNN 9.22，静态输入 `x=[1,3,224,224]`，5 次预热、50 次计时。ONNX SHA 为 `04a862a81e3c466d6ce7ef8398ea2464e46dbbdbfaa53278ad2b42427be8eb45`，本次 Engine SHA 为 `c9464c22f5d1d11ac4e2f35fb3d437a782278d9a85f697bdd3f8ef050ad065f2`（7,350,700 bytes），构建耗时 `36,204.071 ms`。
-
-| 模型 / 输入 | 后端 | 结果 | ORT 对照 | 总 P50 ms | 总 P95 ms |
-| --- | --- | --- | --- | ---: | ---: |
-| `pp-lcnet-x1-0-table-cls` / `table_recognition.jpg` | TensorRT CUDA | `wired_table` / `0.851693` | ORT `wired_table` / `0.844208`；绝对分数差 `0.007485` ≤ `0.01` | 1.212 | 1.331 |
-
-该测试使用 TensorRT CUDA 视觉流水线，计时包含一次紧凑 BGR 上传、CUDA 预处理、引擎执行和分类 Decoder，不包含图片解码、Engine 构建或模型加载。表格分类的 TensorRT/ORT 置信度只做精确工件回归，不等价于数据集精度。
-
-### PP-Structure 印章检测：TensorRT CUDA 稳态口径
-
-`ppocrv4-mobile-seal-det.onnx` 使用 `E:\Data\ocr\demo_1.jpg`，TensorRT 11 API、CUDA 12.9、cuDNN 9.22，动态输入 profile 在本次测试中固定为 `image=[1,3,224,224]`，5 次预热、50 次计时。ONNX SHA 为 `e4b20a5c47c70dbe67cebfdad970124e8c43b0c23cfa4eda5e17f77ef51f9199`，本次 Engine SHA 为 `13772da4a34bd9fb3ea1e1c3cfedabf6a2fb1aace0762c6e5253904e374c9953`（7,045,964 bytes），构建耗时 `86,508.609 ms`。
-
-| 模型 / 输入 | 后端 | 结果一致性 | 总 P50 ms | 总 P95 ms |
-| --- | --- | --- | ---: | ---: |
-| `ppocrv4-mobile-seal-det` / `demo_1.jpg` | TensorRT CUDA | ORT/TensorRT 均输出 `224x224` 概率掩码，区域数 `0/0`；掩码最大/平均绝对误差 `9.42e-8`/`1.36e-8` | 3.710 | 4.558 |
-
-该示例图片没有印章，因此区域数一致性仅证明输入绑定、TensorRT 执行和 `PaddleDocumentSealDecoder` 输出合同一致，不代表检测召回率，也不外推到 `ppocrv4-server-seal-det`。计时包含 OpenCV CPU 输入准备、TensorRT 执行和印章 Decoder，不包含图片解码、Engine 构建或模型加载。
-
-`ppocrv4-server-seal-det.onnx` 也已在同一设备、同一图片和同一 5/50 协议下完成 TensorRT 11 实测。ONNX SHA 为 `f9448c3ffd73f778ad312de10d5ae4df03dbd6b162638bf07fa0880a21a634c7`，Engine SHA 为 `d89b4c5cbfde1707bd486007bdf65afe481e3fcdb85c1cdf11d7c98f88332d03`（140,877,596 bytes），构建耗时 `93,150.467 ms`；构建选项显式设置 `DisableTf32=true`，同时保留 TRT11 强类型网络。
-
-| 模型 / 输入 | 后端 | 结果一致性 | 总 P50 ms | 总 P95 ms |
-| --- | --- | --- | ---: | ---: |
-| `ppocrv4-server-seal-det` / `demo_1.jpg` | TensorRT CUDA | ORT/TensorRT 都解码出 1 个区域；显式关闭 TF32 后掩码平均绝对误差 `2.4136e-6`、最大绝对误差 `8.6451e-4` | 12.221 | 24.648 |
-
-server 模型在 TensorRT 11 强类型网络下通过独立的 `DisableTf32=true` 构建选项关闭 TF32；本样本的概率图逐元素误差、区域数量和 Decoder 结果均通过自动化门槛。这是单张图的数值一致性证据，不能替代数据集级精度评估。
-
-同一 Debug 配置下，缓存 OpenCV `Mat.Channels`、消除逐像素 native 属性访问后，ORT 方向预处理 P50 从 `9.0205` 降至 `3.3705 ms`，总 P50 从 `12.4388` 降至 `6.2970 ms`。分类分数不变；Debug 比较不能与上表 Release 数字混为一个提速比。
-
-| 工件 | SHA-256 |
-| --- | --- |
-| `pp-lcnet-x1-0-doc-ori.onnx` | `96e898f047a0e460ba0652e9afb8c874e53872821cfd7a3fec53a5ab62df92f0` |
-| `pp-lcnet-x1-0-table-cls.onnx` | `04a862a81e3c466d6ce7ef8398ea2464e46dbbdbfaa53278ad2b42427be8eb45` |
-| `img_rot180_demo.jpg` | `c5a77e031470e13878ff4f28a06ca843fd455d95c20b1b49b486681e346209ed` |
-| `table_recognition.jpg` | `acd113bb3a89b488941ee0962776a28e45897fa2802cd306ec3bb68d9043115c` |
-
-复现前按 [PP-Structure 教程](visual-paddle-structure.md#官方预处理与示例回归)获取图片与模型。CPU 测试：
-
-```powershell
-$env:DEPLOYSHARP_PADDLE_DOCUMENT_ACCURACY = '1'
-$env:DEPLOYSHARP_SOURCE_REVISION = (git rev-parse HEAD).Trim() + '+working-tree'
-$env:DOTNET_TieredCompilation = '0'
-dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Tests.csproj `
-  -c Release -f net10.0 --filter FullyQualifiedName~PaddleDocumentOfficialExampleTests `
-  --logger 'trx;LogFileName=paddle-release-stable-50-final.trx' `
-  --results-directory artifacts/test-results/paddle-document-review
-```
-
-结果目录包含六份带原始样本的 JSON。TensorRT 先按教程配置 DLL 路径，再以 `-c Release` 执行 `PaddleDocumentTensorRtExternalIntegrationTests`，本轮原始文件为 `paddle-tensorrt-release-50.trx`；构建结果、图片哈希和全部计时样本保存在输出中。复现时请按实际工作树状态记录源码标识。
-
-## Ubuntu 22.04 / i7-1165G7：PP-OCRv6 Small 单图完整流水线（2026-10-26）
-
-设备 `ygj-NUC11PHi7`；本节仅用 CPU 后端，主机安装的 RTX 2060 不参与推理。固定 `demo_1.jpg`（SHA-256 `ec81d595407ccb61eb2d4d90e74d976469febb41a74cdbc8dbb8429b1e768f5c`）、PP-OCRv6 Small DET/REC、16 个区域、batch 1/两路阶段 Session、动态识别宽度上限 3200。每行 5 次预热 + 50 次计时，复用已准备的检测输入和已解码底图，排除模型加载和原图解码；CPU 未锁频。
-
-| 完整流水线后端/配置 | P50 ms | P95 ms |
+| OS / CPU | Windows x64 `10.0.26200` / Ryzen 7 5800H，16 逻辑处理器 |
+| GPU / 驱动 | RTX 3060 Laptop 6 GiB / `576.02` |
+| GPU runtime | CUDA 12.9、cuDNN 9.22、TensorRT 10.11/11（按具体记录） |
+| 状态 | 未主动锁频；结果不是固定频率硬件极限 |
+
+### PaddleOCR 完整流水线
+
+输入为标准 OCR 图片，返回 16 个文本区域。TensorRT Engine 在该设备用 10.11 重新构建；5 次预热、50 次测量，识别 batch 8、两个独立阶段 Session（v6 medium 为 batch 4、四个 Session）。计时复用准备输入，包含完整流水线，不含 Engine 构建。
+
+| 模型 | 总 P50（ms） | 总 P95（ms） |
+| --- | ---: | ---: |
+| PP-OCRv4 mobile | 29.775 | 34.304 |
+| PP-OCRv4 server | 114.205 | 118.435 |
+| PP-OCRv5 mobile | 46.474 | 55.036 |
+| PP-OCRv5 server | 90.797 | 93.476 |
+| PP-OCRv6 tiny | 16.743 | 18.399 |
+| PP-OCRv6 small | 27.311 | 36.788 |
+| PP-OCRv6 medium | 64.387 | 77.434 |
+
+Engine 与 GPU 架构、TensorRT 序列化版本和 profile 绑定；换设备或 Runtime 后必须重新构建。其它后端及自动调优方式见 [PaddleOCR Benchmark](https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/tools/DeploySharp.PaddleOcrBenchmark/README.md)。
+
+### PP-Structure 代表模块
+
+以下为相同设备上的独立模块延迟，不是完整页面总耗时。分类表包含预处理、推理和 decoder；其余行的计时边界写在备注中。
+
+| 模型 / 任务 | 后端 | P50（ms） | P95（ms） | 备注 |
+| --- | --- | ---: | ---: | --- |
+| 文档方向分类 | ORT CPU | 4.105 | 6.353 | 完整模块 |
+| 文档方向分类 | OpenVINO CPU | 2.201 | 3.714 | 完整模块 |
+| 文档方向分类 | OpenCV DNN CPU | 5.651 | 6.534 | 完整模块 |
+| 文档方向分类 | TensorRT CUDA | 1.318 | 1.921 | 完整模块 |
+| 表格分类 | ORT CPU | 3.818 | 5.867 | 完整模块 |
+| 表格分类 | OpenVINO CPU | 2.836 | 5.024 | 完整模块 |
+| 表格分类 | OpenCV DNN CPU | 5.171 | 6.353 | 完整模块 |
+| 表格分类 | TensorRT CUDA | 1.212 | 1.331 | 完整模块 |
+| UVDoc | ORT CPU | 148.580 | 157.366 | Session + decoder，batch 1 |
+| UVDoc | OpenVINO CPU | 102.519 | 128.084 | Session + decoder，batch 1 |
+| UVDoc | TensorRT CUDA | 28.369 | 32.069 | Session + decoder，动态 batch 2 |
+| SLANeXt wireless | ORT CPU | 966.413 | 1402.346 | 官方源图 + decoder |
+| SLANeXt wireless | OpenVINO CPU | 794.132 | 962.269 | 独立兼容图 + decoder |
+| FormulaNet Plus-S | ORT CPU | 390.540 | 617.810 | 自回归 Session + decoder |
+| UniMERNet | ORT CPU | 11796.760 | 12938.260 | 自回归 Session + decoder |
+
+不同 Batch 和任务不能仅按表中数字直接排名。公式行证明稳定执行与延迟，不代表数学语义准确率。
+
+### PaddleOCR-VL 1.6
+
+固定官方任务输入、同一 Bundle、单 Session。CPU 行为 5+50；Spotting 因序列较长使用 1+5。TensorRT Table 使用五图 Engine 和设备端 KV；不包含 Engine/Session 创建或调用方图像准备。
+
+| 任务 | 后端 | Wall P50（ms） | Wall P95（ms） | 协议 |
+| --- | --- | ---: | ---: | --- |
+| Table | ORT CPU | 7268.069 | 7709.583 | 5+50 |
+| Table | OpenVINO CPU | 6787.859 | 7318.409 | 5+50 |
+| Table | TensorRT CUDA，设备 KV | 9329.231 | 9650.985 | 5+50 |
+| OCR | ORT CPU | 19163.912 | 22211.472 | 5+50 |
+| OCR | OpenVINO CPU | 20744.661 | 23868.052 | 5+50 |
+| Formula | ORT CPU | 8446.139 | 8878.795 | 5+50 |
+| Formula | OpenVINO CPU | 8186.035 | 8600.297 | 5+50 |
+| Chart | ORT CPU | 22372.818 | 24391.971 | 5+50 |
+| Chart | OpenVINO CPU | 22076.120 | 25688.664 | 5+50 |
+| Seal | ORT CPU | 20141.041 | 20739.562 | 5+50 |
+| Seal | OpenVINO CPU | 12785.056 | 15429.444 | 5+50 |
+| Spotting | ORT CPU | 132459.805 | 134999.906 | 1+5 |
+| Spotting | OpenVINO CPU | 106346.339 | 112527.683 | 1+5 |
+
+生成长度差异很大，不能用不同任务的总毫秒判断后端效率。CUDA/TensorRT 的未锁频结果也不能解释为该 GPU 的性能极限。
+
+## ROI 与滑动窗口
+
+统一输入为 `bus.jpg`，源图 ROI 为 `100,100,600,800`，模型输入 640x640，batch 1、单 Session/context/stream，5 次预热、20 次测量。`cold` 每次解码并准备 ROI；`steady` 复用准备输入。TensorRT CUDA steady 仍包含 BGR 上传和 CUDA 预处理，因此与普通后端的工作量不完全相同。
+
+### Windows / RTX 3060 Laptop
+
+| 模型 | 后端 | Cold P50/P95（ms） | Steady P50/P95（ms） |
+| --- | --- | ---: | ---: |
+| YOLOv8n | TensorRT | 30.915 / 34.788 | 9.182 / 10.290 |
+| YOLOv8n | TensorRT CUDA preprocessing | 20.489 / 23.298 | 7.447 / 8.814 |
+| YOLOv8n | ORT CUDA | 29.990 / 70.457 | 15.546 / 18.769 |
+| YOLOv8n-seg | TensorRT | 48.778 / 62.037 | 19.179 / 23.034 |
+| YOLOv8n-seg | TensorRT CUDA preprocessing | 21.311 / 23.751 | 7.817 / 9.328 |
+| YOLOv8n-seg | ORT CUDA | 44.054 / 49.373 | 20.724 / 23.437 |
+
+### Ubuntu 22.04 / i7-1165G7 / RTX 2060
+
+| 模型 | 后端 | Cold P50/P95（ms） | Steady P50/P95（ms） |
+| --- | --- | ---: | ---: |
+| YOLOv8n | ORT CPU | 66.723 / 82.942 | 59.414 / 61.073 |
+| YOLOv8n | ORT CUDA | 29.360 / 30.559 | 14.875 / 15.551 |
+| YOLOv8n | OpenVINO CPU | 42.130 / 46.441 | 26.854 / 27.662 |
+| YOLOv8n | OpenCV DNN CPU | 58.348 / 60.986 | 43.620 / 51.674 |
+| YOLOv8n | TensorRT | 24.238 / 25.192 | 8.870 / 9.750 |
+| YOLOv8n | TensorRT CUDA preprocessing | 15.596 / 16.150 | 9.721 / 10.232 |
+| YOLOv8n-seg | ORT CPU | 82.206 / 95.980 | 95.394 / 96.785 |
+| YOLOv8n-seg | ORT CUDA | 37.368 / 39.587 | 22.789 / 23.207 |
+| YOLOv8n-seg | OpenVINO CPU | 57.677 / 59.521 | 43.209 / 43.909 |
+| YOLOv8n-seg | OpenCV DNN CPU | 118.796 / 119.631 | 104.301 / 106.419 |
+| YOLOv8n-seg | TensorRT | 33.908 / 35.045 | 20.175 / 21.745 |
+| YOLOv8n-seg | TensorRT CUDA preprocessing | 14.899 / 15.942 | 9.078 / 10.053 |
+
+两台设备的 admitted YOLOv8n-seg CUDA 后处理与 managed 参考掩码逐像素一致。该设备路径只覆盖轴对齐矩形及受支持的 YOLO 后处理；旋转框、多边形、Mask 和透视 ROI 使用 OpenCV 精确路径。滑动窗口还会增加切片规划和跨窗口合并，必须用目标尺寸和重叠率单独测量。
+
+## Ubuntu 22.04 / i7-1165G7：PP-OCRv6 Small
+
+固定 OCR 输入、16 个区域、batch 1、两个阶段 Session、最大识别宽度 3200；5 次预热、50 次测量，复用已准备输入，不含模型加载和原图解码。GPU 未参与这些行。
+
+| 后端 / 配置 | P50（ms） | P95（ms） |
 | --- | ---: | ---: |
 | ONNX Runtime CPU | 309.153 | 345.692 |
 | OpenVINO CPU | 239.854 | 284.206 |
-| OpenCV DNN CPU，默认形状缓存 1 | 1439.253 | 1510.367 |
-| OpenCV DNN CPU，可选形状缓存 16，第 1 次 | 426.472 | 485.785 |
-| OpenCV DNN CPU，可选形状缓存 16，第 2 次 | 479.831 | 546.506 |
-| OpenCV DNN CPU，可选形状缓存 8 | 1406.747 | 1640.434 |
+| OpenCV DNN，动态 shape 缓存 1 | 1439.253 | 1510.367 |
+| OpenCV DNN，动态 shape 缓存 16 | 426.472 | 485.785 |
 
-六行的文本与语义结果 SHA 一致，均通过正式报告校验。OpenCV 缓存保留多个动态形状原生网络，有内存代价；16 在这张图的 16 区域工作集有效，8 则没有稳定收益，因此默认仍为 1。原始 CSV、邻接环境记录、模型 SHA、运行时版本和边界见[逐设备验证报告](../../eng/models/paddle-ocr/verification/paddleocr-v6-small-linux-shape-cache-20261026.md)。此处与下方三图预取批次的输入和计时范围不同，不直接比较。
+增加 shape 缓存会占用更多 native 内存，且收益依赖实际宽度分布；默认配置不会据此自动改为 16。
 
-## Ubuntu 22.04 / RTX 2060：PP-OCRv6 Small 三图异步预取流水线
+## Windows / i7-14700KF / RTX 5060 Ti：历史参考
 
-远端 `ygj-NUC11PHi7` 上使用 PP-OCRv6 Small DET/REC、PP-OCRv5 Mobile CLS 和 ONNX Runtime CPU，按 `5 warm-up + 50 measured` 运行 `OcrPipeline.RunPrefetchedAsync(prefetch:2)`。每个计时样本处理三张 SHA 不同的 HierText JPEG；Pipeline 最大并发为 2，DET/CLS/REC 各配置两路独立 Session。计时包含图片读取/解码、预处理、异步准备、完整 OCR 和结果合并，排除模型/Session 创建与预热。
+便携包使用 3 次预热、10 次测量，只保存均值，未记录 commit、输入 SHA-256 或 P50/P95，因此不能与上面的正式分位数结果直接比较。
 
-每组三图 P50/P95 为 `2513.460/2857.975 ms`，均值 `2568.837 ms`，范围 `2319.842–3087.415 ms`。这是完整多图预取流水线的批次墙钟，不是单图延迟，也不能与本节复用 PreparedInput 的 `steady` 数据直接排名。CPU 为 i7-1165G7，governor `powersave`、scaling range `400–4700 MHz`，未锁频且没有运行期间时钟/功耗遥测；RTX 2060 只作为主机信息，实际后端是 ORT CPU。
+| 模型 | ORT CPU | ORT CUDA | OpenVINO CPU | OpenCV DNN CPU | TensorRT |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| YOLOv8n | 15.281 | 6.682 | 13.342 | - | 5.050 |
+| YOLOv8n-seg | 27.082 | 14.819 | 24.921 | 130.889 | 11.867 |
+| YOLOv8s pose | 33.200 | 6.857 | 35.262 | 126.708 | 4.007 |
+| PaDiM | 15.626 | 5.355 | 13.407 | 31.107 | 3.989 |
+| BRIA RMBG 1.4 | 364.413 | 42.940 | 366.734 | 933.514 | 25.141 |
+| BRIA RMBG 2.0 | 7864.023 | 538.860 | 7424.923 | - | 201.242 |
 
-运行状态与边界、模型和输入 SHA、全部 50 个样本见[逐设备报告](../../eng/models/paddle-ocr/verification/paddleocr-v6-small-session-pool-prefetch-linux-rtx2060-benchmark-20261018.md)及[机器报告](../../eng/models/paddle-ocr/verification/paddleocr-v6-small-session-pool-prefetch-linux-rtx2060-benchmark-20261018.json)。该结果只覆盖这一精确 PP-OCRv6 Small 配置，不代表 GPU/TensorRT 速度、准确率或全模型×后端性能矩阵。
+单位为毫秒均值；`-` 表示该历史包没有有效记录，不表示不支持。
 
-同一远端主机另有[七组 PP-OCR 核心模型的三图 ORT/OpenVINO 功能复跑](../../eng/models/paddle-ocr/verification/paddleocr-core-seven-models-ort-openvino-three-image-linux-rtx2060-20261023.md)：21/21 对的文本和区域计数一致，但完整结果指纹 0/21 一致。它是单次执行且没有逐字真值，不纳入本页性能数字或设备间速度对比；两种后端均运行在 CPU。
+## 复现与提交结果
 
-## 复现
+通用视觉基准：
 
-设备测试包中的 `Run-DeviceBenchmark.ps1` 会记录系统、运行时和结果文件。运行前应先准备与目标设备匹配的模型、ONNX Runtime、OpenVINO、OpenCV、CUDA、TensorRT 和 cuDNN；TensorRT 测试还需要匹配版本的 bridge。每次在新的设备、模型制品、运行时版本、输入图片或 batch/Session 配置上运行后，都应新增独立设备小节，而不是替换其他设备的结果。
-# UVDoc TensorRT dynamic Batch=2 — 2026-10-18
+```powershell
+dotnet run --project tools/DeploySharp.VisualBenchmark -c Release -- `
+  --kind yolov8n --model .models/yolov8n.onnx --image data/bus.jpg `
+  --backend onnxruntime,openvino,opencv-dnn `
+  --mode both --warmup 5 --iterations 50 `
+  --output ..\benchmark-results\visual.csv `
+  --json-output ..\benchmark-results\visual.json
+```
 
-On the same JYPPX Windows host (Ryzen 7 5800H, RTX 3060 Laptop, TensorRT 11.0.0.114, CUDA 12.9, cuDNN 9.22), the official UVDoc ONNX was rebuilt into a dynamic Batch=2 engine and run on two distinct `bus.jpg` regions. With one prepared `[2,3,640,640]` input and one reused TensorRT session, synchronous `Session.Run + PaddleDocumentUnwarpingDecoder` measured P50/P95 `28.3687/32.0690 ms` over 50 calls after 5 warm-ups. Image decoding, crop/preprocessing, Engine building, Session creation and ORT reference are excluded. The two decoded rows were stable across all measured calls and their raw outputs remained within the bounded ORT comparison (`max/mean` per row `0.1154633/0.00175354` and `0.0770721/0.00180646`).
-
-The host used Windows Balanced power policy; the GPU was not clock-locked. A single post-run sample showed P0, 1425 MHz graphics / 7000 MHz memory clocks and 1% utilization; this was not sampled during the measurement loop. Treat the numbers as a single-device repeated-latency observation, not a clock-controlled hardware limit, full-image end-to-end latency, image-unwarping quality score or cross-device promise. See the [full report](../../eng/models/paddle-document/verification/paddle-document-uvdoc-dynamic-batch-tensorrt-benchmark-20261018.md) and [machine-readable samples](../../eng/models/paddle-document/verification/paddle-document-uvdoc-dynamic-batch-tensorrt-benchmark-20261018.json).
+PaddleOCR 使用 `tools/DeploySharp.PaddleOcrBenchmark`，设备测试包使用 `Run-DeviceBenchmark.ps1`。新结果应写到仓库外目录，并同时返回 CSV/JSON、设备信息和控制台日志。更新本页时只加入满足协议的汇总行；逐次样本、TRX、日志和临时 Engine 不提交到公共文档。

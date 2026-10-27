@@ -30,9 +30,9 @@
 
 PaddleOCR-VL 使用 `models-paddleocr` 的独立 Bundle catalog，不在上述自动生成的单工件 ModelPack 表中；不能通过是否出现在该表推断其 Bundle 不可下载。
 
-固定 PaddleOCR-VL-1.6 五图 v2 Bundle（五张 ONNX、四个 tokenizer/template 文件及 manifest）已在 [`models-paddleocr`](https://github.com/guojin-yan/DeploySharp/releases/tag/models-paddleocr) 作为十个独立资产发布。`PaddleOcrReleaseClient.GetBundleAsync("paddleocr-vl/1.6")` 已完成全新缓存下载、逐文件哈希校验及离线回读，Visual manifest 也校验了下载所得九个本地文件，见[在线交付验证](../../eng/models/paddle-ocr/verification/paddleocr-vl-release-live-20261026.md)。旧四图 v1 格式仍可读取，但在线 catalog 当前指向五图 v2；下载验证没有从新缓存重跑生成。
+固定 PaddleOCR-VL-1.6 五图 v2 Bundle（五张 ONNX、四个 tokenizer/template 文件及 manifest）已在 [`models-paddleocr`](https://github.com/guojin-yan/DeploySharp/releases/tag/models-paddleocr) 作为十个独立资产发布。`PaddleOcrReleaseClient.GetBundleAsync("paddleocr-vl/1.6")` 已完成全新缓存下载、逐文件哈希校验及离线回读，Visual manifest 也校验了下载所得九个本地文件，见在线交付验证。旧四图 v1 格式仍可读取，但在线 catalog 当前指向五图 v2；下载验证没有从新缓存重跑生成。
 
-四张原始图已在 Linux/Windows ORT CPU、OpenVINO CPU 和 Windows ORT CUDA 完成六任务固定输入生成，765 个 Token/文本与官方参考一致；Windows TensorRT 10.11 使用派生第五图和设备专用 Engine 也完成同组六任务，见[五图生成报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-tensorrt-five-graph-20261026.md)。这些是精确工件的运行证据，不代表页面质量或可下载 TensorRT Engine。OpenCV DNN 5.0 对原始 vision/decoder 动态图导入失败。公式任务的[同构建 ORT CPU/CUDA 121 图对照](../../eng/models/paddle-ocr/verification/paddleocr-vl-realformula-ort-cpu-cuda-121-20261026.md)和[Linux ORT CPU/OpenVINO CPU 121 图逐 Token 对照](../../eng/models/paddle-ocr/verification/paddleocr-vl-realformula-ort-openvino-linux-121-20261026.md)仍为质量诊断：严格去空白匹配 0/121，不是数学语义准确率。表格 OTSL 可解析逻辑单元格/HTML，Spotting 可映射页面像素；其它任务的语义结构和跨后端支持不能外推。用法见[VL 教程](visual-ocr.md#paddleocr-vl-是否已经可用于模型推理)及[表格与 Spotting 教程](visual-paddle-structure.md#vl-spotting文字四边形与页面坐标)。
+四张原始图已在 Linux/Windows ORT CPU、OpenVINO CPU 和 Windows ORT CUDA 完成六任务固定输入生成，765 个 Token/文本与官方参考一致；Windows TensorRT 10.11 使用派生第五图和设备专用 Engine 也完成同组六任务，见五图生成报告。这些是精确工件的运行证据，不代表页面质量或可下载 TensorRT Engine。OpenCV DNN 5.0 对原始 vision/decoder 动态图导入失败。公式任务的同构建 ORT CPU/CUDA 121 图对照和Linux ORT CPU/OpenVINO CPU 121 图逐 Token 对照仍为质量诊断：严格去空白匹配 0/121，不是数学语义准确率。表格 OTSL 可解析逻辑单元格/HTML，Spotting 可映射页面像素；其它任务的语义结构和跨后端支持不能外推。用法见[VL 教程](visual-ocr.md#paddleocr-vl)及[表格与 Spotting 教程](visual-paddle-structure.md#vl-spotting文字四边形与页面坐标)。
 
 ## 如何阅读一个模型条目
 

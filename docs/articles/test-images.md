@@ -12,7 +12,7 @@ DeploySharp 为示例和基准工具提供一组固定的默认输入。图片�
 | `plane.png` | 旋转框检测 | [下载](https://github.com/guojin-yan/DeploySharp/releases/download/test-assets.1/plane.png) |
 | `ocr-demo_1.jpg` | PaddleOCR 完整流水线 | [下载](https://github.com/guojin-yan/DeploySharp/releases/download/test-assets.1/ocr-demo_1.jpg) |
 
-`eng/test-assets/test-image-catalog.json` 保存任务映射、文件大小和 SHA-256。当前五个输入分别对应本机的 `E:\Data\image\bus.jpg`、`E:\Data\image\demo_7.jpg`、`E:\Data\image\demo_9.jpg`、`E:\Data\image\plane.png` 和 `E:\Data\ocr\demo_1.jpg`；这些本机路径不是使用者的前置条件。
+`eng/test-assets/test-image-catalog.json` 保存任务映射、文件大小和 SHA-256。五个默认输入分别用于目标检测/分割、分类、关键点、旋转框和 OCR；客户端下载到应用缓存后使用，不依赖维护者的本机目录。
 
 ## 自动使用
 
@@ -29,3 +29,13 @@ dotnet run --project samples/06-models/release-inference/ModelReleaseInference.c
 ## 维护与追加
 
 使用 `eng/test-assets/Stage-TestImageAssets.ps1` 可按清单从本地源文件生成带校验的发布目录；使用 `eng/test-assets/Publish-TestImageRelease.ps1 -Publish` 会校验已有资产并将新增资产追加到 `test-assets.1`。同名图片内容变化会被拒绝，避免静默改变基准输入；`README.md`、`test-image-catalog.json` 和 `SHA256SUMS` 会在追加图片时按校验结果受控更新。
+
+## 使用协议
+
+默认图片只用于示例和性能复现，不代表每个模型的精度测试集。运行基准时应把以下信息和结果一起保存：图片文件名、SHA-256、模型工件 SHA-256、后端版本、设备、warmup/iterations、batch、Session 数量和是否包含解码/后处理。更换图片后不能直接与历史 P50/P95 比较。
+
+工具找不到远程图片时，可以设置 `DEPLOYSHARP_TEST_IMAGE_ROOT` 使用本地目录；目录中的文件名必须与清单一致，工具仍会校验 SHA-256。不要用同名不同内容的文件绕过校验，因为这会让后端对比失去意义。
+
+## 按任务选择输入
+
+`bus.jpg` 适合快速观察目标检测、分割和视觉语言输出，但不能覆盖小目标和遮挡场景；`plane.png` 只用于 OBB 的几何回归；`ocr-demo_1.jpg` 用于完整 OCR 流程，不能把它当成只有 det 或 rec 的基准。新增模型时应在清单中添加专用输入映射，并在模型文章中说明该输入覆盖了哪些边界。

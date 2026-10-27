@@ -15,7 +15,7 @@ DeploySharp V2 是面向 .NET 的模型部署工具。它通过显式后端、�
 | 安装并运行首个推理 | [快速开始](articles/getting-started.md) / [安装与运行时](articles/installation.md) |
 | 了解当前版本与平台范围 | [2.0.0-alpha.1 发布说明](releases/2.0.0-alpha.1.md) / [平台与后端支持](articles/platform-support.md) |
 | 选择模型与后端 | [模型支持状态](articles/model-support.md) / [模型与后端验证矩阵](model-backend-verification-matrix.md) |
-| 下载并校验模型 | [ModelFactory](articles/modelfactory-getting-started.md) / [ModelFactory CLI](articles/model-factory-cli.md) |
+| 下载并校验模型 | [ModelFactory 与 CLI](articles/modelfactory-getting-started.md) |
 | 构建视觉任务 | [视觉任务指南](articles/visual-getting-started.md) |
 | 选择 NuGet 包组合 | [包组合与安装指南](articles/package-combinations.md) |
 | 复现性能测试 | [性能基准方法](articles/performance-benchmarking.md) / [设备性能实测](articles/device-performance-benchmarks.md) |

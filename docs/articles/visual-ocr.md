@@ -67,43 +67,13 @@ foreach (OcrRegionResult region in result.Regions)
 
 检测模型通常按单图 `batch=1` 编排，但 Paddle DB 检测 Profile 现在也可以通过 `maximumBatch > 1` 声明真正的动态 `[batch,1,H,W]` 概率图；Decoder 会按 `PreparedVisualInput.BatchFrames` 逐行恢复源坐标。是否能在目标后端实际执行仍取决于 ONNX 导出图和后端 importer。识别模型可声明动态宽度和动态 batch。`OcrPipelineOptions.MaximumRecognitionBatch` 限制一次提交的文本行数量；同一配置里的 `MaximumConcurrency` 限制并发的完整 OCR 调用，**不等于 REC Session 数量**。通过构造 `OcrPipeline` 时的 `recognitionSessionOptions: new SessionOptions(2)` 配置两个独立识别通道，再由 Pipeline 将有界批任务分派给空闲通道。
 
-2026-10-13 已在 TensorRT 11/RTX 3060 Laptop 上将动态 Batch→DB Decoder 合同扩展到 PP-OCRv4 Mobile/Server、v5 Mobile/Server、v6 Tiny/Small/Medium 共 7 个 DET 工件：每个模型由 DeploySharp Builder 创建 `min=1,opt=max=2` Engine，ORT CPU 与 TensorRT CUDA 均运行两个不同 ROI，并由同一 DB Decoder 恢复两行源坐标。七个精确工件均通过最大/平均概率差 `≤0.10/≤0.001` 的图级合同；所有已解码区域均一对一匹配且 polygon IoU ≥ `0.90`，本次最低匹配 IoU 为 `0.99676`。v5 Server 最大 raw 差 `0.0516`、均值差 `1.91e-5`。此证据不代表检测召回、CER/WER、完整 OCR 流水线、正式吞吐或其他设备/版本 TensorRT 支持，详见[七模型验证报告](../../eng/models/paddle-ocr/verification/paddleocr-core-detectors-tensorrt-dynamic-batch-decoder-20261013.md)。
+PP-OCRv4 Mobile/Server、PP-OCRv5 Mobile/Server、PP-OCRv6 Tiny/Small/Medium 已覆盖完整流水线和动态检测/识别 Batch 合同。精确模型与后端是否通过以[模型与后端验证矩阵](../model-backend-verification-matrix.md)为准；测试过一个组合不能外推到其它模型、运行时或设备。
 
-随后先完成一条精确的 TensorRT 端到端 OCR 验证：v6 Small DET + v5 Mobile CLS + v6 Small REC 在 `demo_1.jpg` 上执行 `det → crop → cls → rec → merge`，TensorRT 10.11/CUDA 12.9/cuDNN 9.22 与 ORT CPU 均返回 16 个区域且有序文本 SHA 一致。该次单次总耗时观察为 ORT `1157.2269 ms`、TensorRT `1288.2198 ms`，详见[v6 Small 端到端报告](../../eng/models/paddle-ocr/verification/paddleocr-v6-small-tensorrt-full-pipeline-20261013.md)。
+动态宽度是默认识别策略。OpenCV DNN 对频繁变化的宽度可能反复专门化模型；可显式使用 `WithFixedWidth(320)` 或 `WithWidthBuckets(...)` 限制宽度种类。固定宽度会保持内容宽高比并补边，但可能压缩超宽文本；宽度分桶也可能改变延迟尾部和 CER/WER，因此必须在目标数据集上验证，库不会自动启用。
 
-同日又按相同完整路径覆盖 v4 Mobile/Server、v5 Mobile/Server、v6 Tiny/Small/Medium 七组核心组合。`7/7` 均完成 TensorRT 10.11 Engine 构建与完整执行；每组 ORT CPU/TensorRT 都返回 16 个已识别区域，并且组内有序文本 SHA 一致。逐模型 ONNX/Engine SHA 和执行结果见[七组合完整流水线报告](../../eng/models/paddle-ocr/verification/paddleocr-core-tensorrt-full-pipeline-20261013.md)及[机器 JSON](../../eng/models/paddle-ocr/verification/paddleocr-core-tensorrt-full-pipeline-20261013.json)。其中耗时是排除 Engine 构建、但包含 Session/Pipeline 创建的一次调用观察，没有预热和分位数分布，GPU 也未锁频；因此不能用作正式 P50/P95 排名。该证据只关闭所列工件和单台 Windows 主机的执行/文本 parity，不关闭 CER/WER、检测召回、多页质量、跨设备 Engine 可移植性或其它运行时组合。
+<code>MaximumRecognitionPaddingRatio</code> 默认为 1.0，只把等宽文本行放在同一批次。增大它可以减少 batch 数，也会增加补边计算和显存占用。动态 Batch、独立 Session 数与帧级预取是三个不同的并发维度；配置方法见 [Batch、Session 池与并发](batch-session-concurrency.md)，公开设备结果见[设备性能实测](device-performance-benchmarks.md)。
 
-随后在同一设备上以正式 `5 次预热 + 50 次测量` 协议补做 TensorRT 稳态性能矩阵。七组核心组合均通过校验，统一使用设备本地 Builder Engine、Batch=8、独立阶段通道=2、复用已准备输入；完整流水线 P50/P95 为 v4 Mobile `191.256/200.739 ms`、v4 Server `243.536/258.356 ms`、v5 Mobile `196.894/210.507 ms`、v5 Server `488.820/522.446 ms`、v6 Tiny `80.169/91.488 ms`、v6 Small `143.523/152.854 ms`、v6 Medium `326.212/369.506 ms`。详见[正式性能报告](../../eng/models/paddle-ocr/verification/paddleocr-core-tensorrt10.11-steady-formal-20261013.md)、[CSV](../../eng/models/paddle-ocr/verification/paddleocr-core-tensorrt10.11-steady-formal-20261013.csv)和[协议校验 JSON](../../eng/models/paddle-ocr/verification/paddleocr-core-tensorrt10.11-steady-formal-20261013.validation.json)。这些是未锁频单机稳态观察，不能外推为跨设备排名、冷启动耗时或 OCR 准确率。
-
-2026-10-17 又按同一 `5+50` 协议和当前源码复跑七组核心组合：TensorRT 10.11/CUDA 12.9/cuDNN 9.22、Batch=8、阶段通道=2、prepared-input reuse，`7/7` 通过。P50/P95 为 v4 Mobile `153.249/167.140 ms`、v4 Server `199.291/230.132 ms`、v5 Mobile `173.940/191.950 ms`、v5 Server `427.819/533.568 ms`、v6 Tiny `68.461/79.338 ms`、v6 Small `130.262/156.516 ms`、v6 Medium `276.124/293.220 ms`。见[当前复跑报告](../../eng/models/paddle-ocr/verification/paddleocr-core-tensorrt10.11-steady-formal-current-20261017.md)和[汇总 JSON](../../eng/models/paddle-ocr/verification/paddleocr-core-tensorrt10.11-steady-formal-current-20261017.json)。GPU 未锁频，这仍是单机精确 Engine/profile 的稳态观察，不代表跨设备排名、冷启动、吞吐或 OCR 质量。
-
-对应的[ORT 1.28/OpenVINO CPU 正式矩阵](../../eng/models/paddle-ocr/verification/paddleocr-core-ort1.28-openvino-steady-formal-20261013.md)使用同一张图、prepared-input、Batch=8、两阶段通道和 `5+50` 协议覆盖七组核心组合。`14/14` 行通过，每行 50 次调用保持一个严格合同变体，逐模型在两个后端上的有序文本 SHA 和语义合同相同。P50/P95、阶段拆分和模型 SHA 见[原始 CSV](../../eng/models/paddle-ocr/verification/paddleocr-core-ort1.28-openvino-steady-formal-20261013.csv)；schema 3 [环境记录](../../eng/models/paddle-ocr/verification/paddleocr-core-ort1.28-openvino-steady-formal-20261013.csv.environment.json)保存实际加载的 ORT `1.28.0.0`、OpenVINO API `3.3.1.0`、OpenCV API `5.0.0.0` 版本/哈希，并明确该非 TensorRT 运行不包含 Engine 证据。CPU 未锁频且只有一个输入，不能把本轮数值当作跨设备排名、吞吐或 OCR 质量结论。
-
-同一协议现已补齐[ORT 1.23.2 CUDA 正式矩阵](../../eng/models/paddle-ocr/verification/paddleocr-core-ort-cuda12-steady-formal-20261013.md)。七组核心组合 `7/7` 通过，每行 50 次调用保持一个严格合同变体，并逐模型匹配 CPU 矩阵的有序文本 SHA 和语义合同 SHA。完整流水线 P50/P95 为 v4 Mobile `69.960/160.443 ms`、v4 Server `117.107/201.558 ms`、v5 Mobile `70.545/117.800 ms`、v5 Server `105.702/168.476 ms`、v6 Tiny `22.658/28.969 ms`、v6 Small `43.704/50.460 ms`、v6 Medium `72.872/78.681 ms`。schema 3 [环境记录](../../eng/models/paddle-ocr/verification/paddleocr-core-ort-cuda12-steady-formal-20261013.csv.environment.json)保存 CUDA 12.9、cuDNN 9.22、DLL 搜索目录及实际 ORT 程序集哈希；[GPU 遥测](../../eng/models/paddle-ocr/verification/paddleocr-core-ort-cuda12-steady-formal-20261013.gpu.csv)显示 P0、活跃采样平均 1800 MHz，热降频和硬件 slowdown 均为 0。GPU/CPU 均未锁频，且输入只有一张图，因此仍不能当作 CER/WER、吞吐、跨设备排名或 PP-Structure 全模型支持。
-
-[OpenCV DNN 动态宽度正式矩阵](../../eng/models/paddle-ocr/verification/paddleocr-core-opencv-dnn-steady-formal-20261013.md)也覆盖七组核心组合和 `5+50` 计时规则，但必须遵守这些图的静态 batch=1 合同，并用两个独立 Session 并发调度 16 个识别 batch。当前版本的[同 Batch=1 三图对照](../../eng/models/paddle-ocr/verification/paddleocr-core-three-image-opencv-ort-20261013.md)已证明七模型 `21/21` ORT/OpenCV 组合文本完全一致、置信度差 `≤0.01`、顶点差 `≤0.5 px`，所以与 Batch=8 矩阵的差异来自 Batch/动态宽度合同，不应归因于 OpenCV importer。
-
-后续[固定宽度 320 正式矩阵](../../eng/models/paddle-ocr/verification/paddleocr-core-opencv-dnn-fixed320-steady-formal-20261013.md)避免了 crop 宽度变化时重复专门化和导入整张 ONNX 图。七组 `5+50` 均通过：P50 降低 `26.0%–49.0%`，报告的托管分配降低 `96.04%–99.76%` 至约 `17.5–46.9 MiB/次`；同固定宽度下，七组 ORT/OpenCV 的有序文本和语义合同 SHA 均一致。进一步的[同后端十页 SROIE 质量对照](../../eng/models/paddle-ocr/verification/sroie-v6-small-opencv-fixed320-quality-20261013.md)只改变 v6 Small 的宽度策略：固定 320 的诊断总耗时 P50/P95 下降 `68.0%/69.2%`，但 matched CER/WER 上升 `0.87/2.16` 个百分点，`531` 个对齐区域中有 `101` 个文字不同；检测数量和 polygon 不变。另一组[241 条 HierText 自然倾斜文字对照](../../eng/models/paddle-ocr/verification/paddleocr-hiertext-fixed320-quality-20261026.md)中，Fixed320 的聚合 CER/WER 反而更低，但仍有单条退化；该质量测试没有正式 5+50 计时。不同数据集结果方向相反，因此动态宽度保持默认，固定宽度仅作为显式选项。使用时先在代表性标注数据上验证：`TextCropProfile fastCrop = cropProfile.WithFixedWidth(320);`。裁剪内容保持原宽高比，剩余列填充，不会把文字横向拉伸。两份 OpenCV 性能数据都不能与 Batch=8 后端直接排名。
-
-还有一种显式折中方案是有限动态宽度分桶：`TextCropProfile bucketed = cropProfile.WithWidthBuckets(new[] { 48, 64, 96, 128, 192, 256, 320, 448, 640, 960, 1280, 1920, 2560, 3200 });`。列表须严格递增、对齐并以当前 `MaximumWidth` 结尾；模型输入仍须支持动态宽度。行的内容按原比例缩放到自然宽度，再补到下一个桶，不为对齐桶而压缩；**自然宽度超过上限时，Clamp 或固定宽度仍可能压缩文字**。分桶不改变默认行为，也不能与 `WithFixedWidth` 同时使用。[241 条自然倾斜标注行及完整流水线 5+50 对照](../../eng/models/paddle-ocr/verification/paddleocr-width-bucket-quality-performance-20261026.md)显示 OpenCV DNN 的张量宽度种类和 P50/托管分配下降，但 P95 上升、部分行 CER 退化且聚合 WER 上升；因此需按目标数据集和设备自行验证，不自动启用。
-
-动态宽度会产生 padding。<code>MaximumRecognitionPaddingRatio</code> 默认为 1.0，只把等宽文本行放在同一批次。目标后端经过实测后，可以适当调高该值以减少 batch 数，但要同时观察填充计算和显存占用。
-
-P3 的并发与生命周期合同由[集中验证报告](../../eng/models/paddle-ocr/verification/paddleocr-p3-concurrency-contract-20261013.md)维护。当前回归覆盖动态 REC Batch、独立单通道 Session 池、批次顺序恢复、排队/活动取消、异常后复用、预取输入释放和幂等关闭；Visual 合同 `95/95`、ORT CPU OCR/lifecycle `5/5`、ORT provider/session-pool `12/12`、OpenVINO CPU OCR/lifecycle `4/4`，另有 OpenVINO provider/session-pool `9/9` 通过。两 Session 的真实设备对照仍需按后端调优，不能从 ORT 的收益外推到 OpenVINO。该证据不等于长时间 soak、跨设备吞吐或 PP-Structure 全模型并发通过。
-
-补充的[PP-OCRv6 Small 真实 Session 池/预取合同](../../eng/models/paddle-ocr/verification/paddleocr-v6-small-session-pool-prefetch-20261018.md)在三张本地图像上实际创建 DET/CLS/REC 各两路独立 ORT Session，并以 `OcrPipeline.RunPrefetchedAsync(prefetch: 2)` 同时准备后续输入。测试验证三项结果按输入顺序返回、均有识别区域、结果合同互不塌缩，并验证成功路径由 Pipeline 释放回调创建的输入；峰值准备并发为 3。这是单主机的执行/所有权证据，不是吞吐排名、精度、5+50 性能、soak、GPU 或其它后端结论。
-
-同一合同随后在远端 Ubuntu 22.04.5 / RTX 2060 主机上复跑；先补齐与项目匹配的 Ubuntu `JYPPX.OpenCV.Native` 原生运行时，再使用三张不同的公开 JPEG。详见 [Linux RTX 2060 证据](../../eng/models/paddle-ocr/verification/paddleocr-v6-small-session-pool-prefetch-linux-rtx2060-20261018.md)。该次执行仍使用 ORT CPU，显卡只作为设备元数据，不是 CUDA/TensorRT 性能证据；它关闭的是远端真实 DeploySharp 执行、顺序、预取和输入所有权切片，不关闭第二设备正式性能、锁频、soak 或全模型后端矩阵。
-
-另有一份独立的[三图异步预取 5+50 性能报告](../../eng/models/paddle-ocr/verification/paddleocr-v6-small-session-pool-prefetch-linux-rtx2060-benchmark-20261018.md)：每个计时样本处理同组三张图并包含文件读取、预处理、完整 OCR 和结果合并，P50/P95 为 `2513.460/2857.975 ms` 每组三图。它是 ORT CPU 上的批次墙钟观察，CPU governor 为 `powersave` 且没有锁频或运行期时钟遥测；不能与单图或 GPU 数据直接比较，也不代表全模型性能矩阵。
-
-当前 revision 的[P7 非外部回归记录](../../eng/models/paddle-ocr/verification/paddleocr-ppstructure-non-external-regression-20261013.md)覆盖 Core、Extensibility、ModelFactory、ModelPack.Json、Visual、Visual.OpenCV、ONNX Runtime、OpenVINO、OpenCV 和 TensorRT，共 `912 passed / 14 skipped / 0 failed`；同时 `14/14` 源码项目和 `10/10` 示例项目构建通过，维护范围 `671/671` 个本地 Markdown 链接有效。该记录来自 dirty working tree，14 个跳过项仍是明确的外部模型、native runtime、网络或平台门控，不能换算成支持结论，也不替代 clean-checkout、质量、性能、打包或 soak 门禁。
-
-随后在提交 `d02638e` 的 detached clean checkout 中完成了[完整解决方案构建](../../eng/models/paddle-ocr/verification/paddleocr-ppstructure-clean-checkout-build-20261014.md)：`DeploySharp.sln` 的 `37` 个项目还原和 Release 构建均通过，编译错误为 `0`。该门禁排除 `applications`，并只说明源码可复现构建，不代表 native runtime、外部模型、准确率或性能支持。
-
-针对这次 clean 回归发现的 OpenCV DNN 兼容合同和 PaddleOCR release-admission 漂移，已在提交 `f23d19f` 的干净 checkout 中完成[聚焦复测](../../eng/models/paddle-ocr/verification/paddleocr-clean-checkout-focused-tests-20261014.md)：OpenCV `32/32`、ModelFactory `63/65`（2 个显式外部门控跳过），无失败。它只确认这两组修复已进入提交，不替代完整回归、外部模型质量或性能验证。
-
-之后在提交 `a3c3fdc` 的 detached clean checkout 中完成了[完整非外部回归](../../eng/models/paddle-ocr/verification/paddleocr-clean-checkout-non-external-regression-20261014.md)：14 个测试项目共 `938 passed / 0 failed / 15 skipped`（953 项），命令退出码为 `0`。跳过项仍是外部模型、公开下载、checkpoint 或运行时门控，不转换为模型或后端支持结论；本轮关闭的是 P7 clean-checkout 回归门，不是质量、正式性能、soak、跨设备或 PP-Structure 全后端门。维护范围链接审计为 `684` 条、断链 `0`。
+并发路径保证输入顺序、取消传播、异常后的 Session 复用和临时输入释放。它不等于长时间稳定性或跨设备吞吐证明，生产配置仍应按目标后端测量 P50/P95、内存和结果一致性。
 
 ### 连续帧异步预取
 
@@ -241,8 +211,6 @@ TextCropProfile crop = recognitionProfile.CropProfile!.WithCropProcessing(proces
 
 当前仍无经过标定的自动噪声、阴影或 JPEG 退化分类，也没有换模型重试；八种操作都是有界、显式候选，不能冒充退化分类器、超分辨率模型或准确率保证。已实现对应门限路径和下面的有限低置信度增强重试，全部默认关闭。
 
-功能回归示例：2026-09-17，在 Windows RTX3060 Laptop、ORT1.23.2 CPU/CUDA 下，使用同一 `demo_1.jpg`，v4 mobile/v5 mobile/v6 tiny、B4/单通道、Clamp320，对 Report/ContrastNormalize/GrayClahe 共18组运行成功。Report 的文字和完整合同SHA与关闭增强基线一致；本图各模型均仅第12号区域触发默认门限。线性方式文字不变但置信度/token使合同SHA改变；v5 CLAHE 将 `(成品包材)` 变成 `（成品包材）`，置信度从CPU基线0.848219升到0.9010367，不能据此判断更准确。该轮只有1次预热/3次采样且存在开发负载，不作为稳定性能或准确率结论；复现时请保存 sidecar 和原文差异，而非仅比较置信度。
-
 ### 低置信度单候选增强重试
 
 需要“先保留原始识别，再检查局部增强是否值得采用”时，不要在首轮 `CropProcessing` 中设置增强，而应显式启用：
@@ -322,20 +290,11 @@ TextCropProfile crop = recognitionProfile.CropProfile!
 
 ### B2/B3 安全与成本证据
 
-对原始低分辨率噪声扫描图的最新验证见 [FUNSD 自然扫描报告](../../eng/models/paddle-ocr/verification/paddleocr-funsd-natural-low-quality-enhancement-20261023.md)。固定十张测试页与此前 40 页受控增强父图不重叠，共 1,769 个有效词区，未生成退化或调参；ORT/OpenVINO 的原文、全部候选和最终文本全部一致，2 处浮点边界选择元数据差异单独保留。两后端的 CER 编辑数均从 `307/8,582` 增至 `311/8,582`，WER 从 `214/1,775` 增至 `219/1,775`，因此不能将三配方共识视为准确率保证。来源仅给出噪声扫描的整体描述，没有逐图严重度标签。
+增强策略不能只按置信度选择。公开数据上的验证表明，多配方共识仍可能增加 CER/WER，而且强制运行多个候选会显著增加裁剪、REC 和 CTC 成本。因此所有增强和自动替换策略默认关闭。
 
-增强成本现有独立的[配对 5+50 测量](../../eng/models/paddle-ocr/verification/paddleocr-funsd-paired-enhancement-cost-20261023.md)：固定第一页前 16 个词区，独立创建禁用增强和三配方增强 Pipeline，按 AB/BA 交替执行，两后端各 50/50 文本合同稳定。每 16 词调用的 baseline/enhanced P50 为 ORT `69.17/258.29 ms`、OpenVINO `91.53/364.82 ms`；配对耗时比中位数为 `3.68×/3.93×`。这包含 crop、REC、CTC 与重试，不含页面输入准备、DET/CLS；是强制三个候选的成本切片，不是整页时延或生产策略。该 16 词子集 CER/WER 无收益，默认增强继续关闭；更细的自然质量分层、业务字段误纠预算和代表性成本门仍待验收。
+上线前先使用 `PreserveOriginal` 收集候选差异，再在与生产分布一致的标注集上同时评估 CER/WER、业务字段通过率、误纠率和端到端 P50/P95。只有明确设定质量与延迟门槛后，才应启用 `ConfidenceGain` 或 `ConsensusConfidenceGain`；后端结果一致和置信度上升都不能替代人工真值。
 
-增强策略不能只看置信度提升。仓库脚本 `eng/models/paddle-ocr/scripts/Summarize-OcrEnhancementEvidence.py` 可对集成测试输出的逐行 JSON 计算：候选被选中的数量、候选 CER/WER 高于原文的误纠率、全部记录和已选候选的 P50/P95 额外耗时、多后端决策/最终文本一致性，以及共识策略的置信度增益阈值曲线。例如 [2026-10-11 汇总](../../eng/models/paddle-ocr/verification/ocr-enhancement-safety-cost-20261011.md) 中，SROIE parent-linked crop 的已选子集没有 CER 变差行，而 FUNSD word-crop 子集有 `5/14` 行 CER 变差（`35.71%`）。这正是保持 `ConfidenceGain` 和 `ConsensusConfidenceGain` 显式 opt-in 的依据；该报告是有标签 crop 的边界诊断，不是页/行级鲁棒性、准确率或默认阈值批准。新增退化数据后应重新生成机器 JSON 与 Markdown，并把最大允许误纠率、延迟预算和有效样本量作为业务决策门，而不是只比较平均置信度。
-
-2026-10-23 又使用 PP-OCRv6 Small，在 SROIE 十页的 542 个带词级真值 crop 上比较 `ContrastNormalize`、`GrayClahe`、`UnsharpMask` 三候选共识；ORT CPU 与 OpenVINO CPU 的原文、候选文本、最终选择和候选索引 `542/542` 一致，但被选择的区域 CER 改善/恶化/相同为 `4/5/344`，WER 为 `3/4/346`，整体 CER/WER 编辑数都各增加 1。之后穷举 ORT `348` 个、OpenVINO `350` 个非空候选置信度增益切点，没有找到同时满足“零 CER 误纠且至少一项 CER 改善”的阈值；零误纠点只保留一两个 CER 持平区域。该事后扫描仅描述此样本，不能用来定生产阈值。此样本是自然来源收据，但数据没有成像质量标签，所以不能称为自然低质量验证；它进一步说明后端一致和置信度共识不等于正确。详见[报告](../../eng/models/paddle-ocr/verification/paddleocr-sroie-natural-source-enhancement-20261023.md)和[逐区域 JSON](../../eng/models/paddle-ocr/verification/paddleocr-sroie-natural-source-enhancement-20261023.json)。默认增强保持关闭，B1b/B2/B3 门禁未关闭。
-当前还提供独立的 `eng/models/paddle-ocr/scripts/Evaluate-PaddleOcrEnhancementSafetyGate.ps1`，可对汇总报告执行 fail-closed 门禁。以 FUNSD 40 页、240 条 parent-linked 记录为例，[2026-10-17 门禁报告](../../eng/models/paddle-ocr/verification/ocr-enhancement-safety-gate-funsd40-20261017.md) 在 ORT/OpenVINO 均为 `blocked`：样本量和 P95 成本满足示例阈值，但 CER/WER 误纠率分别为 `31.25%/12.50%`。这不是自然质量或业务准确率结论，而是明确阻止把受控退化数据当作默认增强批准的安全边界。
-
-[2026-10-13 FUNSD 40-crop 共识报告](../../eng/models/paddle-ocr/verification/paddleocr-funsd40-consensus-safety-cost-20261013.md) 改用真值完整 crop 的 `RecognizeOnlyAsync`，避免检测失败掩盖增强候选。修复识别-only 原先不执行重试的接口缺口后，ORT CPU/OpenVINO CPU 在 240 条记录上的决策、选择标记、最终文本、候选索引和共识计数全部一致。`ContrastNormalize + GrayClahe + UnsharpMask` 在 `minimumGain=0` 时形成 177 条候选共识并选择 115 条，其中 2 条 CER 改善、4 条恶化、109 条不变，平均 CER `0.3060 → 0.3067`；P50/P95 候选墙钟观察分别为 ORT `76.21/144.57 ms`、OpenVINO `34.87/51.64 ms`。全量事后阈值扫描没有找到“零 CER 恶化且仍有至少一条 CER 改善”的档位；进一步按父 crop 做确定性 5 折验证，保证同一原图的六种条件不跨校准/验证集，五折都因校准集不存在安全且有收益的阈值而弃权。该结果只关闭接口和受控数据的分组验证缺口，不批准默认配方或阈值；自然低质量独立数据集、业务字段误纠门和正式 5+50 成本协议仍未完成。当前耗时来自顺序质量运行，不是正式性能排名。
-
-多配方覆盖全部 `OcrCropEnhancementMode`，包括 `LocalUpscale`、`ShadowNormalize` 和 `JpegArtifactSuppress`；每种模式仍只按自身显式统计门限决定是否执行，不自动判断真实退化类别，不切换 DET/CLS/REC 模型，也不替代标注集评估。真实部署建议先用 `PreserveOriginal` 导出候选差异，再按 CER/WER、字段校验通过率、召回率和端到端延迟选择是否启用 `ConfidenceGain` 或更保守的 `ConsensusConfidenceGain`；后者需要至少两个配方，额外成本和候选不一致率必须单独纳入评测。
-
-验证示例（2026-09-17）：同一Windows RTX3060 Laptop、ORT1.23.2 CPU/CUDA、demo_1.jpg、B4/单通道、Clamp320、1次预热/3次短测，v4 mobile/v5 mobile/v6 tiny的关闭/保留/显式选择共18组通过，前两种模式的完整合同SHA均与既有基线一致。置信度阈值0.9时，v5的第6号区域因质量门限不合格不重试，第12号区域生成一个候选；保持原始TensorWidth=282时，该行CPU置信度0.848219→0.9010367，显式选择把半角括号改为全角，默认保留策略不改原文。v4/v6本图没有低分行触发。另以v6 tiny、SlidingWindow320、方向/增强阈值1、最多接收1行、增强质量阈值128作组合边界测试，两后端均保留2窗口候选及原始方向证据；这些强制参数是测试用例，不是生产推荐值。没有标注真值，不据此声称准确率提高。
+多配方覆盖全部 `OcrCropEnhancementMode`，但每种模式只依据自身显式门限运行，不判断真实退化类别、不切换 DET/CLS/REC 模型，也不提供准确率保证。
 
 ### 动态宽度低置信度重试（B3b-width）
 
@@ -406,19 +365,9 @@ coverage.EnsureCovered();
 
 现有 [PaddleOCR Benchmark](https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV2.0/tools/DeploySharp.PaddleOcrBenchmark) 提供 `--audit-characters` 命令，以及推理前的 `Report/Require` 模式。需求 JSON 将分组名映射为所需原始字符，覆盖汉字样本、大小写、数字、标点、全半角、单位和业务编号；缺失信息与字典文件 SHA 全部导出。完整运行时，审计在加载图片和创建后端会话之前完成，不计入推理时间。
 
-### 本机字典样例（2026-09-17）
+### 使用审计结果
 
-使用工具的 `character-requirements.example.json` 对本机五份字典检查，均按模型约定追加空格。表中只列该示例涉及的缺失项，不表示完整字符覆盖矩阵：
-
-| 本机字典 | token 数（含追加空格） | 重复项数 | 示例中缺少的独立字符 |
-| --- | ---: | ---: | --- |
-| v4 | 6624 | 28 | `＠` U+FF20、`¢` U+00A2、`£` U+00A3、`¥` U+00A5、`€` U+20AC |
-| v5 | 18384 | 0 | `‘` U+2018、`‰` U+2030、`㎏` U+338F、`㎡` U+33A1 |
-| v6 tiny | 6905 | 0 | `㎏` U+338F、`㎡` U+33A1 |
-| v6 small | 18709 | 0 | `㎏` U+338F、`㎡` U+33A1 |
-| v6 medium | 18709 | 0 | `㎏` U+338F、`㎡` U+33A1 |
-
-本次使用的 v4 文件含 28 个重复项，工具已统一使用主库加载器保留原索引和文字。示例里的中文样本、ASCII 大小写、数字和 URL/邮箱/电话/编号字符在五份字典中均有独立 token。`¥` 与 `￥`、`㎏` 与两个字符 `kg` 是不同需求，报告不会擅自替换。
+将业务实际需要的汉字、数字、大小写、标点、全半角、单位和编号字符写入需求 JSON，再对准备发布的每一份字典运行审计。Unicode 相似字符不会自动等价，例如 `¥` 与 `￥`、`㎏` 与 `kg` 会分别检查。缺失字符应通过更换匹配字典或重新训练模型解决，不要在 CTC 解码后静默替换。
 
 ## 文本规范化（可选、保留原文）
 
@@ -608,14 +557,14 @@ foreach (OcrRegionResult item in result.Regions)
 
 ### 模型路由边界
 
-当前 OCR Pipeline 不会根据文字长度、置信度或语言自动切换 v4/v5/v6、mobile/server 或其它 recognizer。原因是现有公开标注和本地 smoke 证据不足以证明某个路由条件能稳定降低 CER/WER，自动路由还会改变字典、token 来源、Session 池和预算追溯。调用方如需路由，应显式创建多个已验证的 `OcrPipeline`/Profile，并在业务层固定：
+OCR Pipeline 不会根据文字长度、置信度或语言自动切换 v4/v5/v6、mobile/server 或其它 recognizer。自动路由会改变字典、token 来源、Session 池和预算追溯，且没有通用规则能保证降低 CER/WER。调用方如需路由，应显式创建多个已验证的 `OcrPipeline`/Profile，并在业务层固定：
 
 - 路由输入特征与阈值（例如语言、脚本、长度桶），同时记录配置 SHA；
 - 每个候选模型的模型/字典 SHA、后端、预处理和最大窗口/耗时预算；
 - 最终选择、候选结果和未选择原因，不能只返回置信度最高的文字；
 - 失败或超预算时的明确 fallback，不得在一次调用中无限创建新 Session。
 
-在没有按模型、数据域和后端固定 CER/WER 证据之前，推荐保持单 Profile、单字典和有界 Session 池。当前仓库将模型路由列为未完成实验项，不把近似模型的单机结果外推成自动路由收益。
+在没有按模型、数据域和后端固定 CER/WER 证据之前，推荐保持单 Profile、单字典和有界 Session 池。
 
 ```csharp
 TextCropProfile crop = recognitionProfile.CropProfile!.WithRecognitionWindows(
@@ -660,7 +609,7 @@ foreach (OcrRegionResult line in result.Regions)
 
 完全匹配时 `OverlapEditDistance=0` 且接缝不标记 uncertain；通过模糊回退时 `OverlapEditDistance` 记录编辑距离并设置 `SeamUncertain=true`，合并优先保留前一窗口的重叠文本，同时抑制后一窗口对应的前缀；无法通过门限时不删除后一窗口文本，也设置 `SeamUncertain=true`，因此**最终文本可能保留重复内容**。应用应复核所有 uncertain 接缝；当前 Pipeline 不自动选择重试结果。原始窗口文字与 CTC trace 一直可查。被抑制前缀在合并 trace 中标记为不发射，局部原始 trace 保持不变；合并 trace 的时间步是窗口序列串接索引，不是原模型一次推理的时间轴。
 
-2026-09-29 的两种受控 3,600 字符样本用于验证接缝合同，不代表自然图片精度：PP-OCRv6 Small 在 ORT CPU 与 OpenVINO CPU 上均完成识别。周期重复短语样本用 18 窗口，CER `0.0556%`、WER `0.4556%`；变化词汇样本用 16 窗口，CER `0.0833%`、WER `0.7194%`；每个样本在两后端的文本 SHA 一致，模糊回退均处理了 1–2 token 编辑的接缝。样本图由脚本生成，不是公开数据集，也不应作为生产准确率结论。测试与边界见[受控长文本验证记录](../../eng/models/paddle-ocr/verification/synthetic-longtext-a2-20260929.md)。
+滑窗合并已覆盖精确匹配、有限编辑距离回退和不确定接缝合同，但合成样本或跨后端文本一致只能证明实现稳定，不能代表自然长文本精度。生产使用必须保留 `SeamUncertain`，并用真实长文本真值检查误删、重复和替换。
 
 ### 资源与失败行为
 
@@ -793,312 +742,66 @@ ROI 投影、合并重新编号、全图方向恢复都保留记录并同步原�
 
 先测试默认 180°候选及少量低置信度行，再决定是否开启三个候选；不要为了更高置信度无限增加推理。该接口不是任意角度搜索、图像去噪/锐化或语义纠错器。
 
-## 性能测量建议
+## 性能与验证
 
-### 几何检查验证（2026-09-16）
+OCR 性能必须按完整 `det -> crop -> cls/orientation -> rec -> merge` 流水线测量。检测通常每图执行一次，分类和识别应按实际宽度分组，并在模型支持时使用真 Batch；固定 batch-one 图则使用有界的独立 Session 池。不要把单阶段 `Session.Run` 时间当作用户看到的端到端延迟。
 
-使用同一 `demo_1.jpg`、PP-OCRv4 mobile/v5 mobile/v6 tiny、ORT 1.23.2 CPU/CUDA、Batch=4/独立通道=1、Clamp/320、warmup=1/iterations=3：
+基准至少记录：
 
-- Disabled 和 Report 各 6 组完整调用成功，文本与结果合同 SHA 均与此前 Clamp 基线相同。
-- 每组保留原 16 行并输出几何证据；此图默认风险均为 `None`。各版本最大归一化条件数约 3.003、3.025、3.010，同版本 CPU/CUDA 相同。
-- 将 `minimumArea` 故意设为 100000000 后，6 组调用均按预期返回 `DS-VISUAL-4104`，并非后端不支持。
-- 原生像素测试覆盖 0°、±5°、±15°、±30°、±45°、90°、180°和梯形透视；检查采样坐标、颜色通道、ROI 投影及方向恢复后的诊断来源。
+- 模型、字典、输入和程序集的 SHA-256；
+- 后端、运行时、设备、batch、Session 数和宽度策略；
+- 5 次预热、50 次测量的总耗时及各阶段 P50/P95；
+- 区域数、有序文本指纹、CER/WER 或明确说明没有人工真值；
+- CPU/GPU 电源与锁频状态、峰值内存和分配量。
 
-这是正确性和兼容性回归，不是最佳性能或 CER/WER 测试。本轮 Report 的 `crop_ms`（几何检查加分组）约 0.037～0.237 ms，但开发机有其他任务且样本仅 3 次，不能由此做稳定性能结论。真实文字的多角度标注集和其他后端几何模式矩阵仍未完成；仿射快路径的安全策略及 OpenCV 适配器回归已在本轮补齐，仍需在目标设备上独立测量收益。后续方向重试验证见下节。
+当前 PP-OCRv4 mobile/server、PP-OCRv5 mobile/server、PP-OCRv6 tiny/small/medium 已有完整流水线证据。不同后端和精确工件的状态以[模型与后端验证矩阵](../model-backend-verification-matrix.md)为准；代表模型通过不能外推为整个模型族通过。复现命令和结果格式见 [PaddleOCR Benchmark](https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/tools/DeploySharp.PaddleOcrBenchmark/README.md)，公开设备数据见[设备性能实测](device-performance-benchmarks.md)。
 
-### 方向重试验证（2026-09-17）
+滑窗、方向重试和增强都可能提高特定样本质量，也会增加推理量。默认保持关闭或保守阈值，只有带人工真值的业务数据证明收益后再启用。跨后端比较应先确认区域数、文本顺序和坐标容差一致，再比较性能。
 
-使用同一图片、v4 mobile/v5 mobile/v6 tiny、ORT CPU/CUDA、Batch=4/通道=1、Clamp/320、warmup=1/iterations=3，对照关闭、默认启用、强制触发三组模式，共 18 组完整调用通过。
+## PaddleOCR-VL
 
-- 关闭时全部结果合同 SHA 与上一批几何 Report 基线一致。
-- 默认阈值 0.8、最小增量 0.05、只试相对 180°：v4/v6 未触发，v5 触发 1 行且保留原结果；同版本 CPU/CUDA 的最终文字及决策一致。
-- 将阈值设为 1 以强制试验时，三版本每个后端均对 16 行额外试一次 180°，没有候选被接受。此项证明调度和原始结果保留，不证明准确率改善。
-- v6 tiny 的 SlidingWindow/320、最多重试 1 行、阈值 1 组合在 CPU/CUDA 上通过：1 行重试，15 行明确标记被行数限制跳过；重试行包含 2 个窗口，两后端最终文字一致。完整合同 SHA 可因浮点置信度不同而不同，不能据文字一致宣称逐位数值一致。
-- 单元及原生测试覆盖改善候选被接受、多轮早停/平局、空文本、相对于 CLS 结果的旋转、旋转后 Reject 宽度限制、并发独立 Session、取消/失败/资源释放、ROI 重新编号、全图方向恢复。
-
-这些是开发机短时行为验证，未形成有人工真值的“倒置文字修复率”、CER/WER 或最优速度结论。重试会额外执行模型；业务中应保留关闭时的基线，并根据触发比例评估收益与耗时。
-
-### 宽度诊断与兼容性验证（2026-09-16）
-
-使用同一 `demo_1.jpg`、v4 mobile/v5 mobile/v6 tiny，在 ONNX Runtime 1.23.2 CPU 与 CUDA 上验证了以下行为。设备为 Windows x64 / RTX3060 Laptop；这不是所有模型/后端的完整验收。
-
-| 检查 | 实测结果 |
-| --- | --- |
-| 同样的 Clamp/320 设置，改动前后各 6 组 | 文本 SHA 与完整结果合同 SHA 均一致 |
-| Clamp/320 的宽度记录 | v4 有 13/16 个区域压缩，v5/v6 各 12/16；两后端一致 |
-| Reject/320，各 6 组负向调用 | 都返回 `DS-VISUAL-4103` 和源区域索引，未作为模型“不支持”掩盖 |
-| Reject/3200，各 6 组 | 完整流水线通过；压缩区域为 0，同版本 CPU/CUDA 文本 SHA 一致 |
-
-将宽度从 320 改为 3200 后，本图实际规划的最大宽度是 859～973，而不是给每行都分配 3200。文本指纹有变化，但目前没有人工标注真值，不能将变化直接称为准确率提升。warmup=1/iterations=3 的短测用于验证行为，不作为性能结论；性能调优与长文本完整性指标将在后续步骤单独验收。
-
-### 滑窗调用与接缝诊断验证（2026-09-16）
-
-同一 Windows x64 / RTX3060 Laptop 6 GB、驱动 576.02，使用 ORT 1.23.2 CPU/CUDA、OpenCV 5.0、完整流水线 Batch=4、独立通道=1、warmup=1、iterations=3。输入仍为 `demo_1.jpg`，SHA-256 为 `ec81d595407ccb61eb2d4d90e74d976469febb41a74cdbc8dbb8429b1e768f5c`。先验证 Clamp/320：6 组文本 SHA 和完整结果 SHA 与加入滑窗前相同。
-
-SlidingWindow/320、20% 重叠、最少匹配 2 个 token 时，6 组调用都成功，原检测行仍为 16 个；同一版本 CPU/CUDA 的文本 SHA、切片数和接缝诊断一致。中间 crop 宽度不超过配置上限，几何诊断压缩数为 0。
-
-| 模型 | 切片行数 | 总 REC 窗口（含普通行） | 不确定接缝 / 接缝总数 | CPU / CUDA 完整流水线 P50（ms） |
-| --- | --- | --- | --- | --- |
-| v4 mobile | 13/16 | 40 | 18/24 | 1005.012 / 531.559 |
-| v5 mobile | 12/16 | 37 | 15/21 | 776.414 / 596.205 |
-| v6 tiny | 12/16 | 35 | 11/19 | 224.065 / 359.944 |
-
-将重叠调到 35% 后，6 组调用再次成功且同版本 CPU/CUDA 文字一致；v4/v5/v6 tiny 的总窗口变成 45/40/38，不确定接缝分别为 13/12/11。该图仍存在未匹配接缝，不能把诊断减少直接当作准确率提升。重复字、截断字符和相邻窗口识别分歧需要结合人工真值评估。
-
-上表是繁忙开发设备上的短测，含构建与其他负载干扰，**不是最优性能记录**。SlidingWindow 增加了识别工作量；支持更大动态宽度的模型应同时对照 Reject/3200。当前验证覆盖 v4 mobile、v5 mobile、v6 tiny 的 CPU/CUDA；v6 small/medium、TensorRT/OpenVINO/OpenCV DNN 的滑窗矩阵和标注长文本 CER/WER 仍待补齐。
-
-### PP-OCR 核心七模型跨后端证据（更新于 2026-10-23）
-
-2026-10-23 在 Ubuntu 22.04.5 / RTX 2060 主机上用当前测试源复跑七组核心流水线，形成[三图 ORT/OpenVINO 对照报告](../../eng/models/paddle-ocr/verification/paddleocr-core-seven-models-ort-openvino-three-image-linux-rtx2060-20261023.md)。21/21 对的输入与模型文件 SHA、检测区域数、识别区域数及有序文本 SHA 一致；但完整 `OcrResult` 指纹是 0/21 一致，因此只可称文本和计数一致，不能称完整结果 parity。两后端均为 CPU，RTX 2060 只是主机配置；每对单次执行没有人工逐字真值，不提供 CER/WER，也不构成性能基准。原始 ORT/OpenVINO JSON 和可重跑比较脚本均已链接在报告中。
-
-另在 Windows Ryzen 7 5800H 上将同一组三图、七个模型对 ONNX Runtime CPU 与 OpenVINO CPU 做了逐区域组件审计，见[组件与数值漂移报告](../../eng/models/paddle-ocr/verification/paddleocr-core-seven-models-ort-openvino-component-parity-windows-20261023.md)。文本、区域数及 CTC token 决策 `21/21` 一致，几何、检测分数和识别置信度均在声明容差内。逐字段归因显示坐标 `8/2,216` 个标量有位级差异，检测分数 `248/277`、识别置信度 `245/277`、对齐 token 置信度 `12,366/15,937` 有位级差异；最大坐标差 `0.00385 px`（门槛 `0.01 px`），最大 token 置信度差 `0.0003796`（门槛 `0.001`）。因此 `OcrResult` 的严格 SHA 不同代表浮点值并非位级相同，不表示文本/token 决策不同。该归因只定位输出字段与样本，不证明运行时内部数值差异的根因；这些无真值、单次运行的演示图仍不能用于准确率或性能结论。
-
-### PaddleOCR 质量证据状态索引（2026-10-14）
-
-为避免把大量分散的质量报告误读成“所有模型、所有后端都已通过”，新增了[PaddleOCR 质量证据状态索引](../../eng/models/paddle-ocr/verification/paddleocr-quality-status-20261014.md)及其[机器可读 JSON](../../eng/models/paddle-ocr/verification/paddleocr-quality-status-20261014.json)。索引把当前证据分成“诊断通过、受控诊断、部分通过、未完成”四类：核心 v4/v5/v6 七模型的 SROIE 十页、HierText v6 Small 的 1,557 条真实行级 crop、HierText v6 Medium 三后端 34 页、FUNSD v4/v6 40 页、v6 Small 三后端十页，以及本轮 A3 已知角度 retry 均有明确报告链接。
-
-随着核心识别器行级证据补入，另有[2026-10-18 状态增量索引](../../eng/models/paddle-ocr/verification/paddleocr-quality-status-20261018.md)及其[机器可读 JSON](../../eng/models/paddle-ocr/verification/paddleocr-quality-status-20261018.json)。它只补充 v4/v5/v6 七个 REC 工件的 14 组 ORT/OpenVINO 诊断和当前开放门禁，基线索引与增量索引都不改变后端支持状态。
-
-本轮新增的[2026-10-23 质量状态增量索引](../../eng/models/paddle-ocr/verification/paddleocr-quality-status-20261023.md)及其[机器可读 JSON](../../eng/models/paddle-ocr/verification/paddleocr-quality-status-20261023.json)记录了 SROIE 自然来源收据、FUNSD 原始噪声扫描的三配方增强共识诊断，以及独立 16 词选集的配对 5+50 成本。两组选集均未显示固定增强策略的总体 CER/WER 收益，默认增强仍关闭；CPU 成本测量不代替业务质量/延迟预算。
-
-[2026-10-25 质量状态增量索引](../../eng/models/paddle-ocr/verification/paddleocr-quality-status-20261025.md)及其[机器可读 JSON](../../eng/models/paddle-ocr/verification/paddleocr-quality-status-20261025.json)补入 v6 Tiny HierText 十图端到端 smoke、PaddleOCR-VL 六任务生成边界，并保留当时 VL Bundle 尚未上传的历史状态。当前固定 1.6 五图 Bundle 已完成[Release 在线下载、哈希和离线回读](../../eng/models/paddle-ocr/verification/paddleocr-vl-release-live-20261026.md)；模型交付通过并不关闭标注质量或全部后端门禁。
-
-该索引同时保留质量边界：SROIE/FUNSD 的标注粒度与 PP-OCR 文本行输出不完全一致；OpenCV 在 v6 Medium 34 页上存在文本差异；一次测量的 P50/P95 不是正式 `5 warm-up + 50 measured` 性能；受控旋转、退化和增强实验不能替代自然角度/自然低质量真值。归一化识别宽度超过 `3,200 px` 的自然标注行及接缝质量（A2）、自然角度（A3）、B1b/B2/B3 鲁棒性与误纠成本、正式质量门以及完整模型/后端矩阵仍保持未完成，增强默认仍关闭。A2 的单位是像素宽度，历史记录中要求“自然连续 3,200 字符”的表述已更正。
-
-新增的[核心识别器 HierText 行级质量证据](../../eng/models/paddle-ocr/verification/paddleocr-core-recognizer-quality-hiertext-20261018.md)把 v4/v5/v6 的七个 REC 工件放在同一批 256 个 source-linked 文本行 crop 上，显式跳过 DET，因此可单独观察识别器 CER/WER。ORT CPU 与 OpenVINO CPU 均完成 `14/14` 组合，v6 Small/Medium 在这批选择上的 CER/WER 为 `25.00%/48.17%` 与 `23.07%/45.23%`，两后端的逐行文本 SHA 完全一致。该结果是可复现的识别器诊断，不是完整页面准确率、检测召回率、自然长文本、鲁棒性或发布质量结论；机器 JSON 同时记录模型、字典、输入 crop 和逐行结果合同 SHA。
-
-随后补充了[v6 Tiny HierText 十图公开数据 smoke](../../eng/models/paddle-ocr/verification/hiertext-v6-tiny-10page-public-ocr-20261025.md)，使用当前 revision 的 v6 Tiny DET+REC、ORT CPU、batch `8`、两个推理通道和 `SlidingWindow`（重叠 `0.2`、每区域最多 32 个窗口）。10/10 图像完成且无空输出；IoU0.5 检测 `TP/FP/FN=115/191/422`，F1 `27.28%`，匹配区域 CER/WER `22.54%/55.70%`，端到端 CER/WER `113.33%/126.50%`；一次测量的总耗时 P50/P95 为 `219.440/361.046 ms`。该结果是当前十图诊断和复现证据，不是发布准确率或正式性能；样本没有达到 A2 的归一化宽度 `>3,200 px` 门禁，低检测召回与词框/文本行粒度差异均保留在报告中。机器 JSON 保存数据清单、模型/程序集 SHA 和逐图结果。
-
-[历史文本长度盘点](../../eng/models/paddle-ocr/verification/paddleocr-longtext-coverage-a2-20261014.md)扫描 8 个 JSONL、243 页和 32,694 条有效标注行，最长自然行 132 字符、最长单页累计 2,348 字符。这些统计只描述字符数覆盖，不能用来判断是否达到 A2 的像素宽度要求；页面累计、拼接 crop 和合成文本也不能替代自然宽行准确率。
-
-[HierText 自然宽行几何审计](../../eng/models/paddle-ocr/verification/hiertext-natural-wide-coverage-a2-20261017.md)以目标高度 48 找到 13 条宽度超过 3,200 像素的自然行，分布于 9 张已缓存并校验 SHA 的图像，最大投影宽度 4,725。[修复前真值四边形基线](../../eng/models/paddle-ocr/verification/paddleocr-hiertext-natural-wide-gt-20261023.md)直接调用 `RecognizeOnlyAsync`，绕过 DET/CLS，以主库 `MaximumWidth=3200` 对照 Clamp 和 SlidingWindow。v6 Small/Medium × ORT/OpenVINO CPU 共 104 次行级调用通过执行、源坐标、窗口和 CTC 重建合同；52 对文本、发射类别和窗口决策一致。主质量层为官方可读且源图框高至少 2px 的 11 行；1 条官方不可读行与 1 条 1px 高行单独保留。修复前 Small 的 Clamp/滑窗 CER 为 `1.498%/4.430%`，Medium 为 `1.759%/6.450%`，部分未匹配接缝保留了重复前缀。
-
-[接缝修复后复测](../../eng/models/paddle-ocr/verification/paddleocr-natural-wide-seam-comparison-20261023.md)在同组数据上重跑了 104 次真实识别，并用原始 CTC token 回放隔离合并逻辑。52 组滑窗的文字、指标和窗口决策与回放一致，原始窗口的几何/文字/发射类别摘要及 52 组 Clamp 结果不变。两后端 Small 的滑窗字符编辑数 `68→31`（CER `4.430%→2.020%`），Medium `99→29`（`6.450%→1.889%`）；主质量层没有行级 CER 恶化。这组诊断数据也用于定位修复，**不是独立验证**；Clamp 仍分别只有 23/27 个字符编辑，优于滑窗，因此默认继续使用 Clamp。A2 的自然重复编号/单字符接缝、其余后端及更广数据验证仍开放。合并阶段的 5+50 成本另行记录，不能解读为完整 OCR 提速；图像与原文仅保留在本机。[真实复测摘要](../../eng/models/paddle-ocr/verification/paddleocr-hiertext-natural-wide-seam-followup-20261023.md)保留各模式和诊断层结果。
-
-[旧 DET 关联报告](../../eng/models/paddle-ocr/verification/hiertext-natural-wide-a2-v6-small-20261017.md)使用的窗口上限实际是 **320px**，两后端各关联 8/13 候选。2026-10-23 从原始预测修正其 WER 算法后，匹配候选的宏平均 WER 为 `44.36%`，原 `291.20%` 无效；跨后端文本应记为 `8/8` 已关联对一致，5 对未关联的空占位不计作文本通过。旧时延未复测，不能将该 320px / DET 关联协议与新 3,200px / 真值裁剪的语料级 CER/WER 混用。
-
-为避免把单张演示图当成完整覆盖，固定使用 `demo_1.jpg`、`demo_2.jpg`、`demo_3.jpg`，对 PP-OCRv4 mobile/server、PP-OCRv5 mobile/server、PP-OCRv6 tiny/small/medium 共 7 组 DET+CLS+REC 流水线分别运行 ONNX Runtime CPU 与 OpenVINO CPU。21 个组合在两个后端都完成检测、裁剪、方向、识别和合并；区域数与已识别数逐组合一致，按区域文本序列的 SHA-256 也为 `21/21` 一致。v6 没有独立版本化 CLS 归档，明确复用 PP-OCRv5 mobile CLS。
-
-该轮只使用演示图，没有逐字人工真值，因此不能从它计算 CER/WER、召回率或准确率；每组仅一次端到端调用，耗时不替代 5 次预热 + 50 次正式性能协议。模型、输入、结果摘要和可复现命令见[三图跨后端机器可读记录](../../eng/models/paddle-ocr/verification/paddleocr-core-three-image-openvino-ort-20260930.md)，复现脚本为 `eng/models/paddle-ocr/scripts/Invoke-PaddleOcrCoreThreeImageEvidence.ps1`。
-
-同一批输入还对七个 DET 工件保存了[原始 DB 概率图中间张量对照](../../eng/models/paddle-ocr/verification/paddleocr-core-det-intermediate-parity-20260930.md)。ORT/OpenVINO 的输入和输出形状在 21 组中全部一致，最大元素级绝对差为 `0.0067548752`（阈值 `0.01`）。这是后端合同证据，仍不包含人工框标注，因此不能替代检测召回率、IoU 或端到端 OCR 质量评测。
-
-在同一 SROIE 十页 selection 上，PP-OCRv4 Mobile 也完成了 ORT/OpenVINO 端到端质量对照：两个后端均 `10/10` 页成功，检测 TP/FP/FN `502/53/40`（F1 `91.52%`），matched CER/WER `37.59%/71.88%`，端到端 CER/WER `43.78%/77.87%`；555 个索引区域和 `10/10` 页有序文本一致，polygon 漂移为 `0`，最大 confidence 漂移 `7.62e-5`。一次性总耗时 P50/P95 为 ORT `4347.26/5796.95 ms`、OpenVINO `2032.36/3267.12 ms`。这是 SROIE 词框与 PP-OCR 文本行粒度不一致下的 smoke 记录，不是官方准确率或正式 5/50 性能结论；详见 [PP-OCRv4 Mobile 质量记录](../../eng/models/paddle-ocr/verification/sroie-v4-mobile-10page-quality-parity-20261010.md)。
-
-同样的十页协议也覆盖了 PP-OCRv4 Server：ORT/OpenVINO 均 `10/10` 页完成，检测 TP/FP/FN `482/52/60`（F1 `89.59%`），matched CER/WER `36.22%/75.55%`，端到端 CER/WER `44.89%/82.64%`；534 个索引区域和 `10/10` 页有序文本一致，polygon 漂移为 `0`，最大 confidence 漂移 `1.98e-5`。一次性总耗时 P50/P95 为 ORT `8063.73/10209.76 ms`、OpenVINO `5901.97/19871.63 ms`。该记录同样只用于 SROIE 词框/文本行 smoke 和跨后端合同对照，详见 [PP-OCRv4 Server 质量记录](../../eng/models/paddle-ocr/verification/sroie-v4-server-10page-quality-parity-20261010.md)。
-
-PP-OCRv5 Server 也在同一十页选择上完成 ORT/OpenVINO 对照：两后端均 `10/10` 页完成，检测 TP/FP/FN `496/38/46`（F1 `92.19%`），matched CER/WER `38.99%/68.46%`，端到端 CER/WER `45.77%/74.38%`；534 个索引区域和 `10/10` 页有序文本一致，polygon 漂移为 `0`，最大 confidence 漂移 `5.804e-5`。一次性总耗时 P50/P95 为 ORT `5446.37/6584.76 ms`、OpenVINO `3537.17/4442.24 ms`。详见 [PP-OCRv5 Server 质量记录](../../eng/models/paddle-ocr/verification/sroie-v5-server-10page-quality-parity-20261010.md)；它仍是 SROIE 词框/文本行 smoke，不是正式准确率或 5/50 性能结论。
-
-为统一当前源码和协议，PP-OCRv5 Mobile 又完成了[十页 ORT/OpenVINO 质量对照](../../eng/models/paddle-ocr/verification/sroie-v5-mobile-10page-quality-parity-20261010.md)。两后端均 `10/10` 页完成，IoU0.5 TP/FP/FN `492/46/50`（F1 `91.11%`），matched CER/WER `38.09%/69.80%`，端到端 CER/WER `45.11%/76.40%`；538 个索引区域和页面有序文本全部一致，polygon 坐标无漂移，最大 confidence 漂移 `2.25e-5`。一次性总耗时 P50/P95 为 ORT `2640.82/3289.84 ms`、OpenVINO `1113.67/1468.35 ms`。这是 one-warm-up/one-measured-iteration 的词框/文本行 smoke 证据，不是官方 SROIE 准确率或正式 5/50 性能结果；早期三后端记录仍单独保留用于 OpenCV DNN 边界，不能与本次 current-revision 证据混用。
-
-随后对同一三图集合补做了[OpenCV DNN 与 ORT 的七组全流程对照](../../eng/models/paddle-ocr/verification/paddleocr-core-three-image-opencv-ort-20260930.md)。21/21 组合均完成 `det → crop → cls → rec → merge`，区域文本、置信度和多边形坐标全部匹配；v4 的精确输出名、legacy CLS shape 和 OpenCV batch=1 约束已写入复现合同。OpenCV 单次耗时明显高于 ORT，只作为兼容性证据，不替代正式性能矩阵。
-
-随后补充了[v6 Medium HierText 质量记录](../../eng/models/paddle-ocr/verification/hiertext-v6-medium-public-ocr-20261002.md)：同一 24 页标注选择使用 ORT CPU 和 SlidingWindow，重叠 `0.2`、每区域最多 32 个窗口、识别 batch 16、单通道，24/24 页面完成且无失败或空输出。IoU 0.5 检测 TP/FP/FN 为 `459/478/561`（precision/recall/F1 为 `48.99%/45.00%/46.91%`），匹配区域 CER/WER 为 `12.12%/32.58%`，端到端 CER/WER 为 `71.76%/98.42%`；总耗时 P50/P95 为 `1928.53/4687.44 ms`。这是公开数据 smoke 证据，不是发布精度或正式 5/50 性能结果；未按归一化宽度超过 3,200px 与接缝真值单独验收 A2。
-
-同一批次又以 OpenVINO CPU 复跑，并形成[ORT/OpenVINO 质量 parity 记录](../../eng/models/paddle-ocr/verification/hiertext-v6-medium-ort-openvino-quality-parity-20261002.md)。24 页文本序列、检测计数、CER/WER 全部一致；937 个对应预测区域的文本和 polygon 坐标一致，置信度最大绝对差 `2.57e-5`。OpenVINO 总耗时 P50/P95 为 `1325.58/2646.71 ms`，只能解释为当前主机和单次协议下的观察，不代表跨设备性能排名或准确率结论。
-
-同一精确组合也完成了[OpenCV DNN 质量 smoke](../../eng/models/paddle-ocr/verification/hiertext-v6-medium-opencv-quality-20261002.md)。检测几何与 ORT 完全一致（TP/FP/FN `459/478/561`），但识别是后端相关的：23/24 页文本序列、937 个对应区域中的 174 个文本不同；OpenCV 匹配 CER/WER 为 `11.89%/30.48%`，端到端 CER/WER 为 `71.14%/96.89%`，总耗时 P50/P95 为 `11971.02/26997.76 ms`。这证明当前 OpenCV 导入器可以完成该组合，但不能把 ORT/OpenVINO 的文本 parity 或性能结论外推到 OpenCV。
-
-随后将 sample-003 的 24 页与不重叠的 sample-002 10 页按同一模型、SlidingWindow 和测量协议合并，形成了[HierText v6 Medium 三后端 34 页汇总](../../eng/models/paddle-ocr/verification/hiertext-v6-medium-34page-three-backend-quality-20261003.md)。ORT、OpenVINO 和 OpenCV DNN 均完成 `34/34` 页，检测 TP/FP/FN 均为 `646/722/911`；ORT/OpenVINO 的页面文本序列和区域数 `34/34` 一致，OpenCV 与 ORT 的页面文本仅 `11/34` 一致、对应区域有 `178/1368` 个文本差异。该汇总的匹配 CER/WER 分别为 ORT/OpenVINO `13.04%/35.63%`、OpenCV `12.85%/33.91%`，总耗时 P50/P95 分别为 ORT `1687.40/3572.89 ms`、OpenVINO `1131.57/2255.66 ms`、OpenCV `9646.35/24180.50 ms`。34 页仍是公开数据 smoke，不能替代正式行级精度、5/50 性能协议或自然超长文本验收；旧的 24 页 OpenCV 记录保留为历史单批次结果。
-
-同一质量 runner 还补充了[PP-OCRv6 Small SROIE 10 页 ORT/OpenVINO 记录](../../eng/models/paddle-ocr/verification/sroie-v6-small-10page-quality-parity-20261009.md)。两个五页分片先分别运行，再由 `Merge-PaddleOcrPublicDatasetRuns.py` 校验协议并合并，避免一次长进程占满资源；两后端均完成 `10/10` 页，IoU0.5 TP/FP/FN `489/42/53`（F1 `91.15%`），matched CER/WER `30.42%/46.03%`，端到端 CER/WER `37.63%/55.74%`，页面文本序列 `10/10` 一致，531 个区域索引文本差异为 `0`。该数据仍是词框/文本行异粒度的 smoke 诊断，21 个 ≥32 字符区域；未构成归一化宽度超过 3,200px 的 A2 专项。P50/P95 仅为 one-shot 观察，不能当作官方 SROIE 准确率或正式性能结果。
-
-同一十页 SROIE 协议随后覆盖了[PP-OCRv6 Tiny ORT/OpenVINO 质量对照](../../eng/models/paddle-ocr/verification/sroie-v6-tiny-10page-quality-parity-20261010.md)。两后端均完成 `10/10` 页，IoU0.5 TP/FP/FN `475/61/67`（F1 `88.13%`），matched CER/WER `33.39%/56.81%`，端到端 CER/WER `43.73%/68.14%`；536 个索引区域和页面有序文本全部一致，polygon 坐标无漂移，最大 confidence 漂移 `7.57e-6`。一次性总耗时 P50/P95 为 ORT `336.38/488.29 ms`、OpenVINO `196.15/249.63 ms`。这是 one-warm-up/one-measured-iteration 的词框/文本行 smoke 证据，不是官方 SROIE 准确率或正式 5/50 性能结果，也不扩展到 CUDA、TensorRT 或 OpenCV DNN；自然长文本和正式质量门仍保持开放。完整机器摘要见[JSON](../../eng/models/paddle-ocr/verification/sroie-v6-tiny-10page-quality-parity-20261010.json)。
-
-随后将同一十页 selection 扩展到[PP-OCRv6 Medium ORT/OpenVINO 质量对照](../../eng/models/paddle-ocr/verification/sroie-v6-medium-10page-quality-parity-20261010.md)。两后端均完成 `10/10` 页，IoU0.5 TP/FP/FN `490/51/52`（F1 `90.49%`），matched CER/WER `29.97%/44.33%`，端到端 CER/WER `37.41%/54.82%`；541 个索引区域和页面有序文本全部一致，polygon 坐标无漂移，最大 confidence 漂移 `2.63e-5`。一次性总耗时 P50/P95 为 ORT `4450.38/6082.79 ms`、OpenVINO `2533.57/3240.18 ms`。这仍是 one-warm-up/one-measured-iteration 的词框/文本行 smoke 证据，不是官方 SROIE 准确率或正式 5/50 性能结果，也不扩展到 CUDA、TensorRT 或 OpenCV DNN；自然长文本和正式质量门保持开放。完整机器摘要见[JSON](../../eng/models/paddle-ocr/verification/sroie-v6-medium-10page-quality-parity-20261010.json)。
-
-随后以同一页选集、同一源码 revision 和 batch=1 协议补做了[PP-OCRv6 Small 三后端质量对照](../../eng/models/paddle-ocr/verification/sroie-v6-small-10page-three-backend-quality-20261009.md)。ORT、OpenVINO 和 OpenCV DNN 均完成 `10/10` 页，检测 TP/FP/FN `489/42/53`、531 个区域和页面有序文本全部一致；P50/P95 观察分别为 `1302.87/2534.95 ms`、`779.76/1054.15 ms`、`7722.31/10131.55 ms`。OpenCV 的 batch=1 是当前静态 importer 合同，不代表批量性能；该记录仍是 SROIE 词框/文本行异粒度的 smoke，不能关闭自然长文本、正式质量或 5/50 性能门。完整机器摘要见[JSON](../../eng/models/paddle-ocr/verification/sroie-v6-small-10page-three-backend-quality-20261009.json)。
-
-为统一当前 revision，v6 Small 又完成了[十页 ORT/OpenVINO 质量对照](../../eng/models/paddle-ocr/verification/sroie-v6-small-10page-quality-parity-20261010.md)。两后端均 `10/10` 页完成，IoU0.5 TP/FP/FN `489/42/53`（F1 `91.15%`），matched CER/WER `30.42%/46.03%`，端到端 CER/WER `37.63%/55.74%`；531 个索引区域和页面有序文本全部一致，polygon 坐标无漂移，最大 confidence 漂移 `3.028e-5`。一次性总耗时 P50/P95 为 ORT `1140.60/1839.85 ms`、OpenVINO `647.60/781.49 ms`。这是 one-warm-up/one-measured-iteration 的词框/文本行 smoke 证据，不是官方准确率或正式 5/50 性能结果；早期三后端记录的 OpenCV 边界保持独立。七个核心模型的统一索引见[十页汇总](../../eng/models/paddle-ocr/verification/sroie-core-seven-models-10page-quality-summary-20261010.md)。
-
-### 2026-09-29 受控与真实关联边界补充
-
-- **滑窗接缝**：PP-OCRv6 Small 的两组受控 3,600 字符样本在 ORT/OpenVINO CPU 上分别使用 18/16 个窗口；等长、位置对齐的 token 替换回退后，CER/WER 为 `0.0556%/0.4556%` 与 `0.0833%/0.7194%`。这仍不是自然长文本准确率。
-- **可归因长文本**：从 18 个 HierText 父图选取 102 个真实 text-line crop 拼接成 3,603 字符，ORT/OpenVINO 均使用 32 个窗口并保留每窗口来源 crop/字符区间映射；两后端文本 SHA 一致，CER/WER `19.789%/50.72%`。这是来源可追溯 composition，用于验证真实字形和映射，不是自然连续行准确率。详见 [HierText 长文本记录](../../eng/models/paddle-ocr/verification/hiertext-composed-long-a2-20260929.md)。
-- **文本长度覆盖审计**：HierText `sample-002`/`sample-003` 两份 manifest 共 34 页、1,557 条有效行，最长行 132 字符；完整 validation 标注共 1,724 图、104,139 行，最长行 182 字符。详见[选集盘点](../../eng/models/paddle-document/verification/hiertext-longtext-coverage-a2-20261012.md)与[完整标注盘点](../../eng/models/paddle-document/verification/hiertext-full-annotation-longtext-a2-20261012.md)。这些历史字符统计不能充当 A2 像素宽度门禁；自然宽行应按 `DescribeWidth(...).NaturalWidth > 3200` 选取，拼接样本只用于受控测试。
-- **自然宽行对照**：[Small/Medium 真值四边形记录](../../eng/models/paddle-ocr/verification/paddleocr-hiertext-natural-wide-gt-20261023.md)覆盖 13 条自然宽行、两种宽度策略及 ORT/OpenVINO CPU，实际 104 次调用、52 个跨后端对均完成。11 条主质量行上的滑窗 CER 比压缩更高，未匹配接缝仍需改进；其余 2 条诊断行没有混入主质量指标。[旧 DET 关联记录](../../eng/models/paddle-ocr/verification/hiertext-natural-wide-a2-v6-small-20261017.md)另外注明 320px 窗口、WER 重算及仅 8/8 有效文本对；旧 one-shot 时延不是新 3,200px 协议的性能证据。自然数据已可用，A2 尚缺的是接缝质量与其余后端验收。
-- **独立 test-split 复核**：另从固定 HierText test 标注预选 17 条 `>3200px` 自然行/11 张图，12 条官方可读且框高至少 2px 的行单独计质。按相同 3,200px 上限与 20% 重叠，Small/Medium 的 Clamp→滑窗字符编辑分别为 `56→101/1945`、`45→134/1945`，词编辑为 `26→34/315`、`21→32/315`；ORT、OpenVINO、OpenCV DNN 三后端结果相同，ORT 对另两后端各 68/68 逐行文本、类别及接缝决策一致。参阅[ORT 质量记录](../../eng/models/paddle-ocr/verification/paddleocr-hiertext-test-natural-wide-a2-ort-20261026.md)和[OpenVINO/OpenCV 记录](../../eng/models/paddle-ocr/verification/paddleocr-hiertext-test-natural-wide-a2-ov-opencv-20261026.md)。独立样本反而更明显地支持继续保留 Clamp 默认；滑窗仅在应用自己的标注宽行验证后启用，不能凭 validation 修复集的改进自动启用。此项绕过 DET/CLS，不是整页精度或正式推理时间；后续 TensorRT 和接缝修复证据见下文。
-- **接缝后续修复**：合并器现可在有界编辑预算内保留不属于重叠的右侧尾部，并处理恰好落在几何边界外的同一首 token。相同独立 test 集中，Small/Medium 滑窗字符编辑从 `101→58/1945`、`134→91/1945`，词编辑从 `34→28/315`、`32→26/315`；24 个主质量模型行中 4 行改善、0 行变差，Clamp 与原窗口文本/类别均不变。修复后的 OpenVINO、OpenCV DNN 各与 ORT 在 68/68 逐行文本、类别、指标与接缝决策和 70/70 原窗口文本/类别上相符。参阅[修复对照](../../eng/models/paddle-ocr/verification/paddleocr-natural-wide-seam-candidate-20261027.md)。滑窗仍差于 Clamp，默认不变；这只关闭 Small/Medium 的精确三后端 CPU 组合，不代表整页精度或正式时延。
-- **TensorRT 独立 test 复核**：同一份 Visual 程序集及 Small/Medium 权重，以 SHA 锁定的 TensorRT 11 Engine 跑完 17 行 × 两模型 × 两模式，`68/68` 次调用完成。12 条可读主质量行对应 `48/48` 个模型/模式结果与 ORT 的文本、CTC 类别、CER/WER 和接缝决策一致；全部 68 行则为文本/类别 `64/68`、指标 `66/68`、接缝决策 `68/68`，原窗口文本/类别 `68/70`。四个文本差异都在官方不可读诊断行，不能宣称全量 parity。Engine 未重新检查构建 profile，DET/CLS、页面质量及正式时延未测；原始报告 SHA 和复现边界见[同一修复记录](../../eng/models/paddle-ocr/verification/paddleocr-natural-wide-seam-candidate-20261027.md)。
-- **预测盲选 train 宽行复核**：不看模型输出，从官方 HierText train 标注的 42 条合格自然宽行/26 张图中，按固定 SHA 排序选 12 张不同图片各一行；这批样本未参与前述接缝修复开发。ORT、OpenVINO、OpenCV DNN CPU 各完成 48 次 REC 调用，ORT 对另两个后端的逐行文本/类别/指标/接缝和原窗口各 `48/48` 一致。但 Small/Medium 的 Clamp→滑窗字符编辑分别由 `37→85/1642`、`27→83/1642`，词编辑由 `20→28/246`、`16→26/246`，仍应保持 Clamp 默认。详见[独立选样与质量记录](../../eng/models/paddle-ocr/verification/paddleocr-hiertext-train-natural-wide-holdout-20261027.md)。train 标注可能与原模型训练语料重叠，不能叫官方模型盲测精度；TensorRT、DET/CLS、页面效果及正式性能没有在该新样本上复测。
-- **已知角度**：4 个不同 SROIE receipt 页的真实标注 crop 旋转到 8 个已知角度；0° case-folded CER/WER `0%/0%`，±12° 明显退化，±90° 全空输出，180° 仍有误差。该结果用于验证方向校正边界，不代表自然旋转分布成绩。详见 [SROIE 已知角度记录](../../eng/models/paddle-ocr/verification/sroie-known-angle-a3-20260929.md)。
-- **正确四边形校正**：同一批真实旋转 crop 在提供正确 source quadrilateral 后，Perspective/Affine 两种变换在 ORT/OpenVINO 各 32/32 条 case-folded CER `0%`，polygon round-trip 为 0；这证明几何校正路径，不证明自动角度分类或自然旋转分布。详见 [A3 四边形校正记录](../../eng/models/paddle-ocr/verification/sroie-angle-rectification-a3-20260929.md)。
-- **退化 smoke**：2026-09-29 的 4 页样本各生成 6 种退化，ORT/OpenVINO 各 24/24 通过；case-folded CER/WER 均为 `0%/0%`，说明退化强度不足以评估增强收益。2026-10-02 又扩展到 10 个父页、60 条 severe word-crop 记录：两后端识别文本 60/60 一致，blur 平均 case-folded CER/WER 为 `8%/10%`，增强候选 22 条选中但选中行仍为 `0% -> 0%`，默认增强继续关闭。两组都属于可追溯 word-crop smoke，不能替代行/页级准确率。详见 [B1b 扩展记录](../../eng/models/paddle-ocr/verification/synthetic-degraded-b1b-20261002.md) 和 [B1b 原始汇总](../../eng/models/paddle-ocr/verification/synthetic-degraded-b1b-20261002-summary.json)。
-- **FUNSD 退化扩展**：在历史 32 个父页/192 条记录之外，又用 FUNSD `test/full-001` 的全部 40 个父页词 crop 生成 240 条 severe 记录；ORT/OpenVINO 文本 `240/240` 一致，blur 平均 case-folded CER/WER `92.61%/96.67%`、空输出 `19/40`。增强候选共选中 16 条，置信度选中行 `5/16` 的 CER 变差（`31.25%`），所以默认增强继续关闭。该结果仍是 word-crop smoke，不能当作 FUNSD 行/页准确率。详见 [FUNSD 40-crop B1b 记录](../../eng/models/paddle-ocr/verification/synthetic-degraded-funsd-b1b-20261012.md)、[汇总 JSON](../../eng/models/paddle-ocr/verification/synthetic-degraded-funsd-b1b-20261012-summary.json) 和 [增强安全/成本 JSON](../../eng/models/paddle-ocr/verification/ocr-enhancement-safety-cost-funsd40-20261012.json)。
-- **识别-only 共识增强扩展**：同一 40 个 FUNSD 父 crop/六种条件改由真值完整区域进入 `RecognizeOnlyAsync`，修复后方向/宽度/增强重试均按 Profile 执行且不调用 DET。ORT/OpenVINO 的 240 条决策和最终文本完全一致；三配方共识在零增益门限选择 115 条，但 CER 改善/恶化仅为 `2/4`。全量阈值扫描没有找到零恶化且有改善的档位；按父 crop 隔离的 5 折检查中，五个校准折也全部弃权。详见[共识安全/成本报告](../../eng/models/paddle-ocr/verification/paddleocr-funsd40-consensus-safety-cost-20261013.md)。因此默认增强继续关闭，B2/B3 仍需自然低质量独立数据集、业务误纠门和正式成本协议。
-- **整页退化扩展**：基于 10 张带 SROIE 多边形真值的页面生成 normal、low-contrast、blur、noise、shadow 和 JPEG 六种 severe 条件，共 60 条完整 `det → rec` 流程。ORT/OpenVINO 均 `60/60` 无失败或空输出，IoU0.5 检测 F1 和匹配 CER 分别随条件记录；两后端逐页区域数和文本 `60/60` 一致，3169 个对应区域文本无差异，多边形最大差 `0`、置信度最大差 `4.83e-5`。其中 blur 的检测 F1 为 `79.42%`、匹配 CER `58.94%`，normal 基线为 `90.49%`、`32.04%`；该结果明确了整页模糊退化的真实边界，但仍是受控生成 smoke，不是自然低质量分布或默认增强收益证明。详见 [ORT 整页报告](../../eng/models/paddle-ocr/verification/sroie-page-degraded-b1b-20261004-ort.md)、[OpenVINO 整页报告](../../eng/models/paddle-ocr/verification/sroie-page-degraded-b1b-20261004-openvino.md) 和 [跨后端 parity](../../eng/models/paddle-ocr/verification/sroie-page-degraded-b1b-20261004-ort-openvino-parity.md)。
-- **真实文档阅读顺序**：FUNSD 三页 smoke 的预测文本行与词级标注 aggregate reading-order pair accuracy `70.92%`，三页均非单调，不能把通用几何 OCR 排序当作多栏版面模型。详见 [FUNSD C3 三页边界](../../eng/models/paddle-ocr/verification/funsd-reading-order-c3-3pages-20260929.md)。
-- **自然角度数据边界**：HierText 缓存的旋转元数据有 476 个非零角度条目，但与 1,724 个官方标注图像 ID 的交集为 0；因此不能把无真值的 Open Images 图片当成自然角度 OCR 评测。详见 [HierText 旋转覆盖审计](../../eng/models/paddle-ocr/verification/hiertext-rotation-coverage-a3-20261002.md)，A3 仍需要合法可归因的自然或明确标注角度数据。
-- **方向字段全量审计**：进一步扫描 `F:\OCRBenchmarkTesting` 当前全部 8 个 JSONL manifest（243 页、33,425 个实例）后，显式自然方向标签仍为 `0`；209 张图的方向为 unknown，23 个实例仅标记为 vertical，非零角度字段为 `0`。这只是数据覆盖审计，不能把竖排或几何推断当作 upright/inverted 真值。详见 [A3 方向字段全量审计](../../eng/models/paddle-ocr/verification/paddleocr-orientation-coverage-a3-20261014.md) 和 [机器 JSON](../../eng/models/paddle-ocr/verification/paddleocr-orientation-coverage-a3-20261014.json)。
-- **自然竖排切片**：18 条官方 `vertical=true` 且有文本的 HierText 行在 ORT/OpenVINO 上分别执行 0°、顺时针 90°、逆时针 90° 候选；两后端 18/18 候选文本一致，按真值选择的 oracle 只有 6/18 exact、平均 CER `46.3356%`。这是自然竖排输入和方向候选合同证据，不是自动方向分类准确率。详见 [HierText 竖排 A3 记录](../../eng/models/paddle-ocr/verification/hiertext-vertical-a3-20261002.md)。
-- **PP-LCNet 二分类方向合同**：使用 128 条可追溯水平 crop 构造 256 个已知变换行（原图 0°、OpenCV 旋转 180°），在 ORT/OpenVINO CPU 上以 `[2,3,80,160] → [2,2]` 动态 Batch 执行；两后端预测、类别和输入 digest `0` 差异。构造标签诊断为 `134/256`（`52.34%`），不是自然方向准确率，因为 HierText 没有 upright/inverted 真值且选集含极小 crop。该证据只关闭 PP-LCNet 的预处理、动态 Batch 和 CPU parity 合同；模型只有 0°/180° 两类，90°/270° 与 A3 自动方向质量门仍开放。详见 [动态 Batch 方向合同](../../eng/models/paddle-ocr/verification/paddleocr-hiertext-orientation-classifier-dynamic-batch-20261014.md)。
-- **重试策略实测**：在 4 个真实 SROIE 页的 32 个已知角度 crop 上启用 `OcrOrientationRetryOptions`（置信度阈值 `1`、候选 `90°/180°/-90°`），ORT/OpenVINO 都执行 `32/32`，右角可比较行 `16/16` 选中预期方向，所有逐行文本和方向结果一致。该结果只证明候选规划、重试调度、选择元数据和跨后端合同，不是自然旋转准确率，也不批准该阈值为默认生产策略。详见 [A3 重试策略记录](../../eng/models/paddle-ocr/verification/sroie-angle-orientation-retry-a3-20261014.md) 和 [机器 JSON](../../eng/models/paddle-ocr/verification/sroie-angle-orientation-retry-a3-20261014.json)。
-
-- 检测、裁剪/warp、识别 batch 准备、后端推理、CTC 解码和合并应分别计时。
-- PP-OCRv5 Mobile 与 v6 Small 的真实 REC batch=4 ORT/OpenVINO parity 已在[动态 Batch 记录](../../eng/models/paddle-ocr/verification/paddleocr-recognition-dynamic-batch-ort-openvino-20261002.md)中覆盖；这仍是 crop/decoder 合同，不是页面级准确率或 GPU 性能结果。
-- 视频逐帧可使用 <code>VisualPipeline.RunPrefetchedAsync</code> 重叠下一帧准备与当前帧推理。
-- 多张独立图片可用 <code>RunManyAsync</code>；它是独立 Session 并发。只有在 Profile、导出图和后端都声明支持时，才会形成真正的 detector batch；否则应继续使用独立 Session/页面并发。
-- GPU 后端应尽量复用输入缓冲区和 CUDA stream；TensorRT OCR 的设备侧前后处理边界见[TensorRT CUDA OCR](tensorrt-cuda-ocr.md)。
-
-详细测速方法和批量调度方式见[推理性能测试](performance-benchmarking.md)，不同设备的实际结果见[设备性能实测](device-performance-benchmarks.md)。
-
-### PP-Structure 动态 Batch 当前证据（2026-10-14）
-
-按外部模型门控运行 `PaddleDocumentDynamicBatchIntegrationTests`，本机得到 **23/23 通过、0 失败、0 跳过**。测试覆盖 PP-LCNet 文档/表格分类、PP-DocLayout/PP-DocBlockLayout、RT-DETR 版面与表格单元格、PP-OCRv4 mobile/server 印章、FormulaNet/UniMERNet、SLANeXt wired/wireless 和 UVDoc。ORT CPU 与 OpenVINO CPU 的真实动态 Batch 绑定、辅助几何输入、解码行隔离和顺序合同均通过；SLANeXt 的 OpenVINO 行使用独立的 alpha-renamed 兼容图，不代表原始 Loop 图可直接导入。
-
-OpenCV DNN 只对两个分类图和两张印章图完成本轮动态 Batch 执行；版面、RT-DETR 单元格的精确组合在 `forward_many` 返回 `DS-OCV-8004`，六个公式图在 batch=2 以及随后 batch=1 探针中均在导入/输入专门化阶段返回 `DS-OCV-8002`。这些是当前适配器与 OpenCV 5.0.0 的精确阻断，不外推到所有 OpenCV 版本，也不继续追查第三方 importer。
-
-完整的模型/后端/边界表见[聚合 Markdown 报告](../../eng/models/paddle-document/verification/paddle-document-dynamic-batch-current-20261014.md)，原始 JSON 见 [`dynamic-batch-20261014/`](../../eng/models/paddle-document/verification/dynamic-batch-20261014/)。该轮只证明动态 Batch 执行和结果行隔离，不证明数据集准确率、CER/WER、正式 P50/P95、GPU 吞吐、TensorRT 覆盖或跨设备可移植性；公式渲染/数学语义质量门仍保持开放。
-
-## 常见问题
-
-### PaddleOCR-VL 是否已经可用于模型推理
-
-PaddleOCR-VL-1.6 已加入 `DeploySharp.Visual`，固定四图 Bundle 已在 Windows/Linux 的 ONNX Runtime CPU、Windows 的 ONNX Runtime CUDA 和 Windows/Linux 的 OpenVINO CPU 完成实验性六任务生成验证，并可接入现有区域和页面编排。当前提供 `PaddleOcrVlInputPlanning` 的任务 Prompt、动态尺寸/图像 Token 数量规划、`PaddleOcrVlTokenizer` 的精确分词和单图 Prompt 展开，以及 `PaddleOcrVlOnnxSession` 的四图动态 Bundle 生成。Tokenizer 在 `net8.0/net9.0/net10.0` 可用，加载时校验官方 `tokenizer.model`、`tokenizer.json`、`tokenizer_config.json` 和 `chat_template.jinja`，保留空格、数字、表格/定位结构标记与字节回退；其它目标框架调用该内置 Tokenizer 会返回明确的能力不可用错误。[Tokenizer 合同验证](../../eng/models/paddle-ocr/verification/paddleocr-vl-tokenizer-contract-20261023.md)覆盖六类任务、全部 1,041 个新增 Token、103,424 个词表槽位和并发请求。
-
-六任务固定图片的 Token 与官方一致，不代表真实页面识别准确。[两张预选 FUNSD Spotting 页面诊断](../../eng/models/paddle-ocr/verification/paddleocr-vl-funsd-spotting-two-page-20261026.md)分别有 45/63 和 73/75 个词中心被预测区域覆盖；协议总 CER/WER 分别为 `64.78%/74.60%` 和 `3.37%/16.00%`，包含漏覆盖和无真值预测造成的编辑，并非纯转写错误率。两页的输入 Patch、生成 Token 和文本均与固定官方原始权重一致，但词框对可能行级输出的关联分数不是官方 FUNSD 指标或可外推的模型精度；更大预声明样本、跨后端质量和资源边界仍开放。
-
-TensorRT 10.11 另有实验性五图路径：从固定 decoder 派生双输入 `prefill.onnx`，首步不传空 KV，后续沿用原 decoder。`PaddleOcrVlOnnxSession` 的五 Session 构造器接受单独的 prefill Session；`CreateWithPrefill` 可从调用方已核对的本地五图 ONNX 目录创建 Session。现在 `CreateVerified` 也能根据 manifest v1/v2 在创建后端 Session 前校验四图或五图 Bundle 的全部文件；五图打包及 SHA 见[完整性记录](../../eng/models/paddle-ocr/verification/paddleocr-vl-five-graph-bundle-20261026.md)，[Release 下载回读](../../eng/models/paddle-ocr/verification/paddleocr-vl-release-live-20261026.md)另行记录。ONNX Bundle 已在线提供，但不包含设备专用 TensorRT Engine。六任务的真实 TensorRT EOS/Token/文本对照、Engine profile、SHA 与复现步骤见[五图验证报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-tensorrt-five-graph-20261026.md)。
-
-`JYPPX.DeploySharp.Visual.TensorRT` 的 `PaddleOcrVlTensorRtDeviceSession` 可复用同五个 Engine Session：Vision 和首轮 Prefill 仍使用主机输出，后续 Decoder 的 36 路 KV 在两组 CUDA 缓冲区之间轮换，Decoder 的隐藏状态在同一 CUDA stream 上直接送入 Head，每步仅回读 logits 选 Token。它不改变 `PaddleOcrVlOnnxSession` 的 CPU/ORT/OpenVINO 路径，且只在 `net8.0` 的 TensorRT 包中提供。调用方需先按本机 GPU 和任务图像尺寸构建 Engine、校验图与 tokenizer 的同批身份，再创建独立的五个 Session；设备端对象不接管 Session 所有权：
+PaddleOCR-VL-1.6 是生成式四图/五图 Bundle，与普通 DET/CLS/CTC REC 流水线不同，不能互换权重或 decoder。它提供任务 Prompt、官方尺寸与图像 Token 规划、Tokenizer、图像 Processor、ONNX 生成 Session，以及表格、公式、图表、Spotting、印章和 OCR 任务解析。
 
 ```csharp
-using JYPPX.DeploySharp.Visual.TensorRT;
+var tokenizer = new PaddleOcrVlTokenizer(bundleDirectory);
+using PaddleOcrVlPreparedInput prepared =
+    new OpenCvPaddleOcrVlInputFactory().CreateFromFile(
+        imagePath, PaddleOcrVlTask.TableRecognition);
 
-// vision、embedding、decoder、head、prefill 为调用方持有的五个 TensorRT Session。
-using var deviceVl = new PaddleOcrVlTensorRtDeviceSession(
-    vision, embedding, decoder, head, prefill);
-PaddleOcrVlGenerationResult generated = deviceVl.Generate(
-    prepared, tokenizer, new PaddleOcrVlGenerationOptions(maximumNewTokens: 512));
-```
+using var session = PaddleOcrVlOnnxSession.CreateVerified(
+    registry, bundleDirectory, backendRequest);
 
-这条路径目前仍是固定 1.6 的实验能力；设备 KV 驻留不代表图像预处理、Prefill、Token Embedding、logits argmax 都在 GPU，也不保证任意 Engine profile、页面质量或其它显卡可用。完整调用入口与 Engine 身份见 `Invoke-PaddleOcrVlTensorRtGeneration.ps1` 的 `-DeviceKv` 选项；固定 Table 输入的原路径、设备端 KV 两组 5+50 和最终构建短复测见[验证报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-tensorrt-device-kv-20261026.md)，不能外推为全任务或跨设备加速比。
+PaddleOcrVlGenerationResult result = await session.GenerateAsync(
+    prepared,
+    tokenizer,
+    new PaddleOcrVlGenerationOptions(maximumNewTokens: 512),
+    cancellationToken);
 
-```csharp
-using JYPPX.DeploySharp.Visual;
-using JYPPX.DeploySharp.Visual.Models.PaddleOcr;
-using JYPPX.DeploySharp.Visual.OpenCV;
-
-var tokenizer = new PaddleOcrVlTokenizer(modelDirectory);
-var imagePlan = PaddleOcrVlInputPlanning.PlanOfficialV16(
-    new VisualSize(imageWidth, imageHeight), PaddleOcrVlTask.TableRecognition);
-PaddleOcrVlTokenSequence prompt = tokenizer.EncodePrompt(imagePlan,
-    maximumNewTokens: 512, maximumContextTokens: 8192);
-long[] inputIds = prompt.CopyTokenIds(); // 也可用于审查展开后的 Prompt。
-```
-
-生产 C# ORT 路径可以直接使用 `PaddleOcrVlImageProcessor` 准备紧密 RGB 字节；如果已经引用 `JYPPX.DeploySharp.Visual.OpenCV`，则 `OpenCvPaddleOcrVlInputFactory` 会单次解码 PNG/JPEG、保留编码源 SHA256，并调用同一官方 Processor 合同生成 `[grid_h, grid_w, 3, 14, 14]` Patch Tensor。随后绑定同一导出批次的 `vision.onnx`、`embedding.onnx`、`decoder.onnx` 和 `head.onnx`：
-
-```csharp
-PaddleOcrVlPreparedInput prepared = new OpenCvPaddleOcrVlInputFactory().CreateFromFile(
-    imagePath, PaddleOcrVlTask.TableRecognition);
-using var vl = PaddleOcrVlOnnxSession.Create(
-    registry, bundleDirectory, onnxCpuRequest);
-PaddleOcrVlGenerationResult result = await vl.GenerateAsync(
-    prepared, tokenizer,
-    new PaddleOcrVlGenerationOptions(maximumNewTokens: 512));
-Console.WriteLine($"{result.Task}: {result.TokenIds.Count} tokens, " +
-                  $"{result.FinishReason}, {result.Elapsed.TotalMilliseconds:F1} ms");
 Console.WriteLine(result.Text);
 ```
 
-默认的 OpenCV 图像入口会应用 JPEG EXIF 方向，使页面、检测框与区域裁剪处于同一正向坐标系。若需要**复现官方 Pillow 原始像素输入**（`Image.open(...).convert("RGB")` 不自动应用 EXIF 方向），对单张编码图显式使用 `new OpenCvPaddleOcrVlInputFactory(128 * 1024 * 1024, normalizeExifOrientation: false)`。这个选项不改变已经解码的页面；从默认正向页面取得的区域坐标不能直接用于未旋转原图。[六任务编码图逐值对照](../../eng/models/paddle-ocr/verification/paddleocr-vl-encoded-input-parity-20261026.md)覆盖五张 JPEG/PNG 源图，其中一张 JPEG 带 EXIF Orientation=3：原始模式的全部 `6,818,448` 个 Patch 值一致，默认模式在该图的 OCR/Spotting 输入上不同。这是预处理正确性，不是识别准确率或 OpenCV DNN 推理支持。
+来自 Release 或共享缓存的 Bundle 必须先校验 manifest 和所有模型/tokenizer 文件。TensorRT Engine 与 GPU、TensorRT 版本和 profile 绑定，需要在目标设备重新构建；ONNX Bundle 校验不能证明 Engine 可移植。完整的页面路由、区域裁剪、OTSL 表格、公式和多页编排见 [PaddleOCR / PP-Structure 教程](visual-paddle-structure.md)。
 
-公式任务另有[realFormula 121 张人工标注图像的实测](../../eng/models/paddle-ocr/verification/paddleocr-vl-realformula-ort-cuda-20261026.md)：Windows RTX 3060 上的 ORT CUDA 四图路径完成 121/121 次生成，全部 EOS、没有截断。严格去空白 LaTeX 文本匹配为 0/121，字符 CER 为 55.15%；不同但可能等价的 LaTeX 写法会被计为错误，因此这不是公式语义正确率。6 GB 显卡连续处理不同尺寸时，默认 CUDA arena 曾在第 10 张图发生内存申请失败；显式启用后端现有的逐次 arena 收缩配置后完成全量。该配置不保证任意大图的峰值显存，也不会自动改动普通推理默认值。
+## 常见问题
 
-[同构建 ORT CPU/CUDA 全 121 图对照](../../eng/models/paddle-ocr/verification/paddleocr-vl-realformula-ort-cpu-cuda-121-20261026.md)中，默认 CUDA 与 CPU 的生成文本在 120/121 图一致；开启显式 `use_tf32=0` 后，121/121 图的文本、生成 Token 数和结束状态一致。分叉图的单图 Token ID 诊断定位到第 15 个生成 Token；全量报告没有记录逐 Token ID，不能称为 121 图 Token ID 完全一致。此开关只在显式质量测试中设置，不会改变普通 CUDA 后端默认行为，也不证明公式语义准确率或正式性能。
+### 为什么 CPU 和 GPU 的文本一样，但结果哈希不同
 
-Linux 同构建的[真实标注图 OpenVINO 探针](../../eng/models/paddle-ocr/verification/paddleocr-vl-realformula-openvino-linux-probe-20261026.md)在 realFormula 前 5 张上与 ORT CPU 的文本、生成 Token ID 和 EOS 全部一致；另有最大尺寸 5 张的 OpenVINO CPU 生成与内存观察。它们仍是有界样本，不能当作 OpenVINO 全 121 图质量或跨后端速度结论。
+坐标、检测分数、字符置信度等浮点字段可能有细小差异。先分别比较区域数量、有序文本、token 决策、坐标误差和置信度误差；只有逐字段都满足合同，才能声明完整结果一致。
 
-后续按每进程最多五图的有界协议，完成[Linux 同构建 ORT CPU / OpenVINO CPU 的 121 图全量对照](../../eng/models/paddle-ocr/verification/paddleocr-vl-realformula-ort-openvino-linux-121-20261026.md)：两边均 121/121 EOS、0 截断；解码文本和逐 Token ID 均为 121/121 一致。两边严格去空白匹配均为 0/121，字符 CER 均约 55.17%。这是固定 1.6 四图、该标注集上的后端决策一致性，不是数学语义准确率或公式质量门通过；分片重启和无预热运行时间不能作为正式推理速度排名。
+### 什么时候使用 Clamp、Reject 或 SlidingWindow
 
-[后续公式结构诊断](../../eng/models/paddle-ocr/verification/paddleocr-vl-realformula-structure-20261026.md)中，121 个 VL 输出都可由固定 MathJax 渲染；在 118 个可比较的参考式中，23 个 MathML 结构完全相同。保守数值代入只能够判断 8 个，其中 7 个采样相符、1 个根号作用范围不同，余下 113 个不可判定。可渲染、结构相同或有限点代入一致都不等于全数据集数学正确率。
+- `Clamp` 适合默认兼容路径，但超宽行会被压缩；
+- `Reject` 适合必须暴露输入合同错误的场景；
+- `SlidingWindow` 适合自然超宽文本，必须设置窗口、重叠、接缝和总裁剪上限，并用真实长文本真值验证。
 
-如果使用 OpenVINO CPU，准备相同的四图和 tokenizer，在注册时选择对应后端即可；不要为四个阶段混入其它导出批次的模型：
+### Batch 和多个 Session 应如何选择
 
-```csharp
-using JYPPX.DeploySharp;
-using JYPPX.DeploySharp.Backends.OpenVINO;
-using JYPPX.DeploySharp.Registry;
+模型支持动态 batch 时，优先让同阶段的多区域组成真 Batch。固定 batch-one 图使用多个从头创建的独立 Session；不要让多个线程并发写入同一个有状态 Session。最佳组合由吞吐、P95、显存/内存和输入区域分布共同决定。
 
-using var openVinoRegistry = new BackendRegistry();
-openVinoRegistry.UseOpenVino(new OpenVinoOptions(
-    performanceHint: OpenVinoPerformanceHint.Latency,
-    streams: 1, inferenceThreads: 4, requestCount: 1));
-var openVinoCpu = new BackendRequest(BackendCapabilities.TensorInference,
-    OpenVinoBackendProvider.BackendId, "CPU");
-using var openVinoVl = PaddleOcrVlOnnxSession.Create(
-    openVinoRegistry, bundleDirectory, openVinoCpu);
-PaddleOcrVlGenerationResult openVinoResult = await openVinoVl.GenerateAsync(
-    prepared, tokenizer, new PaddleOcrVlGenerationOptions(maximumNewTokens: 512),
-    cancellationToken);
-```
+### OpenCV DNN 导入失败是否应继续修改 decoder
 
-该配置在 Ubuntu 22.04 x64 / OpenVINO 2026.3.1 上完成六任务真实生成，全部 `765` 个 Token/文本与官方和 ORT 参考一致；首次零长度 KV、随后逐 Token 增长及每图只运行一次视觉编码均有逐步记录。Windows 10.0.26200 / OpenVINO 2026.2.1 也完成同一组六任务，见 [Windows OpenVINO 六任务验证](../../eng/models/paddle-ocr/verification/paddleocr-vl-windows-openvino-20261025.md)。两次验证使用 native 默认计算精度，不把 Float32 端口等同于所有内部运算均为 FP32。依赖为现有 `JYPPX.DeploySharp.Backend.OpenVINO` 和匹配的 OpenVINO 2026.x native runtime，没有新增 VL 包。两份报告的耗时都是单次观察，不是正式性能；也不代表 OpenVINO 页面联合质量、标注准确率或长期内存稳定性。
+先确认错误发生在模型导入、输入绑定、forward 还是 decoder。Importer 不支持的动态 shape、辅助输入或 Transformer 算子应在矩阵中标记为不支持或改用其他后端，不能通过修改阈值掩盖。
 
-Windows 10.0.26200 上的 ONNX Runtime CPU 也完成了相同六任务的托管 RGB 生成，六项均 EOS，Token/Text `6/6` 与官方参考一致；见 [Windows ORT 证据](../../eng/models/paddle-ocr/verification/paddleocr-vl-windows-ort-20261025.md)。同一主机的 [ORT CUDA 证据](../../eng/models/paddle-ocr/verification/paddleocr-vl-cuda-20261025.md)也完成六项 EOS 与 Token/Text 精确对照，但 KV/logits 每步仍经过 CPU-owned 中间张量，且为未锁频单次观察；不能把它解释为全设备端 CUDA 流程或正式性能。每项只运行一次，耗时只是观察值，不是 P50/P95；这些生成报告从上游/Pillow 解码的 RGB fixture 开始，编码图解码的独立对照见上文。
+### 如何报告质量
 
-该 16 GB、无 Swap 的 Linux 主机，异步复测仅限制托管堆仍出现 OOM；最终通过的进程同时设置了 `MALLOC_ARENA_MAX=2` 和 `DOTNET_GCHeapHardLimit=0x40000000`，进程峰值 RSS 约 `12.05 GiB`。复现时在启动命令上设置，按自己的主机与负载调整；1 GiB 是托管堆预算，不包括模型和 OpenVINO 原生内存，也不是进程总内存上限：
-
-```bash
-MALLOC_ARENA_MAX=2 DOTNET_GCHeapHardLimit=0x40000000 dotnet YourApplication.dll
-```
-
-当前后端会在编译并复制元数据后释放原始模型图，Session 继续持有编译模型与推理资源。同配置的[六任务内存对照](../../eng/models/paddle-ocr/verification/paddleocr-vl-openvino-source-model-memory-20261024.md)中，四图加载后 RSS 为 `6.770 → 6.007 GiB`，进程峰值为 `11.861 → 11.616 GiB`，两次生成均与参考完全一致。这是各一次顺序运行的观察，不能当作最优内存上限或稳定性保证；上面的历史 OOM 和进程配置边界仍需考虑，不要直接扩大大模型 Session 数量。
-
-表格输出可以继续转换为逻辑单元格和 HTML：`PaddleOcrVlTableParser.Parse(result.Text, result.FinishReason)`。文档阶段返回的 `PaddleDocumentVisionLanguageResult.Table` 已自动执行同一默认严格解析。支持横向、纵向和矩形合并，保留原文/Token，生成未到 EOS、结构非法或超预算时明确失败；官方行宽修复需显式启用。使用方式、默认预算、修复影响及 JSON/Markdown 格式见[VL 表格解析](visual-paddle-structure.md#vl-表格otsl合并单元格与-html)。逻辑行列不是单元格像素框，转换成功也不等于文字或表格识别准确。
-
-如果 Bundle 来自 Release 或共享缓存，先调用 `PaddleOcrVlBundleManifest.LoadFromDirectory(bundleDirectory).VerifyFiles(bundleDirectory)`，或直接使用会先做同样校验的 `PaddleOcrVlOnnxSession.CreateVerified`。v1 校验四图和四个 tokenizer sidecar；v2 还校验独立 `prefill.onnx`，并创建第五个 Session。`PaddleOcrReleaseClient.GetBundleAsync("paddleocr-vl/1.6")` 当前可从 [`models-paddleocr`](https://github.com/guojin-yan/DeploySharp/releases/tag/models-paddleocr) 下载十资产 v2，逐文件校验并离线复用；[在线回读记录](../../eng/models/paddle-ocr/verification/paddleocr-vl-release-live-20261026.md)还对所得九个本地 manifest 文件执行了 Visual 层实文件校验。仓库内的 `Write-PaddleOcrVlBundleManifest.py` 增加 `--prefill-graph` 后会核对固定 Decoder/Prefill SHA 并生成本地 v2 Bundle；只给图和 tokenizer 目录时仍生成 v1。TensorRT 还需在目标设备构建适合输入尺寸的 Engine，不可把 ONNX manifest 校验视为 Engine 可移植性验证。
-
-[PaddleOCR-VL ONNX 示例](../../samples/02-visual/paddleocr-vl-onnx/README.md)提供 `--release <cache> <image> <task>` 的实际图片入口、离线缓存模式和不加载 Session 的 `--verify-only`。示例使用 ORT CPU；下载校验、固定任务生成证据和用户自己的图片结果应分别判断。
-
-Linux 上生产 C# ORT CPU 已对 OCR、Table、Formula、Chart、Spotting、Seal 六张真实图片完成生成：分别为 `162/71/80/137/286/29` Token，全部 EOS，Token 和文本与官方参考精确一致。Windows 10.0.26200 上使用同一四图 Bundle 和托管 RGB 处理再次完成六项，CPU 与 CUDA 结果均为 `6/6` 精确一致；见[Windows ORT 证据](../../eng/models/paddle-ocr/verification/paddleocr-vl-windows-ort-20261025.md)和 [Windows ORT CUDA 证据](../../eng/models/paddle-ocr/verification/paddleocr-vl-cuda-20261025.md)。Linux 对应证据见[托管 C# ORT 报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-managed-csharp-ort-linux-20261024.json)及[运行日志](../../eng/models/paddle-ocr/verification/paddleocr-vl-managed-csharp-ort-linux-20261024.log)。四图导出元数据和 SHA 见 [vision](../../eng/models/paddle-ocr/verification/paddleocr-vl-vision-export-20261023.json)、[embedding](../../eng/models/paddle-ocr/verification/paddleocr-vl-embedding-export-20261023.json)、[decoder](../../eng/models/paddle-ocr/verification/paddleocr-vl-decoder-export-20261023.json) 和 [head](../../eng/models/paddle-ocr/verification/paddleocr-vl-head-export-20261023.json)。
-
-图像准备也已补充真实对照：`PaddleOcrVlImageProcessor` 对同组六任务的 `6,818,448` 个 Patch 数值与固定官方 Processor 逐值一致，包含 Spotting 的 Lanczos → Bicubic 双重缩放。Linux C# ORT 随后从原始 RGB 运行该处理器，六任务的全部 `765` 个 Token 和文本仍与官方参考一致并正常 EOS；[详细结果与复现步骤](../../eng/models/paddle-ocr/verification/paddleocr-vl-managed-processor-parity-20261024.md)说明了图像 SHA、环境和测试入口。编码 JPEG/PNG 的生产 OpenCV 入口现有上述独立 Patch 对照；尚未把任意图像格式、EXIF/ICC 变体或编码图到最终生成的全流程逐项验收。
-
-普通 PP-OCR DET/REC/CLS 用法不变，不能用 CTC 识别器加载 VL 权重。当前已提供 `PaddleOcrVlDocumentStage` 的单图页面阶段、`PaddleOcrVlRegionStage` 的通用区域路由，以及 `OpenCvPaddleOcrVlRegionStage` 的实际页面裁剪适配器。OpenCV 阶段每页只解码一次，对多个区域复用底图，只复制各自的紧密 RGB，不重新编码 crop 或克隆整页。区域结果保留页码、区域索引、源坐标、输入 SHA、Token 和 EOS/截断状态，并可配置单区域失败隔离。[完整页面/多页示例](../../samples/02-visual/paddleocr-vl-document/README.md)提供图片与区域 manifest、取消、页面并发和 JSON/Markdown 导出；[PP-Structure 用法](visual-paddle-structure.md#paddleocr-vl-原始任务接入页面和多页编排)说明如何接在已有版面阶段之后。
-
-如果已经持有解码底图，也可直接准备多个区域：
-
-```csharp
-using var pageImage = new OpenCvVisualInputFactory().DecodeForRois(
-    OpenCvImageSource.FromFile(imagePath), cancellationToken);
-var vlInputs = new OpenCvPaddleOcrVlInputFactory();
-PaddleOcrVlPreparedInput firstRegion = vlInputs.CreateRegion(pageImage,
-    new JYPPX.DeploySharp.Geometry.RectangleF(80, 200, 840, 500),
-    PaddleOcrVlTask.TableRecognition, cancellationToken: cancellationToken);
-PaddleOcrVlGenerationResult firstResult = await vl.GenerateAsync(
-    firstRegion, tokenizer, cancellationToken: cancellationToken);
-```
-
-矩形先左上向下、右下向上取整，再裁至源图边界；不相交区域拒绝执行。`CreateFromPage` 可在不重复解码的情况下准备整页。页面 SHA 是原始编码文件 SHA；区域 `SourceSha256` 是 `SHA256(UTF8("deploysharp-paddleocr-vl-rgb8-v1\n<width>x<height>\n") + packedRGB)`，按尺寸和像素区分输入。同内容区域可共享该身份，位置仍由各自的 `SourceRegion` 保存。适配器持有底图直到准备结束，释放时等待正在进行的准备，不向调用方暴露悬空 Mat。
-
-[区域真实运行记录](../../eng/models/paddle-ocr/verification/paddleocr-vl-regional-pages-linux-20261024.md)使用同一官方表格 RGB 拼出两张 PNG 页面、三个手工区域，验证了 OpenCV 解码和非连续 crop 的 Patch 精确一致，以及全部 `213` Token/文本一致并 EOS。它检查页面/区域来源和顺序，不是独立多页质量集，也不包含真实版面检测模型。
-
-混合页面可使用 `PaddleOcrVlTaskRouter.CreatePpStructure()` 和 `OpenCvPaddleOcrVlLayoutStage`，根据已有版面类别分别执行文字、表格、公式、图表或印章任务，仍然每页解码一次。映射可覆盖，未知类别及图片类默认明确跳过；Spotting 由应用显式选择。`PaddleDocumentVisionLanguageRoutedPageResult` 保留所有原始索引、逐区域任务以及成功/失败/跳过状态，不必预先将页面分组。[混合页面用法](visual-paddle-structure.md#paddleocr-vl-原始任务接入页面和多页编排)与[示例 Auto 模式](../../samples/02-visual/paddleocr-vl-document/README.md#混合页面按类别选择任务)说明配置、原文导出及失败退出码。
-
-[混合页面实测](../../eng/models/paddle-ocr/verification/paddleocr-vl-mixed-pages-linux-20261024.md)将六任务的固定 RGB 拼成两张 PNG，使用手工区域类别；全部 `6,818,448` 个 Patch 数值和 `765` 个生成 Token/文本与官方参考精确一致、均 EOS，并保留两个跳过区域。该结果只验证混合路由、实际裁剪和生成一致性，不是自动版面检测或独立文档质量结论。
-
-需要自动检测区域时，`OpenCvPaddleOcrVlDocumentPipeline` 可以将真实布局 `VisualPipeline` 接到混合 VL，检测前处理和全部 crop 共用同一张解码底图。[PP-DocLayout-L 联合实测](../../eng/models/paddle-ocr/verification/paddleocr-vl-detected-pages-linux-20261024.md)使用两张独立 FUNSD 页面：8 个检测区域中 6 个生成、2 个图片区域跳过，全部 `3,960,768` 个 Patch 数值和 `653` 个 Token/文本匹配相同裁剪的官方参考且 EOS。它保留检测器顺序、页码和索引；现在还可通过 `readingOrderOptions` 生成独立的多栏几何阅读视图，使用方法见[多栏阅读顺序与稳定区域索引](visual-paddle-structure.md#多栏阅读顺序与稳定区域索引)。新增排序不改变历史模型运行证据，也不代表标注集阅读顺序质量已验收。默认跳过图片可能漏掉被检测器误分类的正文，重叠类别也可能重复解析。[自动版面示例](../../samples/02-visual/paddleocr-vl-document/README.md#自动检测版面再执行-vl)说明如何配置 `layoutDetector`、区域上限和类别覆盖。
-
-表格已有经验证的 OTSL 逻辑单元格/HTML；Spotting 也提供两种官方标记格式的严格解析。`PaddleDocumentVisionLanguageResult.Spotting` 保留文字、原始量化值及源图多边形，OpenCV 的精确整数 crop 映射另提供整页多边形。`CoordinatesAvailable` 表示该区域解析成功并有源像素坐标，`PageCoordinatesAvailable` 表示同时有页面映射；页面聚合标记只表示至少一个区域可用。源框仍来自调用方/版面模型，不被当作 VL 预测框。详见[Spotting 坐标教程](visual-paddle-structure.md#vl-spotting文字四边形与页面坐标)及[实际裁剪联测](../../eng/models/paddle-ocr/verification/paddleocr-vl-spotting-20261024.md)。
-
-标注集阅读顺序质量、真实版面模型与 VL 的联合质量、公式/图表等任务语义归一和独立标注质量尚未完成。RTX2060 6GB 的[早期 ORT CUDA 实验](../../eng/models/paddle-ocr/verification/paddleocr-vl-cuda-head-group-20261024.md)只完成部分任务；Windows RTX3060 的[ORT CUDA 六任务证据](../../eng/models/paddle-ocr/verification/paddleocr-vl-cuda-20261025.md)已通过生成一致性，仍有 CPU-owned KV/logits 回读。该主机的[TensorRT 五图六任务证据](../../eng/models/paddle-ocr/verification/paddleocr-vl-tensorrt-five-graph-20261026.md)也达到 EOS、Token/文本一致，但使用按任务构建的本机 Engine，Spotting 需要固定 `72×72` FP16 vision 和长序列 prefill；这些单次耗时不能与[重复延迟实测](device-performance-benchmarks.md)混为正式 P50/P95。OpenCV DNN 5.0 仍无法导入原始 vision/decoder 动态图。CPU/ORT CUDA 的 Table、OCR、Formula、Chart 和 Seal 有独立 `5+50` 记录，Spotting 使用 `1+5` 有界协议；它们不代表页面级性能或质量。固定五图 1.6 Bundle 已作为十个独立 Release 资产上线并完成下载校验，派生 prefill 包含其中，设备专用 TensorRT Engine 不包含在内。核心 Visual 包接收已解码 RGB，OpenCV 适配器负责编码图像解码；官方资产身份见[来源核对](../../eng/models/paddle-ocr/verification/paddleocr-vl-official-assets-20261023.md)，详细开发状态维护在仓库外的 `plan/paddleocr` 目录。
-
-2026-10-25 的[原图导入与组件推理报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-backend-boundary-20261025.md)记录的是五图 Prefill 方案落地前的历史边界：当时 TensorRT 只有四图组件对照，零长度 KV 首步阻断完整生成。当前固定六任务五图 TensorRT 已通过，以上方[五图验证报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-tensorrt-five-graph-20261026.md)和[后端矩阵](../model-backend-verification-matrix.md)为准；OpenCV DNN 原始动态图 importer `✗` 未改变。[五图 Bundle](../../eng/models/paddle-ocr/verification/paddleocr-vl-five-graph-bundle-20261026.md)已有[远端下载校验](../../eng/models/paddle-ocr/verification/paddleocr-vl-release-live-20261026.md)，但这不改变 OpenCV DNN 的运行结论。
-
-### 自然宽行有哪些真实后端证据
-
-自然宽行的后端结果可查阅 [OpenCV DNN 真实记录](../../eng/models/paddle-ocr/verification/paddleocr-hiertext-natural-wide-opencv-20261023.md)与 [ORT/OpenVINO 同 DLL 参考](../../eng/models/paddle-ocr/verification/paddleocr-hiertext-natural-wide-cpu-reference-20261023.md)：Small/Medium × Clamp/SlidingWindow × 13 个真值四边形，OpenCV/ORT 的 52 对文本、CTC 发射类别、CER/WER 与接缝决策全部一致，52 个原始窗口文字/类别摘要也一致，详见[跨报告比较](../../eng/models/paddle-ocr/verification/paddleocr-hiertext-natural-wide-opencv-parity-20261023.md)。这是绕过 DET/CLS 的识别质量诊断，仍不代表独立准确率或速度排名。[2026-10-23 TensorRT 11 尝试](../../eng/models/paddle-ocr/verification/paddleocr-hiertext-natural-wide-tensorrt-interrupted-20261023.md)在当时的 13 行组合中止于原生 enqueue，没有结果报告；之后的独立 17 行 test-split TensorRT 复核已完成，结论见上文及[修复记录](../../eng/models/paddle-ocr/verification/paddleocr-natural-wide-seam-candidate-20261027.md)。两次数据集和程序状态不同，不能把新结果回填为旧尝试的通过记录。
-
-### 部署中的常见现象
-
-| 现象 | 处理 |
-| --- | --- |
-| 找不到输入或输出 | 用 Netron 检查名称、布局、dtype 和动态维度，并同步修改 Profile |
-| 检测框位置偏移 | 检查 resize、letterbox、padding 和坐标空间是否与导出脚本一致 |
-| 识别乱码 | 检查字符表版本、blank index、logits layout 和归一化参数 |
-| batch 运行失败 | 确认识别输入声明动态 batch；静态 batch 模型应降低 batch 或创建多个 Session |
-| 内存持续增长 | 复用 Pipeline，及时释放输入和结果；降低最大区域数、batch 数或并发通道 |
-
-模型是否已经在某个后端完成真实验证，以[模型支持状态](model-support.md)和[模型与后端验证矩阵](../model-backend-verification-matrix.md)为准。
+有人工真值时报告检测 IoU/召回率和识别 CER/WER，并说明标注粒度。只有演示图或跨后端一致性时，应明确写为 smoke/parity，不能称为准确率。

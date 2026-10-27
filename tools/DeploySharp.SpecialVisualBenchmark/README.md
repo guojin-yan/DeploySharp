@@ -14,10 +14,10 @@ The CSV includes `total_ms`, `total_p50_ms`, and `total_p95_ms` for each passing
 dotnet run --project tools/DeploySharp.SpecialVisualBenchmark/DeploySharp.SpecialVisualBenchmark.csproj -c Release -- `
   --kind all `
   --backend all `
-  --model-root E:\DeploySharp-Models `
-  --image E:\Data\image\bus.jpg `
-  --warmup 3 `
-  --iterations 10
+  --model-root .\models `
+  --image .\images\bus.jpg `
+  --warmup 5 `
+  --iterations 50
 ~~~
 
 `--image` is optional. When omitted, the runner downloads and SHA-256 verifies `bus.jpg` from the dedicated `test-assets.1` Release, caching it under `%LOCALAPPDATA%\DeploySharp\TestImages`. `--sam-image` defaults to the same verified image and can be overridden independently.

@@ -64,9 +64,9 @@ source-mask download, PNG output and JSON export are separately timed.
 
 [中文说明](README_cn.md) · [ROI guide](../../../docs/articles/visual-roi-configuration.md)
 
-## Verified scope (2026-09-16)
+## Current verification scope
 
-SAM2 tiny passed a six-frame official `bedroom.mp4` test on Ubuntu 22.04 / i7-1165G7 with Python 3.12.14 and PyTorch 2.10.0+cpu: initialization, propagation, correction, source masks and identical first-frame mask hashes after reset. See the [device evidence](../../../docs/articles/roi-backend-performance-matrix.md). This is not a GPU throughput or native SAM Bundle claim.
+SAM2 tiny passed a six-frame official `bedroom.mp4` test on Ubuntu 22.04 / i7-1165G7 with Python 3.12.14 and PyTorch 2.10.0+cpu: initialization, propagation, correction, source masks and identical first-frame mask hashes after reset. See the [device benchmarks](../../../docs/articles/device-performance-benchmarks.md#roi-与滑动窗口). This is not a GPU throughput or native SAM Bundle claim.
 
 The pinned SAM3 version fails CPU construction because its position-encoding cache explicitly allocates CUDA tensors. Use matching CUDA PyTorch and adequate VRAM; this adapter's SAM3 path is not yet verified end to end. CPU wheel availability must not be interpreted as upstream SAM3 CPU support.
 

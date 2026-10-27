@@ -24,7 +24,7 @@ The model-by-backend execution results are consolidated in the [model/backend ve
 Run the full 42-model audit from the repository root:
 
 ~~~powershell
-pwsh -NoProfile -File eng/model-catalog/Test-PublishedModelCases.ps1 -UpdateReadmes -CachePath E:/DeploySharpModelAudit/metadata
+pwsh -NoProfile -File eng/model-catalog/Test-PublishedModelCases.ps1 -UpdateReadmes -CachePath "$env:TEMP\DeploySharpModelAudit\metadata"
 ~~~
 
 Add -ModelId <id> to reproduce one case. Add -DownloadAssets to download every declared asset for that case and verify every local file size/SHA256. The current catalog contains 42 models and 43 artifact variants; the metadata/ModelPack audit is required for all cases, while full payload download is an explicit opt-in because the complete release payload is approximately 6.2 GB.

@@ -62,7 +62,7 @@ OcrResult result = pipeline.Run(input);
 
 运行时下载使用 `JYPPX.DeploySharp.ModelFactory.PaddleOcrReleaseClient`。它读取 Release 目录后只下载所选模型和必需字典，按目录中的大小与 SHA-256 校验并缓存；核心 OCR 可使用 `paddleocr/ppocrv5/mobile-rec` 等代码 ID，PP-Structure 可使用 `paddle-doc/pp-doclayout-s`、`paddle-table/slanext-wired`、`paddle-formula/unimernet` 等代码 ID。下载后将 `ModelPath` 传给对应的 `PaddleOcrModelCatalog` 或 `PaddleDocumentProfiles` Profile；模型下载、Profile 构造和后端 Session 创建仍是三个明确步骤。
 
-如果希望直接运行完整三模型流水线，可使用 `demos/paddleocr` 的 `--release` 模式；它会根据 `--version`/`--variant` 下载 DET、CLS、REC 和字典，绑定准确的 opset、张量输出名与 SHA-256，再执行现有 `OcrPipeline`。`--offline` 可强制只使用已经校验的缓存。TensorRT 仍需额外准备与当前设备匹配的 engine，Release 中的 ONNX 不会自动冒充 engine。
+需要从 Release 获取模型时，使用 `PaddleOcrReleaseClient` 按模型 ID 下载 DET、CLS、REC 和字典，再将校验后的 `ModelPath` 交给对应 Profile。离线模式只读取已经完整校验的缓存。完整流水线的命令行复现与性能采集见 [PaddleOCR Benchmark](https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/tools/DeploySharp.PaddleOcrBenchmark/README.md)。TensorRT 仍需在目标设备为所选 ONNX 和 shape profile 构建 Engine，Release 中的 ONNX 不会被当作可移植 Engine。
 
 | 合同 | 输入 | 输出 | 语义 |
 | --- | --- | --- | --- |
@@ -78,7 +78,7 @@ OcrResult result = pipeline.Run(input);
 
 检测通常使用一个 Session；方向分类和识别可以分别配置独立 Session 池，并使用动态 batch 一次处理多条文本行。`maximumRecognitionBatch` 控制单批行数，Session 池大小控制并发通道数；剩余批次等待空闲通道，不共享 native predictor 或 TensorRT execution context。每个阶段使用固定数量 worker 调度批次，不会为一页中的全部识别批次预先创建 Task；准备、后端或解码失败/取消后会停止分配尚未开始的批次，并等待已进入后端的 batch 安全退出。
 
-已有调用方提供的文本框时，可用 `OcrPipeline.CreateRecognitionOnly(registry, recognitionSelection, recognitionRequest, cropProfile)` 创建仅含 REC Session 的管线，再调用 `RecognizeOnlyAsync(input, regions)`；`Run/RunAsync` 仅适用于含 DET 的完整管线。多模块共用一张图片时，`OpenCvDecodedRoiImage.CreateRecognitionInput()` 会生成共享原生像素的识别视图，调用方分别释放视图和页面持有者；此路径不重新解码，也不准备无用的检测张量。[表格案例](../../samples/02-visual/paddle-structure-table/README.md)展示了结构/检测框对齐后的批量识别和安全 HTML 填字。
+已有调用方提供的文本框时，可用 `OcrPipeline.CreateRecognitionOnly(registry, recognitionSelection, recognitionRequest, cropProfile)` 创建仅含 REC Session 的管线，再调用 `RecognizeOnlyAsync(input, regions)`；`Run/RunAsync` 仅适用于含 DET 的完整管线。多模块共用一张图片时，`OpenCvDecodedRoiImage.CreateRecognitionInput()` 会生成共享原生像素的识别视图，调用方分别释放视图和页面持有者；此路径不重新解码，也不准备无用的检测张量。[表格案例](https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/samples/02-visual/paddle-structure-table/README.md)展示了结构/检测框对齐后的批量识别和安全 HTML 填字。
 
 推荐的调度顺序是：检测完成后立即把 crop 描述排入有界队列；方向分类和识别各自从队列取满一个 batch；一个阶段的 Session 忙碌时让其他独立 Session 接管，不增加无限线程。设备显存不足时优先降低 Session 数，再降低 batch；batch 太小会增加提交开销，batch 太大则会增加 padding 和尾批等待。
 
@@ -88,21 +88,11 @@ OcrResult result = pipeline.Run(input);
 
 完整流水线的最佳 batch/通道组合和具名设备耗时见[设备性能实测](device-performance-benchmarks.md)。不同后端的推理时间不能互相替代，部署时应在目标设备上重新测量。
 
-## 核心模型完整流水线实测
+## 核心组合验证
 
-`PaddleOcrAllCorePipelineOrtIntegrationTests` 已覆盖当前本机全部核心 DET/REC 工件，并把可用 CLS 组合接入同一条真实流水线：v4 mobile、v4 server、v5 mobile、v5 server、v6 tiny、v6 small、v6 medium，共 7 组。v6 官方没有独立版本化 CLS，因此测试明确使用 PP-OCRv5 mobile text-line CLS；这不是把 v6 模型伪装成 v5，而是目录中记录的官方复用策略。每组都使用 `E:\Data\ocr\demo_1.jpg`，真实执行检测、透视裁剪、方向分类、CTC 识别和坐标合并；每组返回 16 个检测区域且 16 个区域均有识别文本。
+真实完整流水线覆盖以下七组组合：PP-OCRv4 Mobile/Server、PP-OCRv5 Mobile/Server，以及 PP-OCRv6 Tiny/Small/Medium。每组都会执行检测、透视裁剪、方向分类、CTC 识别和坐标合并。v6 官方没有独立的版本化 CLS，因此按目录合同复用 PP-OCRv5 Mobile 文本行方向模型。
 
-| 组合 | ORT CPU 单次端到端耗时 | 区域/识别数 | 结果 SHA-256 |
-| --- | ---: | ---: | --- |
-| PP-OCRv4 mobile | 676.431 ms | 16 / 16 | `049eb7563013bf5d7b4938c28112bfd4aa74081cfeffe7c8cb2a435b0e170c15` |
-| PP-OCRv4 server | 2840.955 ms | 16 / 16 | `981cb5a5007c41be6171c9a01586284aee371adb1ebb7ae6e18c49e32eaefc82` |
-| PP-OCRv5 mobile | 911.419 ms | 16 / 16 | `978d82249162cef011a99e31bfec0f3e17eed986b9746b678272a015d0278212` |
-| PP-OCRv5 server | 1890.864 ms | 16 / 16 | `45921c49f5f006705eab60cf0675d02b5de11a4b0625d95005d3811768a8335a` |
-| PP-OCRv6 tiny | 356.106 ms | 16 / 16 | `85f00c5ad8ee587bf316fc1966e01430bffaf0c38bd2dc280c539fc5aeb1856e` |
-| PP-OCRv6 small | 1044.636 ms | 16 / 16 | `2fdf5b2687d02b06704aa2bd6c39652aa85647174e2e4017a98c356ebbe4313f` |
-| PP-OCRv6 medium | 2286.589 ms | 16 / 16 | `fbac8dcb3469d95702f3fec67188a71b1424eee8a15ae7d631d9395f38cf3b47` |
-
-这些是单次冷启动结果，包含模型 Session 创建、第一次图执行和 OCR 后处理，不应与已预热的 P50/P95 混用。复现实验需要显式授权本机外部模型：
+ONNX Runtime CPU 测试需要先准备模型根目录和测试图片，再显式开启外部模型门：
 
 ```powershell
 $env:DEPLOYSHARP_PADDLEOCR_ORT_RUN_EXTERNAL = '1'
@@ -115,9 +105,7 @@ dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Test
 
 模型文件、字典和原生 runtime 由应用提供；仓库不把它们嵌入 Visual 包。模型/后端逐项状态见[模型支持指南](model-support.md)和[验证矩阵](../model-backend-verification-matrix.md)。如果输入输出名称、字典或方向类别不匹配，Pipeline 会在执行前返回带稳定错误码的诊断。
 
-OpenVINO CPU 的完整流水线也已完成独立验证：`PaddleOcrAllCorePipelineOpenVinoIntegrationTests` 在 Windows x64、`E:\Data\ocr\demo_1.jpg` 和本机 `E:\Model\paddleocr` 模型上，逐组执行 PP-OCRv4 mobile/server、PP-OCRv5 mobile/server、PP-OCRv6 tiny/small/medium，共 7 组，测试 1/1 通过（测试内部每组都要求检测区域和识别文本非空）。该证据只说明当前 OpenVINO CPU runtime 能完成这些已登记工件的流水线编排，不代表其它版本、设备或 TensorRT/OpenCV DNN 自动兼容。
-
-复现 OpenVINO 全流水线：
+OpenVINO CPU 使用同一组模型组合和结果非空合同，但仍需独立启用其外部模型测试：
 
 ```powershell
 $env:DEPLOYSHARP_PADDLEOCR_OPENVINO_RUN_EXTERNAL = '1'
@@ -126,4 +114,6 @@ dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Test
   --filter FullyQualifiedName~PaddleOcrAllCorePipelineOpenVinoIntegrationTests
 ```
 
-此前同一图片上 OpenCV DNN 显示 8 区域、ORT 显示 16 区域。复核发现不是 OpenCV DNN importer 或 DB 后处理失败，而是外部测试的输出合同把概率图高度错误地固定为 `128`；实际准备张量为 `[1,3,512,512]`，PP-OCRv5 mobile 的概率图为 `[1,1,512,512]`。OpenCV Session 按合同把同样数量的输出值解释成 `[1,1,128,2048]`，改变了解码几何。测试现改为从准备输入绑定输出高度，并增加 OpenCV/ORT 的同张量原始输出和检测框对照。当前 v5 mobile 全流程两边均返回 16 区域、逐区域识别文本一致；坐标容差 0.5 px、分数容差 0.001，原始概率输出 max/mean 绝对差 `4.2915344e-5` / `8.6187186e-8`。最新一次 OpenCV `pipeline.Run` 观察为 `4117.808 ms`，前一次为 `5655.803 ms`；均为单次诊断观察，不是稳定性能基准，也不含模型和图像输入初始化。独立 benchmark 已将 v4 mobile/server、v5 mobile/server、v6 tiny/small/medium 七组写入 [`paddleocr-core-opencv-20260924.json`](../../eng/models/paddle-ocr/verification/paddleocr-core-opencv-20260924.json)。新增三图一致性测试在 `demo_1.jpg`、`demo_2.jpg`、`demo_3.jpg` 上逐图通过区域数、文本、分数和坐标断言；没有人工标注，不能计算 CER/WER。TensorRT CUDA 的设备侧 crop/CTC 优化是可选路径，ORT、OpenVINO 和 OpenCV DNN 仍各走各自后端流程。
+OpenCV DNN 的 DB 输出尺寸必须从实际准备输入绑定，不能把概率图高度写死；否则同一输出缓冲会被错误解释并改变检测几何。当前合同测试会比较原始概率图、区域数量、文本、分数和坐标。OpenCV 图通常固定为 Batch=1，需要用独立 Session 池调度文本行；动态宽度可能触发重复专门化，固定宽度或宽度分桶必须在目标数据上同时评估延迟和 CER/WER。
+
+各后端的最新精确状态见[验证矩阵](../model-backend-verification-matrix.md)，正式 P50/P95 和最佳 Batch/Session 组合只在[设备性能实测](device-performance-benchmarks.md)维护。单次冷启动、演示图片一致或某个阶段通过都不能替代完整质量与性能验证。

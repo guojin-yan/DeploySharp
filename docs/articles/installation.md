@@ -36,3 +36,39 @@ dotnet add package Microsoft.ML.OnnxRuntime --version 1.28.0
 模型文件、字典、Tokenizer、OpenVINO XML/BIN、TensorRT Engine 和原生 DLL 均由应用负责部署。请勿仅根据包能够还原来推断目标设备已经具备可运行的原生环境。
 
 目标框架兼容性和已验证设备见[平台与后端支持](platform-support.md)；运行真实模型前请查阅[模型 × 后端验证矩阵](../model-backend-verification-matrix.md)。
+
+## 目标框架、RID 与位数
+
+应用目标框架决定托管 API 是否可引用，RID 和进程位数决定 native runtime 是否能加载。建议视觉 Windows 应用显式声明 `win-x64`，并在发布时使用与模型后端一致的 RID：
+
+```xml
+<PropertyGroup>
+  <TargetFramework>net8.0</TargetFramework>
+  <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+  <PlatformTarget>x64</PlatformTarget>
+  <InvariantGlobalization>false</InvariantGlobalization>
+</PropertyGroup>
+```
+
+不要将 x64 OpenCV、CUDA 或 TensorRT DLL 放进 x86 进程，也不要把不同版本的同名 DLL 混在应用目录和系统 PATH 中。发布目录中应能够从应用启动位置找到所有依赖；生产环境不要依赖开发机的全局 PATH。
+
+## 后端安装检查表
+
+| 检查项 | 通过标准 | 失败时的表现 |
+| --- | --- | --- |
+| 托管包版本 | DeploySharp 适配器与底层运行时来自声明的兼容组合 | 类型能编译但 Session 创建失败 |
+| native 架构 | 所有 DLL 与进程均为 x64 或均为 x86 | `BadImageFormatException`/入口点错误 |
+| 模型资产 | 主模型、external data、字典和 tokenizer 都存在且哈希一致 | 模型加载或生成阶段失败 |
+| 设备驱动 | `nvidia-smi`/OpenVINO 设备查询与目标后端一致 | Provider/设备不可用 |
+| 搜索路径 | 发布目录或显式加载目录包含依赖 | `DS-NATIVE-6001` |
+
+## 发布前自检
+
+```powershell
+dotnet restore
+dotnet build -c Release --no-restore
+dotnet publish -c Release -r win-x64 --self-contained false
+dotnet --info
+```
+
+在干净机器上运行发布目录中的自检程序，再运行一张默认测试图片。不要只在包含 Visual Studio、CUDA Toolkit 或 Python 环境的开发机上验证；那些全局依赖可能掩盖部署目录缺失。

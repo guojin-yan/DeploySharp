@@ -23,3 +23,28 @@ ModelSelection selection = ModelCatalogQuery.Select(
 ~~~
 
 这些条目属于 Alpha Preview。具体下载地址、版本和当前后端状态以[官方模型目录](model-catalog.md)和[模型支持指南](model-support.md)为准；未列出的 SigLIP 2、SAM 2/3、BLIP VQA、BLIP-2、InstructBLIP 等模型不能用集合中的其他条目替代。
+
+## 按任务选择资产
+
+- 目标检测、分割和姿态优先选择带有明确输入尺寸、标签文件和 decoder schema 的 ONNX 条目；不要只按模型名称下载一个原始权重。
+- SAM v1 需要 image encoder 与 prompt/mask decoder 的配套资产，同一图像的多个提示应复用 encoder 特征。
+- CLIP 需要图像 encoder、文本 encoder、tokenizer 和相同的归一化/温度参数；只有图像 encoder 不能完成图文相似度。
+- BLIP Caption 是生成式流程，需要视觉 encoder、语言 decoder、词表和生成配置；它不等同于 VQA。
+- PaDiM 与 RMBG 的输出不是通用分类分数：前者返回异常图/异常分数，后者返回连续 alpha，应使用对应任务页的结果处理。
+
+## 下载、校验和复现
+
+```powershell
+dotnet run --project tools/DeploySharp.ModelFactory.Cli -- list --preview
+dotnet run --project tools/DeploySharp.ModelFactory.Cli -- show `
+  --model-id vision-language/clip-vit-b-32 --preview
+dotnet run --project tools/DeploySharp.ModelFactory.Cli -- install `
+  --model-id vision-language/clip-vit-b-32 --backend onnxruntime `
+  --format onnx --preview --cache .\.cache\deploysharp
+```
+
+安装完成后记录 materialized root、目录版本和每个工件 SHA-256。端到端验证必须使用与模型目录相同的测试图片、文本 tokenizer、后处理阈值和后端；“模型文件下载成功”不能作为视觉任务通过证据。
+
+## 目前不应替代的模型
+
+集合中没有完整的 SAM2/SAM3 视频记忆、BLIP VQA/BLIP-2、Qwen2.5-VL、Phi Vision、SigLIP 2 或 LayoutLMv3 任务头。它们可能在源码中有合同或实验入口，但在完整 Bundle、后端和结果验证完成前，不应从本页的 Preview 状态推断可用。

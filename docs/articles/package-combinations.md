@@ -49,7 +49,7 @@ dotnet add package JYPPX.DeploySharp.Backend.OpenVINO --version 2.0.0-alpha.1
 # 或：dotnet add package JYPPX.DeploySharp.Backend.OpenCV --version 2.0.0-alpha.1
 ```
 
-随后由应用选择与目标 TFM/RID 匹配的 OpenVINO 或 OpenCV runtime。不要把 OpenCV preview runtime 与其他版本混用。
+应用还需要选择与目标 TFM/RID 匹配的 OpenVINO 或 OpenCV runtime。不要把 OpenCV preview runtime 与其他版本混用。
 
 ### TensorRT CUDA 视觉
 

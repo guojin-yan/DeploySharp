@@ -16,7 +16,7 @@
 
 <p align="center">
   <a href="docs/index.md"><img src="https://img.shields.io/badge/docs-DocFX-2f80ed" alt="DocFX 文档" /></a>
-  <a href="docs/releases/2.0.0-alpha.1.md"><img src="https://img.shields.io/badge/release-2.0.0--alpha.1-f59e0b" alt="DeploySharp 2.0.0-alpha.1" /></a>
+  <a href="https://www.nuget.org/packages/JYPPX.DeploySharp.Core/"><img src="https://img.shields.io/nuget/vpre/JYPPX.DeploySharp.Core.svg?label=NuGet" alt="DeploySharp 最新 NuGet 版本" /></a>
   <a href="https://github.com/guojin-yan/DeploySharp/releases"><img src="https://img.shields.io/github/v/release/guojin-yan/DeploySharp?include_prereleases&amp;label=GitHub%20Release" alt="GitHub Release" /></a>
 </p>
 
@@ -114,28 +114,28 @@ Console.WriteLine(outputs.Count);
 
 ## 🌐 公共包与 Release 资产
 
-DeploySharp 包尚未发布到 nuget.org。以下保留准确的包 ID 和 `2.0.0-alpha.1` 候选版本；每个 NuGet 徽章直接指向真实包页，首次发布后会自动显示线上版本，无需再次修改 README。
+DeploySharp 预览包已发布到 NuGet.org。版本列直接读取 NuGet 数据，后续发布新版本时会自动更新，无需手工修改 README 中的版本号。
 
-| 包 | 候选版本 | NuGet.org | 用途 |
-| --- | --- | --- | --- |
-| `JYPPX.DeploySharp.Core` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Core.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Core) | Core 契约和后端注册 |
-| `JYPPX.DeploySharp.Extensibility` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Extensibility.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Extensibility) | 插件描述、运行时探测和选项 Schema |
-| `JYPPX.DeploySharp.Visual` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Visual.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Visual) | 视觉 Profile、预处理和解码器 |
-| `JYPPX.DeploySharp.Visual.OpenCV` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Visual.OpenCV.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Visual.OpenCV) | OpenCV 图像准备 |
-| `JYPPX.DeploySharp.Visual.TensorRT` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Visual.TensorRT.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Visual.TensorRT) | CUDA 前处理和 TensorRT 视觉流水线 |
-| `JYPPX.DeploySharp.LLM` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.LLM.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.LLM) | LLM 生成与 Embedding 契约 |
-| `JYPPX.DeploySharp.Multimodal` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Multimodal.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Multimodal) | 有序多模态编排 |
-| `JYPPX.DeploySharp.ModelPack.Json` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.ModelPack.Json.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.ModelPack.Json) | 模型清单和完整性校验 |
-| `JYPPX.DeploySharp.ModelFactory` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.ModelFactory.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.ModelFactory) | 目录选择、下载、缓存和离线复用 |
-| `JYPPX.DeploySharp.Backend.OnnxRuntime` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Backend.OnnxRuntime.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.OnnxRuntime) | ONNX Runtime 命名张量适配器 |
-| `JYPPX.DeploySharp.Backend.OpenVINO` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Backend.OpenVINO.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.OpenVINO) | OpenVINO 命名张量适配器 |
-| `JYPPX.DeploySharp.Backend.OpenCV` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Backend.OpenCV.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.OpenCV) | OpenCV DNN 适配器 |
-| `JYPPX.DeploySharp.Backend.TensorRT` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Backend.TensorRT.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.TensorRT) | TensorRT 推理和 ONNX 转 Engine 边界 |
-| `JYPPX.DeploySharp.Backend.LlamaSharp` | `2.0.0-alpha.1` | [![NuGet version](https://img.shields.io/nuget/v/JYPPX.DeploySharp.Backend.LlamaSharp.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.LlamaSharp) | LLamaSharp GGUF 生成和 Embedding |
+| 包 | NuGet 版本 | 用途 |
+| --- | --- | --- |
+| [`JYPPX.DeploySharp.Core`](https://www.nuget.org/packages/JYPPX.DeploySharp.Core/) | [![NuGet version](https://img.shields.io/nuget/vpre/JYPPX.DeploySharp.Core.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Core/) | Core 契约和后端注册 |
+| [`JYPPX.DeploySharp.Extensibility`](https://www.nuget.org/packages/JYPPX.DeploySharp.Extensibility/) | [![NuGet version](https://img.shields.io/nuget/vpre/JYPPX.DeploySharp.Extensibility.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Extensibility/) | 插件描述、运行时探测和选项 Schema |
+| [`JYPPX.DeploySharp.Visual`](https://www.nuget.org/packages/JYPPX.DeploySharp.Visual/) | [![NuGet version](https://img.shields.io/nuget/vpre/JYPPX.DeploySharp.Visual.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Visual/) | 视觉 Profile、预处理和解码器 |
+| [`JYPPX.DeploySharp.Visual.OpenCV`](https://www.nuget.org/packages/JYPPX.DeploySharp.Visual.OpenCV/) | [![NuGet version](https://img.shields.io/nuget/vpre/JYPPX.DeploySharp.Visual.OpenCV.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Visual.OpenCV/) | OpenCV 图像准备 |
+| [`JYPPX.DeploySharp.Visual.TensorRT`](https://www.nuget.org/packages/JYPPX.DeploySharp.Visual.TensorRT/) | [![NuGet version](https://img.shields.io/nuget/vpre/JYPPX.DeploySharp.Visual.TensorRT.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Visual.TensorRT/) | CUDA 前处理和 TensorRT 视觉流水线 |
+| [`JYPPX.DeploySharp.LLM`](https://www.nuget.org/packages/JYPPX.DeploySharp.LLM/) | [![NuGet version](https://img.shields.io/nuget/vpre/JYPPX.DeploySharp.LLM.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.LLM/) | LLM 生成与 Embedding 契约 |
+| [`JYPPX.DeploySharp.Multimodal`](https://www.nuget.org/packages/JYPPX.DeploySharp.Multimodal/) | [![NuGet version](https://img.shields.io/nuget/vpre/JYPPX.DeploySharp.Multimodal.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Multimodal/) | 有序多模态编排 |
+| [`JYPPX.DeploySharp.ModelPack.Json`](https://www.nuget.org/packages/JYPPX.DeploySharp.ModelPack.Json/) | [![NuGet version](https://img.shields.io/nuget/vpre/JYPPX.DeploySharp.ModelPack.Json.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.ModelPack.Json/) | 模型清单和完整性校验 |
+| [`JYPPX.DeploySharp.ModelFactory`](https://www.nuget.org/packages/JYPPX.DeploySharp.ModelFactory/) | [![NuGet version](https://img.shields.io/nuget/vpre/JYPPX.DeploySharp.ModelFactory.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.ModelFactory/) | 目录选择、下载、缓存和离线复用 |
+| [`JYPPX.DeploySharp.Backend.OnnxRuntime`](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.OnnxRuntime/) | [![NuGet version](https://img.shields.io/nuget/vpre/JYPPX.DeploySharp.Backend.OnnxRuntime.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.OnnxRuntime/) | ONNX Runtime 命名张量适配器 |
+| [`JYPPX.DeploySharp.Backend.OpenVINO`](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.OpenVINO/) | [![NuGet version](https://img.shields.io/nuget/vpre/JYPPX.DeploySharp.Backend.OpenVINO.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.OpenVINO/) | OpenVINO 命名张量适配器 |
+| [`JYPPX.DeploySharp.Backend.OpenCV`](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.OpenCV/) | [![NuGet version](https://img.shields.io/nuget/vpre/JYPPX.DeploySharp.Backend.OpenCV.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.OpenCV/) | OpenCV DNN 适配器 |
+| [`JYPPX.DeploySharp.Backend.TensorRT`](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.TensorRT/) | [![NuGet version](https://img.shields.io/nuget/vpre/JYPPX.DeploySharp.Backend.TensorRT.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.TensorRT/) | TensorRT 推理和 ONNX 转 Engine 边界 |
+| [`JYPPX.DeploySharp.Backend.LlamaSharp`](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.LlamaSharp/) | [![NuGet version](https://img.shields.io/nuget/vpre/JYPPX.DeploySharp.Backend.LlamaSharp.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.LlamaSharp/) | LLamaSharp GGUF 生成和 Embedding |
 
 | 发布渠道 | 当前状态 | 资产 |
 | --- | --- | --- |
-| [NuGet.org](https://www.nuget.org/) | DeploySharp 包待首次发布 | 公共托管包源 |
+| [NuGet.org](https://www.nuget.org/packages?q=JYPPX.DeploySharp) | 预览包已发布 | 公共托管包源 |
 | [GitHub Packages](https://github.com/guojin-yan/DeploySharp/packages) | DeploySharp 包待首次发布 | 包镜像 |
 | [GitHub Releases](https://github.com/guojin-yan/DeploySharp/releases) | 当前用于模型工件交付 | 版本化 ModelPack 资产和验证元数据 |
 
@@ -195,9 +195,11 @@ DeploySharp 包尚未发布到 nuget.org。以下保留准确的包 ID 和 `2.0.
 | 文档索引 | [docs/index.md](docs/index.md) | DocFX 公开文档入口 |
 | 首次版本说明 | [2.0.0-alpha.1](docs/releases/2.0.0-alpha.1.md) | 首发范围和已知边界 |
 | 使用教程 | [使用教程](docs/articles/usage-tutorial.md) | 代码优先的张量和视觉工作流 |
+| 自定义视觉模型 | [自定义模型与预处理指南](docs/articles/visual-custom-model.md) | 强类型前后处理及几何/归一化切换 |
 | 平台/后端支持 | [支持表](docs/articles/platform-support.md) | 目标框架和验证边界 |
 | 模型支持 | [模型指南](docs/articles/model-support.md) | 目录 ID、模型族和状态语义 |
 | 设备性能实测 | [具名设备结果](docs/articles/device-performance-benchmarks.md) | 可复现的环境与耗时记录 |
+| 视觉 ROI | [ROI 总指南](docs/articles/visual-roi-configuration.md) · [设备实测](docs/articles/device-performance-benchmarks.md#roi-与滑动窗口) | 几何、裁剪/过滤/滑窗、JSON 热更新、视频事件及实际验证边界 |
 
 ## 🔨 源码构建
 

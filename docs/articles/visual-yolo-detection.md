@@ -56,6 +56,25 @@ Decoder 会拒绝 NaN/Infinity、错误 rank 或字段数、越界类别、反�
 
 标准检测 Profile 使用 RGB、NCHW、Float32、除以 255 和居中 Letterbox（默认填充值 114）。`PreparedVisualInput.Transform` 保存源图到模型图的变换，Decoder 会将框裁剪并还原到源图坐标；应用不应再次缩放。
 
+### 显式切换缩放方式
+
+YOLO Profile 的默认行为保持与导出合同一致，但可以创建局部 Profile 副本切换几何和归一化：
+
+```csharp
+VisualModelProfile resizeProfile = profile.VisualProfile.WithPreprocessing(
+    profile.VisualProfile.Preprocessing!
+        .WithResizeMode(VisualResizeMode.Resize)
+        .WithNormalization(VisualNormalizationOptions.Scale(255f))
+        .WithInterpolation(VisualInterpolationMode.Linear));
+
+using PreparedVisualInput input =
+    new OpenCvVisualInputFactory().CreateFromFile(imagePath, resizeProfile);
+```
+
+如果代码直接使用 `OpenCvYoloPreprocessing.CreateOptions(profile)`，它会读取 Profile 当前的 `Preprocessing` 合同；也可以传入 `CreateOptions(profile, overrideOptions)` 使用一次性覆盖。覆盖几何后，检测框的源图坐标和置信度都可能变化，必须重新做模型验证，不能把覆盖后的结果与官方 Letterbox 结果混用。
+
+多任务 YOLO（分类、分割、Pose、OBB）使用同一套 `VisualPreprocessingOptions`。分类常见默认是 CenterCrop，检测/分割/Pose/OBB 常见默认是 Letterbox；具体以 Profile 中的 `ResizeMode` 和 `Normalization` 为准，不按模型文件名推断。
+
 ## 固定验证输入
 
 发布候选的 YOLO Profile 使用固定本地验证图像和 `ultralytics-letterbox-rgb-nchw-v1` 预处理进行交叉后端核验：原图 SHA-256 为 `33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c`，生成的 `Float32` NCHW 输入张量 SHA-256 为 `48af3a194d046f683585c8c8deffa953d415122ec0f2398bd27d8a67f34978df`。这是可追溯的验证证据，不代表该本地图片可以随模型包或项目重新分发。

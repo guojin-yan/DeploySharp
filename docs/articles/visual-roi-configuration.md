@@ -359,7 +359,7 @@ foreach (VisualRoiPromptResultItem item in prompts.Failed)
 
 该运行器不会并发调用同一个有状态 SAM Session：Session 本身要求单图像 Embedding 串行解码，因此按快照顺序执行可避免并发状态冲突，同时保留每个 ROI 的 Prompt、结果和异常。`PromptableSegmentationImageSession.CurrentImage.SourceSize` 必须与快照源尺寸一致；ROI 的 `classFilter` 对 Prompt 没有语义，配置后会被明确拒绝。交互式 mask-feedback、VLM/VQA 语义提示和多帧跟踪仍由上层应用负责，ROI 工厂不伪造这些模型输入。
 
-## SAM2/SAM3 视频 ROI：计划与状态提交
+## SAM2/SAM3 视频 ROI
 
 SAM2/SAM3 的官方视频 Predictor 会修改 memory、对象状态和 tracker 状态，不能把每一帧当成无状态 `RunManyAsync`。`VisualRoiVideoPromptPlanner` 只负责可验证的编排边界，不替代官方 Predictor：
 
@@ -415,7 +415,7 @@ foreach (VisualRoiGenerativeVisionLanguageResultItem item in answers.Succeeded)
 
 ## TensorRT CUDA ROI 与设备端后处理边界
 
-[两设备实测矩阵](roi-backend-performance-matrix.md) 已记录 Windows RTX3060 Laptop 与 Ubuntu RTX2060 上 YOLOv8n/YOLOv8n-seg 的 ROI P50/P95，包含 TensorRT 原地转换与 ORT CUDA。两台设备的 YOLOv8n-seg CPU/GPU 掩码逐像素差异为 0；设备 NMS 候选上限为 32768。该证据不替代其他模型/几何的专门测试。
+公开设备上的 ROI P50/P95 已合并到[设备性能实测](device-performance-benchmarks.md#roi-与滑动窗口)。当前 TensorRT 设备路径覆盖轴对齐矩形及有限的 YOLO 实例分割后处理；这些结果不替代其他模型、几何或设备的专门测试。
 
 `TensorRtVisualPipeline.RunRoi` 对轴对齐矩形提供直接设备采样：完整紧凑 BGR 帧只上传一次，CUDA 融合内核通过 `sourceOffsetX/sourceOffsetY/cropWidth/cropHeight` 在原始设备缓冲区上完成双线性采样、Resize/Letterbox、颜色转换和归一化，不创建 CPU ROI 临时图。`Run` 与 `RunRoi` 共用同一 stream、输入输出缓冲区和后处理状态，单个 Pipeline 的并发调用仍由执行门串行化。
 
@@ -466,7 +466,7 @@ Console.WriteLine($"frames={report.ProcessedFrames}, failures={report.FailedFram
 
 每一帧都会先调用跟踪器，再将非空观测提交给 `ProcessFrame`，随后调用 `Advance`。因此没有检测结果的空帧也会推进 TrackId 超时；不能为了节省调用而跳过 `Advance`。`continueOnFrameFailure=false` 时第一个非取消异常会终止运行；启用后异常会计入 `FailedFrames`，最多保留 `maximumRecordedFailures` 个异常对象，其余数量在 `DroppedFailureCount` 中统计，并继续推进过期状态。取消异常始终向上传递，不会被当作普通帧失败吞掉。
 
-`MaximumFrames` 是防止错误解码器或无限流导致运行失控的硬上限；如果源序列继续产生第 `MaximumFrames + 1` 帧，运行器会释放该帧后抛出 `InputInvalid`，不会静默截断。跟踪器、解码器和 GPU Session 的并发/队列上限仍由应用控制。生产监控至少应记录 `ProcessedFrames`、`FailedFrames`、`DroppedFailureCount`、`PeakActiveTrackCount`、`PeakCooldownEntryCount` 和 `PeakCountKeyCount`。峰值只增不减，应检查其是否保持有界，并另外检查处理器当前活动状态在目标过期后是否回收。库内的 20,000 帧合同测试只验证状态回收和有界计数；真实设备长时间 soak 本轮暂缓。
+`MaximumFrames` 是防止错误解码器或无限流导致运行失控的硬上限；如果源序列继续产生第 `MaximumFrames + 1` 帧，运行器会释放该帧后抛出 `InputInvalid`，不会静默截断。跟踪器、解码器和 GPU Session 的并发/队列上限仍由应用控制。生产监控至少应记录 `ProcessedFrames`、`FailedFrames`、`DroppedFailureCount`、`PeakActiveTrackCount`、`PeakCooldownEntryCount` 和 `PeakCountKeyCount`。峰值只增不减，应检查其是否保持有界，并另外检查处理器当前活动状态在目标过期后是否回收。库内的 20,000 帧合同测试只验证状态回收和有界计数；真实设备长时间 soak 尚未纳入支持证据。
 
 ROI 事件处理器消费外部跟踪器输出的 `TrackId`、目标框/质心和单调时间戳，负责区域进入、离开、停留、穿线、方向、去抖、冷却、丢失过期和计数。它不内置检测器或跟踪器，因此可以与现有 YOLO、ByteTrack、DeepSORT 或自研跟踪器组合：
 

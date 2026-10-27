@@ -40,6 +40,27 @@ tokenBatch 必须由 Profile 指定的官方 tokenizer 生成；DeploySharp 不�
 
 CLIP 使用 RGB、最短边缩放、中心裁剪和官方 mean/std；SigLIP 使用固定 224 缩放和自身的归一化参数。不要把两种模型的 tokenizer、池化或阈值互换。
 
+## 预处理覆盖
+
+图像 Factory 默认使用 Profile 记录的 Processor。需要比较不同几何方式或归一化时，可以显式传入共享合同；模型尺寸、RGB/NCHW、Float32 和 Batch 约束仍会被校验：
+
+```csharp
+var overrideOptions = new VisualPreprocessingOptions(
+    profile.ImageSize,
+    VisualResizeMode.Resize,
+    VisualColorOrder.Rgb,
+    VisualNormalizationOptions.Scale(255f),
+    VisualTensorLayout.Nchw,
+    batchSize: 1,
+    interpolation: VisualInterpolationMode.Linear);
+
+using PreparedVisualInput image =
+    new OpenCvVisionLanguageInputFactory().CreateFromFile(
+        imagePath, profile, preprocessing: overrideOptions);
+```
+
+生成式 BLIP 工厂也接受相同的最后一个 `preprocessing` 参数，但强制固定尺寸和 Batch=1。覆盖只适合实验、域适配或已经重新导出的模型；它会改变输入分布，不能继续使用原始 Processor 的数值一致性结论。
+
 ## 缓存、并发与批量
 
 VisionLanguageEmbeddingSession 拥有图像和文本两条后端会话。单个 session 的状态操作是单写者；需要并发时创建独立 session。成功结果是调用方拥有的托管对象，取消或超时不会发布半成品。大量文本或图像可按模型支持的动态 batch 组织，或由外层会话池分发。

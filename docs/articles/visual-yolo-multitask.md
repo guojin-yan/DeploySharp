@@ -49,6 +49,18 @@ ClassificationResult result = pipeline.Run(input)
 
 分割、姿态和 OBB 分别使用 `CreateInstanceSegmentation`、`CreatePose` 和 `CreateObb`，并传入对应工件的输出选项。
 
+## 不同 YOLO 导出的辨别方法
+
+同一个任务名可能对应完全不同的导出合同。接入前应记录：
+
+- 检测行是 `[N, 6]`、`[N, 7]` 还是 `[B, 4+C+K, N]`；
+- 是否已经在图内做 sigmoid、decode、阈值和 NMS；
+- 分割的 prototype 是 `[C,H,W]` 还是 `[H,W,C]`，系数对应哪个候选维度；
+- Pose 的关键点组件顺序和可见性范围；
+- OBB 的角度单位、方向、范围以及宽高交换规则。
+
+Profile 应把这些信息固化为 schema 和版本字段。看到 `end-to-end`、`decoded` 或 `raw` 标签时，不能据此自动选择 decoder；必须与实际输出 shape 和数值范围核对。
+
 ## Batch 与并发
 
 输出布局允许动态首维且模型确实支持 batch 时，在对应 Profile Options 中设置 `maximumBatch > 1`，使用 `InferenceBatchScheduler` 获取 `*BatchResult`。固定 batch=1 或包含可变掩码/关键点/旋转几何的导出图，使用多个独立 Session 的 `RunManyAsync`，不要把多个样本拼接到未经声明的张量中。
@@ -58,3 +70,7 @@ ClassificationResult result = pipeline.Run(input)
 检测族通常使用 RGB、NCHW、Float32、除以 255 和 114 填充的居中 Letterbox；分类通常使用固定尺寸中心裁剪。OpenVINO、TensorRT 和 OpenCV DNN 必须分别绑定实际工件的输入输出合同，不能直接复用不兼容的导出 Profile。
 
 模型状态和逐后端实测见[模型支持指南](model-support.md)与[验证矩阵](../model-backend-verification-matrix.md)。
+
+## 调参和回归顺序
+
+先固定预处理和模型工件，只调整一个后处理参数：score threshold、NMS IoU、mask threshold 或 keypoint threshold。保存候选数量、最终结果数量和耗时，再决定是否改变参数。批量/并发调优应在结果合同稳定后进行，否则吞吐变化可能只是候选数变化造成的假象。

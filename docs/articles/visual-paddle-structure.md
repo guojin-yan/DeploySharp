@@ -6,103 +6,61 @@ DeploySharp 现在把 PaddleOCR 的文档智能能力按模块建模，而不是
 
 官方 PP-StructureV3 的组合方式和模型说明见 [PaddleOCR 官方 PP-StructureV3 文档](https://paddlepaddle.github.io/PaddleOCR/main/version3.x/pipeline_usage/PP-StructureV3.html)。本项目不会把 Paddle Inference 的 `.tar` 工件自动当作 ONNX，也不会在没有转换和运行时证据时标记为“多后端已支持”。
 
-## 当前模块边界
+## 支持的文档任务
 
-| 模块 | 官方模型族 | DeploySharp 任务/结果合同 | 当前状态 |
-| --- | --- | --- | --- |
-| 文档方向 | `PP-LCNet_x1_0_doc_ori` | `VisualTaskId.DocumentOrientation`、四分类结果 | ORT CPU、OpenVINO CPU 和 TensorRT 11 smoke 已完成；分类预处理为短边 256 后中心裁剪 224 |
-| 文本图像矫正 | `UVDoc` | `VisualTaskId.DocumentUnwarping`、输出尺寸/变换元数据 | ORT CPU/OpenVINO CPU 均完成同一 `bus.jpg`、同一输入张量的真实运行；输出均为 `640x640x3` 且有限值，max/mean 绝对差 `0.0730591/0.00176066`。TensorRT 11 + DeploySharp decoder 已完成 DisableTf32 对照，max/mean 绝对差 `0.0778809/0.00172731`；OpenCV 5.0 importer 在 `PaddingLayerImpl` 处确认阻断。该 TensorRT 结果是有界数值比较，不是像素等价或视觉质量通过 |
-| 版面区域检测 | `PP-DocLayout*`、`PP-DocBlockLayout`、PicoDet/RT-DETR layout | `VisualTaskId.LayoutDetection`、区域检测结果 | 本机 13 个已转换 layout 工件已完成 ORT CPU + Paddle 后置 NMS Decoder 逐模型 smoke；12 个此前未逐项验证的工件已在 OpenVINO CPU 上全部执行通过。OpenCV DNN 对 `pp-doclayout-plus-l`、`pp-docblocklayout`、`rt-detr-h-layout-3cls/17cls` 执行通过，PP-DocLayout-M/S 和 PicoDet 相关工件在 OpenCV 5.0 `MatMul` importer 处明确不支持；逐项边界见[OpenVINO 矩阵报告](../../eng/models/paddle-document/verification/paddle-document-openvino-layout-matrix-20260930.md)和[OpenCV NMS 矩阵报告](../../eng/models/paddle-document/verification/paddle-document-opencv-nms-matrix-20260930.md) |
-| 表格分类 | `PP-LCNet_x1_0_table_cls` | `VisualTaskId.TableClassification` | wired 模型已完成 ORT CPU/OpenVINO CPU 分类 Decoder smoke，并有 TensorRT 11 CUDA 真实证据；使用官方短边 256、中心裁剪 224 |
-| 表格单元格检测 | `RT-DETR-L_*_table_cell_det` | `VisualTaskId.TableCellDetection` | wired/wireless 均已完成 ORT CPU Paddle NMS Decoder smoke；OpenVINO CPU wired/wireless 两个精确工件均已执行通过；TensorRT 11 动态三输入 profile、图内 NMS、ORT 几何/score 对照和 5/50 P50/P95 已完成，另有真实 Batch=2 双 ROI/双模型 ORT parity 证据；逐项报告见 [`paddle-document-openvino-table-cell-matrix-20260930.md`](../../eng/models/paddle-document/verification/paddle-document-openvino-table-cell-matrix-20260930.md)、[`paddle-document-tensorrt-table-cell-matrix-20260930.md`](../../eng/models/paddle-document/verification/paddle-document-tensorrt-table-cell-matrix-20260930.md) 与 [`paddle-document-table-cell-dynamic-batch-tensorrt-20261011.md`](../../eng/models/paddle-document/verification/paddle-document-table-cell-dynamic-batch-tensorrt-20261011.md) |
-| 表格结构识别 | `SLANeXt_wired/wireless` | `VisualTaskId.TableStructureRecognition`、表格标记和单元格结果 | wired/wireless 均已完成 ORT CPU 双输出序列/八点框 Decoder smoke；原始 Release 图在 OpenVINO 当前版本不支持（`Loop` importer），仅派生 alpha-renamed 图通过逐元素和 Decoder 对齐 |
-| 公式识别 | `PP-FormulaNet_plus-*`、`UniMERNet` | `VisualTaskId.FormulaRecognition`、LaTeX/序列结果 | 6 个可转换公式工件均已在真实 ORT CPU 推理后使用官方 `inference.yml` BPE tokenizer 完成语义 LaTeX 解码；OpenVINO 兼容图实验中没有模型通过 token 级 parity，仍标记为不支持；token-piece fallback 保留给旧目标框架 |
-| 印章文本检测 | `PP-OCRv4_*_seal_det` | `VisualTaskId.SealTextDetection`、区域结果 | mobile/server 均已完成 ORT CPU + OpenVINO CPU 概率图连通区域 Decoder smoke；TensorRT 11 另有动态 Batch=2 的正式 `5+50` 证据，mobile/server P50/P95 分别为 `7.9329/10.5334 ms` 与 `18.0625/22.4997 ms`；弧形文本明确不支持，需调用方先展开后再提交识别器-only |
-| 图表解析 | `PP-Chart2Table` | `PaddleChart2TableOnnxSession`、`PaddleChart2TableTensorRtDeviceSession`、`PaddleChart2TableGenerationResult` | 四图 greedy 生成已接入；四张 ONNX 图和 tokenizer 作为 `paddle-chart/pp-chart2table` Bundle 发布在 `models-paddleocr`；ORT CPU、OpenVINO CPU、TensorRT CUDA 已完成官方样例 EOS 证据，ChartQA 样本扩展验证见下文 |
+| 任务 | 官方模型族 | DeploySharp 入口 |
+| --- | --- | --- |
+| 文档方向 | PP-LCNet doc orientation | `PaddleDocumentProfiles.CreateClassification` |
+| 文本图像矫正 | UVDoc | `CreateUnwarping` / `PaddleDocumentUnwarpingResult` |
+| 版面区域 | PP-DocLayout、PP-DocBlockLayout、PicoDet、RT-DETR | `CreatePaddleNmsRegions` |
+| 表格分类 | PP-LCNet table classification | 分类 Profile |
+| 表格单元格 | RT-DETR-L table cell | Paddle NMS 区域 Profile |
+| 表格结构 | SLANeXt wired/wireless | `CreateTableStructure` / HTML 标记 |
+| 公式识别 | PP-FormulaNet、UniMERNet | `CreateFormula` / LaTeX 结果 |
+| 印章文本检测 | PP-OCRv4 seal detection | 印章掩码与区域结果 |
+| 图表解析 | PP-Chart2Table | 四图生成 Bundle |
+| 视觉文档生成 | PaddleOCR-VL 1.6 | 六任务生成、区域与页面编排 |
 
-## 获取官方模型并转换为 ONNX
+表中的 API 表示主库已实现任务合同。具体模型是否能在某个后端运行，以[模型与后端验证矩阵](../model-backend-verification-matrix.md)为准。
 
-标准 PP-Structure ONNX 已经同步发布到 [`models-paddleocr`](https://github.com/guojin-yan/DeploySharp/releases/tag/models-paddleocr) Release，按单模型资产提供，不要求用户下载整包。运行时可用 `PaddleOcrReleaseClient.GetModelAsync("paddle-doc/pp-doclayout-s")`、`paddle-table/slanext-wired` 或 `paddle-formula/unimernet` 按需获取并校验；`PaddleDocumentModelCatalog.GetReleaseArtifact` 可查询对应资产名、大小、SHA-256、opset 和下载地址。Chart2Table 是生成式四图模型，按 `paddle-chart/pp-chart2table` Bundle 用 `PaddleOcrReleaseClient.GetBundleAsync(...)` 单独获取四张 ONNX 和 tokenizer 文件；它不伪装成一个普通单图 ONNX。
+## 获取模型
 
-仓库提供官方模型目录和获取脚本：
+PP-Structure ONNX 以单模型资产发布在 [models-paddleocr Release](https://github.com/guojin-yan/DeploySharp/releases/tag/models-paddleocr)，无需下载整包。使用 `PaddleOcrReleaseClient.GetModelAsync` 按模型 ID 下载，例如：
 
-- 模型目录：[paddle-document-models.json](../../eng/models/paddle-document/paddle-document-models.json)
-- 获取/转换：[Acquire-PaddleDocumentModels.ps1](../../eng/models/paddle-document/scripts/Acquire-PaddleDocumentModels.ps1)
+```csharp
+PaddleOcrReleaseModelMaterialization layout =
+    await releaseClient.GetModelAsync("paddle-doc/pp-doclayout-s");
 
-脚本只把模型保存到外部模型根目录，不把大型模型提交到 Git。它会下载 Paddle 官方 `paddle3.0.0` 推理归档，记录源归档大小和 SHA-256，解压后调用 `paddle2onnx`，最后为每个模型写出 `records/<id>.json` 和根目录 `acquisition-summary.json`。
+PaddleOcrReleaseBundleMaterialization chart =
+    await releaseClient.GetBundleAsync("paddle-chart/pp-chart2table");
+```
 
-先安装与当前 Paddle 导出格式匹配的 Python 运行时、`paddlepaddle` 和 `paddle2onnx`，再执行：
+Chart2Table 和 PaddleOCR-VL 是多图 Bundle；模型图、tokenizer 和 manifest 必须来自同一发布批次。模型 ID、资产名、SHA-256、opset 和 sidecar 见[官方模型目录](model-catalog.md)。
+
+需要从 Paddle 官方推理包自行转换时，仓库提供[模型清单](https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/eng/models/paddle-document/paddle-document-models.json)和转换脚本。输出放在仓库外或被忽略的本地模型目录：
 
 ```powershell
+$modelRoot = Join-Path $PWD '.models\paddle-document'
 python -m pip install paddlepaddle paddle2onnx
+
 & .\eng\models\paddle-document\scripts\Acquire-PaddleDocumentModels.ps1 `
   -ModelId pp-lcnet-x1-0-doc-ori,pp-doclayout-plus-l `
-  -ModelRoot E:\Model\PaddleDocument
+  -ModelRoot $modelRoot
 ```
 
-确认小规模转换成功后，再获取全部官方目录：
+`-SkipConversion` 只下载和解压，不会把结果标记为 ONNX。转换失败会保留明确的 `conversion-blocked` 状态；不要用空文件或 Paddle Inference 原始目录冒充可运行 ONNX。
 
-```powershell
-& .\eng\models\paddle-document\scripts\Acquire-PaddleDocumentModels.ps1 `
-  -All -ModelRoot E:\Model\PaddleDocument
-```
+## Batch 边界
 
-`-SkipConversion` 只下载和解压源模型，用于排查网络或转换依赖；它不会把结果标记成 ONNX。转换失败的记录会标记为 `conversion-blocked`，包括具体异常，不会被静默写成可运行模型。公式、图表、矫正等模型的转换可能需要特定 Paddle/Paddle2ONNX 版本；如果官方算子不在 ONNX 导出支持范围内，应保留源模型记录并实现专用导出器，而不是篡改结果合同。
+不要从模型名称推断 Batch。以实际图的输入轴、辅助输入和输出布局为准：
 
-本地标准推理归档转换为 ONNX 后按单模型资产同步到上述 Release；Chart2Table 的上游归档是生成式权重而非 `inference.json + inference.pdiparams`，因此模型目录仍把“单文件源归档转换项”标为 `conversion-blocked`。它的四张派生 ONNX 和三份 tokenizer 资产现已作为可单独按需下载的 Bundle 发布。ORT CPU、OpenVINO CPU 和 TensorRT CUDA 在官方样例上均跑到 EOS 并生成相同完整文本；OpenCV DNN 隔离探针已确认 Vision/Embedding 可加载，但 Prefill/Decode 需要三维/四维辅助张量，当前 OpenCV DNN 适配器合同不支持，因此完整 OpenCV 自回归仍未支持。详见 [`chart2table-opencv-isolated-20260929.json`](../../eng/models/paddle-document/verification/chart2table-opencv-isolated-20260929.json)。
+- 动态第一轴的分类、部分版面、单元格、印章、公式、SLANeXt 和 UVDoc 可以配置真 Batch，但每个精确后端仍需验证；
+- 静态 `batch=1` 的 PicoDet、部分 PP-DocLayout 和生成式 Bundle 使用有界 Session 池或页面并发；
+- Paddle NMS 的扁平 `[rows,6]` 输出必须用 `bbox_num` 按 batch 行切分；真正的 `[batch,rows,6]` 输出才可省略计数张量；
+- Chart2Table/PaddleOCR-VL 的动态序列或 KV 轴不等于图像请求 Batch，自回归状态仍绑定单个请求；
+- 动态轴只表示图允许绑定，不能替代解码行隔离、内存上限、结果一致性和目标后端实测。
 
-### 真实 ONNX 的 Batch 边界
-
-不要根据模型名称或 Profile 参数猜测官方图是否支持 Batch。使用 [`Audit-PaddleDocumentBatchShapes.py`](../../eng/models/paddle-document/scripts/Audit-PaddleDocumentBatchShapes.py) 对外部模型根目录做 protobuf 级审计后，当前 54 个本地 ONNX 文件中 53 个可解析、1 个零字节实验导出被保留为失败记录；其中 32 个图的输入第一轴是动态的，8 个标准 PP-Structure 图明确是静态 `batch=1`。动态输入/输出图包括 PP-DocLayout-L/Plus-L、PP-DocBlockLayout、RT-DETR 版面/单元格、公式、表格分类、印章、SLANeXt 和 UVDoc；PicoDet 与 PP-DocLayout-M/S 应走 Session 池或多页有界并发。完整逐文件输入/输出轴、SHA-256 和失败记录见[机器可读 JSON](../../eng/models/paddle-document/verification/paddle-document-onnx-batch-axis-audit-20261005.json)与[审计报告](../../eng/models/paddle-document/verification/paddle-document-onnx-batch-axis-audit-20261005.md)。
-
-Chart2Table 的视觉、Embedding、Prefill 和 Decode 图都保持请求 batch 为 `1`，只是序列长度或 KV 轴可以动态；自回归状态绑定到单张图，不能因为 KV 动态就把它标记成模型 Batch。动态轴也只表示可以尝试批量绑定，仍需按后端完成输入绑定、Decoder、内存和结果一致性验证；本审计不替代任何后端运行或精度证据。
-
-目前已有多条真实 Batch 执行证据，分别按精确 ONNX、后端和主机记录；最初覆盖的文档方向 `PP-LCNet_x1_0_doc_ori` 与表格分类 `PP-LCNet_x1_0_table_cls` 在 ORT CPU、OpenVINO CPU 上均以两个相同 `bus.jpg` 行运行 `[2,3,224,224]`，标签、分数和顺序一致，见[分类动态 Batch 报告](../../eng/models/paddle-document/verification/paddle-document-dynamic-batch-ort-openvino-20261005.md)。以下结果不代表所有 PP-Structure 模型都支持 Batch，也不代表性能或数据集准确率。
-
-随后对官方 `PP-DocLayout-L` 动态 Paddle NMS 图完成了真实双行运行：ORT CPU、OpenVINO CPU 均绑定 `[2,3,640,640]` 图像和 `[2,2]` 的 `im_shape`/`scale_factor`，使用 `bbox_num` 将扁平 `[300*batch,6]` 输出按行切分，两行均保留 300 个导出候选且标签/几何完全一致。详见 [版面动态 Batch 报告](../../eng/models/paddle-document/verification/paddle-document-layout-dynamic-batch-ort-openvino-20261005.md)。这不是版面准确率或性能基准；`300` 是导出图的后置 NMS 候选数量，不是真值目标数量。
-
-同一协议还在架构不同的官方 `RT-DETR-H_layout_3cls` 图上通过：ORT CPU、OpenVINO CPU 均完成双行输入、几何辅助绑定和 `bbox_num` 扁平输出切分，两行各返回 300 个候选且结果逐项一致。详见 [RT-DETR 动态 Batch 报告](../../eng/models/paddle-document/verification/paddle-document-rtdetr-layout-dynamic-batch-ort-openvino-20261005.md)。这仍只覆盖精确模型/后端/主机，不扩展为 TensorRT、OpenCV 或所有 RT-DETR 变体支持。
-
-SLANeXt wired 也完成了真实动态 Batch 解码：ORT CPU 使用官方 `slanext-wired.onnx`，OpenVINO CPU 使用独立 SHA-256 的 Loop 兼容图；两边均绑定 `[2,3,512,512]` 的两行相同表格，Decoder 均返回 24 个结构 token、13 个 cell，HTML 哈希完全一致。该证据只覆盖这两个精确工件和单机双行执行，不代表原始 SLANeXt 图可以直接导入 OpenVINO，也不代表表格准确率、吞吐或 TensorRT/OpenCV 支持。详见 [SLANeXt 动态 Batch 报告](../../eng/models/paddle-document/verification/paddle-document-slanext-dynamic-batch-ort-openvino-20261005.md) 及 [JSON 记录](../../eng/models/paddle-document/verification/paddle-document-slanext-dynamic-batch-ort-openvino.json)。
-
-SLANeXt wireless 现也完成同协议实测：ORT CPU 使用官方 `slanext-wireless.onnx`，OpenVINO CPU 使用独立 SHA 的 Loop 兼容图；两个后端均以 `[2,3,512,512]` 运行两行，返回 24 个 token、13 个 cell，HTML 哈希一致。wired 与 wireless 两个变体因此都具备双行动态 Batch 的模型/Decoder 证据。OpenVINO 仍需显式兼容图；该结果不构成表格准确率或性能结论。见 [wireless 报告](../../eng/models/paddle-document/verification/paddle-document-slanext-wireless-dynamic-batch-ort-openvino-20261007.md) 和 [JSON 记录](../../eng/models/paddle-document/verification/paddle-document-slanext-wireless-dynamic-batch-ort-openvino.json)。
-
-随后使用 DeploySharp TensorRT API-11 Builder 对原始 wired/wireless Release 图和两份 OpenVINO 兼容图分别做了 Builder 边界探针。四个精确工件都在 recurrence 输入 `[]` 与 `[-1,8]` 的形状校验处返回空 Engine，未进入 TensorRT Session 或表格 Decoder；原始图的记录见 [SLANeXt TensorRT Builder 报告](../../eng/models/paddle-document/verification/slanext-tensorrt-builder-probe-20261014.md)，兼容图见 [兼容图报告](../../eng/models/paddle-document/verification/slanext-openvino-compat-tensorrt11-builder-probe-20261012.md)。2026-10-18 又用 API-10 / TensorRT `10.11.0.33-cu12` 对相同四个精确工件重测，仍在相同 recurrence shape 校验处返回空 Engine，见 [TensorRT 10.11 报告](../../eng/models/paddle-document/verification/slanext-tensorrt10.11-builder-probe-20261018.md)。因此当前证据只覆盖所列精确 ONNX 与 TRT 10.11/11.0 运行时；它不否定 ORT/OpenVINO CPU 结果，也不是所有 TensorRT 版本的普遍结论。
-
-进一步将两个标量 recurrence carry 扩成静态 `[1,8]`/`[1,50]` 的诊断图后，原 shape 错误消失，但 TensorRT 11 在 `graphScope.makeScopeNodesContiguous` 内部断言处仍返回空 Engine；batch=1 profile 也无法绕过。该转换只用于定位 Builder 边界，不是发布资产，详见 [carry-shape 诊断报告](../../eng/models/paddle-document/verification/slanext-tensorrt-carry-shape1-probe-20261014.md) 和 [转换脚本](../../eng/models/paddle-document/scripts/Prepare-SlanextTensorRtCarryShapeProbe.py)。
-
-2026-10-07 又补充 wired/wireless 两个 RT-DETR-L 表格单元格模型：ORT CPU 和 OpenVINO CPU 均以 `[2,3,640,640]` 执行，`im_shape`、`scale_factor` 分别绑定为 `[2,2]`；输入是 `table_recognition.jpg` 上下两个不重叠的 `551×66` 区域。四个精确模型/后端组合都返回两行、每行 300 个后置 NMS 候选；两行输入张量 SHA 和解码结果 SHA 均不同，能排除把同一行结果复用到另一行。这里的 300 是图导出候选数，不是单元格真值数量。详见[单元格动态 Batch 报告](../../eng/models/paddle-document/verification/paddle-document-table-cell-dynamic-batch-ort-openvino-20261007.md)及[JSON](../../eng/models/paddle-document/verification/paddle-document-table-cell-dynamic-batch-ort-openvino-20261007.json)；这不是准确率、跨后端数值 parity 或性能结论。
-
-随后对这两种 ONNX 图补做 OpenCV DNN batch=2 探针：两个 Session 均成功建立，但 `forward_many` 都报 `DS-OCV-8004 / Requested blob not found`。因此只记录 wired/wireless 两个精确模型的 OpenCV 动态 Batch 不支持，不改变单图 OpenCV 结果以及 ORT/OpenVINO 动态 Batch 证据；按本项目范围不再排查 importer/native 原因。该输入没有单元格真值，本结果不代表准确率或吞吐。详见[OpenCV 边界报告](../../eng/models/paddle-document/verification/paddle-document-table-cell-dynamic-batch-opencv-20261007.md)和[机器可读 JSON](../../eng/models/paddle-document/verification/paddle-document-table-cell-dynamic-batch-opencv-20261007.json)。
-
-UVDoc 也已完成双行动态 Batch：使用 `bus.jpg` 左/右两个不重叠 ROI，ORT CPU 和 OpenVINO CPU 均解码成两个独立 `640×640×3` 结果；逐行跨后端平均绝对差为 `0.002078/0.002263`，属于有界数值对照，不表示像素等价或视觉质量通过。TensorRT 11 进一步以 DeploySharp Builder 构建动态 profile，在同一 Windows RTX 3060 Laptop 上完成 `[2,3,640,640]` 两行解码；最后一次复现实测逐行对 ORT 的 max/mean absolute difference 为 `0.1243744/0.00174680`、`0.0770721/0.00180950`，保持在明确的 `0.2/0.01` 边界内。详见 [UVDoc CPU 报告](../../eng/models/paddle-document/verification/paddle-document-uvdoc-dynamic-batch-ort-openvino-20261007.md) 和 [TensorRT 报告](../../eng/models/paddle-document/verification/paddle-document-uvdoc-dynamic-batch-tensorrt-20261011.md)；这些是执行/有界 parity 证据，不是像素等价、视觉质量或速度结论。
-
-2026-10-07 另对官方 `PP-DocLayout_plus-L` 与 `PP-DocBlockLayout` 做了 batch=2 真模型验证。ORT CPU 和 OpenVINO CPU 四个模型/后端组合均绑定各自的动态图像输入及 `[2,2]` 几何辅助张量，并经 NMS Decoder 返回两行；行输入和结果摘要 SHA 均不同。两个模型分别使用 `[2,3,800,800]` 与 `[2,3,640,640]`；每行各有 300 个图导出候选。测试切自 `bus.jpg` 上下两个半幅，仅作为 batch 行隔离探针，不是文档质量样本、准确率或性能证据。详见[验证报告](../../eng/models/paddle-document/verification/paddle-document-additional-layout-dynamic-batch-ort-openvino-20261007.md)及[机器可读 JSON](../../eng/models/paddle-document/verification/paddle-document-additional-layout-dynamic-batch-ort-openvino-20261007.json)。
-
-对这两个模型追加 OpenCV DNN 动态 Batch 尝试后，Session 创建成功，但 `forward_many` 均返回 `DS-OCV-8004 / Requested blob not found`；该结论只限定于这两个精确模型、OpenCV 5.0 和 batch=2，不推翻已有单图 OpenCV 证据，也不影响 ORT/OpenVINO 的 batch=2 解码结果。依照项目约定未继续深挖 importer。详情见[OpenCV 动态 Batch 边界报告](../../eng/models/paddle-document/verification/paddle-document-additional-layout-dynamic-batch-opencv-20261007.md)及[JSON](../../eng/models/paddle-document/verification/paddle-document-additional-layout-dynamic-batch-opencv-20261007.json)。
-
-PP-OCRv4 mobile/server 印章检测已验证真正的 batch=2：使用不同的 `demo_4.jpg` 与 `demo_5.jpg`，ORT CPU、OpenVINO CPU、OpenCV DNN CPU 均把两图组成 `[2,3,224,224]` 并得到 `[2,1,224,224]` 概率图，六个模型/后端组合都完成 Decoder 行映射。page index 与来源 SHA 保持输入顺序；不同后端 raw mask 摘要不一致，因此只证明执行和行隔离，不作为数值 parity。样本没有印章真值，mobile `0/0`、server `1/0` 区域数不能解释为检测准确性，也不是速度结论。见[三后端报告](../../eng/models/paddle-document/verification/paddle-document-seal-dynamic-batch-ort-openvino-opencv-20261007.md)及[JSON](../../eng/models/paddle-document/verification/paddle-document-seal-dynamic-batch-ort-openvino-opencv-20261007.json)。
-
-方向分类和表格分类也补上了跨三种 CPU 后端的不同输入 Batch 证据：在官方表格示例的顶部/底部区域上，两个 PP-LCNet 模型都返回两行，逐行 raw-logit SHA 不同；测试逐行比较原始输出与 ORT CPU，并要求最大绝对差不超过 `1e-4`。本机观测最大差小于 `1.2e-7`，三个后端对同一区域的 top label 一致。SHA 不同反映浮点值并非逐位相同；输入区域没有人工标签，因此数值 parity 不代表分类准确率或速度。详情见[跨后端报告](../../eng/models/paddle-document/verification/paddle-document-classifier-distinct-dynamic-batch-ort-openvino-opencv-20261007.md)。
-
-公式动态 Batch 已逐项覆盖六个官方动态输入导出：PP-FormulaNet Plus-S/M/L、FormulaNet-S/L 和 UniMERNet。它们都在 ORT CPU 上以官方公式样例的上下不同区域绑定 batch=2，每行到达 EOS，token IDs 与 LaTeX 均和该行独立 batch=1 推理完全一致。裁剪区域是执行隔离探针，不是独立标注公式；结论不代表数据集准确率、吞吐或其他后端支持。各模型 shape、token 数、SHA 与复现命令见[六模型动态 Batch 报告](../../eng/models/paddle-document/verification/formula-dynamic-batch-six-models-ort-20261007.md)。
-
-随后把六个公式模型的动态 Batch=2 路径扩展到 OpenCV DNN CPU；均在推理前以 `DS-OCV-8002` 失败，错误位于 OpenCV 5.0 ONNX importer/input specialization。PP-FormulaNet 五个图报告 `ConstantOfShape` 零维度错误，UniMERNet 报 `GatherND` importer 错误。随后以完整官方公式图补做 batch=1：五个 FormulaNet 仍在同一 `ConstantOfShape` 边界失败，UniMERNet 在 importer 分配阶段失败，均未进入 Decoder。此处只登记精确图与当前 OpenCV 5.0.0 的不支持边界，不推翻 ORT CPU 的真实 Batch 证据，也不外推其它 OpenCV 版本；按范围不再深挖 importer。详见[公式 OpenCV batch=1 报告](../../eng/models/paddle-document/verification/paddle-document-formula-batch1-opencv-20261012.md)、[动态 Batch 报告](../../eng/models/paddle-document/verification/paddle-document-formula-dynamic-batch-opencv-20261007.md)及对应 JSON。
-
-同日还为官方 RT-DETR-H 17-class 版面模型完成 batch=2 验证：ORT CPU/OpenVINO CPU 对 `bus.jpg` 上下不同区域绑定 `[2,3,640,640]` 和两个 `[2,2]` 几何输入，均返回两行、每行 300 个候选；OpenCV DNN session 虽创建成功，但 forward 报 `DS-OCV-8004` / `Requested blob not found`，因此该精确 OpenCV 动态 Batch 组合不支持，不改变其单 Batch 既有结果。半幅图片没有版面标注，此项不是准确率或吞吐证据。随后在匹配的 TensorRT 10.11/API 10 bridge 上完成同一动态 Batch=2 Engine/Decoder 合同，五次预热 + 五十次测量的 P50/P95 为 `121.5792/125.4129 ms`；详见[ORT/OpenVINO 报告](../../eng/models/paddle-document/verification/paddle-document-rtdetr-17cls-layout-dynamic-batch-ort-openvino-20261007.md)及[TensorRT 10.11 报告](../../eng/models/paddle-document/verification/paddle-document-layout-rt-detr-h-17cls-tensorrt10.11-dynamic-batch-20261017.json)。
-
-随后将同一不同区域协议用于官方 RT-DETR-H 3-class 版面模型：ORT CPU 与 OpenVINO CPU 完成 batch=2 全解码、各返回两行且每行 300 个候选；OpenCV DNN 的 Session 创建成功，但 `forward_many` 报 `DS-OCV-8004 / Requested blob not found`。这只标记该精确模型的动态 Batch=2 OpenCV 组合不支持，不改动已有单图结果。随后 TensorRT 10.11/API 10 以同一 `[2,3,640,640]` + `[2,2]` 辅助输入完成五次预热、五十次测量，P50/P95 为 `125.3546/137.9207 ms`；裁剪不是版面真值，因此不代表质量或跨设备吞吐。详见[CPU 报告](../../eng/models/paddle-document/verification/paddle-document-rtdetr-3cls-layout-dynamic-batch-ort-openvino-opencv-20261007.md)、[TensorRT 报告](../../eng/models/paddle-document/verification/paddle-document-layout-rt-detr-h-3cls-tensorrt10.11-dynamic-batch-20261017.json)和[机器可读 JSON](../../eng/models/paddle-document/verification/paddle-document-rtdetr-3cls-layout-dynamic-batch-ort-openvino-opencv-20261007.json)。
-
-同日随后对官方 23 类 `PP-DocLayout-L` 做不同输入的 batch=2 三后端验证：`bus.jpg` 上下两个不重叠 `810×540` 区域在 ORT CPU、OpenVINO CPU 均以 `[2,3,640,640]` 和两个 `[2,2]` 几何输入完成 NMS 解码，每行各返回 300 个导出候选，输入和结果摘要均区分两个 batch 行。OpenCV DNN 在 Session 创建后 forward 报 `DS-OCV-8004` / OpenCV 5.0 `Requested blob not found`；仅这一精确动态 Batch 组合不支持，不影响既有单图验证。区域没有版面真值，因此不代表准确率、跨后端数值 parity 或性能。该 2026-10-07 快照当时尚无 TensorRT Batch 证据；后续已经补齐，当前结论以[TensorRT 动态 Batch 报告](../../eng/models/paddle-document/verification/paddle-document-layout-tensorrt11-dynamic-batch-20261011.md)为准。详见[三后端验证报告](../../eng/models/paddle-document/verification/paddle-document-pp-doclayout-l-dynamic-batch-ort-openvino-opencv-20261007.md)和[JSON](../../eng/models/paddle-document/verification/paddle-document-pp-doclayout-l-dynamic-batch-ort-openvino-opencv-20261007.json)。
-
-五个版面模型的单图 TensorRT 11 证据已经补齐：在 Windows RTX 3060 Laptop、TensorRT `11.0.0.114-cu12`、CUDA `12.9`、cuDNN `9.22` 上，`pp-doclayout-l`、`pp-doclayout-plus-l`、`pp-doclayout-m`、`pp-doclayout-s` 和 `pp-docblocklayout` 均由 DeploySharp Builder 从 ONNX 重建并运行，测试 `5/5 passed`。每个模型使用 `bus.jpg`、5 次预热和 50 次测量，和 ORT CPU 的同一 Decoder 进行同类全局最大-IoU 匹配；最小 IoU 均达到显式 `0.80`（M 为 `0.832389`，其余为 `0.996929–0.999996`），score 差不超过 `0.01`。M/S 的静态 batch 合同和 M 的数据依赖 `[N,6]` 输出也按真实图形处理，enqueue 后优先读取 TensorRT 的具体 shape。P50/P95、Engine/ONNX SHA 与复现命令见[TensorRT 11 版面报告](../../eng/models/paddle-document/verification/paddle-document-layout-tensorrt11-20261011.md)及[JSON](../../eng/models/paddle-document/verification/paddle-document-layout-tensorrt11-20261011.json)。这只表示五个精确单图工件的执行/有界 parity，不代表版面准确率、batch=2、其它 PicoDet/RT-DETR 图或跨设备 Engine 可移植性。
-
-随后补齐了真实 TensorRT 动态 Batch=2：动态输入的 `pp-doclayout-l`、`pp-doclayout-plus-l`、`pp-docblocklayout`、`rt-detr-h-layout-3cls` 和 `rt-detr-h-layout-17cls` 由 DeploySharp Builder 重新生成 Engine，以 `bus.jpg` 上下两个不同 ROI 绑定 `image`、`im_shape`、`scale_factor`，并逐行与 ORT CPU 的 Paddle NMS 结果对照，`5/5` 模型行通过。五次预热、五十次测量的 P50/P95 为 `40.0028/45.6559 ms`、`52.2604/54.0856 ms`、`34.6254/37.1798 ms`、`115.2087/116.2460 ms`、`121.8828/148.5517 ms`；这些时间包含当前 Session 与 Decoder 调用，不能当作纯 GPU kernel 或布局准确率。完整 Engine/ONNX/input SHA、置信度门槛和低分 NMS 尾部边界见[动态 Batch 报告](../../eng/models/paddle-document/verification/paddle-document-layout-tensorrt11-dynamic-batch-20261011.md)及五个[机器 JSON](../../eng/models/paddle-document/verification/paddle-document-layout-paddle-doc-pp-doclayout-l-tensorrt11-dynamic-batch-20261011.json)。静态 M/S、PicoDet 以及跨设备 Engine 仍不能由此宣称支持。
-
-上文 2026-10-07 的 RT-DETR/PP-DocLayout 段落保留为当日 CPU/OpenCV 快照；其中“TensorRT Batch 仍未验证”是历史时点描述，当前状态以本节 2026-10-11/12 的五模型 TensorRT 动态 Batch 报告为准。
-
-上文 2026-10-07 的表格分类段落同样保留为历史 bridge 探针快照：vendor `trtexec` 的 GPU-only 结果不包含 DeploySharp Provider、预处理/后处理或数据搬运，且当时的 DeploySharp bridge 初始化返回结构化异常 `3228369022`。该阻断随后已在 native loader 路径修复后关闭；当前 TRT10.11/API 10 的 DeploySharp 动态 Batch=2 证据使用真实 `[2,3,224,224]` 输入、两行分类 Decoder 和 ORT raw-logit 对照，正式报告见[动态 Batch 报告](../../eng/models/paddle-document/verification/paddle-document-table-classification-tensorrt-dynamic-batch-20261011.md)。历史探针仍见[独立报告](../../eng/models/paddle-document/verification/paddle-document-table-classification-tensorrt-dynamic-batch-probe-20261007.md)。当前结论只对该精确 PP-LCNet 表格分类工件、TRT10.11/API 10 和本机成立，不外推其它分类图、TensorRT 版本或设备。
-
+需要批量处理完整文档时，优先使用页面级有界并发；需要同模型吞吐时，先比较真 Batch 与独立 Session 池的 P95 和内存，再选择部署配置。
 ## 在代码中创建 Profile
 
 文档模型使用 `PaddleDocumentProfiles` 创建后端无关 Profile。分类可以直接复用分类 Profile；通用 `CreateRegionDetection` 只适用于调用方确认了 `[batch,candidates,fields]` 原始候选张量的导出。它现在可以通过可选的 `maximumBatch` 暴露真正的动态 Batch（默认仍是 `1`，以保持旧调用兼容），Decoder 会按输入顺序逐行执行坐标还原和 NMS；只有 ONNX 图的输入 batch 轴确实是动态时才应设置大于 `1`。当前官方 layout/cell 导出已经将 NMS 写入图中，应使用 `CreatePaddleNmsRegions`；模型输出名、标签、预处理和输出坐标必须以实际 ONNX 图为准：
@@ -148,9 +106,10 @@ PaddleDocumentProfile uvdoc = PaddleDocumentProfiles.CreateUnwarping(
 // FormulaNet/UniMERNet exports return integer token IDs. On net8+ load the
 // official BPE tokenizer from the downloaded Paddle inference.yml (or tokenizer.json)
 // so byte-level merges are applied instead of simply concatenating token pieces.
+string modelRoot = Path.GetFullPath(Path.Combine(".models", "paddle-document"));
 PaddleDocumentFormulaTokenizer tokenizer =
     PaddleDocumentFormulaTokenizer.FromPaddleInferenceYaml(
-        @"E:\Model\PaddleDocument\source\unimernet\UniMERNet_infer\inference.yml");
+        Path.Combine(modelRoot, "unimernet", "inference.yml"));
 var formulaSchema = new PaddleDocumentFormulaSchema(
     tokenizer, endTokenId: 2, startTokenId: 0, padTokenId: 1, unknownTokenId: 3);
 PaddleDocumentProfile formula = PaddleDocumentProfiles.CreateFormula(
@@ -159,20 +118,20 @@ PaddleDocumentProfile formula = PaddleDocumentProfiles.CreateFormula(
 // Chart2Table is an autoregressive four-graph bundle rather than a single
 // integer-token decoder. Use the official qwen.tiktoken sidecars and the
 // dedicated generation session.
-var chartTokenizer = new PaddleChart2TableTokenizer(
-    @"E:\Model\PaddleDocument\source\pp-chart2table\PP-Chart2Table");
+string chartRoot = Path.Combine(modelRoot, "pp-chart2table");
+var chartTokenizer = new PaddleChart2TableTokenizer(chartRoot);
 var chartBundle = new PaddleChart2TableOnnxBundle(
-    @"E:\Model\PaddleDocument\chart-export\chart-vision.onnx",
-    @"E:\Model\PaddleDocument\chart-export\text-onnx-verify-20260923\chart-token-embedding-dynamic.onnx",
-    @"E:\Model\PaddleDocument\chart-export\text-onnx-verify-20260923\chart-text-prefill-full-epsilon.onnx",
-    @"E:\Model\PaddleDocument\chart-export\text-onnx-verify-20260923\chart-text-decoder-dynamic-past-full-epsilon.onnx",
+    Path.Combine(chartRoot, "vision.onnx"),
+    Path.Combine(chartRoot, "embedding.onnx"),
+    Path.Combine(chartRoot, "prefill.onnx"),
+    Path.Combine(chartRoot, "decoder.onnx"),
     OnnxRuntimeBackendProvider.BackendId);
 using var chartSession = new PaddleChart2TableOnnxSession(
     registry, chartBundle,
     new BackendRequest(BackendCapabilities.TensorInference,
         OnnxRuntimeBackendProvider.BackendId));
 var chartInput = new OpenCvPaddleChart2TableInputFactory()
-    .CreateFromFile(@"E:\Model\PaddleDocument\validation\chart_parsing_02.png");
+    .CreateFromFile(Path.GetFullPath(Path.Combine("data", "chart.png")));
 using (chartInput)
 {
     PaddleChart2TableGenerationResult result =
@@ -195,7 +154,7 @@ PP-Structure 的模型组合依赖具体业务：有的页面只需要方向和 
 
 ### 可复现的方向 → 版面案例
 
-仓库中的 `PaddleDocumentPipelineSemanticIntegrationTests` 是一个完整的真实案例：它从 `E:\Data\image\bus.jpg` 准备页面，使用 `pp-lcnet-x1-0-doc-ori` 进行方向分类，再把同一页交给 `pp-doclayout-l` 做 23 类版面区域检测。两个阶段都通过 ONNX Runtime CPU Session，版面阶段读取前一阶段的方向结果，最终输出页码、区域列表和分段计时。
+仓库中的 `PaddleDocumentPipelineSemanticIntegrationTests` 演示从标准 `bus.jpg` 准备页面，先执行文档方向分类，再把同一页交给版面区域检测。两个阶段使用 ONNX Runtime CPU，版面阶段读取前序方向结果，最终输出页码、区域列表和分段计时。
 
 ```powershell
 $env:DEPLOYSHARP_PADDLE_DOCUMENT_RUN_EXTERNAL = '1'
@@ -206,7 +165,7 @@ dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Test
 
 该案例验证的是可运行的方向→版面任务链和结果来源，不代表版面区域已经与人工标注集完成精度评测，也不自动包含版面区域内的 OCR、表格或公式任务。后续阶段应从 `context.GetRegions()` 显式接收区域并创建局部输入，再将局部坐标映射回页面坐标。
 
-另外，`PaddleDocumentFunsdLayoutEvidenceTests` 默认仍在三个真实 FUNSD 表单页上运行；设置 `DEPLOYSHARP_PADDLE_DOCUMENT_FUNSD_LAYOUT_MAX_PAGES=50` 后，可对本地 FUNSD 测试集的 50 页执行同一合同。2026-10-04 的 ORT/OpenVINO 扩展均完成 `50/50` 页、共 1332 个区域，检测数量和标签逐页一致，坐标/尺寸/score 最大绝对差约 `4.6e-4`；两后端只有 `5/50` 页天然按左上顺序输出，因此仍需显式 reading-order policy。该记录只证明版面模型的跨后端执行和 typed region 合同；FUNSD 是词/实体标注，没有对齐的 23 类版面真值，因此不被解释为版面准确率或阅读顺序通过。详见 [`funsd-doclayout-l-50page-multibackend-20261004.md`](../../eng/models/paddle-document/verification/funsd-doclayout-l-50page-multibackend-20261004.md) 及两份原始 JSON。
+要扩展到公开数据集，可设置测试入口声明的页数和数据根目录。FUNSD 等词/实体标注并不等同于 PP-Structure 的版面类别真值；这类运行只能证明执行和结果合同，不能直接作为版面准确率。
 
 如果阶段已经由 `VisualPipeline` 管理，Visual 包还提供
 `PaddleDocumentVisualPipelineStage` 适配器。它把“准备 `PreparedVisualInput` → 调用所选后端 →
@@ -296,11 +255,11 @@ IReadOnlyList<PaddleDocumentPipelineResult> pages =
 
 PaddleOCR-VL-1.6 的六类任务可以作为页面阶段接入同一个编排器。`PaddleOcrVlDocumentStage` 负责准备输入、调用 `PaddleOcrVlOnnxSession`、保留 Token/EOS 或截断状态，并把页码、输入 SHA、模型和后端写入 `PaddleDocumentVisionLanguageResult`。已有四图 Session 的调用方式如下：
 
-固定 1.6 五图 ONNX Bundle 可用 `PaddleOcrReleaseClient.GetBundleAsync("paddleocr-vl/1.6")` 从 [`models-paddleocr`](https://github.com/guojin-yan/DeploySharp/releases/tag/models-paddleocr) 按需下载并校验；十个资产已完成[全新缓存与离线回读验证](../../eng/models/paddle-ocr/verification/paddleocr-vl-release-live-20261026.md)。该下载结果不包含设备专用 TensorRT Engine，且没有替代下述任务生成和页面质量验证。
+固定 1.6 五图 ONNX Bundle 可用 `PaddleOcrReleaseClient.GetBundleAsync("paddleocr-vl/1.6")` 从 [`models-paddleocr`](https://github.com/guojin-yan/DeploySharp/releases/tag/models-paddleocr) 按需下载并校验；十个资产已完成全新缓存与离线回读验证。该下载结果不包含设备专用 TensorRT Engine，且没有替代下述任务生成和页面质量验证。
 
-四图 Session 已在 Linux 的 ONNX Runtime CPU 和 OpenVINO CPU 上分别完成六任务单图生成对照。[OpenVINO 配置](visual-ocr.md#paddleocr-vl-是否已经可用于模型推理)复用同一 API 和图文件；下方使用 `onnxruntime-cpu` 的页面/版面联合案例仍是 ORT 的实测范围，不据此宣称 OpenVINO 多页联合质量已通过。
+四图 Session 已在 Linux 的 ONNX Runtime CPU 和 OpenVINO CPU 上分别完成六任务单图生成对照。[OpenVINO 配置](visual-ocr.md#paddleocr-vl)复用同一 API 和图文件；下方使用 `onnxruntime-cpu` 的页面/版面联合案例仍是 ORT 的实测范围，不据此宣称 OpenVINO 多页联合质量已通过。
 
-在带人工公式标注的 realFormula 数据上，当前有 [121 图 ORT CUDA 字符质量诊断](../../eng/models/paddle-ocr/verification/paddleocr-vl-realformula-ort-cuda-20261026.md)、[同构建 CPU/CUDA 全 121 图对照](../../eng/models/paddle-ocr/verification/paddleocr-vl-realformula-ort-cpu-cuda-121-20261026.md)和 [ORT CPU/OpenVINO CPU 全 121 图逐 Token 对照](../../eng/models/paddle-ocr/verification/paddleocr-vl-realformula-ort-openvino-linux-121-20261026.md)。默认 CUDA 的生成文本与 CPU 为 120/121 一致，显式关闭 CUDA TF32 后为 121/121 一致；Linux ORT CPU/OpenVINO CPU 的 Token ID 为 121/121 一致。[官方原始权重全 121 图对照](../../eng/models/paddle-ocr/verification/paddleocr-vl-realformula-official-121-20261026.md)又表明 DeploySharp ORT CPU 与官方的 6699 个生成 Token、121 份文本全部一致；严格标注匹配仍为 0/121，且至少一张图双方都把 `+1` 错放到根号外。[保守语义诊断复评](../../eng/models/paddle-document/verification/formula-realformula-semantic-reevaluation-20261026.md)将同数据的抽样结果修正为 5 相符、1 不同、115 不可判定；它仍不是数学语义准确率。这些结果说明固定导出的生成一致性，不代表公式数学语义正确，也不是正式性能结果；调用方仍应针对自己的文档数据验收。
+在带人工公式标注的 realFormula 数据上，当前有 121 图 ORT CUDA 字符质量诊断、同构建 CPU/CUDA 全 121 图对照和 ORT CPU/OpenVINO CPU 全 121 图逐 Token 对照。默认 CUDA 的生成文本与 CPU 为 120/121 一致，显式关闭 CUDA TF32 后为 121/121 一致；Linux ORT CPU/OpenVINO CPU 的 Token ID 为 121/121 一致。官方原始权重全 121 图对照又表明 DeploySharp ORT CPU 与官方的 6699 个生成 Token、121 份文本全部一致；严格标注匹配仍为 0/121，且至少一张图双方都把 `+1` 错放到根号外。保守语义诊断复评将同数据的抽样结果修正为 5 相符、1 不同、115 不可判定；它仍不是数学语义准确率。这些结果说明固定导出的生成一致性，不代表公式数学语义正确，也不是正式性能结果；调用方仍应针对自己的文档数据验收。
 
 ```csharp
 var vlModel = new PaddleDocumentModelDescriptor(
@@ -367,7 +326,7 @@ PaddleOcrVlTableParseResult repaired = raw.ParseTable(
 
 上述四个上限也是默认值，限制的是 UTF-16 原文字符数、原始行数、每行原始槽数以及原始/修复后网格大小。超过上限返回 `LimitExceeded`，取消请求传播 `OperationCanceledException`。最终行可以在 EOS 处结束，末尾 `<nl>` 可省略。HTML 仅生成固定的 `table/tr/td` 和跨度属性，单元格内容按官方规则去掉两端空白并做 HTML 转义；原有实体也作为文本保留，不执行模型生成的标签。JSON 导出保留 `table.status/diagnostics/cells/html`；Markdown 同时保留原始 OTSL 代码围栏和转义后的表格。
 
-[官方 OTSL 对照与真实页面联测](../../eng/models/paddle-ocr/verification/paddleocr-vl-otsl-tables-20261024.md)覆盖合并、空格/特殊字符和显式行宽修复，也核对已生成的两张真实表格。它验证转换与接入正确性，不评估模型识别内容是否正确。
+官方 OTSL 对照与真实页面联测覆盖合并、空格/特殊字符和显式行宽修复，也核对已生成的两张真实表格。它验证转换与接入正确性，不评估模型识别内容是否正确。
 
 #### VL Spotting：文字四边形与页面坐标
 
@@ -403,7 +362,7 @@ prepared = prepared.WithSourceFrame(new PaddleOcrVlSourceFrame(
 
 只有 EOS 且所有配对、坐标和四边形合法时 `Spotting.Succeeded=true`。少于八值、额外块内值、未配对文本、越界或错误标记、重复点、退化及自交四边形均返回 `InvalidStructure`；任何失败都不发布部分成功区域。非 EOS 为 `IncompleteGeneration`，不是“完整识别”。默认最多解析 1,048,576 个 UTF-16 字符和 4096 个区域，超限返回 `LimitExceeded`，取消直接传播。用 `result.ParseSpotting(new PaddleOcrVlSpottingParseOptions(...))` 可以独立调整上限，不改变原文或默认分析。
 
-JSON 的 `spotting` 保存状态、诊断、原始量化值、源图/页面多边形和映射元数据，Markdown 显示独立的坐标系与文字代码围栏。页面聚合的坐标可用标记表示“至少一个区域可用”，并不保证所有任务都有模型坐标，必须检查逐区域状态。[官方解析对照与实际 ROI 联测](../../eng/models/paddle-ocr/verification/paddleocr-vl-spotting-20261024.md)记录了当前验证范围；它不等于人工标注的文字或定位准确率。
+JSON 的 `spotting` 保存状态、诊断、原始量化值、源图/页面多边形和映射元数据，Markdown 显示独立的坐标系与文字代码围栏。页面聚合的坐标可用标记表示“至少一个区域可用”，并不保证所有任务都有模型坐标，必须检查逐区域状态。官方解析对照与实际 ROI 联测记录了当前验证范围；它不等于人工标注的文字或定位准确率。
 
 如果版面检测已经产出页面区域，可以使用 `PaddleOcrVlRegionStage` 逐区域路由同一个 VL 任务。它按版面结果顺序准备每个 crop，保留原区域的页面坐标、区域索引和输入 SHA，并返回 `PaddleDocumentVisionLanguagePageResult`。输入任务必须与阶段一致；当输入和生成结果都携带 SHA 时，两者必须相同，防止把另一张 crop 的结果关联到当前区域。`continueOnRegionFailure: true` 时，单个区域的裁剪、生成或身份校验失败会变成带异常类型和消息的隔离记录，后续区域仍会运行；取消请求会向上传播，也不会启动备用推理。`fallback` 只用于调用方提供的另一条 VL 生成路径，不能把普通 CTC OCR 的文本伪装成 VL 结果。
 
@@ -446,9 +405,9 @@ var pageInput = new PaddleDocumentPage(
 PaddleDocumentPipelineResult actualPage = await pipeline.RunAsync(pageInput, cancellationToken);
 ```
 
-该阶段校验页面尺寸与解码尺寸一致，拒绝无交集或无效矩形，支持非连续 stride 的区域视图。裁剪按左上 floor、右下 ceil、源图 clipping 执行；不会重新编码区域、克隆整页或提前使用 OpenCV 缩放。页面 metadata 使用编码文件 SHA，区域 metadata 使用包含裁剪尺寸与紧密 RGB 的内容 SHA。[完整多页案例](../../samples/02-visual/paddleocr-vl-document/README.md)给出输入 manifest、命令、JSON/Markdown 和非零失败退出码。
+该阶段校验页面尺寸与解码尺寸一致，拒绝无交集或无效矩形，支持非连续 stride 的区域视图。裁剪按左上 floor、右下 ceil、源图 clipping 执行；不会重新编码区域、克隆整页或提前使用 OpenCV 缩放。页面 metadata 使用编码文件 SHA，区域 metadata 使用包含裁剪尺寸与紧密 RGB 的内容 SHA。[完整多页案例](https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/samples/02-visual/paddleocr-vl-document/README.md)给出输入 manifest、命令、JSON/Markdown 和非零失败退出码。
 
-[Linux CPU 区域验证](../../eng/models/paddle-ocr/verification/paddleocr-vl-regional-pages-linux-20261024.md)从同一官方表格 RGB 拼成两张 PNG 页面，运行三个手工区域。Patch 及 `213` Token/文本全部一致、全部 EOS，并检查页码 7→3 及页面内的调用方区域顺序。该记录验证实际裁剪与页面编排，不等于独立多页质量、自动版面检测或阅读顺序验证。
+Linux CPU 区域验证从同一官方表格 RGB 拼成两张 PNG 页面，运行三个手工区域。Patch 及 `213` Token/文本全部一致、全部 EOS，并检查页码 7→3 及页面内的调用方区域顺序。该记录验证实际裁剪与页面编排，不等于独立多页质量、自动版面检测或阅读顺序验证。
 
 区域阶段的 `SourceRegion` 是版面检测或调用方提供的页面坐标来源，区别于 VL 模型通过 `Spotting` 返回的文字多边形。表格的逻辑单元格/HTML 和 Spotting 坐标各自检查解析状态，不会自动补出公式语义、图表结构或单元格像素框。`PaddleOcrVlRegionStage` 保留“所有区域运行同一任务”的语义；混合页面使用 `PaddleOcrVlLayoutStage`，或它的 OpenCV 单次解码适配器 `OpenCvPaddleOcrVlLayoutStage`：
 
@@ -478,13 +437,13 @@ foreach (var region in mixed.Executions)
 
 `CreatePpStructure` 按现有版面标签选择任务：文字/标题类 → OCR，`table` → 表格，`formula` → 公式，`chart` → 图表，`seal` → 印章。类别匹配忽略大小写和两端空白。图片类及未知类默认跳过；可覆盖映射，也可通过 `unmatchedCategoryTask` 为未知类配置任务。未开启图片回退时，显式 `null` 映射始终跳过该类别；Spotting 需应用明确配置，不根据图片类别猜测。路由器复制配置后只读，可供并发页面共享。
 
-版面模型有时把正文误判为 `image`。应用可显式开启 `imageFallback: new PaddleOcrVlImageFallbackOptions(PaddleOcrVlTask.TextRecognition, minimumUncoveredAreaRatio: .25, maximumRegionsPerPage: 1)`，传给 `CreatePpStructure`。路由器只对本来跳过的 `image` 区域计算其它已规划路由区域在其内部的矩形**并集**覆盖；达到未覆盖比例阈值的候选按未覆盖绝对面积排序，每页取前 N 个，同面积保留原索引先后。选中区域的页面警告为 `vl-image-fallback:<index>`。该计算每页执行一次，不启动额外检测器；默认关闭。显式非空的 `image` 类别任务仍优先于此回退，`image: null` 加启用回退表示按几何规则挑选而不是无条件跳过。若要保持全部图片跳过，应不配置回退。筛选发生在生成前，正常区域后来失败不会重新触发回退；回退也不判断图片有无文字或消除其它区域的重复解析，预算、阈值和质量须由应用数据确定。[真实检测框与单次图片推理记录](../../eng/models/paddle-ocr/verification/paddleocr-vl-image-fallback-20261026.md)展示了边界；完整 manifest 见[示例](../../samples/02-visual/paddleocr-vl-document/README.md#自动检测版面再执行-vl)。
+版面模型有时把正文误判为 `image`。应用可显式开启 `imageFallback: new PaddleOcrVlImageFallbackOptions(PaddleOcrVlTask.TextRecognition, minimumUncoveredAreaRatio: .25, maximumRegionsPerPage: 1)`，传给 `CreatePpStructure`。路由器只对本来跳过的 `image` 区域计算其它已规划路由区域在其内部的矩形**并集**覆盖；达到未覆盖比例阈值的候选按未覆盖绝对面积排序，每页取前 N 个，同面积保留原索引先后。选中区域的页面警告为 `vl-image-fallback:<index>`。该计算每页执行一次，不启动额外检测器；默认关闭。显式非空的 `image` 类别任务仍优先于此回退，`image: null` 加启用回退表示按几何规则挑选而不是无条件跳过。若要保持全部图片跳过，应不配置回退。筛选发生在生成前，正常区域后来失败不会重新触发回退；回退也不判断图片有无文字或消除其它区域的重复解析，预算、阈值和质量须由应用数据确定。真实检测框与单次图片推理记录展示了边界；完整 manifest 见[示例](https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/samples/02-visual/paddleocr-vl-document/README.md#自动检测版面再执行-vl)。
 
-[Linux 混合页面实测](../../eng/models/paddle-ocr/verification/paddleocr-vl-mixed-pages-linux-20261024.md)验证两张无损拼接 PNG 上的六个任务区域和两个跳过项：全部 Patch、765 Token/文本与固定官方参考一致且 EOS，页码/区域索引不变。该集成测试使用手工版面输入，不是自动版面模型、独立多页质量或正式性能结论。
+Linux 混合页面实测验证两张无损拼接 PNG 上的六个任务区域和两个跳过项：全部 Patch、765 Token/文本与固定官方参考一致且 EOS，页码/区域索引不变。该集成测试使用手工版面输入，不是自动版面模型、独立多页质量或正式性能结论。
 
-混合结果保留全部原版面区域和索引，分别统计 `SucceededCount`、`FailedCount`、`SkippedCount`；跳过项不准备 Patch、不执行生成、不伪造空文本。单区域失败保留已选任务，成功结果的模型模块按实际任务设置，页面聚合模块为 `VisionLanguageParsing`。`Succeeded` 表示生成返回结果，仍须检查 `FinishReason`，`MaxTokens` 可能意味着截断。JSON/Markdown 导出保留任务、状态、源框和原文。它沿用输入顺序，不重新排序，也不会识别没有检测出的区域。[多页示例](../../samples/02-visual/paddleocr-vl-document/README.md#混合页面按类别选择任务)提供 `task=Auto` 的完整 manifest。
+混合结果保留全部原版面区域和索引，分别统计 `SucceededCount`、`FailedCount`、`SkippedCount`；跳过项不准备 Patch、不执行生成、不伪造空文本。单区域失败保留已选任务，成功结果的模型模块按实际任务设置，页面聚合模块为 `VisionLanguageParsing`。`Succeeded` 表示生成返回结果，仍须检查 `FinishReason`，`MaxTokens` 可能意味着截断。JSON/Markdown 导出保留任务、状态、源框和原文。它沿用输入顺序，不重新排序，也不会识别没有检测出的区域。[多页示例](https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/samples/02-visual/paddleocr-vl-document/README.md#混合页面按类别选择任务)提供 `task=Auto` 的完整 manifest。
 
-同一个 stage 可以按页调用 `RunManyAsync`，或对线程安全适配器调用 `RunManyConcurrentAsync`。OpenCV VL 阶段为每页持有独立底图，并在该页运行结束/失败/取消时释放；Session 和 Tokenizer 仍由调用方拥有。并发方法只提供页面级并发，不是真正的 VL 模型 Batch；单个 `PaddleOcrVlOnnxSession` 仍串行化生成。固定 1.6 的 Linux/Windows ORT CPU、OpenVINO CPU 和 Windows ORT CUDA 已有六任务单图证据，CUDA 路径仍有 CPU-owned KV/logits 回读。[TensorRT 五图完整生成](../../eng/models/paddle-ocr/verification/paddleocr-vl-tensorrt-five-graph-20261026.md)也已在 Windows RTX 3060 Laptop 上完成六任务 Token/文本对照，但使用本机专用 Engine、派生 prefill 图和不同 vision profile；尚无 TensorRT 页面联合质量或正式性能结论。OpenCV DNN 5.0 对原始 vision/decoder 图在动态 `Shape` 导入失败，此精确 Bundle 当前不支持，见[后端探针报告](../../eng/models/paddle-ocr/verification/paddleocr-vl-backend-boundary-20261025.md)。
+同一个 stage 可以按页调用 `RunManyAsync`，或对线程安全适配器调用 `RunManyConcurrentAsync`。OpenCV VL 阶段为每页持有独立底图并在结束、失败或取消时释放；Session 和 Tokenizer 仍由调用方拥有。页面并发不是真正的 VL 模型 Batch，单个 `PaddleOcrVlOnnxSession` 会串行生成。当前精确后端范围以验证矩阵为准；TensorRT Engine 绑定目标设备，OpenCV DNN 不支持该生成式 Bundle。
 
 ### 真实版面检测与 VL 共享解码底图
 
@@ -515,7 +474,7 @@ Console.WriteLine(PaddleDocumentPipelineExport.ToMarkdown(parsed));
 
 `maximumPagePixels`（默认 128 Mi 像素）在解码后、检测前检查；它不能防止解码器自身分配。`maximumRegions`（默认 64）包括将跳过的所有候选，超限在任何 VL 生成前失败，不静默丢弃区域。VL 最小/最大像素、上下文、KV、Token 和超时仍独立生效。返回的 `Elapsed` 覆盖文档阶段，不含包装器外层首次解码；完整调用耗时请在 `RunAsync` 外计时。
 
-区域保留检测器顺序和 `layoutModelRegionIndex`，另可选择下述几何阅读顺序视图。默认图片类跳过，版面模型的漏检/错分类会直接影响解析覆盖；允许覆盖类别映射，但不会自动消除重叠文本或补回漏检。完整配置见[自动版面示例](../../samples/02-visual/paddleocr-vl-document/README.md#自动检测版面再执行-vl)。
+区域保留检测器顺序和 `layoutModelRegionIndex`，另可选择下述几何阅读顺序视图。默认图片类跳过，版面模型的漏检/错分类会直接影响解析覆盖；允许覆盖类别映射，但不会自动消除重叠文本或补回漏检。完整配置见[自动版面示例](https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/samples/02-visual/paddleocr-vl-document/README.md#自动检测版面再执行-vl)。
 
 #### 多栏阅读顺序与稳定区域索引
 
@@ -552,18 +511,7 @@ foreach (var region in page.ReadingExecutions)
 
 该功能是可配置的几何启发式，已有多栏/跨栏/方向/导出与原生适配器合同测试，**不是官方阅读顺序模型或独立标注集准确率结论**。任意重叠布局、竖排、复杂浮动插图和表格单元格内部顺序需另行处理；排序不会修复检测漏检、去重、改变 VL 文本或调整模型精度。
 
-外部基准入口将页面并发和每个视觉 Session 的内部并发分别暴露为 `DEPLOYSHARP_PADDLE_DOCUMENT_PAGE_CONCURRENCY` 与 `DEPLOYSHARP_PADDLE_DOCUMENT_SESSION_CONCURRENCY`，默认值都是 `2`，并会原样写入证据 JSON。两者必须联合调优；OpenVINO CPU 的 5/50 记录显示，在当前主机上固定为 `2/2` 时页面并发 P50 反而比串行慢 `12.0%`，不能把页面并发当成通用加速开关。
-
-四组 `session/page` 组合的同协议对照见[OpenVINO 并发调优报告](../../eng/models/paddle-document/verification/paddle-document-multipage-openvino-concurrency-tuning-20261005.md)。本机这次小样本中 `1/2` 同时降低了 P50/P95，但串行基线在不同进程间有波动，因此仅作为当前设备的候选配置；库和示例不会据此自动改变默认值。
-
-真实模型证据见[两页 ORT CPU 有界并发记录](../../eng/models/paddle-document/verification/paddle-document-multipage-concurrent-ort-20261005.md)：方向→版面两阶段在同一 `bus.jpg` 的两个页对象上运行，串行墙钟为 `882.267 ms`，页面并发上限为 `2` 时墙钟为 `791.9943 ms`。进一步的[5 次预热/50 次测量记录](../../eng/models/paddle-document/verification/paddle-document-multipage-concurrent-ort-benchmark-20261005.md)给出串行 P50/P95 `841.0031/918.2798 ms`、并发 P50/P95 `708.4469/873.7787 ms`；[OpenVINO CPU 单次记录](../../eng/models/paddle-document/verification/paddle-document-multipage-concurrent-openvino-20261005.md)给出串行/并发墙钟 `898.9205/644.0613 ms`，[OpenVINO 5/50 记录](../../eng/models/paddle-document/verification/paddle-document-multipage-concurrent-openvino-benchmark-20261005.md)给出串行 P50/P95 `563.6314/647.9142 ms`、并发 P50/P95 `631.2580/664.9269 ms`，说明该主机上页面并发反而变慢。四组 `session/page` 组合的对照见[OpenVINO 并发调优报告](../../eng/models/paddle-document/verification/paddle-document-multipage-openvino-concurrency-tuning-20261005.md)，本机 `1/2` 仅作为候选配置。 [TensorRT CUDA 5/50 记录](../../eng/models/paddle-document/verification/paddle-document-tensorrt-multipage-benchmark-20261005.md)在相同双页合同下记录 P50/P95 `103.2937/109.6768 ms` 串行、`66.7278/69.0992 ms` 并发。结果只证明页面顺序、源 SHA、区域数量和当前主机上的执行行为；它们不是模型 Batch、质量结论或跨设备性能承诺。
-
-在同一台 Windows 主机按相同 `5+50` 协议复测的[2026-10-14 汇总](../../eng/models/paddle-document/verification/paddle-document-multipage-benchmark-20261014.md)显示，ORT CPU 串行/并发 P50/P95 为 `1139.597/1261.217` 与 `1018.432/1211.011 ms`，OpenVINO CPU 为 `1137.557/1280.655` 与 `915.874/987.933 ms`。两后端都保持两页顺序和每页 300 个候选；当前配置下页面并发只是单机观察，不能替代张量 Batch、质量或跨设备吞吐结论。
-
-同一流水线在 TensorRT 10.11 `compute_86` Engine 上也完成了[两页正式协议复测](../../eng/models/paddle-document/verification/paddle-document-tensorrt-multipage-benchmark-20261014.md)：串行/并发 P50/P95 为 `99.344/128.749` 与 `67.187/72.894 ms`，两页顺序和每页 300 个版面候选保持不变。该结果绑定当前 Engine、GPU 和 bridge/runtime，只是页面并发证据，不是 TensorRT 通用性能、准确率或跨设备承诺。
-
-表格单元格的两个 RT-DETR 工件也完成了[TensorRT 10.11 动态 Batch=2 验证](../../eng/models/paddle-document/verification/paddle-document-table-cell-dynamic-batch-tensorrt-20261014.md)：每个输入由 `bus.jpg` 上下两个 ROI 组成，两个行各返回 300 个候选，ORT/TensorRT 最小 IoU 为 `0.99983543–0.99996006`。这是精确工件的辅助输入、行隔离和有界 parity 证据，不代表表格召回率、结构准确率、吞吐或跨设备可移植性。
-
+页面并发和单个视觉 Session 的内部并发是两个独立参数，必须联合调优。更多并发不一定更快：CPU 线程争用、OpenVINO request 数量、GPU 显存和页面任务分布都会影响 P95。保持输入顺序时使用 `RunManyConcurrentAsync` 的有界并发；固定 batch-one 模型通过独立 Session 池处理，不要并发写入同一个 request 或自回归 Session。部署前在目标设备比较串行、页面并发和真 Batch，并记录峰值内存。
 ### 版面区域 → OCR
 
 版面检测结果可以交给 `PaddleDocumentRegionTextStage`。该适配器要求前序阶段产生 `LayoutDetection` 区域，然后按页面区域顺序调用应用提供的 OCR 委托；委托负责从原图按 `region.Bounds` 裁剪、调用已有 `OcrPipeline`，再返回一条 `PaddleDocumentTextItem`。库会检查区域索引、页码和输入 SHA，并把每条文本与页面坐标绑定。
@@ -657,387 +605,76 @@ var chart = new PaddleDocumentDependentStage(
 
 SLANeXt Decoder 在结构序列没有选出 `<EOS>` 时会保留已解码的 markup，同时追加 `missing-eos:sequence-may-be-truncated` warning。调用方应把该 warning 视为截断风险，而不是把“有 HTML 输出”误判为完整表格；完整序列仍需要结合模型的 EOS、最大长度和任务级质量指标检查。
 
-面向使用者的 [PP-Structure 表格案例](../../samples/02-visual/paddle-structure-table/README.md) 可在自己的图片上运行分类→单元格检测→SLANeXt 结构→PP-OCRv5 Mobile 逐格识别。分类后自动选择 wired/wireless 表格模型；仅对齐成功时按需加载 REC 模型和字典，`--structure-only` 保留原三模型结构路径。它支持 ORT CPU/OpenVINO CPU、单次图像解码，并导出页面 JSON、HTML、独立的 `table-cell-alignment.json` 和 `table-cell-ocr.json`。案例默认检测分数阈值为 `0.5`，可显式调节；对齐器只在来源、数量和逐行几何满足合同的情况下给出结构槽位→RT-DETR 检测框映射，遇到跨行单元格或歧义时保留结构输出并记录跳过原因。不使用当前示例中大量越界的 SLANeXt 结构框裁剪；[四阶段单图记录](../../eng/models/paddle-document/verification/paddle-structure-table-cell-ocr-20261027.md)证明官方 wired 图在 ORT CPU/OpenVINO CPU 各运行一次，13 条文字及最终 HTML 完全一致，不代表其它表格或标注准确率。仓库中的历史 `PaddleDocumentTablePipelineIntegrationTests` 仍记录阈值 0 的协议：`table_recognition.jpg` → `pp-lcnet-x1-0-table-cls`（`wired_table`）→ `rt-detr-l-wired-cell-det`（300 个候选）→ `slanext-wired`（24 tokens、13 个单元格、HTML markup）。复现命令：
+面向使用者的 [PP-Structure 表格案例](https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/samples/02-visual/paddle-structure-table/README.md) 演示分类 → 单元格检测 → SLANeXt 结构 → PP-OCR 逐格识别。分类结果负责选择 wired/wireless 模型；只有结构槽位和检测框能够可靠对齐时才执行逐格 OCR，歧义、跨行单元格或越界几何会保留结构结果并记录跳过原因。示例支持 ORT CPU 与 OpenVINO CPU，并导出页面 JSON、HTML、对齐和单元格 OCR 结果。
 
-两张独立官方 PubTabNet 无线图的[定向运行](../../eng/models/paddle-document/verification/paddle-structure-table-wireless-20261027.md)已证实分类路由和后三阶段中的检测、结构可执行；其中一张在 ORT CPU/OpenVINO CPU 得到相同的 44 个检测框、45 个结构单元格和 HTML。对齐器因数量不一致跳过 REC，因此这不是无线四阶段或填写文字的验证，也不改变标注精度结论。
+Chart2Table、公式与印章使用相同的 `PaddleDocumentDependentStage` 接入页面 Pipeline，分别写入 `PaddleDocumentChartResult.StructuredData`、`PaddleDocumentFormulaResult.Latex` 和 `PaddleDocumentSealResult`。这些结果类型保留页码、区域来源和输入身份；是否通过准确率门禁仍由应用自己的标注集决定。
 
-同一案例现在也有 OpenVINO CPU 的完整记录。ORT CPU 和 OpenVINO CPU 均返回 `wired_table`、300 个阈值为 0 的检测候选、13 个 SLANeXt 结构单元格、24 个结构 token、HTML 长度 165；旧版 Decoder 当时尚未检查源图越界，因此记录为无 warning，新版在该图上报告 `table-cell-geometry-outside-source:12/13`。单次总耗时分别为 `2001.241 ms` 和 `2127.139 ms`。OpenVINO 的 SLANeXt 阶段使用独立 SHA-256 的 `slanext-wired-openvino-compat.onnx`，因为原始 Loop 图仍受当前 importer 限制。详细模型/输入哈希、兼容 ID 和边界说明见 [`paddle-document-table-pipeline-ort-openvino-20261011.md`](../../eng/models/paddle-document/verification/paddle-document-table-pipeline-ort-openvino-20261011.md) 及其 [JSON](../../eng/models/paddle-document/verification/paddle-document-table-pipeline-ort-openvino-20261011.json)。这些是执行与 Decoder 合同证据，不是单元格召回、表格准确率或 P50/P95 性能结果；OpenCV DNN 与 TensorRT 仍按矩阵单独记录。
-
-2026-10-14 又按统一 **5 次预热 + 50 次测量** 协议对这条完整任务链做了 ORT CPU / OpenVINO CPU 复测。每次都断言分类标签、单元格检测候选数、SLANeXt 结构单元格数、token 数和 HTML SHA 稳定；两后端最终结果完全一致（`wired_table`、300 个候选、13 个结构单元格、24 个 token，HTML SHA-256 `53de44f9af566b55f7a583489d157d4e75e5ba6a834a77f0245712b16e3d2557`）。端到端 P50/P95：ORT CPU `1532.50/1618.06 ms`，OpenVINO CPU `1288.99/1558.58 ms`；分阶段耗时、原始 50 次样本、精确模型 SHA 和复现命令见[正式重复性能报告](../../eng/models/paddle-document/verification/paddle-document-table-pipeline-ort-openvino-20261014.md)及[机器 JSON](../../eng/models/paddle-document/verification/paddle-document-table-pipeline-ort-openvino-20261014.json)。OpenVINO 使用另行派生并登记 SHA 的兼容 SLANeXt 图。输入没有单元格/表格真值，检测阈值为 0，因此候选数不代表召回；本结果仅是单设备单图延迟与执行合同，CPU 未锁频，不代表准确率、跨设备排名、其他输入性能或 OpenCV/TensorRT 状态。
-
-Chart2Table 另有独立的三后端固定样本性能协议：同一 ChartQA `val` 图像、同一四图 Bundle、每个后端单 Session/单通道，5 次预热后 50 次测量，并在每次检查 EOS、21 token 和输出 SHA。ORT CPU、OpenVINO CPU、TensorRT CUDA 的总耗时 P50/P95 分别为 `8526.26/9042.12`、`7962.20/12161.73`、`2884.91/3456.44 ms`；三者 55 次运行的文本结果完全一致。完整阶段数据、Engine/模型 SHA 和复现入口见[三后端固定样本报告](../../eng/models/paddle-document/verification/chart2table-fixed-benchmark-20261017.md)及其[机器 JSON](../../eng/models/paddle-document/verification/chart2table-fixed-benchmark-20261017.json)。这是未锁频的单机重复延迟记录，不是 ChartQA split accuracy、跨设备排名或 TensorRT plan 可移植性结论。
-
-```powershell
-$env:DEPLOYSHARP_PADDLE_DOCUMENT_RUN_EXTERNAL = '1'
-dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Tests.csproj `
-  -f net10.0 --no-restore --verbosity quiet `
-  --filter FullyQualifiedName~PaddleDocumentTablePipelineIntegrationTests
-```
-
-这条案例证明了阶段依赖、真实模型执行和 HTML 结果传递；300 个候选是阈值 0 的执行观察，不是单元格检测准确率，HTML 结构也不代表数据集级表格识别指标。
-
-Chart2Table 也可挂接到同一 Pipeline。`PaddleDocumentChartPipelineIntegrationTests` 使用四图 ONNX Bundle、官方 tokenizer 和 `chart_parsing_02.png`，在 ORT CPU 上把生成结果封装为 `PaddleDocumentChartResult.StructuredData`。测试要求显式提供 Bundle、模型源目录和导出目录：
-
-```powershell
-$env:DEPLOYSHARP_CHART2TABLE_PIPELINE_RUN_EXTERNAL = '1'
-$env:DEPLOYSHARP_CHART2TABLE_MODEL_ROOT = 'E:\Model\PaddleDocument\source\pp-chart2table\PP-Chart2Table'
-$env:DEPLOYSHARP_CHART2TABLE_EXPORT_ROOT = 'E:\Model\PaddleDocument\chart2table-export-repro-20260923'
-dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Tests.csproj `
-  -f net10.0 --no-restore --verbosity quiet `
-  --filter FullyQualifiedName~PaddleDocumentChartPipelineIntegrationTests
-```
-
-公式和印章已有独立 ORT/Decoder 真实案例；它们接入页面 Pipeline 时分别使用 `PaddleDocumentDependentStage` 声明版面区域依赖，并将 `Latex` 或掩码区域写入页面导出。当前这些组合仍是代表样本验证，不是数据集级精度结论。2026-10-04 又对六个公式 ONNX 做了 Loop-body 参数重命名兼容实验：六个派生图均通过 `onnx.checker`，但 Plus-S/FormulaNet-S 虽进入 OpenVINO 执行却没有通过 token parity，Plus-M/Plus-L/FormulaNet-L 在 Loop reshape 处失败，UniMERNet 仍 native crash；六个精确组合继续标记为当前 OpenVINO 不支持。详见 [`formula-openvino-loop-compat-20261004.json`](../../eng/models/paddle-document/verification/formula-openvino-loop-compat-20261004.json) 与 [`formula-openvino-loop-compat-20261004.md`](../../eng/models/paddle-document/verification/formula-openvino-loop-compat-20261004.md)。
-
-`PaddleDocumentFormulaSealPipelineIntegrationTests` 已验证这两类结果可以挂入页面 Pipeline：公式使用 `PP-FormulaNet_plus-S` 和官方公式图片，输出带页码/输入 SHA 的 LaTeX；印章使用 PP-OCRv4 mobile seal 模型和 `demo_1.jpg`，输出带页码/输入 SHA 的掩码尺寸及区域。测试入口：
-
-```powershell
-$env:DEPLOYSHARP_PADDLE_DOCUMENT_RUN_EXTERNAL = '1'
-dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Tests.csproj `
-  -f net10.0 --no-restore --verbosity quiet `
-  --filter FullyQualifiedName~PaddleDocumentFormulaSealPipelineIntegrationTests
-```
-
-公式案例校验 `\\frac` 和 token 输出，印章案例校验 mask 尺寸；两者仍属于官方代表样本执行合同，不等同于公式识别或印章检测数据集精度。另有 Plus-S 五种受控公式图变体回归：原图/白边/对比度/轻模糊归一化 LaTeX 精确一致，JPEG q45 出现两个符号替换；证据见 [`formula-plus-s-variants-20260929.md`](../../eng/models/paddle-document/verification/formula-plus-s-variants-20260929.md)。
-
-印章 Decoder 另有 `SealDecoderRunsAcrossThreeLocalImagesOnOrtCpu` 多图片执行入口，覆盖 `demo_1/2/3.jpg`，只记录掩码尺寸、区域数和分数范围；由于这些图片没有印章人工标注，该报告不被解释为召回率或精度评测。`FormulaModelsAndSealModelsProduceMachineReadableOrtEvidence` 进一步将六个公式模型和 mobile/server 两个印章模型的结果写入测试 JSON，记录模型/图片 SHA、token/LaTeX、mask 尺寸和区域数。公式模型随后已接入带许可证和可追溯标签的 MathNet realFormula v1（121 张图），并完成六模型 ORT CPU 逐样本诊断；当前结果和限制见[六模型汇总](../../eng/models/paddle-document/verification/formula-realformula-six-models-ort-20261007.md)及[公式后端状态索引](../../eng/models/paddle-document/verification/formula-backend-quality-status-20261011.md)。
-
-2026-10-12 已对六个官方公式 ONNX 全部执行 TensorRT 11 Batch=1 Builder 探针。五个 FormulaNet 图在 Loop 内 `BitwiseAnd` parser 检查失败，UniMERNet 在 If 内 `ConcatFromSequence` 检查失败；没有 Engine、Decoder、质量或性能结果。该状态只针对记录的 TensorRT 11.0.0.114-cu12 和精确工件，不是对所有 TensorRT 版本的普遍结论。见[FormulaNet 五图汇总](../../eng/models/paddle-document/verification/formula-tensorrt11-builder-probe-20261012.md)和[UniMERNet 独立报告](../../eng/models/paddle-document/verification/formula-unimernet-tensorrt11-builder-probe-20261012.md)。较早对 Plus-S 派生图的 Polygraphy/掩码/Loop 探针仅为非发布实验，仍见[派生图记录](../../eng/models/paddle-document/verification/formula-tensorrt-derived-graph-probe-20261011.md)。
-
-2026-10-14 又在匹配的 TensorRT 10.11.0.33-cu12 / API 10 bridge 上对同六个精确 ONNX 执行动态 Batch=2 DeploySharp Builder 探针。五个 FormulaNet 均在 `BitwiseAnd.0` 处失败，UniMERNet 独立在 `ConcatFromSequence.2` 处失败；`1/1` 外部测试通过、环境阻断为 `0`，但六个 Engine 均未创建，因此没有 TensorRT Decoder、token 生成、质量或性能结果。该证据与 TRT11 Batch=1 探针分开记录，不应互相外推。详见[TensorRT 10.11 动态 Batch 报告](../../eng/models/paddle-document/verification/paddle-document-formula-tensorrt-builder-probe-20261014.md)及[机器 JSON](../../eng/models/paddle-document/verification/paddle-document-formula-tensorrt-builder-probe-20261014.json)。
-
-2026-10-14 又补充了独立的 ORT CUDA 证据：六个精确公式 ONNX 使用 `Microsoft.ML.OnnxRuntime.Gpu.Windows` 1.23.2 opt-in restore，在相同 realFormula 图片和 DeploySharp 专用预处理下与 ORT CPU 对照。Plus-S/M/S 已完成三样本进程内对照；Plus-L/L/UniMERNet 当前只接受每样本新进程的单样本证据，因为长生命周期多样本运行会污染部分自回归 `Int64` 输出。运行均记录 raw output 可比性、token ID 和 LaTeX 一致。该记录只关闭 ORT CUDA 的进程隔离执行/Parity 合同，不改变六模型的公式质量门、OpenVINO/OpenCV DNN 阻断或 TensorRT Builder 阻断。详见[ORT CUDA 报告](../../eng/models/paddle-document/verification/formula-realformula-ort-cuda-20261014.md)及[机器 JSON](../../eng/models/paddle-document/verification/formula-realformula-ort-cuda-20261014.json)。
-
-同日的 [FormulaNet-L 单 Session 生命周期探针](../../eng/models/paddle-document/verification/formula-formulanet-l-cuda-lifecycle-20261014.md) 只创建一个 CPU Session 和一个 CUDA Session，在同一进程连续执行三个 realFormula 样本；首行正常，后两行返回 `[1,1025]` 和 1024 个越界 `Int64` 值且没有 EOS，Decoder 按合同拒绝。它确认 Session 重建不是充分修复，因此 FormulaNet-L 仍不能宣称普通多样本 CUDA 支持。
-
-基于同一外部 manifest 又生成了[公式命令 token 诊断](../../eng/models/paddle-document/verification/formula-realformula-command-quality-20261011.md)：六模型逐行通过图片 SHA 关联真实参考标签，micro-F1 为 `45.15%–63.01%`，预测环境配对为 `117/121–121/121`。这是词法/结构指标，不是 TeX 渲染、数学语义或发布精度；原始参考 LaTeX 不写入仓库。
-
-同一六模型 ORT CPU 结果还增加了[保守结构 token 诊断](../../eng/models/paddle-document/verification/formula-realformula-structural-quality-20261011.md)：对命令、变量占位符、数字、分组符号、上下标和常见运算符做多重集合匹配，micro-F1 为 `79.81%–86.53%`。它用于区分结构性过生成/截断，不是 TeX parser、渲染相似度或数学语义指标；可用 `Summarize-FormulaStructuralQuality.py` 在同一外部 manifest 上重算。
-
-应用侧也可以复用 `PaddleDocumentFormulaQualityEvaluator`，避免各项目自行实现不一致的公式比较逻辑。`Compare(expected, actual)` 同时返回原始文本相等、仅空白规范化后的相等、Unicode 标量 CER、LaTeX 命令 token 多重集合 Precision/Recall/F1，以及大括号、`\\left`/`\\right` 和 `\\begin{...}`/`\\end{...}` 环境平衡检查；结构诊断脚本也按参考长度分层统计生成环境平衡。`NormalizeLatex` 只规范换行与空白，不改写命令。该 API 是可复现的回归/数据集诊断，不是渲染器，也不能证明数学语义等价。
-
-此外，`Compare` 提供有序词法 token 的 `TokenEditDistance` / `TokenErrorRate`。它把命令、连续数字和非空白符号保守地组成序列，用于发现命令多重集合无法发现的顺序、插入和删除错误；该指标同样不是 TeX 解析、渲染相似度或数学语义分数。
+公式评估可复用内置比较器，而不是在每个项目重复实现字符串指标：
 
 ```csharp
-var quality = PaddleDocumentFormulaQualityEvaluator.Compare(referenceLatex, formula.Latex);
+PaddleDocumentFormulaQualityResult quality =
+    PaddleDocumentFormulaQualityEvaluator.Compare(referenceLatex, formula.Latex);
+
+Console.WriteLine(
+    $"CER={quality.NormalizedTextAccuracy.CharacterErrorRate:P2}, " +
+    $"token-error={quality.TokenErrorRate:P2}, command-F1={quality.CommandF1:P2}");
+
 if (!quality.ActualBalancedDelimiters)
     Console.WriteLine("prediction has unbalanced delimiters");
-Console.WriteLine($"CER={quality.NormalizedTextAccuracy.CharacterErrorRate:P2}, F1={quality.CommandF1:P2}");
 ```
 
-当前本机数据根目录的 [`formula-data-availability-audit-20261005.md`](../../eng/models/paddle-document/verification/formula-data-availability-audit-20261005.md) 和 [JSON 清单](../../eng/models/paddle-document/verification/formula-data-availability-audit-20261005.json) 是 **2026-10-05 的历史盘点**，只描述当时尚未下载 MathNet 的目录状态；其中“只有一张官方公式图片”的结论不代表当前状态。MathNet 评测已经补齐 121 条真实标签，但 exact/CER 仍是 ORT CPU 字符诊断，不是数学语义准确率，也没有关闭 OpenVINO、OpenCV DNN 或 TensorRT 质量门。
+该 API 提供原文/空白规范化比较、Unicode CER、有序词法 token error、LaTeX 命令 Precision/Recall/F1 以及分组和环境闭合诊断。它不是 TeX 渲染器，也不能证明数学语义等价；需要视觉或语义质量时，在独立评测工具中加入渲染和人工真值。
+## 模型与后端边界
 
-公式输出还提供一份 [保守语法/结构诊断](../../eng/models/paddle-document/verification/formula-realformula-syntax-quality-20261012.md)：它只检查常见命令参数、分组和环境闭合，并对抽象结构指纹做配对统计。由于参考标签中也有不满足该子集的写法，结果只能作为 malformed-output 线索，不能当作 TeX 渲染或数学语义指标。
+模型目录和 Release 下载按单个工件组织，不要求用户下载整个 PaddleOCR 集合。使用 `PaddleOcrReleaseClient` 或 [ModelFactory](modelfactory-getting-started.md) 获取模型、字典、tokenizer 和 manifest；创建 Session 前校验全部文件。PP-OCR 核心模型见 [OCR 教程](visual-ocr.md)，本页任务对应的精确 ID 见[官方模型目录](model-catalog.md)。
 
-另外可以运行 [SymPy/ANTLR LaTeX 解析可接受性诊断](../../eng/models/paddle-document/verification/formula-realformula-latex-parseability-20261012.md)（[JSON](../../eng/models/paddle-document/verification/formula-realformula-latex-parseability-20261012.json)）。它对六模型共 726 条预测调用当前 SymPy ANTLR parser，其中 548 条接受、178 条拒绝（75.48%）。该 parser 只覆盖有限 LaTeX 子集，复杂环境、宏和数据集中的非规范写法可能被拒绝；因此数字只能帮助定位 malformed output 与 parser coverage 边界，不能当作渲染成功、视觉相似、数学语义等价或发布质量。
+后端状态必须按“精确模型工件 + 任务 + 后端”判断：
 
-2026-10-13 又补充了锁定 MathJax 4.1.3 和 sharp 0.35.5 的[渲染/视觉结构诊断](../../eng/models/paddle-document/verification/formula-realformula-render-quality-20261013.md)（[JSON](../../eng/models/paddle-document/verification/formula-realformula-render-quality-20261013.json)）。121 条参考中 118 条可渲染；六模型预测分别有 110–121 条可渲染，可比较配对的前景 IoU P50 为 `0.2253–0.2434`。工具位于 `eng/models/paddle-document/tools/formula-render-quality`，报告只保存图片/公式哈希、渲染错误和像素指标，不复制原始 LaTeX。该结果关闭了“缺少可复现渲染器”的工具阻断，但像素相似度受排版和字形影响，不能证明数学语义等价、完整 TeX 兼容或发布精度。
-
-2026-10-17 同一工具增加了 [MathML 结构指纹诊断](../../eng/models/paddle-document/verification/formula-realformula-render-quality-20261017.md)（[JSON](../../eng/models/paddle-document/verification/formula-realformula-render-quality-20261017.json)）。每条参考/预测先由同一 MathJax `tex2mml` 生成 MathML，再去除渲染器元数据和标签间空白计算结构 SHA；六模型与参考的匹配为 `14–21/107–118` 个可比较对。该指标比像素比较更少受字形影响，但仍是渲染器结构诊断，不是数学语义等价；质量门仍按 fail-closed 规则保持 blocked。
-
-2026-10-17 新增[公式质量门汇总](../../eng/models/paddle-document/verification/formula-quality-gate-20261017.md)及[机器可读报告](../../eng/models/paddle-document/verification/formula-quality-gate-20261017.json)。它把 121 条样本的执行完整性、EOS/空输出、语法、SymPy/ANTLR 解析和 MathJax 渲染证据按模型对齐，并采用 fail-closed 规则：六模型的行数、空输出和 EOS 完整性通过，但 Plus-S 与 FormulaNet-S 的可比较渲染比例低于诊断阈值，因此总门禁保持 **blocked**。2026-10-18 的[受限数值替换诊断](../../eng/models/paddle-document/verification/formula-realformula-numeric-equivalence-20261018.md)曾将同批 726 个 ORT CPU 输出中的 36 对记为抽样相符；[v0.4.0 保守复评](../../eng/models/paddle-document/verification/formula-realformula-semantic-reevaluation-20261026.md)修正了方程“两个不同式子在所有采样点都为假”的误判，现为 29/726 对可评估（各模型 4–5/121），其余 697 对 `not-assessable`。这不是独立审阅的语义评测，也不是证明或质量分数；公式数学语义门仍为 **NOT ASSESSED**。不能把 CER、字符串 exact、解析接受、像素相似或稀疏数值样本误称为公式准确率；该 ORT CPU 汇总也不会改变 OpenVINO、OpenCV DNN、TensorRT 的后端状态。可用 `eng/models/paddle-document/scripts/Evaluate-FormulaQualityGate.ps1` 重算原门禁，使用 `eng/models/paddle-document/tools/formula-render-quality` 复现探索性诊断。
-
-## 状态和验证规则
-
-28 个独立 ONNX Release 资产均有 ORT CPU 图执行及 Decoder 冒烟证据。PP-LCNet、SLANeXt、公式模型另有下方官方示例回归。PP-Chart2Table 的四图 Bundle 和 tokenizer 已放入 `models-paddleocr` Release。ORT CPU、OpenVINO CPU 和 TensorRT CUDA 在官方图表样例均生成完整 2018–2023 表格并正常到 EOS；优化 TensorRT device path 在该样例最好 10.12 秒，原 host-KV 严格 FP32 通用路径为 83.42 秒。额外四个 ChartQA human 图表均生成完整表格并核对通过 8 个关联 QA 标签。该小样本不是数据集准确率指标；Chart2Table 的 OpenCV DNN 自回归已确认受当前 N-D 辅助输入适配器限制而不支持，PP-OCR 核心 OpenCV DNN 证据不代表 PP-Structure 生成模型。
-
-| 后端/模块 | 当前真实证据 | 边界 |
-| --- | --- | --- |
-| ORT CPU | 22 个非公式工件、6 个公式 token/BPE 解码，方向→版面阶段编排 | 公式结果长度与 tokenizer 无告警不是公式准确率 |
-| OpenVINO CPU | 方向、版面、表格分类、wired/wireless 单元格、UVDoc、mobile/server 印章 | 按精确模型记录；未外推其它工件 |
-| OpenVINO SLANeXt | wired/wireless 派生 ONNX 均通过，与原始 ORT 输出逐元素对比 | 原始 Release ONNX 仍受循环变量同名问题影响，需先执行下方兼容转换 |
-| OpenCV DNN | PP-DocLayout-L、PP-DocLayout-Plus-L、PP-DocBlockLayout、RT-DETR 3/17 类版面、wired/wireless 单元格、两个 PP-LCNet 官方示例以及 PP-OCR v4/v5/v6 七组核心完整流水线 | PP-DocLayout-M/S 与 PicoDet layout、六个公式模型、四个 SLANeXt 工件及 Chart2Table 自回归均有精确阻断证据；PP-DocLayout-L 不请求被 importer 忽略的常量计数输出 |
-| TensorRT CUDA | PP-LCNet 文档方向、PP-LCNet 表格分类、五个 PP-Structure 版面图、mobile/server 印章概率图；版面/分类和印章均有正式 `5+50`，均有 ORT 对照 | TRT 11 bridge + TRT 11.0.0.114-cu12 + CUDA 12.9 + cuDNN 9.22；版面五模型为单图证据，M 的最低 IoU `0.832389` 采用显式 `0.80` 门槛；印章正式报告使用两个 ROI 的动态 Batch=2，server 已显式关闭 TF32；不外推其它模型 |
-| Chart2Table 四图 Bundle | ORT CPU/OpenVINO CPU/TensorRT CUDA：官方样例生成完整 2018–2023 表格；4 张 ChartQA human 图在 ORT/OpenVINO/TensorRT 均到 EOS、精确匹配 golden table，关联 QA 8/8 匹配。ORT/OpenVINO 四图机器可读证据见 `chart2table-ort-multi-image-20260929.json` / `chart2table-openvino-multi-image-20260929.json`；TensorRT device path 的官方样例最好 10.12 s，Decode P50/P95 66.47/73.48 ms | 库 Builder 已构建四图并通过完整生成回归；严格 FP32 Builder 四图运行耗时异常且不是性能基准；OpenCV DNN 当前适配器明确不支持完整自回归，跨数据集准确率仍未验证 |
-
-完整状态见[模型后端验证矩阵](../model-backend-verification-matrix.md)。这些测试使用本机模型和真实图片，但尚未完成 PP-Structure 的任务级精度基准或全模型 P50/P95。UVDoc TensorRT 运行记录见 [`uvdoc-tensorrt11-20260924.json`](../../eng/models/paddle-document/verification/uvdoc-tensorrt11-20260924.json)。Chart2Table 四图合同、tokenizer 哈希、端到端结果和每后端阶段耗时见 [Bundle 验证记录](../../eng/models/paddle-document/verification/chart2table-component-validation.json)。
-
-当前 PP-Structure 31 个精确 artifact/backend 单元的 pass/unsupported/unverified 数量见[当前状态索引（2026-10-18）](../../eng/models/paddle-document/verification/paddle-document-backend-matrix-current-20261017.md)及其[机器可读 JSON](../../eng/models/paddle-document/verification/paddle-document-backend-matrix-current-20261017.json)；索引由 `Test-PaddleDocumentBackendMatrix.ps1` 自动复算并检查矩阵级证据链接。当前列出 68 个具备 `5 次预热 + 50 次测量` 的正式性能证据包，覆盖 83 个不同模型×后端组合（ORT CPU 29、OpenVINO CPU 23、OpenCV DNN CPU 11、TensorRT CUDA 20）。新增的 OpenVINO 9 个版面、表格单元和印章报告以及 ORT UVDoc/wireless SLANeXt 与六个公式模型报告均使用固定输入和单 Session；印章只声明 mask 形状和专用 Decoder 合同。公式模型在同一个官方示例上各有稳定的 EOS/token/LaTeX 指纹，但 realFormula 质量门仍 blocked，性能不能代表识别准确率。逐模型输入/模型 SHA、P50/P95、逐次样本与边界见 `paddle-document-*-benchmark-20261018` 报告。TensorRT 的 27 个证据行包含同一精确模型在静态/动态 Batch 或不同 runtime/API profile 下的重复记录；去重后仍为 20 个模型×后端组合。该索引仍不是全部工件和后端的完整统一性能矩阵。文档入口的 909 条本地 Markdown 链接由[独立审计](../../eng/models/paddle-document/verification/document-link-audit-20261018-formula-benchmark.json)复核且断链为 0。逐行权威数据仍见[原始机器矩阵](../../eng/models/paddle-document/verification/paddle-document-backend-matrix-20260929.json)；这些摘要只汇总逐组合执行证据，不代表数据集级准确率或跨设备兼容性。
-
-### Chart2Table 完整 Bundle 技术验证
-
-本次验证复用了 `E:\Model\PaddleDocument\source\pp-chart2table\PP-Chart2Table\model_state.pdparams` 和官方 `chart_parsing_02.png`，没有重新下载同一官方包。结论分为三个层次：
-
-1. **多后端端到端与额外图表样本**：视觉编码、官方 Tokenizer、图像特征替换、286-token Prefill、`lm_head` greedy 选择和动态 KV Decode 均已覆盖。三 token ORT 阶段与 Paddle 逐 token 一致，最大逐步 logits 误差 `6.77e-5`；ORT CPU、OpenVINO CPU、TensorRT CUDA 完整运行均在 256-token 上限内生成 141 个 token（含 EOS），返回同一张官方六行表。新增四张 ChartQA human 图的 ORT/OpenVINO 回归也均为 4/4 EOS 和精确表格 SHA；详见 [`chart2table-ort-multi-image-20260929.json`](../../eng/models/paddle-document/verification/chart2table-ort-multi-image-20260929.json) 与 [`chart2table-openvino-multi-image-20260929.json`](../../eng/models/paddle-document/verification/chart2table-openvino-multi-image-20260929.json)。运行主机为 Ryzen 7 5800H、Windows 11、.NET 10；官方单图 ORT CPU `39.76 s`，OpenVINO CPU `46.40 s`，优化 TensorRT device path 三次 `12.64/12.12/10.12 s`，最好一次 Decode P50/P95 为 `66.47/73.48 ms`（ORT CPU `94.69/123.92 ms`）；最初 host-KV 严格 FP32 TensorRT 路径为 `83.42 s`。
-
-   随后使用 ChartQA `test_human` 的 4 张独立图表（官方仓库：[vis-nlp/ChartQA](https://github.com/vis-nlp/ChartQA)）进行 ORT、OpenVINO 和 TensorRT 端到端补测。三后端每次均到 EOS，生成表格逐字匹配 golden outputs；TensorRT 结果还从表格值核对了 8 个关联问答标签，8/8 一致。ORT 四图总时延约 `12.65–47.05 s`，OpenVINO 四图约 `11.92–49.08 s`；这些是同一设备单次观察，不是性能基准。样本图像 SHA-256、表格文本和逐项核对记录在 [Bundle 验证 JSON](../../eng/models/paddle-document/verification/chart2table-component-validation.json) 以及新增的 ORT/OpenVINO 多图证据文件中。ChartQA 数据文件带 GPL-3.0 许可，本仓库和 Release 不包含这些图像。TensorRT 严格 FP32 Builder 计划曾出现约 29 分钟的异常耗时，原因仍需 profiling，不能与优化 device path 结果混用。
-
-   ```text
-   年份 | 单家五星级旅游饭店年平均营收 (百万元) | 单家五星级旅游饭店年平均利润 (百万元)
-   2018 | 104.22 | 9.87
-   2019 | 99.11 | 7.47
-   2020 | 57.87 | -3.87
-   2021 | 68.99 | -2.90
-   2022 | 56.29 | -9.48
-   2023 | 87.99 | 5.96
-   ```
-2. **TensorRT 使用边界与优化**：文本 TensorRT plan 保持 FP32 数据类型；FP16 text `lm_head` 图在此 GPU 上返回全零 logits。可选 TF32 tactics 在该官方样例上保持与严格 FP32 完全相同的输出，但尚未进行数据集精度验证。四图 TensorRT plan 已由 DeploySharp `TensorRtOnnxEngineBuilder` 构建；Decode 动态 profile 的空 Engine 问题由测试选择了错误图及 mask 长度不匹配造成，修正后库 Builder 计划通过完整 EOS 回归。`PaddleChart2TableTensorRtDeviceSession` 用两组 CUDA KV 缓冲区轮换，只回读 logits，并减少动态 shape/binding 重复工作。没有锁定 GPU 时钟，计时不是受控基准。
-3. **发布与泛化精度边界**：四个派生 ONNX 和 tokenizer sidecars 已作为 `paddle-chart/pp-chart2table` Bundle 放入 `models-paddleocr` Release；OpenCV DNN 当前适配器因 rank-3 Prefill 与 rank-4 KV 输入明确不支持完整生成，见[隔离证据](../../eng/models/paddle-document/verification/chart2table-opencv-isolated-20261013.md)。官方样例和 4 个 ChartQA human 样本均在 ORT、OpenVINO 和 TensorRT 完成 EOS 与表格输出校验，TensorRT 还记录了四图逐阶段耗时和结构指标，详见 [`chart2table-tensorrt-multi-image-20260930.md`](../../eng/models/paddle-document/verification/chart2table-tensorrt-multi-image-20260930.md)。这些是定性回归，不是全量数据集精度或受控性能基准。该模型目录项保留上游源包的 `conversion-blocked` 状态，不能表示其派生 ONNX Session 不可用。
-
-    12 张 `ChartQA/val` 图像的 ORT 和 TensorRT 结果还可以通过 [对齐报告](../../eng/models/paddle-document/verification/chart2table-extended-quality-backend-alignment-20261005.md) 直接核对。脚本只对已生成的两个 JSON 做同源校验：输入图像 SHA、EOS 原因、结构标志、期望单元格数量均为 `12/12`，两边精确单元格合计均为 `140`；它不重新推理，也不构成全量准确率或受控性能结论。对应的[机器可读 JSON](../../eng/models/paddle-document/verification/chart2table-extended-quality-backend-alignment-20261005.json) 可供 CI 或后续设备结果比较使用。
-
-### Chart2Table 结构化质量指标
-
-生成文本除了整段字符串比较，还可以用 `PaddleChart2TableQualityEvaluator` 记录可解释的结构指标：行数、数据行数、列数、空单元格、Markdown 分隔行、畸形行、列数不一致、逐行匹配数和逐单元格匹配数。比较时会单独保留 `ExactTextMatch`，并对单元格首尾空白和连续空白做确定性归一化；转义的 `\|` 不会被误拆成新列。
-
-```csharp
-PaddleChart2TableQualityComparison quality =
-    PaddleChart2TableQualityEvaluator.Compare(expectedTable, result.Text);
-
-if (!quality.Actual.IsStructurallyValid)
-    throw new InvalidOperationException("Chart2Table output is not a rectangular table.");
-
-Console.WriteLine($"rows={quality.Actual.RowCount};columns={quality.Actual.ColumnCount};" +
-    $"rowAccuracy={quality.RowAccuracy:P2};cellAccuracy={quality.CellAccuracy:P2}");
-```
-
-这些指标用于区分“生成结束但结构损坏”“行列结构正确但部分单元格错误”和“完全匹配”。它们不替代 ChartQA、PubTables 或业务数据集的标注评测；只有固定数据集、golden 版本和样本来源后，才可以汇总为数据集级质量结果。四图 ORT/OpenVINO/TensorRT 外部回归现在会把同一组结构指标写入 `chart2table-*-multi-image-evidence.json`，仍保持四张精选图的 qualitative boundary。
-
-为扩大任务级证据，新增了[六张官方 ChartQA `val` 图表的有界质量记录](../../eng/models/paddle-document/verification/chart2table-extended-quality-20261002.md)。样本来自固定 upstream revision，CSV 表格转换为期望管道表；ORT CPU 和 OpenVINO CPU 均为 `6/6` EOS，生成文本 SHA `6/6` 一致，复杂多列样本在两个后端暴露相同的列结构边界。该选择累计匹配 `44/116` 个单元格，只用于定位图表类型和结构问题，不能外推为 ChartQA split 准确率；图片和 CSV 保留在本地缓存，不进入仓库或 Release。
-
-2026-10-04 又按同一 revision 扩展了 12 张图的 ORT CPU 任务质量记录：`12/12` EOS、`9/12` 行列维度一致、`3/12` 文本精确匹配，累计单元格匹配 `140/293`（`47.78%`），总耗时 P50/P95 为 `26.866/72.933 s`。2026-10-11 同一固定选择在 OpenVINO CPU 也完成 `12/12` EOS、`9/12` 行列维度一致、`3/12` 文本精确匹配和 `140/293` 单元格；逐图生成表格 SHA 与 ORT `12/12` 一致，P50/P95 总耗时 `29,616.2891/78,195.865 ms`。这是分组诊断证据，不是 ChartQA split accuracy 或受控性能基准；逐样本 SHA、阶段耗时和结构字段见 [ORT 12 图 JSON](../../eng/models/paddle-document/verification/chart2table-extended-quality-ort-20261004.json) 与 [OpenVINO 12 图 JSON](../../eng/models/paddle-document/verification/chart2table-extended-quality-openvino-20261011.json)。
-
-同一六图选择也完成了 TensorRT CUDA 复测：`6/6` EOS、`5/6` 结构维度一致、单元格匹配 `44/116`，总耗时 `1.18–13.25 s`，Decode P50/P95 `33.32–40.39 / 34.32–48.60 ms`。该结果使用未锁频的本机 RTX 3060 和既有四张 plan，只作为任务质量与阶段计时证据，不是 ChartQA split 准确率或受控性能基准。详见 [TensorRT 六图记录](../../eng/models/paddle-document/verification/chart2table-tensorrt-extended-quality-20261004.md) 及 [机器可读报告](../../eng/models/paddle-document/verification/chart2table-tensorrt-extended-quality-20261004.json)。
-
-同一固定 `ChartQA/val` 选择已扩展为 12 张图并在相同 TensorRT plans 上复测：`12/12` EOS、`9/12` 行列维度一致、单元格匹配 `140/293`（`47.78%`），总耗时 P50/P95 `4,398.95/12,209.76 ms`，Decode P50/P95 范围 `33.37–39.48 / 35.85–48.81 ms`。这仍是有界任务质量和阶段计时诊断，不是 split accuracy、问答分数或受控性能基准。详见 [TensorRT 12 图记录](../../eng/models/paddle-document/verification/chart2table-extended-quality-tensorrt-20261005.md) 及 [机器可读报告](../../eng/models/paddle-document/verification/chart2table-extended-quality-tensorrt-20261005.json)。
-
-2026-10-12 又在同一 ChartQA revision 上将固定选择扩展为 24 张图，并分别在 ORT CPU、OpenVINO CPU 与 TensorRT CUDA 跑完整生成：三后端均 `24/24` EOS、`16/24` 行列维度一致、`6/24` 文本精确匹配，累计 `211/547` 单元格（`38.57%`）和 `98/161` 行（`60.87%`）匹配。总耗时顺序统计 P50/P95：ORT `19,328.80/51,708.73 ms`，OpenVINO `15,887.68/44,197.13 ms`，TensorRT `6,498.09/24,173.29 ms`；三边使用 `1024` token 上限。ORT/OpenVINO 逐图生成表格 SHA `24/24` 一致，ORT/TensorRT 为 `23/24`，有 1 条仅 hash 不同但 EOS、token、维度和单元格总数一致。详见 [ORT 记录](../../eng/models/paddle-document/verification/chart2table-extended-quality-ort-20261012.md)、[OpenVINO JSON](../../eng/models/paddle-document/verification/chart2table-extended-quality-openvino-20261012.json)、[TensorRT JSON](../../eng/models/paddle-document/verification/chart2table-extended-quality-tensorrt-20261012.json) 和 [对齐报告](../../eng/models/paddle-document/verification/chart2table-extended-quality-ort-tensorrt-alignment-20261012.md)。这是有界任务质量与跨后端一致性诊断；TensorRT 计划绑定当前 RTX 3060/TensorRT 10.11 环境，不能外推为跨设备性能或 bitwise parity。
-
-2026-10-13 在同一固定 revision 上进一步扩展为 48 图，按 OECD、`two_col` 和其它文件名各选 16 张；排除 manifest 生成时间后的稳定选择 SHA 为 `137dee01beac021e004d6ec2af0c00dc94cd4ef834558f2bbbe61863f9aaedcb`。ORT CPU、OpenVINO CPU、TensorRT CUDA 三边均为 `48/48` EOS、`47/48` 结构可解析、`33/48` 行列维度一致、`17/48` 全表文本一致，累计精确匹配 `205/319` 行和 `450/1051` 单元格；旧 24 图逐项工件/输出仍全部保留。ORT/OpenVINO 生成 SHA `48/48` 一致；ORT/TensorRT 为 `46/48`，token 数为 `47/48`，两条差异仍保持相同 EOS、尺寸、结构/精确文本标志和精确行/单元格合计，不能写成 bitwise parity。详见 [ORT 汇总](../../eng/models/paddle-document/verification/chart2table-extended-quality-ort-48-20261013.md)、[OpenVINO 汇总](../../eng/models/paddle-document/verification/chart2table-extended-quality-openvino-48-20261013.md)、[TensorRT 汇总](../../eng/models/paddle-document/verification/chart2table-extended-quality-tensorrt-48-20261013.md)、[ORT/OpenVINO 对齐](../../eng/models/paddle-document/verification/chart2table-extended-quality-ort-openvino-48-alignment-20261013.md)和[ORT/TensorRT 对齐](../../eng/models/paddle-document/verification/chart2table-extended-quality-ort-tensorrt-48-alignment-20261013.md)。这仍不是 ChartQA split accuracy、问答准确率或受控性能排名。
-
-文档链接可用性由[最新审计 JSON](../../eng/models/paddle-document/verification/document-link-audit-20261013-chart2table-48.json)维护；当前维护范围覆盖 27 份 PP-OCR/PP-Structure 文档，共检查 663 条相对本地链接、断链 0。外部 URL 与运行时生成路径不在此审计范围。
-
-Paddle2ONNX 需要 `--enable_dist_prim_all True`；导出边界还必须使用无状态 rotary 计算并显式恢复 Qwen2 RMSNorm 的 `1e-6` epsilon。它们是转换器兼容性修正，不是对官方权重的修改。关于 Builder 空 Engine，已定位为回归测试选择了 plain Decoder 图（Release 路径使用 epsilon 图），且把 Decoder mask 的 optimum 写为 512（past KV optimum 为 512 时，mask 应为 513）；改用 Release 路径的图并对齐 KV/mask profile 后，`TensorRtOnnxEngineBuilder` 成功构建 51-input Decoder，库 Builder 构建的四张 plan 也通过 EOS 完整表格回归。剩余边界为 OpenCV DNN 自回归流程和更大规模/多风格的数据集精度评测。
-
-### 官方预处理与示例回归
-
-- **文档方向、表格分类**：默认 RGB、短边缩放到 256、中心裁剪 224、ImageNet 归一化。缩放尺寸采用官方 nearest-even 取整。两个登记的 PP-LCNet ONNX 已输出 Softmax 概率，Decoder 直接保留分数；自定义 logits 导出可以显式设置 `scoreMode: ClassificationScoreMode.Logits`。
-- **SLANeXt wired/wireless**：默认 BGR，长边缩放到 512，归一化后在右侧/底部补浮点零。`normalizedPaddingValue: 0` 是张量空间的零，不能用黑色像素经 ImageNet 归一化替代。标准字典执行官方 `merge_no_span_structure=true` 规则，删除 `<td>` 并加入 `<td></td>`，避免 token 类别错位。当前 CUDA 图像预处理内核不支持归一化后填充，会明确拒绝；可先用 OpenCV 准备张量，再交给 TensorRT Session。
-- **FormulaNet/UniMERNet**：`CreateFormula` 按模型选择 384×384、768×768 或 UniMERNet 的宽 672×高 192。默认 `Preprocessing=null` 表示专用流程，`OpenCvVisualInputFactory.CreateFromFile(path, profile.VisualProfile)` 会自动调用 `PaddleDocumentFormulaInputFactory`，执行去白边、Pillow 双线性短边缩放、bicubic thumbnail、黑色居中填充及 mean `0.7931` / std `0.1738` 的浮点灰度归一化。可向专用 factory 传入已解码 `OpenCvBgrImage` 复用像素；显式传入自定义 `preprocessing` 时采用调用方配置。序列未遇到 EOS 会返回截断警告。
-
-官方示例使用固定 SHA-256 校验：[方向分类](https://github.com/PaddlePaddle/PaddleX/blob/c50f5da858020db473a2285f089bb8c7bbd6afdc/docs/module_usage/tutorials/ocr_modules/doc_img_orientation_classification.en.md)、[表格分类](https://github.com/PaddlePaddle/PaddleX/blob/c50f5da858020db473a2285f089bb8c7bbd6afdc/docs/module_usage/tutorials/ocr_modules/table_classification.en.md)、[公式识别](https://github.com/PaddlePaddle/PaddleX/blob/c50f5da858020db473a2285f089bb8c7bbd6afdc/docs/module_usage/tutorials/ocr_modules/formula_recognition.en.md)。回归结论如下：
-
-2026-10-17 又按统一的 `5 warm-up + 50 measured` 协议复跑了方向分类和表格分类的官方示例，覆盖 ORT CPU、OpenVINO CPU、OpenCV DNN CPU，六个精确模型/后端组合全部通过类别与分数合同。总耗时 P50/P95：方向分类 ORT `6.414/9.094 ms`、OpenVINO `2.317/3.290 ms`、OpenCV `5.567/6.377 ms`；表格分类 ORT `4.198/5.058 ms`、OpenVINO `2.554/3.589 ms`、OpenCV `6.034/7.614 ms`。完整阶段拆分、模型/图片 SHA 和 50 次样本见[官方分类重复性能报告](../../eng/models/paddle-document/verification/paddle-document-official-classification-benchmark-20261017.md)及[机器 JSON](../../eng/models/paddle-document/verification/paddle-document-official-classification-benchmark-20261017.json)。这是固定官方示例的执行/延迟证据，不是数据集准确率或 PP-Structure 全模型性能排名。
-
-| 输入 | 模型和验证范围 | 结果 |
-| --- | --- | --- |
-| `img_rot180_demo.jpg` | PP-LCNet 方向；ORT/OpenVINO/OpenCV CPU、TensorRT CUDA | 类别 180°；CPU 三后端分数约 0.89236；CUDA 预处理允许 0.005 分数差异 |
-| `table_recognition.jpg` | PP-LCNet 表格分类；ORT/OpenVINO/OpenCV CPU、TensorRT CUDA | `wired_table`；CPU 分数约 0.844209，TensorRT 分数约 0.851693，绝对差 0.007485 ≤ 0.01 |
-| 同一表格 | SLANeXt wired/wireless；ORT、OpenVINO 派生兼容图 | 24 个结构 token、13 个单元格，含 colspan=4 的标题；原始输出误差 ≤0.001，结构一致 |
-| `general_formula_rec_001.png` | 六个公式模型；ORT CPU | token/LaTeX 长度为 Plus-S `197/262`、Plus-M `197/262`、Plus-L `197/262`、FormulaNet-S `213/276`、FormulaNet-L `197/262`、UniMERNet `208/270`；六个模型均到达 EOS 且 warnings=0。Plus-S/M/L 的 LaTeX 忽略排版空白后与官方示例一致；FormulaNet-S/L 和 UniMERNet 在该样例仍有符号或格式差异 |
-
-六模型的模型、Tokenizer、输入、token/LaTeX SHA-256 和完整输出见 [`formula-ort-six-models-20260930.md`](../../eng/models/paddle-document/verification/formula-ort-six-models-20260930.md) 及其 [JSON 证据](../../eng/models/paddle-document/verification/formula-ort-six-models-20260930.json)。该报告是单张官方样例的语义执行合同，不是公式数据集准确率；FormulaNet-S/L 和 UniMERNet 仍需额外人工真值样本。
-
-同一官方公式图还生成了原图、白边、对比度、模糊和 JPEG 五个可追溯变体，并让六个模型全部通过 ORT CPU。Plus-S/M/L 的归一化参考式匹配为各 `4/5`，平均去空白 LaTeX CER 为 `1.18%/0.47%/0.71%`，差异均出现在 JPEG 变体；FormulaNet-S/L、UniMERNet 五个变体均正常结束但与 Plus 参考式不同，平均 CER 为 `7.10%/2.37%/6.51%`。完整模型/变体 SHA、LaTeX、编辑距离和 warning 见 [`formula-six-models-variants-20260930.md`](../../eng/models/paddle-document/verification/formula-six-models-variants-20260930.md) 及其 [JSON](../../eng/models/paddle-document/verification/formula-six-models-variants-20260930.json)。这里的 CER 是单一公式去空白字符串的 Levenshtein 比率，不是自然公式数据集准确率。
-
-2026-10-02 在当前工作树按同一固定输入重跑六模型×五变体，两个测试方法 `2/2` 通过，30 行输出与已提交报告的模型/变体、LaTeX SHA、归一化编辑距离和 EOS 状态逐行一致。这只证明解码器回归可复现，不改变多公式真值集或 OpenVINO 尚未完成的状态。
-
-2026-10-04 的 OpenVINO 兼容图实验进一步确认：结构合法不等于可用后端。Plus-S 的派生图只返回 3 个 token（ORT 参考 197），FormulaNet-S 返回 1023 个 token并带 `missing-eos`（ORT 参考 213），其余四个模型分别在 Loop reshape 或 native importer 阶段失败。因此不能把 alpha-renamed 图上传为 OpenVINO 资产；后续必须先修复循环状态形状并通过 token 级 parity，再重新进入发布矩阵。
-
-公式输入还与固定版本的 PaddleX 原始 processor 逐元素对比。三种尺寸平均绝对误差分别约 `1.54e-7`、`7.70e-8`、`2.10e-6`；最大差异约 `0.022564`（相当于归一化前一个灰度级），来自 Pillow 整数滤波取整。此证据针对当前示例，不代表所有输入逐位相同。
-
-针对 realFormula 中 FormulaNet-L 唯一未到 EOS 的 `211110912-2.png`，又分别使用 DeploySharp 和 PaddleX 官方预处理张量复跑 ONNX，并让官方 PaddleX predictor 在相同张量上对照。两份 Float32 张量有 `3,433/589,824` 个元素不同（最大差 `0.022564`、平均差 `4.01e-8`），但 ORT 在两种张量下产生完全相同的 `1,025` 个 raw token（BOS + 1,024 个生成位置），都没有 EOS；官方 Paddle predictor 与 ORT 在每种相同输入上也逐 token 完全一致。因此，该单样本的 EOS 缺失既不是这处预处理数值差导致，也不是 DeploySharp Decoder 丢弃 EOS。进一步查看匹配的 Paddle IR 与 ONNX Loop，均有明确的 1,024 次循环上限；仅将派生 ONNX 上限增至 1,025/2,048 会在位置嵌入表索引 1,026 处越界。故已确定导出图的硬上限，但仍不知道模型为何在该样本的上限前未输出 EOS；没有修改或替换正式模型。Decoder 的 `4,096` 只是安全校验上限，不能据此要求模型生成 4,096 token。保留 `missing-eos:sequence-may-be-truncated`，不人为补 EOS；hash、异常边界与复现方式见 [EOS/预处理敏感性报告](../../eng/models/paddle-document/verification/formula-formulanet-l-eos-preprocessing-sensitivity-20261007.md)、[生成上限探针](../../eng/models/paddle-document/verification/formula-formulanet-l-generation-limit-20261007.md) 与 [JSON](../../eng/models/paddle-document/verification/formula-formulanet-l-generation-limit-20261007.json)。这只解释一个样本，不能关闭公式准确率或其他后端质量门。
-
-```powershell
-& .\eng\models\paddle-document\scripts\Acquire-PaddleDocumentValidation.ps1
-python eng/models/paddle-document/scripts/Generate-FormulaReference.py `
-  --image E:\Model\PaddleDocument\validation\general_formula_rec_001.png `
-  --output E:\Model\PaddleDocument\validation
-$env:DEPLOYSHARP_PADDLE_DOCUMENT_ACCURACY = '1'
-$env:DEPLOYSHARP_PADDLE_DOCUMENT_RUN_EXTERNAL = '1'
-dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Tests.csproj `
-  -f net10.0 --filter 'FullyQualifiedName~PaddleDocumentOfficialExampleTests|FullyQualifiedName~PaddleDocumentFormulaInputTests|FullyQualifiedName~FormulaExportsDecodeWithOfficialTokenizerOnRealOrtCpu'
-```
-
-参考生成器依赖 NumPy、Pillow 和 opencv-python-headless，并校验上游 processor 的提交及文件哈希。分类测试按 5 次预热、50 次测量输出 JSON（设备、源码基准、模型/图片哈希、原始样本、P50/P95），结果见[设备性能实测](device-performance-benchmarks.md)。这些分类耗时不是完整 PP-Structure 页面耗时。
-
-### 版面模型的标签、归一化与坐标
-
-当前 Release 的 PP-DocLayout-L/M/S 使用 23 类标签；不能传入 PicoDet/RT-DETR 的 17 类标签，否则后六类会被丢弃。PP-DocLayout-plus 使用独立的 20 类顺序。
-
-Paddle NMS Profile 的默认预处理依据已登记模型选择：DETR 家族（PP-DocLayout-L/plus、DocBlockLayout、RT-DETR 版面和单元格）使用 RGB、像素除以 255；PicoDet 和 PP-DocLayout-M/S 使用 ImageNet mean/std。这些官方配置均采用直接 Resize、Cubic 插值。自定义模型或不同导出应显式传入 `preprocessing` 覆盖。
-
-`CreateGeometryInputs()` 生成模型坐标系的 `im_shape=[H,W]` 与 `scale_factor=[1,1]`，由 Decoder 使用每张图的 Transform 统一还原源坐标。它只分配少量几何值，不复制图像张量。不要将模型内的反缩放和 Decoder 的反变换重复执行，也不要把示例图片尺寸写死成所有输入的尺寸。生产代码建议使用 `OpenCvPaddleDocumentPreprocessing`：它先准备图像张量，再按实际模型画布自动绑定几何辅助输入，避免调用方手工拼接不匹配的原图尺寸。
-
-```csharp
-var profile = PaddleDocumentProfiles.CreatePaddleNmsRegions(
-    PaddleDocumentModelCatalog.Get("paddle-doc/pp-doclayout-l"),
-    PaddleDocumentProfiles.Layout23Labels,
-    new VisualSize(640, 640),
-    includeGeometryInputs: true,
-    scoreThreshold: 0.5f);
-
-using var input = OpenCvPaddleDocumentPreprocessing.CreateFromFile(
-    new OpenCvVisualInputFactory(), imagePath, profile);
-// 将 input 交给使用该 Profile 创建的 VisualPipeline。
-```
-
-如果已经有 `PreparedVisualInput`，可以调用
-`OpenCvPaddleDocumentPreprocessing.RebindWithGeometryInputs(input, profile)`；该操作复用原有图像张量，只新增几何输入。`PaddleDocumentProfile.CreateGeometryInputs(PreparedVisualInput)` 会检查输入是否已释放以及模型画布是否匹配，`CreateGeometryInputs(int)` 仍保留为兼容性的纯值生成器。
-
-NMS Decoder 支持 Int32/Int64 计数、二维紧凑输出和三维带 Batch 维的输出。二维批输出按 `bbox_num` 的累积偏移拆分，因此每张图的检测数量可以不同；无效计数会明确报错。OpenCV DNN 单 batch 可设置 `countOutputName: null`，但须确认工件返回的每一行均为候选或具有无效标记，不能将任意含未标记 padding 的输出当作此形式。
-
-### OpenCV DNN PP-DocLayout-L 复现
-
-兼容层只移除推理模式的 `BatchNormalization.training_mode=0`，保留训练语义；对 Identity shape 边界与空整数 Reshape 掩码补充 Int32 类型，不改动原始 ONNX 文件。
-
-本机 `bus.jpg` 实际尺寸为 810×1080。修正标签和预处理后，在阈值 0 的合同 smoke 中得到 300 个候选；阈值 0.5 时有 1 个区域。OpenCV 与 ORT 使用同一个准备好的输入张量，比较高于阈值的区域数量、类别、分数（误差 ≤0.001）和源坐标（误差 ≤0.5 像素）。这是一张图片的后端一致性证据。
-
-```powershell
-$env:DEPLOYSHARP_PADDLE_DOCUMENT_OPENCV_RUN_EXTERNAL = '1'
-dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Tests.csproj `
-  -f net10.0 --no-restore `
-  --filter FullyQualifiedName~PaddleDocumentOpenCvSemanticIntegrationTests
-```
-
-需要能够加载 JYPPX OpenCV native runtime。PP-OCR 核心流水线的 OpenCV DNN 诊断已覆盖 v4 mobile/server、v5 mobile/server、v6 tiny/small/medium 七组；同一 `demo_1.jpg` 均返回 16 个区域并产生识别文本。v5 mobile 另有同张量 ORT 对照：输出形状均为 `[1,1,512,512]`，原始概率图 max/mean 绝对差 `4.2915344e-5` / `8.6187186e-8`，逐区域文本、坐标和分数通过容差。七组的模型/输入 SHA、区域数、P50/P95 和结果指纹见 [`paddleocr-core-opencv-20260924.json`](../../eng/models/paddle-ocr/verification/paddleocr-core-opencv-20260924.json)。这些是单图短诊断，不能替代多图准确率或正式锁频性能基准；PP-Structure 生成模型和 Chart2Table 自回归仍按矩阵单独记录。
-
-### OpenVINO SLANeXt 兼容转换
-
-原始图的 Loop 形参与外层常量同名，当前 OpenVINO importer 报出循环体参数数量 1/11 不匹配。该问题可以用局部变量重命名处理，无需展开循环、修改权重或改变停止条件。兼容脚本生成两个新文件，运行 ONNX checker，并输出源文件与派生文件 SHA-256，同时生成 [`slanext-openvino-compatibility.json`](../../eng/models/paddle-document/verification/slanext-openvino-compatibility.json)：
-
-```powershell
-# 在仓库根目录执行；Python 环境需要 onnx，建议复用模型转换环境。
-& .\eng\models\paddle-document\scripts\Build-PaddleDocumentOpenVinoCompatibility.ps1 `
-  -ModelRoot E:\Model\PaddleDocument\onnx `
-  -OutputRoot E:\Model\PaddleDocument\onnx-normalized `
-  -Python E:\Model\PaddleDocument\paddle3\python.exe `
-  -ManifestPath E:\Model\PaddleDocument\onnx-normalized\slanext-openvino-compatibility.json
-
-$env:DEPLOYSHARP_PADDLE_DOCUMENT_OPENVINO_RUN_EXTERNAL = '1'
-$env:DEPLOYSHARP_PADDLE_DOCUMENT_OPENVINO_NORMALIZED_ROOT = `
-  (Resolve-Path E:\Model\PaddleDocument\onnx-normalized).Path
-dotnet test tests/DeploySharp.Visual.OpenCV.Tests/DeploySharp.Visual.OpenCV.Tests.csproj `
-  -f net10.0 --no-restore `
-  --filter FullyQualifiedName~AlphaRenamedTableGraphMatchesOriginalOrtOutputs
-```
-
-| 派生工件 | SHA-256 |
+| 后端 | 当前使用原则 |
 | --- | --- |
-| wired | `2a72212d681400ea514edbf007ab669c32f69f5813c6cac5c3b557bff0581ef0` |
-| wireless | `9769807f5505dd09a88dbeea9b2daa6f085dc5ad0df343b93026d3793a9353c6` |
+| ONNX Runtime | 主要兼容基线；CPU/CUDA 仍需分别验证 |
+| OpenVINO | 多数 CPU 路径可用；SLANeXt 原始 `Loop` 图需选择 Release 中独立的 `*-openvino-compat.onnx` 工件 |
+| OpenCV DNN | 适合已验证的分类、检测和部分 OCR 图；Importer 不支持的动态/生成式图明确标记为不支持 |
+| TensorRT | 在目标设备从 ONNX 构建 Engine；Engine 不可跨 GPU、TensorRT 版本或 profile 假定可移植 |
 
-两个工件均通过 OpenVINO 对原始 ORT 的输出比较，浮点逐值容差 0.001，并执行表格 Decoder。兼容工件有独立兼容 ID、文件名和 SHA，不能沿用原始 Release 的 SHA。现在可用 `PaddleOcrReleaseClient.GetModelAsync("paddle-table/slanext-wired-openvino-compat")` 或 `...wireless-openvino-compat` 按需下载并校验；原始 Release 图保留不变。表格 Profile 仍使用对应的官方模型描述符，绑定派生图时须显式提供下载结果的 SHA：
+当前已提供方向分类、版面区域、表格分类/单元格/结构、UVDoc、公式、印章、Chart2Table 与 PaddleOCR-VL 的任务级 Profile、decoder 或编排入口。某个 Profile 存在只说明合同已实现，不等于所有后端都已通过；权威状态见[模型与后端验证矩阵](../model-backend-verification-matrix.md)。
 
-```csharp
-using JYPPX.DeploySharp.ModelFactory;
-using JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document;
+### SLANeXt
 
-string cacheRoot = @"E:\DeploySharpCache";
-using var client = new PaddleOcrReleaseClient(new PaddleOcrReleaseClientOptions(cacheRoot));
-var compatible = await client.GetModelAsync("paddle-table/slanext-wired-openvino-compat");
-var profile = PaddleDocumentProfiles.CreateTableStructure(
-    PaddleDocumentModelCatalog.Get("paddle-table/slanext-wired"));
-var artifact = profile.CreateArtifactWithSha256(compatible.ModelPath, compatible.Model.Sha256);
-```
+原始 wired/wireless ONNX 在当前 OpenVINO `Loop` importer 中不能直接加载。Release 提供独立 SHA-256 的兼容图，保持原始资产不变；应用必须显式选择兼容模型 ID。TensorRT 当前精确图在 recurrence shape 处无法创建 Engine，矩阵标为不支持，不能用 OpenVINO 兼容图的结果外推。
 
-本地生成仍可用于离线复现。上述输入不是表格标注集，HTML/单元格准确率仍需真实表格验证。
+### Chart2Table 与公式
 
-### 弧形文本的能力边界
+Chart2Table 使用视觉编码、token embedding、自回归 decoder 和 lm head 组成 Bundle，必须来自同一导出批次并共同校验。ORT、OpenVINO 与已验证 TensorRT 组合按矩阵选择；OpenCV DNN 不作为生成式 Bundle 的默认路径。
 
-当前 DeploySharp OCR 几何合同只接受源图矩形、简单多边形和显式四边形透视裁剪。它没有曲线控制点、基线采样或弧形展开器，因此弧形文本明确不支持，也不会被当作普通四边形静默处理。需要识别弧形文本时，应用层必须先用自己的曲线采样/展开算法生成可追溯的局部图像和多边形来源，再调用识别器-only 接口；未提供该展开结果时应返回/记录不支持。普通四边形仍可使用现有透视裁剪，但不得称为弧形文本矫正。
+公式模型的 tokenizer、EOS、最大生成长度和 LaTeX 后处理属于模型合同。结果可渲染不等于数学语义正确；质量评估需要人工真值或明确的结构/语义指标。部分公式图包含 TensorRT/OpenCV 当前不支持的控制流算子，应使用已验证后端，不要改写 decoder 掩盖 importer 失败。
 
-### TensorRT PP-Structure 复现
+## 性能与质量复现
 
-本机 TensorRT 已安装在 `D:\Program Files`。DLL 加载失败需检查运行时根目录、bridge 编译的 TensorRT 主版本以及 CUDA/cuDNN 搜索路径，不能仅凭失败推断“没有安装”。
+完整页面性能应分别记录页面预处理、版面、区域裁剪、OCR/表格/公式/印章子任务和结果合并。单个模块的 P50/P95 不能冒充整页耗时。推荐协议：
 
-```powershell
-$env:DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_RUN_EXTERNAL = '1'
-$env:DEPLOYSHARP_PADDLE_DOCUMENT_TENSORRT_API = '11'
-$env:DEPLOYSHARP_CUDA_ARCHITECTURE = 'compute_86' # 按实际 GPU 修改
-$env:JYPPX_NATIVE_BRIDGE_PATH = 'E:\GitSpace\DeploySharp-V2.0\DeploySharp\artifacts\local-model-benchmarks\tensorrt11-bridge\runtimes\win-x64\native\jyppxtrtbridge.dll'
-$env:JYPPX_TENSORRT_ROOT = 'D:\Program Files\TensorRT-11.0.0.114-cu12'
-$env:JYPPX_CUDA_ROOT = 'C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.9'
-$env:JYPPX_CUDNN_ROOT = 'D:\Program Files\cuDNN-9.22.0-cuda12.9'
-$env:PATH = "$env:JYPPX_TENSORRT_ROOT\bin;$env:JYPPX_TENSORRT_ROOT\lib;$env:JYPPX_CUDA_ROOT\bin;$env:JYPPX_CUDNN_ROOT\bin;$env:PATH"
-dotnet test tests/DeploySharp.Visual.TensorRT.Tests/DeploySharp.Visual.TensorRT.Tests.csproj `
-  -f net10.0 --no-restore `
-  --filter FullyQualifiedName~PaddleDocumentTensorRtExternalIntegrationTests
-```
+1. 固定源码 commit、模型和输入 SHA-256；
+2. 记录后端/runtime、设备、精度、动态 profile、batch 与独立 Session 数；
+3. 先做结果合同或人工真值检查，再执行 5 次预热和 50 次测量；
+4. 生成式任务同时记录 Token 数、EOS/截断和最大长度；
+5. 报告 P50/P95、峰值内存以及 CPU/GPU 电源和锁频状态。
 
-也可以直接使用仓库脚本自动扫描 `D:\Program Files`、选择 TensorRT 11 安装、匹配已登记的 TRT11 bridge，并在当前 PowerShell 进程内设置 PATH（不会修改系统环境变量）：
+公开设备数据见[设备性能实测](device-performance-benchmarks.md)。功能复现优先运行对应 `samples/02-visual` 示例；PaddleOCR 批量基准使用 [DeploySharp.PaddleOcrBenchmark](https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/tools/DeploySharp.PaddleOcrBenchmark/README.md)。测试输出写到调用方指定的仓库外目录，不把逐次 JSON、TRX 或本机绝对路径提交到文档。
 
-```powershell
-& .\eng\models\paddle-document\scripts\Invoke-PaddleDocumentTensorRtTest.ps1
-```
+## 常见问题
 
-脚本在找不到 `trtexec.exe`、CUDA、cuDNN 或对应 API bridge 时会明确失败；仅有 `nvinfer.dll` 并不等于存在 DeploySharp bridge。需要 TensorRT 8/10 时必须显式传入与该 API 线匹配的 `-TensorRtRoot` 和 `-BridgePath`。
+### 为什么下载成功仍不能运行
 
-脚本默认对版面、表格分类和 mobile/server 印章都执行 5 次预热、50 次计时；复现实验时可通过 `-LayoutWarmup/-LayoutIterations`、`-TableWarmup/-TableIterations`、`-SealWarmup/-SealIterations` 和 `-ServerSealWarmup/-ServerSealIterations` 显式调整，文档中的公开数字使用默认的 5/50 协议。
+下载只证明工件完整。还要确认 Profile 的输入输出名称、shape、字典/tokenizer、目标后端 runtime 和设备插件。TensorRT 还需要在目标设备构建与当前 profile 匹配的 Engine。
 
-如果把同一 PP-Structure ONNX 合同编译成 TensorRT Engine，使用 `ForArtifactFormat("tensorrt-engine")` 创建后端专用 Profile 副本，再通过该 Profile 创建工件。原始 Profile 不会被修改，因此 ONNX、OpenVINO 或其它调用可以继续复用原对象：
+### 为什么表格只有 HTML，没有像素单元格
 
-```csharp
-PaddleDocumentProfile onnxProfile = PaddleDocumentProfiles.CreatePaddleNmsRegions(
-    PaddleDocumentModelCatalog.Get("paddle-doc/pp-doclayout-l"),
-    PaddleDocumentProfiles.Layout23Labels,
-    new VisualSize(640, 640),
-    includeGeometryInputs: true);
+SLANeXt/OTSL 结构 token 描述逻辑行列与合并关系，不自动提供每个单元格的像素框。需要几何时组合表格区域、单元格检测器和结构结果，并保留各自坐标空间。
 
-PaddleDocumentProfile engineProfile = onnxProfile.ForArtifactFormat("tensorrt-engine");
-ModelArtifact engine = engineProfile.CreateArtifact(
-    @"C:\\models\\pp-doclayout-l.engine",
-    TensorRtBackendProvider.BackendId);
-```
+### 多页任务如何并发
 
-格式变体会获得稳定的格式后缀 Profile ID，因此 ONNX 与 TensorRT 变体可以同时注册到同一个 `VisualProfileRegistry`；它只改变 Profile 与工件匹配所需的逻辑格式，不会自动转换 ONNX、推断 Engine 的 TensorRT 版本，也不会绕过 `ConversionBlocked` 模型的来源限制。格式发生变化时，`CreateArtifact` 不会把 ONNX SHA 错当成 Engine SHA；如果要把实际 Engine 哈希带入工件，可使用 `CreateArtifactWithSha256(path, sha256, backend)`。Engine 仍必须由目标设备上的匹配 TensorRT/CUDA/cuDNN 组合构建，并按本文的 SHA、输入 profile 和计时协议单独记录。
+页面之间可以使用有界并发；同一页面内先完成版面，再按区域路由。自回归 Session、SAM/VLM 状态和非线程安全 request 不应被多个区域并发共享；需要吞吐时创建有限的独立 Session 池。
 
-如果 TRT11 的强类型网络需要严格的 FP32 数值对照，可在 ONNX→Engine 构建时显式关闭 TF32；这与 `Float32` 弱类型精度选项不同，适用于 TRT11：
+### 如何处理某个后端不支持
 
-```csharp
-var buildOptions = new TensorRtOnnxEngineBuildOptions(
-    apiVersion: TensorRtApiVersion.TensorRt11,
-    precision: TensorRtOnnxEnginePrecision.RuntimeDefault,
-    disableTf32: true,
-    inputProfiles: profiles,
-    overwrite: true);
-```
-
-`DisableTf32` 会进入 build-input hash、engine cache key 和 manifest。切换该值会得到新的缓存身份，旧 Engine 不会被错误复用；它只控制构建时的 TF32 flag，不会把 TRT11 强类型网络改成弱类型 FP32。
-
-同时需要 OpenCV native runtime 读取图片，并先运行上方官方示例获取脚本。PP-LCNet 导出带动态维度，测试显式配置 `x=[1,3,224,224]` 的 min/opt/max profile、构建优化级别 3，再由库内 builder 转 Engine。测试校验同一个 Engine 的 CPU/CUDA 预处理分类结果，记录 Engine SHA、构建时间、5 次预热后 50 个样本及 P50/P95；构建和图像解码不计入稳态时间，也不代表其它 PP-Structure 模型均已验证。
-
-最近一次按官方分类预处理重新执行的 TRT 11 smoke（`compute_86`，正确匹配的 TRT 11 bridge SHA `a94d1e5fe4454c9402979ae050f7a64d74c7f51bd6bb2d74936531f608a9ef6`）为：PP-LCNet ONNX SHA `96e898f047a0e460ba0652e9afb8c874e53872821cfd7a3fec53a5ab62df92f0`，Engine SHA `3a6fbfd57fcd41aadd0d5b7353efc0db3babaac0b8410909595b6f77bb0f39ab`，构建 `40719.153 ms`，稳态 P50 `1.318 ms`、P95 `1.921 ms`；同一 Engine 的 CPU/CUDA 预处理分类分数分别约 `0.892226` / `0.894656`。这里的 Engine 与 TensorRT/CUDA/cuDNN 版本绑定，不能复制到其它设备后直接复用。
-
-2026-10-04 又在当前 `JYPPX` Windows 环境使用本机可用且与 bridge 匹配的 TensorRT `10.11.0.33-cu12` 复跑同一方向模型：Engine SHA `cc7e1454489680630a18a1d6c403668b9d7571dc8d4410c9d33d75bb21ef2547`，构建 `63634.811 ms`，稳态 P50/P95 `1.1231/1.8312 ms`，CPU/CUDA 预处理分类分数 `0.8923855/0.89481854`，绝对差 `0.00243304`。机器可读证据见 [`paddle-document-tensorrt-orientation-20261004.json`](../../eng/models/paddle-document/verification/paddle-document-tensorrt-orientation-20261004.json)。这条记录只证明 TRT10.11 bridge、该 ONNX 和该设备的单模型链路；用 TRT11 运行该 bridge 会得到 `DS-TRT-5005`，不能混用版本或外推到全部 PP-Structure。
-
-表格分类也已在同一入口完成 TRT 11 真实运行：ONNX SHA `04a862a81e3c466d6ce7ef8398ea2464e46dbbdbfaa53278ad2b42427be8eb45`，Engine SHA `c9464c22f5d1d11ac4e2f35fb3d437a782278d9a85f697bdd3f8ef050ad065f2`（7,350,700 bytes），静态 `x=[1,3,224,224]`，5 次预热、50 次测量，构建 `36204.071 ms`，稳态 P50 `1.212 ms`、P95 `1.331 ms`。ORT 返回 `wired_table/0.844208`，TensorRT 返回 `wired_table/0.851693`，绝对置信度差 `0.007485`，在测试合同的 `0.01` 容差内。该 Engine 同样绑定 TensorRT/CUDA/cuDNN/GPU 架构，换设备必须重新构建。
-
-在当前 `JYPPX` 机器的 TRT10.11 匹配 bridge 上，同一表格分类模型又完成了一次独立复跑：Engine SHA `f80df8411b34714cfa77eddefa7a1c2afaca70e83dceeaf85601b76545e6f195`（8,593,404 bytes），构建 `58024.8733 ms`，稳态 P50/P95 `0.9974/1.1903 ms`；TensorRT/ORT 分数 `0.8517079/0.8442081`，差值 `0.0074998`，仍在 `0.01` 合同容差内。详见 [`paddle-document-tensorrt-table-classification-20261004.json`](../../eng/models/paddle-document/verification/paddle-document-tensorrt-table-classification-20261004.json)。这只是当前设备的单模型表格分类证据，不改变 TRT11 与 TRT10 bridge 不能混用的边界。
-
-同一测试入口还完成 `ppocrv4-mobile-seal-det.onnx` 的 TRT 11 真实运行：ONNX SHA `e4b20a5c47c70dbe67cebfdad970124e8c43b0c23cfa4eda5e17f77ef51f9199`，Engine SHA `13772da4a34bd9fb3ea1e1c3cfedabf6a2fb1aace0762c6e5253904e374c9953`（7,045,964 bytes），输入 profile 为 `image=[1,3,224,224]`，5 次预热、50 次测量，构建 `86508.609 ms`，稳态 P50 `3.710 ms`、P95 `4.558 ms`。`demo_1.jpg` 上 ORT/TensorRT 都返回 `224x224` 掩码且区域数为 `0/0`，原始掩码最大/平均绝对误差为 `9.42e-8`/`1.36e-8`；因为该图片无印章，这条结果仅是输入/输出合同和数值一致性，不是检测精度或 server 模型的证明。
-
-server 印章也已在同一入口完成 TRT 11 真实运行：ONNX SHA `f9448c3ffd73f778ad312de10d5ae4df03dbd6b162638bf07fa0880a21a634c7`，Engine SHA `d89b4c5cbfde1707bd486007bdf65afe481e3fcdb85c1cdf11d7c98f88332d03`（140,877,596 bytes），输入 profile 为 `image=[1,3,224,224]`，显式 `DisableTf32=true`，5 次预热、50 次测量，构建 `93150.467 ms`，稳态 P50 `12.221 ms`、P95 `24.648 ms`。`demo_1.jpg` 上 ORT/TensorRT 都解码出 1 个区域，掩码平均绝对误差 `2.4136e-6`、最大绝对误差 `8.6451e-4`，逐元素误差通过当前测试合同；这仍是单张图的数值一致性证据，不是数据集精度结论。
-
-2026-10-17 又以动态 Batch=2、`5 warm-up + 50 measured` 正式协议复跑两个印章模型。mobile 的 P50/P95 为 `7.9329/10.5334 ms`，server 为 `18.0625/22.4997 ms`；两行 ROI 均保持独立输入/输出绑定，并通过 ORT CPU 原始掩码容差和 Decoder 行合同。详见 [mobile JSON](../../eng/models/paddle-document/verification/paddle-document-seal-paddle-seal-ppocrv4-mobile-dynamic-batch-tensorrt11-20261017.json) 与 [server JSON](../../eng/models/paddle-document/verification/paddle-document-seal-paddle-seal-ppocrv4-server-dynamic-batch-tensorrt11-20261017.json)。该结果仅覆盖精确 PP-OCRv4 工件、TensorRT 11 bridge 和当前 RTX 3060 Laptop，不代表印章数据集精度、其它印章导出或跨设备性能。
-
-2026-10-18 补充了两个精确印章工件的 OpenCV DNN CPU 正式 `5 warm-up + 50 measured` 单图证据：mobile P50/P95 `52.8776/59.4496 ms`，server `298.2772/329.3094 ms`。两者都使用专用 `PaddleDocumentSealDecoder`，输出 `224x224` 概率掩码；`demo_1.jpg` 上 mobile/server 分别解码 `0/1` 个区域，与 ORT 的区域数相同，但 OpenCV 与 ORT 原始概率图不做数值 parity 宣称。详见 [mobile OpenCV 报告](../../eng/models/paddle-document/verification/paddle-document-opencv-ppocrv4-mobile-seal-det-benchmark-20261018.md) 与 [server OpenCV 报告](../../eng/models/paddle-document/verification/paddle-document-opencv-ppocrv4-server-seal-det-benchmark-20261018.md)。
-
-同一测试入口还对 `pp-doclayout-l` 完成了真正的 TensorRT Paddle NMS 版面推理。输入为 `E:\Data\image\bus.jpg`，使用动态 `image`、`im_shape`、`scale_factor` 三输入 profile 和 TensorRT 11 API；输入张量由 OpenCV 准备，TensorRT 负责模型推理与图内 NMS，ORT CPU 结果用于确定性比较。ONNX SHA 为 `d65ead6d31c0535b99b7976840f038ba2e7e7be060476d0c413f72dca86b78a9`，Engine SHA 为 `c6acaedc9f3ed2996e012d1fd6b45c5eb061877d2ac3aa0f77bde34f65e9a0ba`（155,392,076 bytes）；5 次预热、50 次测量得到 300 个候选，其中 9 个置信度不低于 0.05，TensorRT 与 ORT 的高置信度结果满足 score 误差 ≤`0.01`、源坐标误差 ≤`1.5 px`，P50 `19.414 ms`、P95 `25.876 ms`。这是 CPU 准备输入的 TensorRT NMS 证据，不是尚未接入辅助输入的 CUDA 端到端预处理指标。
-
-同一入口新增两个 RT-DETR 表格单元格工件的 TensorRT 11 证据：wired Engine SHA `71fb2ee40a53b66c5e61d8bf2679235f5eb53fc2f01dc335dc3bb828b0a2132b`，P50/P95 `21.605/24.613 ms`；wireless Engine SHA `cb7df85c136e0b45e673a37995ed5c58f2a587f385cca15f674a6cf8f29c6c2a`，P50/P95 `21.689/25.661 ms`。两者均为 300 个 Paddle NMS 候选；以 score `>=0.05` 统计时 wireless 为 ORT/TensorRT `294/295`，共同比较候选的最大 score 差 `0.00701`、最小 IoU `0.9179`。完整 Engine/ONNX SHA 和复现命令见 [`paddle-document-tensorrt-table-cell-matrix-20260930.md`](../../eng/models/paddle-document/verification/paddle-document-tensorrt-table-cell-matrix-20260930.md)。这仍是精确工件的执行/数值合同证据，不代表表格单元格召回率或表格结构准确率。
-
-## 2026-10-18：静态版面 OpenVINO CPU 正式性能证据
-
-新增 8 个静态版面模型的 OpenVINO CPU `5 warm-up + 50 measured` 记录，统一使用 `JYPPX` Windows 10、`bus.jpg`、单 Session 和 Paddle NMS Decoder。计时不包含图片解码/准备、模型加载、Session 创建和一次性 ORT 参考；结果是固定主机的执行/有界 parity 证据，不是版面数据集准确率或跨设备排名。
-
-| 模型 | P50 / P95 ms | ORT 高置信度匹配 |
-| --- | ---: | ---: |
-| `pp-doclayout-m` | 57.0756 / 82.5714 | 28/28 |
-| `pp-doclayout-s` | 9.7144 / 12.9484 | 48/48 |
-| `picodet-layout-1x` | 26.1031 / 69.0613 | 5/5 |
-| `picodet-layout-1x-table` | 23.1889 / 26.3338 | 0/0（均无 ≥0.05 候选） |
-| `picodet-s-layout-3cls` | 9.4186 / 12.3624 | 25/25 |
-| `picodet-l-layout-3cls` | 53.0734 / 62.0237 | 22/22 |
-| `picodet-s-layout-17cls` | 10.0184 / 12.7814 | 4/4 |
-| `picodet-l-layout-17cls` | 57.4080 / 125.1531 | 11/11 |
-
-逐模型输入/模型 SHA、输入合同和 50 个原始样本见 [`PP-DocLayout-M 报告`](../../eng/models/paddle-document/verification/paddle-document-openvino-pp-doclayout-m-benchmark-20261018.md) 以及同目录下的其它 2026-10-18 报告；PP-DocLayout-M/S 与 PicoDet 报告特别记录了 `scale_factor` 辅助输入合同，避免误绑定不存在的 `im_shape`。
-
-UVDoc 现有专用的 ORT CPU 与 OpenVINO CPU 正式 5+50 基准，均使用 unwarping 结果合同。`bus.jpg` 上两后端均输出有限 `640×640×3`，与参考后端 raw tensor 最大/平均绝对差 `0.0730591/0.00176066`；ORT P50/P95 为 `148.5798/157.3663 ms`，OpenVINO P50/P95 为 `102.5192/128.0841 ms`。这只是有界数值对照，不表示像素等价或视觉质量通过。详见 [ORT 逐模型报告](../../eng/models/paddle-document/verification/paddle-document-ort-uvdoc-benchmark-20261018.md)、[OpenVINO 逐模型报告](../../eng/models/paddle-document/verification/paddle-document-openvino-uvdoc-benchmark-20261018.md) 和对应机器报告。
-
-同一 UVDoc 工件现补有 TensorRT 11 动态 Batch=2 正式 5+50 基准：一个复用的 `[2,3,640,640]` PreparedVisualInput 和一个 TensorRT Session，`Session.Run + PaddleDocumentUnwarpingDecoder` 的 P50/P95 为 `28.3687/32.0690 ms`，50 次测量的两个输出行 SHA 均保持稳定，并满足既有 ORT 有界差异门槛。该时间不含图像解码、裁剪/预处理、Engine 构建和 Session 创建；GPU 未锁频，且未进行推理期间连续时钟采样，因此不能称为端到端整图延迟或硬件极限。设备、模型/Engine/input SHA、逐次样本和复现命令见 [TensorRT 报告](../../eng/models/paddle-document/verification/paddle-document-uvdoc-dynamic-batch-tensorrt-benchmark-20261018.md) 与 [机器 JSON](../../eng/models/paddle-document/verification/paddle-document-uvdoc-dynamic-batch-tensorrt-benchmark-20261018.json)。
-
-同日也补齐了 wireless SLANeXt OpenVINO 兼容图的正式 5+50 单模型基准。表格样本上完整 `PaddleDocumentTableStructureDecoder` 返回 24 个 token、13 个 cell，并与官方源图 ORT 的 HTML SHA 完全一致；P50/P95 为 `794.1322/962.2685 ms`。测试只使用独立 SHA 的 alpha-renamed compatibility graph，原始图仍受当前 OpenVINO Loop importer 限制；这是执行、Decoder 和固定输入 parity 证据，不是表格准确率、召回率或跨设备排名。详见 [wireless 逐模型报告](../../eng/models/paddle-document/verification/paddle-document-openvino-slanext-wireless-benchmark-20261018.md) 与 [机器报告](../../eng/models/paddle-document/verification/paddle-document-openvino-slanext-wireless-benchmark-20261018.json)。
-
-**性能索引更新（2026-10-18）**：包含上述 UVDoc TensorRT 基准后，当前正式性能索引为 69 个 5+50 证据包、84 个去重模型×后端组合；TensorRT CUDA 为 28 条证据行、21 个去重组合。此前正文中较早统计快照尚未包含该项，最新数值以[自动生成的当前矩阵索引](../../eng/models/paddle-document/verification/paddle-document-backend-matrix-current-20261017.md)为准。链接审计现检查 921 条本地 Markdown 链接，断链 0。
+先用 ORT 基线确认工件与前后处理，再定位到 importer、输入绑定、执行或 decoder。确认是第三方 importer/算子限制后，在矩阵标为 `✗` 并选择其他后端；没有实测证据时标 `△`，不要从相近模型推断。

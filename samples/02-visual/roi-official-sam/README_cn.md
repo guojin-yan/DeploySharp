@@ -37,12 +37,12 @@ CPU 使用 FP32。首次模型加载时间与逐帧预测时间分别记录。
 进程错误、模型不匹配或视频过短会明确失败，不会产出虚假的通过记录。
 
 [ROI 总指南](../../../docs/articles/visual-roi-configuration.md) ·
-[设备性能矩阵](../../../docs/articles/roi-backend-performance-matrix.md)
+[设备性能实测](../../../docs/articles/device-performance-benchmarks.md#roi-与滑动窗口)
 
-## 已验证范围（2026-09-16）
+## 当前验证范围
 
 SAM2 tiny 已在 Ubuntu 22.04 / i7-1165G7、Python 3.12.14、PyTorch 2.10.0+cpu 上通过官方 `bedroom.mp4` 前 6 帧短测：初始化、传播、修正、源图掩码和重置后首帧掩码指纹一致。此结果不代表 GPU 吞吐或原生 SAM Bundle 可用。
 
-固定版本的 SAM3 官方实现会在位置编码缓存构造时直接创建 CUDA Tensor，因此 CPU 实测失败。其适配入口仍需匹配 CUDA 的 PyTorch 与足够显存验证；不能因为安装了 CPU wheel 就宣称 SAM3 支持 CPU。长时 GPU soak 和 VLM 真模型验证不在本轮短测范围。
+固定版本的 SAM3 官方实现会在位置编码缓存构造时直接创建 CUDA Tensor，因此 CPU 实测失败。其适配入口仍需匹配 CUDA 的 PyTorch 与足够显存验证；不能因为安装了 CPU wheel 就宣称 SAM3 支持 CPU。长时 GPU soak 和 VLM 真模型验证尚未纳入支持证据。
 
 补充 CUDA 实测：Python 3.12.14 / PyTorch 2.10.0+cu128 已正确识别 RTX2060，但本例 SAM3 官方模型在首帧发生 CUDA OOM。尝试 FP16 权重存储仍超出当前 6GB 显存预算，因此未保留为默认优化。请在更充足显存设备上重新验证；本例仍不能标为 SAM3 端到端通过。

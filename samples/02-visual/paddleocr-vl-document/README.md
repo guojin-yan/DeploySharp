@@ -37,7 +37,7 @@
 }
 ```
 
-图片相对路径基于 `pages.json` 所在目录。尺寸使用解码、EXIF 方向归一后的页面像素；与实际图片不符会报错。矩形采用页面坐标，左上向下取整、右下向上取整，并裁至页面边界。完全不相交、非有限或空区域会失败。单图 `OpenCvPaddleOcrVlInputFactory` 可显式关闭 EXIF 方向归一以复现官方 Pillow 原始像素，但本多页示例保留正向页面坐标；两种坐标不能不经变换混用，见[编码图对照](../../../eng/models/paddle-ocr/verification/paddleocr-vl-encoded-input-parity-20261026.md)。
+图片相对路径基于 `pages.json` 所在目录。尺寸使用解码、EXIF 方向归一后的页面像素；与实际图片不符会报错。矩形采用页面坐标，左上向下取整、右下向上取整，并裁至页面边界。完全不相交、非有限或空区域会失败。单图 `OpenCvPaddleOcrVlInputFactory` 可显式关闭 EXIF 方向归一以复现官方 Pillow 原始像素，但本多页示例保留正向页面坐标；两种坐标不能不经变换混用，见编码图对照。
 
 上面的区域由调用方提供，不运行版面检测模型；固定任务模式对所有区域运行 `TableRecognition`。混合页面可使用下面的类别路由模式，需要模型自动产生区域时则启用 `layoutDetector`。
 
@@ -115,7 +115,7 @@ JSON 的 `payload.regions` 和区域文件名仍按原 `regionIndex`，新增 `p
 
 返回顺序是检测器顺序，**不是阅读顺序**。默认图片类/未知类别仍跳过；如果模型将正文误判为图片，该内容也不会被默认解析，可显式配置 `"taskByCategory": { "image": "TextRecognition" }`。这改变任务选择，不改善版面模型本身的准确率。检测到重叠类别时保留每个原始区域，不自动合并重复文本。
 
-[两张 FUNSD 页的离线词框覆盖检查](../../../eng/models/paddle-ocr/verification/paddleocr-vl-funsd-layout-routing-coverage-20261026.md)显示了这一取舍：其中一页的 75 个标注词里有 74 个只落在被跳过的图片区域；另一页的图片区域与已执行的表格区域重叠，不能把它们重复计作遗漏。不要仅凭 `skippedCount` 判断页面完整性，也不要无评估地对所有图片区域启用 OCR。
+两张 FUNSD 页的离线词框覆盖检查显示了这一取舍：其中一页的 75 个标注词里有 74 个只落在被跳过的图片区域；另一页的图片区域与已执行的表格区域重叠，不能把它们重复计作遗漏。不要仅凭 `skippedCount` 判断页面完整性，也不要无评估地对所有图片区域启用 OCR。
 
 对这种版面误分类，可在 `task=Auto` 的 manifest 顶层显式启用有界图片回退：
 
@@ -127,24 +127,24 @@ JSON 的 `payload.regions` 和区域文件名仍按原 `regionIndex`，新增 `p
 }
 ```
 
-这是顶层字段片段。省略时仍跳过 `image`；启用后只考虑类别映射原本跳过的 `image` 框，计算它未被其它已规划路由区域的**并集**覆盖比例，再按未覆盖面积选每页最多一块；面积相同时按原检测索引排序。`figure`、`header_image` 等其它类别不自动回退。显式 `taskByCategory.image` 设为非空任务时，类别映射优先，所有图片框均运行该任务，不受回退预算约束；设为 `null` 且启用回退时，仍按本回退规则筛选。结果以 `vl-image-fallback:<regionIndex>` 标记，不改变原索引或默认行为。固定任务模式不接受此选项。筛选发生在生成前，正常区域后来失败不会重新触发图片回退。真实两页检测框分别验证了未覆盖图片的选择和完全重叠图片的跳过；这只补路由缺口，不保证图片一定包含文字，也不去重其它重叠区域。详见[定向验证记录](../../../eng/models/paddle-ocr/verification/paddleocr-vl-image-fallback-20261026.md)。
+这是顶层字段片段。省略时仍跳过 `image`；启用后只考虑类别映射原本跳过的 `image` 框，计算它未被其它已规划路由区域的**并集**覆盖比例，再按未覆盖面积选每页最多一块；面积相同时按原检测索引排序。`figure`、`header_image` 等其它类别不自动回退。显式 `taskByCategory.image` 设为非空任务时，类别映射优先，所有图片框均运行该任务，不受回退预算约束；设为 `null` 且启用回退时，仍按本回退规则筛选。结果以 `vl-image-fallback:<regionIndex>` 标记，不改变原索引或默认行为。固定任务模式不接受此选项。筛选发生在生成前，正常区域后来失败不会重新触发图片回退。真实两页检测框分别验证了未覆盖图片的选择和完全重叠图片的跳过；这只补路由缺口，不保证图片一定包含文字，也不去重其它重叠区域。详见定向验证记录。
 
 ## 运行与结果
 
 ```powershell
 dotnet run --project samples/02-visual/paddleocr-vl-document/PaddleOcrVlDocument.csproj -c Release -- `
-  --release E:\DeploySharpCache E:\Data\document\pages.json E:\Data\document\vl-output 2
+  --release .\.cache\deploysharp .\data\pages.json .\results\paddleocr-vl 2
 ```
 
 自动版面首次运行需下载约 4.4 GiB VL 资产和另一个约 129 MB 的检测器；后续相同命令可追加 `--offline` 只使用已校验缓存。也可先运行 `--release <cache-root> <pages.json> --verify-only` 下载/验证所需资产而不创建推理 Session；已有完整缓存时追加 `--offline`。`--bundle <bundle-root> <pages.json> --verify-only` 仅校验本地 Bundle 和显式配置的检测器。已有 Bundle 做推理时将 `--release <cache-root>` 换成 `--bundle <bundle-root>`；旧的 `<tokenizer-root> <bundle-root>` 位置参数模式仍兼容，但不会执行 Bundle manifest 校验。最后的 `2` 是页面并发上限，省略时顺序处理。示例自动引用 Windows x64 或 Ubuntu 22.04 x64 的 OpenCV runtime；原生系统依赖仍需可用。`Ctrl+C` 取消流水线。每页输出 `page-<index>.json` 和 `.md`，包括原始生成文本、Token、结束原因、页面与区域输入身份、源区域坐标、局部失败和阶段耗时。存在失败、未到 EOS、表格结构或 Spotting 解析失败的区域时返回非零退出码。
 
 表格任务自动附带严格 OTSL 分析。解析成功的区域另生成 `page-<index>-region-<index>.table.html`，包含横向/纵向合并；JSON 的 `table` 对象保留逻辑单元格、跨度、状态和诊断，Markdown 显示转义后的表格并保留 OTSL 原文。生成成功数仍统计生成结果，表格是否可用应检查 `table.succeeded`；示例控制台单独打印该状态。示例不自动启用行宽修复，库的显式修复用法见[VL 表格教程](../../../docs/articles/visual-paddle-structure.md#vl-表格otsl合并单元格与-html)。输出目录应为本次运行专用目录，避免将以前运行留下的 HTML 误当成本次结果。
 
-Linux 默认使用 `ubuntu.22.04-x64` RID；交叉发布可加 `-r ubuntu.22.04-x64 -p:UseRidGraph=true --self-contained false`。程序目标为 .NET 8，需要对应运行时；仅安装 .NET 9/10 时可以显式设置 `DOTNET_ROLL_FORWARD=Major` 后运行已发布的 DLL。[已发布五图 Bundle 的两页实测](../../../eng/models/paddle-ocr/verification/paddleocr-vl-release-document-pages-linux-20261026.md)覆盖本示例的 `--release --offline` 和 `--bundle`；[公开 Bundle 自动版面两页实测](../../../eng/models/paddle-ocr/verification/paddleocr-vl-release-detected-pages-linux-20261026.md)覆盖真实检测器与六个生成区域；[早期页面记录](../../../eng/models/paddle-ocr/verification/paddleocr-vl-regional-pages-linux-20261024.md)保存四图参考结果。这些是固定样本的功能验证，不代表独立多页标注质量。
+Linux 默认使用 `ubuntu.22.04-x64` RID；交叉发布可加 `-r ubuntu.22.04-x64 -p:UseRidGraph=true --self-contained false`。程序目标为 .NET 8，需要对应运行时；仅安装 .NET 9/10 时可以显式设置 `DOTNET_ROLL_FORWARD=Major` 后运行已发布的 DLL。已发布五图 Bundle 的两页实测覆盖本示例的 `--release --offline` 和 `--bundle`；公开 Bundle 自动版面两页实测覆盖真实检测器与六个生成区域；早期页面记录保存四图参考结果。这些是固定样本的功能验证，不代表独立多页标注质量。
 
-`Auto` 模式也有[Linux 混合页面运行记录](../../../eng/models/paddle-ocr/verification/paddleocr-vl-mixed-pages-linux-20261024.md)：由固定六任务 RGB 组成两张 PNG，六个任务区域的全部 765 Token/文本匹配官方参考、均 EOS，另有两个明确跳过项。独立示例实际运行的 JSON/Markdown 与集成测试一致；这是手工版面的拼接页面集成验证，不是独立多页质量或自动版面检测结果。
+`Auto` 模式也有Linux 混合页面运行记录：由固定六任务 RGB 组成两张 PNG，六个任务区域的全部 765 Token/文本匹配官方参考、均 EOS，另有两个明确跳过项。独立示例实际运行的 JSON/Markdown 与集成测试一致；这是手工版面的拼接页面集成验证，不是独立多页质量或自动版面检测结果。
 
-每页只解码一次；区域用底图的只读视图逐行转换为紧密 RGB，不编码 crop、不克隆整页，不先用 OpenCV 缩放。随后由托管 VL Processor 完成官方重采样、归一化和 Patch 打包。页面结果保存编码文件 SHA；区域结果使用尺寸绑定的 RGB 内容 SHA，相同尺寸/像素的重复区域具有相同身份，位置通过各自的 `sourceRegion` 保存。
+每页只解码一次；区域用底图的只读视图逐行转换为紧密 RGB，不编码 crop、不克隆整页，不先用 OpenCV 缩放。托管 VL Processor 再完成官方重采样、归一化和 Patch 打包。页面结果保存编码文件 SHA；区域结果使用尺寸绑定的 RGB 内容 SHA，相同尺寸/像素的重复区域具有相同身份，位置通过各自的 `sourceRegion` 保存。
 
 页面并发可以重叠准备和等待，但示例共享一个 VL Session，生成仍按 Session 的队列串行执行，不代表模型 Batch 或多个独立推理器。使用多个 Session 前，应按实际权重、KV 和工作区占用检查内存预算。
 
@@ -154,4 +154,4 @@ Linux 默认使用 `ubuntu.22.04-x64` RID；交叉发布可加 `-r ubuntu.22.04-
 
 可将 manifest 的 `task` 设置为 `TextSpotting`；混合模式则在 `taskByCategory` 中配置 `"spotting": "TextSpotting"`，并提供对应区域。只有完整 EOS、标记配对及四边形都合法时 `CoordinatesAvailable=true`，本 OpenCV 适配器也会提供 `PageCoordinatesAvailable=true`。源框本身不被当作文字预测框；其它任务不因页面聚合的可用标记变成有坐标。
 
-表格的逻辑单元格/HTML 已有[官方对照及真实页面联测](../../../eng/models/paddle-ocr/verification/paddleocr-vl-otsl-tables-20261024.md)，Spotting 见[坐标规则及实际 ROI 联测](../../../eng/models/paddle-ocr/verification/paddleocr-vl-spotting-20261024.md)和[详细使用教程](../../../docs/articles/visual-paddle-structure.md#vl-spotting文字四边形与页面坐标)。几何阅读排序现已可选；标注集阅读顺序质量、单元格像素框、其它任务语义与独立质量仍需分别验证。
+表格的逻辑单元格/HTML 已有官方对照及真实页面联测，Spotting 见坐标规则及实际 ROI 联测和[详细使用教程](../../../docs/articles/visual-paddle-structure.md#vl-spotting文字四边形与页面坐标)。几何阅读排序现已可选；标注集阅读顺序质量、单元格像素框、其它任务语义与独立质量仍需分别验证。

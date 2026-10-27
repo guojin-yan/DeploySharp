@@ -40,6 +40,17 @@ var decoder = new DirectInstanceSegmentationDecoder(
 
 将 decoder 绑定到任务为 VisualTaskId.InstanceSegmentation 的 VisualModelProfile。Prototype 模型改用 PrototypeInstanceSegmentationOutputSchema 和 PrototypeInstanceSegmentationDecoder；分数筛选与框 NMS 会在 prototype 组合前执行，避免为被抑制候选分配完整掩码。
 
+## Prototype 组合的顺序
+
+Prototype 模型通常先输出共享的 `[C,H,W]` 特征和每个候选的 `[N,C]` 系数。DeploySharp 的处理顺序是：
+
+1. 检查 boxes、scores、classes 和系数的候选维度是否一致；
+2. 按 score threshold 筛选，再在候选框上执行 class-aware 或 class-agnostic NMS；
+3. 只为保留的候选计算系数与 prototype 的组合，按 schema 的 activation 和 threshold 顺序生成 mask；
+4. 将 mask crop 到模型框，再通过 `ImageTransform` 还原到源图。
+
+不要在业务层对已经阈值化的 mask 再做 sigmoid，也不要在 prototype 组合前为所有候选创建完整源图 mask。候选数量较大时，这两个错误会同时拖慢速度并显著增加峰值内存。
+
 ## 真正 Batch 与并发
 
 模型明确声明动态 batch 时，可将输入和输出改为有界 [B,...]，并通过 PreparedVisualInput.BatchFrames 为每行附加源图变换。batch 大于 1 时 decoder 返回 InstanceSegmentationBatchResult；batch 为 1 保留兼容结果类型。
@@ -51,6 +62,10 @@ var decoder = new DirectInstanceSegmentationDecoder(
 结果 mask 默认恢复到完整源图空间，所有 Resize、Letterbox、Crop 和动态尺寸都通过同一个 ImageTransform。Independent 模式保留重叠掩码；ScorePriorityOwnership 可额外生成按分数分配的 ownership map。可选 RLE 是 DeploySharp 行优先游程，不是 COCO 压缩 RLE。
 
 返回的 boxes、实例、稠密 mask 和 RLE 都是调用方拥有的托管数据，不依赖后端 tensor、native request 或 OpenCV Mat。解码器在候选、NMS、prototype、源图行和结果字节分配处检查取消及资源上限。
+
+## Mask 质量回归
+
+至少准备一个目标完全在图内、一个贴近边界、一个与另一目标重叠的样例。分别检查：框与 mask 的裁剪顺序、padding 是否被清除、重叠实例是否被错误合并、RLE 解码后面积是否与稠密 mask 一致。更换插值模式、阈值顺序或输出分辨率时，应保存 raw prototype 和系数版本，便于定位是模型还是 decoder 变化。
 
 ## 后端与性能
 

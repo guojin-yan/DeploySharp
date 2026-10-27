@@ -2,7 +2,7 @@
 
 该包用于在另一台 Windows x64 设备上复测 DeploySharp 的 PaddleOCR 完整流水线。包内包含应用程序、.NET 运行时、Windows 原生依赖、PP-OCRv4/v5/v6 ONNX 模型与字典，以及固定的 500×500 基准图片；目标电脑不需要预装 .NET SDK 或 Runtime。
 
-双击 `run-benchmark.cmd` 即可运行默认测试：ONNX Runtime CPU、PP-OCRv4/v5/v6 全规格、cold 口径、预热 5 次、正式测量 20 次。每次运行会新建 `results/<时间戳>`，其中包含：
+双击 `run-benchmark.cmd` 即可运行默认测试：ONNX Runtime CPU、PP-OCRv4/v5/v6 全规格、cold 口径、预热 5 次、正式测量 50 次。每次运行会新建 `results/<时间戳>`，其中包含：
 
 - `paddleocr-benchmark.csv`：检测、裁剪、方向、识别、合并、平均值、最快/最慢值、P50/P95、区域数及结果哈希。
 - `environment.json`：Windows 版本、主机型号、CPU、内存、GPU、驱动、活动电源计划、测试参数及输入/程序 SHA256。
@@ -13,7 +13,7 @@
 命令行示例：
 
 ```powershell
-.\Run-PaddleOcrBenchmark.ps1 -Backends onnxruntime -Warmup 5 -Iterations 20
+.\Run-PaddleOcrBenchmark.ps1 -Backends onnxruntime -Warmup 5 -Iterations 50
 .\Run-PaddleOcrBenchmark.ps1 -Backends onnxruntime,openvino -Versions v5,v6 -Steady
 .\Run-PaddleOcrBenchmark.ps1 -Backends onnxruntime -Versions v6-tiny -FixedConfiguration -BatchSize 4 -StageConcurrency 1
 .\Run-PaddleOcrBenchmark.ps1 -Backends onnxruntime-cuda -Versions v4,v5,v6 -TensorRtBatchSize 8 -InterTestDelayMs 2000
@@ -27,9 +27,7 @@
 
 包内的“全部依赖”指可随应用复制的 CPU 应用依赖；项目自有的 Windows TensorRT bridge 已随包提供（`jyppxtrtbridge.dll`），不需要再单独拷贝。GPU 驱动、CUDA 12.8、cuDNN、TensorRT 10.10 及与 GPU 架构匹配的 engine 仍必须在目标设备安装或生成。选择 `onnxruntime-cuda` 或 `tensorrt` 前必须补齐并记录对应运行时；后端初始化失败会记录为 `unavailable`，不能当作 GPU 成绩。
 
-当前 NuGet 没有发布名称精确为 TensorRT 10.10 + CUDA 12.8 的 bridge，包内采用已发布的 Windows TensorRT 10 bridge `JYPPX.TensorRT.CSharp.API.Runtime.win-x64.trt10.11.cuda12.9.cudnn9.22.Bridge` 4.0.0。它按 TensorRT 10 主版本 ABI 工作，但正式结果仍要在目标机用 TensorRT 10.10 生成并验证 engine，并在 `environment.json` 记录真实版本。Windows benchmark 的 `onnxruntime-cuda` 使用 ORT 1.23.2 CUDA 12 provider（依赖 `cublasLt64_12.dll`），与 CUDA 12.8 对应；它和 TensorRT 后端是两套独立的 GPU runtime。
-
-本包同时带有针对动态 OCR 输入的 TensorRT 适配器修复。识别阶段会按 batch 内最大 crop 宽度设置运行时 shape；当下一次 batch 的 host payload 大于上一次运行时，旧适配器可能复用过小的 CUDA 输入缓冲区并报 `Existing CUDA buffer is smaller than the requested host payload`。新版 `JYPPX.TensorRtSharp.dll` 会自动释放并重新分配由适配器拥有的输入缓冲区，因而支持不同 batch、不同文字宽度连续运行；通过 `UseDeviceBuffer` 传入的外部缓冲区仍不会被库隐式替换，容量不足时会给出明确的现有/所需字节数。
+包内 bridge 只适用于声明的 TensorRT API 主版本；正式结果仍必须在目标机生成并验证 Engine，并在 `environment.json` 记录真实 runtime。`onnxruntime-cuda` 与 TensorRT 是两套独立 GPU runtime，不能用其中一个的初始化成功代替另一个的验证。
 
 `DEPLOYSHARP_CUDA_ARCHITECTURE` 是可选配置：设置后启用 TensorRT 识别输出的 CUDA CTC trace，未设置时 TensorRT 仍在 GPU 上完成模型推理，只把识别 logits 复制回 CPU 做 CTC 解码。若出现 `DS-TRT-5006`，先在同一模型与配置下把该变量清空做一次对照。新版失败行会记录 `ocrStage`、`trtOperation`、内部 `phase`、实际 batch/time/classes、CUDA 架构及原生异常消息；`environment.json` 同时记录该变量和 GPU CTC 是否启用。只有清空后错误消失，才能判定问题位于可选 CUDA CTC 路径；清空后仍失败则继续检查 TensorRT enqueue、engine profile 和运行库兼容性。
 
@@ -38,13 +36,13 @@ CUDA 运行时有时会打印 `VerifyEachNodeIsAssignedToAnEp`：ORT 会把 `Sha
 在目标机安装好 CUDA/cuDNN/TensorRT 后，可以直接在包根目录生成 sidecar，不需要复制 NVIDIA DLL。Windows PowerShell 5.1 用户可以使用 `build-tensorrt-engines.cmd`，或直接调用 `powershell.exe`：
 
 ```powershell
-$env:JYPPX_TENSORRT_ROOT = 'D:\ProgramData\TensorRT\TensorRT-10.10.0.31-cuda12'
-$env:JYPPX_CUDA_ROOT = 'C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.8'
+$env:JYPPX_TENSORRT_ROOT = '<TensorRT-root>'
+$env:JYPPX_CUDA_ROOT = '<CUDA-root>'
 # 如果 cuDNN DLL 已经放在 CUDA v12.8\bin，可以保持为 CUDA 根目录；否则改为 cuDNN 根目录。
 $env:JYPPX_CUDNN_ROOT = $env:JYPPX_CUDA_ROOT
 
 .\build-tensorrt-engines.cmd -ModelRoot .\models -OutputRoot .\models -TensorRtRoot $env:JYPPX_TENSORRT_ROOT
-.\Run-PaddleOcrBenchmark.ps1 -Backends tensorrt -TensorRtApiVersion 10 -Warmup 5 -Iterations 20
+.\Run-PaddleOcrBenchmark.ps1 -Backends tensorrt -TensorRtApiVersion 10 -Warmup 5 -Iterations 50
 ```
 
 如需给多台设备做区分，可在运行时增加 `-DeviceLabel RTX2060-Win10`。每次运行都会在 `results/<时间戳>/environment.json` 保存设备信息（设备标签、机器名、Windows 版本/构建号、CPU/核心数/内存、GPU/驱动、`nvidia-smi`、电源计划、输入图和程序 SHA256，以及 CUDA/cuDNN/TensorRT 路径）；同目录的 `summary.md` 也会显示设备标签和 Run ID。建议把整个时间戳目录连同 CSV 一起归档。
@@ -57,4 +55,4 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Build-TensorRtEngines.
 
 脚本会为每个识别模型生成 batch 动态、宽度 `48..320` 的 TensorRT profile（优化宽度默认 `160`），为分类模型生成固定尺寸 profile，为检测模型生成 batch-one profile。转换完成后，`models` 下应出现与 ONNX 同名的 `.onnx.engine` 文件；如果没有这些 sidecar，TensorRT 后端会明确返回 `unavailable`。如需调整识别宽度，可传 `-RecognitionMinWidth`、`-RecognitionOptWidth`、`-RecognitionMaxWidth`；本应用默认上限为 320。
 
-模型文件的来源、许可证、转换方式和再分发授权必须由发布者在对外提供压缩包前复核。`manifest.sha256` 可用于检查复制或传输后的包完整性。
+`manifest.sha256` 可用于检查复制或传输后的包完整性。模型和第三方运行时由使用者按各自许可与部署要求提供。

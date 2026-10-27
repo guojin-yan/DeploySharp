@@ -13,6 +13,18 @@ DeploySharp 为 DEIMv2、RF-DETR、Paddle RT-DETR、RT-DETRv2 和 PP-YOLOE 提�
 
 预处理产生的尺寸、比例和原图坐标只能来自同一个 `PreparedVisualInput` 合同。解码器负责阈值、坐标还原和 NMS，并拒绝缺失或类型不匹配的辅助输入。
 
+## 建立新 Profile 的步骤
+
+接入一个新的便携检测器时，建议按以下顺序记录合同：
+
+1. 用 Netron 或后端元数据读取工具确认全部输入输出名称、类型、rank 和动态维度；
+2. 记录原始导出使用的颜色顺序、归一化、resize/letterbox、stride 对齐和 padding 值；
+3. 先选择最接近的输出 schema，再为 query、尺寸、尺度因子等辅助输入创建显式绑定；
+4. 用一张固定图片保存 raw output，独立验证坐标还原和 NMS；
+5. 将模型 SHA-256、标签文件和阈值写进 ModelPack 或应用配置。
+
+`PortableDetectorProfiles` 只提供已知导出合同的便捷构造器。若新模型的输出布局不同，应创建新的 Profile/decoder，而不是修改现有 Profile 让它“兼容”多个不相容布局。
+
 ## 运行示例
 
 ```csharp
@@ -48,3 +60,9 @@ ONNX Runtime 是最通用的路径；OpenVINO 需要匹配的 XML/BIN 或兼容 
 批量推理时，只有导出图明确支持动态 batch 才使用 `InferenceBatchScheduler`；否则通过多个独立 Session 的 `RunManyAsync` 并发处理。
 
 具体可用模型、后端结果和已知限制见[模型支持指南](model-support.md)、[OpenCV 兼容性](visual-opencv-compatibility.md)和[模型 × 后端验证矩阵](../model-backend-verification-matrix.md)。
+
+## 误检、漏检和速度定位
+
+先固定同一张图片、同一张量和同一 raw output，再调阈值。若 raw output 已经不同，问题在后端、精度或输入合同；若 raw output 相同但结果不同，问题在 decoder、NMS 或坐标还原。性能报告至少分开列出图像解码、预处理、模型执行、候选筛选/NMS 和结果序列化。
+
+检测大图时可以组合[滑动窗口检测](visual-async-and-sliding-window.md)，但每个窗口都必须携带自己的 transform，最终在源图坐标上执行一次全局 NMS。窗口重叠越大召回率通常越高，但模型调用和全局候选数量也会上升，应使用固定测试集选择重叠比例。
