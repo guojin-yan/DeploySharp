@@ -138,6 +138,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
             var warnings = new List<string>();
             double scoreSum = 0;
             int scoreCount = 0;
+            int outsideSourceCount = 0;
             bool reachedEndToken = false;
             for (int step = 0; step < sequence; step++)
             {
@@ -160,7 +161,7 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                 if (Schema.CellTokens.Contains(token, StringComparer.Ordinal))
                 {
                     int boxOffset = checked((row * sequence + step) * LocationsWidth);
-                    IReadOnlyList<PointF> points = DecodePoints(boxes, boxOffset, context.Input.BatchFrames[row]);
+                    IReadOnlyList<PointF> points = DecodePoints(boxes, boxOffset, context.Input.BatchFrames[row], out bool outsideSource);
                     RectangleF bounds = Bounds(points);
                     var metadata = new Dictionary<string, string>(StringComparer.Ordinal)
                     {
@@ -168,26 +169,34 @@ namespace JYPPX.DeploySharp.Visual.Models.PaddleOcr.Document
                         ["token"] = token,
                         ["polygon"] = string.Join(",", points.Select(point => point.X.ToString("R", CultureInfo.InvariantCulture) + ":" + point.Y.ToString("R", CultureInfo.InvariantCulture)))
                     };
+                    if (outsideSource)
+                    {
+                        outsideSourceCount++;
+                        metadata["geometry-outside-source"] = "true";
+                    }
                     cells.Add(new PaddleDocumentRegion("table-cell", selectedScore, bounds, metadata));
                 }
             }
             if (tokens.Count == 0) warnings.Add("empty-structure-sequence");
             if (!reachedEndToken) warnings.Add("missing-eos:sequence-may-be-truncated");
+            if (outsideSourceCount > 0) warnings.Add("table-cell-geometry-outside-source:" + outsideSourceCount.ToString(CultureInfo.InvariantCulture) + "/" + cells.Count.ToString(CultureInfo.InvariantCulture));
             float average = scoreCount == 0 ? 0 : (float)(scoreSum / scoreCount);
             VisualInputFrame frame = context.Input.BatchFrames[row];
             var metadataResult = new PaddleDocumentResultMetadata(Descriptor, "backend-neutral-decoder", TimeSpan.Zero, frame.InputId ?? context.Input.InputId ?? "input-not-hashed", row);
             return new PaddleDocumentTableResult(PaddleDocumentModule.TableStructureRecognition, metadataResult, markup.ToString(), cells, "html", warnings, tokens, average);
         }
 
-        private IReadOnlyList<PointF> DecodePoints(float[] values, int offset, VisualInputFrame frame)
+        private IReadOnlyList<PointF> DecodePoints(float[] values, int offset, VisualInputFrame frame, out bool outsideSource)
         {
             var points = new PointF[4];
+            outsideSource = false;
             for (int point = 0; point < 4; point++)
             {
                 float x = values[offset + (point * 2)];
                 float y = values[offset + (point * 2) + 1];
                 if (Options.NormalizedCoordinates) { x *= frame.ModelSize.Width; y *= frame.ModelSize.Height; }
                 PointF source = frame.Transform.ToSource(new PointF(x, y));
+                if (source.X < -1 || source.Y < -1 || source.X > frame.SourceSize.Width + 1 || source.Y > frame.SourceSize.Height + 1) outsideSource = true;
                 points[point] = Options.ClipToSource ? ClipPoint(source, frame.SourceSize) : source;
             }
             return points;

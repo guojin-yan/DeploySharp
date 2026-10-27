@@ -141,6 +141,8 @@ namespace DeploySharp.Visual.OpenCV.Tests
                 Assert.IsTrue(cell.Bounds.X >= 0 && cell.Bounds.Y >= 0);
                 Assert.IsTrue(cell.Bounds.Width >= 0 && cell.Bounds.Height >= 0);
             }
+            Assert.AreEqual(12, result.Regions.Count(cell => cell.Metadata.ContainsKey("geometry-outside-source")), "The official example's structure geometry must not be presented as valid source cells.");
+            CollectionAssert.Contains(result.Warnings.ToArray(), "table-cell-geometry-outside-source:12/13");
             Console.WriteLine("PADDLE_DOCUMENT_SEMANTIC module=table-structure;model=" + descriptor.ModelId + ";tokens=" + result.Tokens.Count + ";cells=" + result.Regions.Count + ";markup=" + result.Markup);
         }
 

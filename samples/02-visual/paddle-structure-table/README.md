@@ -19,4 +19,6 @@ dotnet run --project samples/02-visual/paddle-structure-table/PaddleStructureTab
 
 `--image` 可改为自己的表格图片；输出目录下的 `table-result.json` 包含分类、候选单元格、结构 token、区域和阶段时间，`table-result.html` 将 SLANeXt 的行片段包成可打开的 HTML 页面。此案例只输出表格**结构**，没有逐单元格 OCR 文本填充。自动模式下后两阶段的首次墙钟包含按需下载、哈希和 Session 创建，不能作为稳态推理时间；各模块 `metadata.elapsedMs` 记录实际推理时间，也不是正式性能基准。检测阈值为 0，候选数不代表召回率。没有标注真值的图片不能用于断言表格准确率；出现 `missing-eos:sequence-may-be-truncated` 警告时，HTML 可能不完整。
 
+`table-cell-geometry-outside-source:N/M` 表示 M 个 SLANeXt 结构区域中有 N 个原始顶点超出图像边界；对应区域的 `metadata.geometry-outside-source` 为 `true`。此时边界裁剪后的区域可能退化，不能直接拿它们裁图或绑定 OCR 文本。官方示例图中 13 个结构区域有 12 个越界，而 RT-DETR 的高分检测框仍位于真实表格网格上；13 对 13 的数量相同不代表位置匹配。当前案例只使用 SLANeXt 的 HTML 结构，不进行单元格框融合。详见 [几何核对记录](../../../eng/models/paddle-document/verification/slanext-cell-geometry-20261027.md)。
+
 模型/后端的精确支持边界和正式复现证据见 [PP-Structure 教程](../../../docs/articles/visual-paddle-structure.md)。

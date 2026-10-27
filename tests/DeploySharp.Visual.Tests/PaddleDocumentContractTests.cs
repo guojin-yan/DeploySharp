@@ -280,6 +280,38 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
+        public void SlanetDecoderFlagsCellsOutsideTheSourceBeforeClipping()
+        {
+            PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get("paddle-table/slanext-wired");
+            var schema = new PaddleDocumentTableStructureSchema("structure", "locations", new[] { "<s>", "<td></td>", "<eos>" });
+            PaddleDocumentProfile profile = PaddleDocumentProfiles.CreateTableStructure(descriptor, schema, modelSize: new VisualSize(8, 8));
+            var structure = new float[3 * 3];
+            SetWinner(structure, 3, 0, 0);
+            SetWinner(structure, 3, 1, 1);
+            SetWinner(structure, 3, 2, 2);
+            var locations = new float[3 * 8];
+            for (int point = 0; point < 4; point++)
+            {
+                locations[8 + point * 2] = point % 2 == 0 ? .1f : .2f;
+                locations[9 + point * 2] = point < 2 ? 1.2f : 1.4f;
+            }
+            using var input = new PreparedVisualInput("x", new Tensor<float>(new TensorShape(1, 3, 8, 8), new float[3 * 8 * 8], TensorBufferOwnership.Transfer),
+                new VisualSize(8, 8), new VisualSize(8, 8), 1, VisualTensorLayout.Nchw, ImageTransform.Resize(new VisualSize(8, 8), new VisualSize(8, 8)));
+            var outputs = new InferenceOutputs(new[]
+            {
+                new NamedTensor("locations", new Tensor<float>(new TensorShape(1, 3, 8), locations, TensorBufferOwnership.Transfer)),
+                new NamedTensor("structure", new Tensor<float>(new TensorShape(1, 3, 3), structure, TensorBufferOwnership.Transfer))
+            });
+
+            var result = (PaddleDocumentTableResult)profile.VisualProfile.Decoder.Decode(new VisualDecodeContext(input, profile.VisualProfile, outputs, CancellationToken.None));
+
+            Assert.AreEqual(1, result.Regions.Count);
+            Assert.AreEqual(0f, result.Regions[0].Bounds.Height);
+            Assert.AreEqual("true", result.Regions[0].Metadata["geometry-outside-source"]);
+            CollectionAssert.Contains(result.Warnings.ToArray(), "table-cell-geometry-outside-source:1/1");
+        }
+
+        [TestMethod]
         public void SlanetDecoderWarnsWhenStructureSequenceHasNoEndToken()
         {
             PaddleDocumentModelDescriptor descriptor = PaddleDocumentModelCatalog.Get("paddle-table/slanext-wired");
