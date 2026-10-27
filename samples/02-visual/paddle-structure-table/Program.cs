@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -95,7 +96,7 @@ internal static class Program
                 string cellId = "paddle-table/rt-detr-l-" + tableType + "-cell-det";
                 PaddleDocumentModelDescriptor cellDescriptor = PaddleDocumentModelCatalog.Get(cellId);
                 PaddleDocumentProfile cellProfile = PaddleDocumentProfiles.CreatePaddleNmsRegions(cellDescriptor,
-                    new[] { "table-cell" }, new VisualSize(640, 640), includeGeometryInputs: true, scoreThreshold: 0);
+                    new[] { "table-cell" }, new VisualSize(640, 640), includeGeometryInputs: true, scoreThreshold: options.CellScoreThreshold);
                 string filename = "rt-detr-l-" + tableType + "-cell-det.onnx";
                 ModelFile cellModel = await ResolveModelAsync(cellId, filename, options, release, token).ConfigureAwait(false);
                 cells = CreatePipeline(cellRegistry, cellProfile, cellModel, request, backendId);
@@ -188,7 +189,7 @@ internal static class Program
     }
 
     private static void PrintUsage() => Console.WriteLine(
-        "Usage: dotnet run --project samples/02-visual/paddle-structure-table -- --image <path> --output <directory> [--table-type auto|wired|wireless] [--backend ort|openvino] [--cache <directory> | --model-dir <directory>] [--offline]");
+        "Usage: dotnet run --project samples/02-visual/paddle-structure-table -- --image <path> --output <directory> [--table-type auto|wired|wireless] [--backend ort|openvino] [--cell-score-threshold 0..1] [--cache <directory> | --model-dir <directory>] [--offline]");
 
     private sealed class ModelFile
     {
@@ -206,13 +207,14 @@ internal static class Program
 
     private sealed class Options
     {
-        private Options(string image, string output, string tableType, string backend, string cache, string? modelDirectory, bool offline)
-        { Image = image; Output = output; TableType = tableType; Backend = backend; Cache = cache; ModelDirectory = modelDirectory; Offline = offline; }
+        private Options(string image, string output, string tableType, string backend, float cellScoreThreshold, string cache, string? modelDirectory, bool offline)
+        { Image = image; Output = output; TableType = tableType; Backend = backend; CellScoreThreshold = cellScoreThreshold; Cache = cache; ModelDirectory = modelDirectory; Offline = offline; }
 
         public string Image { get; }
         public string Output { get; }
         public string TableType { get; }
         public string Backend { get; }
+        public float CellScoreThreshold { get; }
         public string Cache { get; }
         public string? ModelDirectory { get; }
         public bool Offline { get; }
@@ -221,6 +223,7 @@ internal static class Program
         {
             string? image = null, output = null, cache = null, modelDirectory = null;
             string tableType = "auto", backend = "ort";
+            float cellScoreThreshold = 0.5f;
             bool offline = false;
             for (int index = 0; index < args.Length; index++)
             {
@@ -234,6 +237,11 @@ internal static class Program
                     case "--output": output = value; break;
                     case "--table-type": tableType = value.ToLowerInvariant(); break;
                     case "--backend": backend = value.ToLowerInvariant(); break;
+                    case "--cell-score-threshold":
+                        if (!float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out cellScoreThreshold) ||
+                            float.IsNaN(cellScoreThreshold) || float.IsInfinity(cellScoreThreshold) || cellScoreThreshold < 0 || cellScoreThreshold > 1)
+                            throw new ArgumentException("--cell-score-threshold must be a finite number from 0 to 1 using a decimal point.");
+                        break;
                     case "--cache": cache = value; break;
                     case "--model-dir": modelDirectory = value; break;
                     default: throw new ArgumentException("Unknown option: " + key);
@@ -243,7 +251,7 @@ internal static class Program
             if (tableType != "auto" && tableType != "wired" && tableType != "wireless") throw new ArgumentException("--table-type must be auto, wired or wireless.");
             if (backend != "ort" && backend != "openvino") throw new ArgumentException("--backend must be ort or openvino.");
             if (modelDirectory != null && (offline || cache != null)) throw new ArgumentException("--model-dir cannot be combined with --offline or --cache.");
-            return new Options(Path.GetFullPath(image), Path.GetFullPath(output), tableType, backend,
+            return new Options(Path.GetFullPath(image), Path.GetFullPath(output), tableType, backend, cellScoreThreshold,
                 Path.GetFullPath(cache ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "DeploySharp", "models")),
                 modelDirectory == null ? null : Path.GetFullPath(modelDirectory), offline);
         }
