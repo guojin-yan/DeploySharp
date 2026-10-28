@@ -4,7 +4,7 @@
 
 | 基于版本 | 系列入口 | 当前状态 |
 | --- | --- | --- |
-| 2.0.0 | [2.0.0 系列](2.0.0/README.md) | 第 01—03 篇主稿完成；02 包含 Windows YOLO26 四种引擎、五条执行路径（含 ORT CUDA），03 包含 Windows/Ubuntu OCR 与 Ubuntu 四后端对照，均有正式 NuGet 可运行代码；尚未向博客平台发表 |
+| 2.0.0 | [2.0.0 系列](2.0.0/README.md) | 第 01—04 篇主稿完成；02 包含 Windows YOLO26 五条执行路径，03 包含 Windows/Ubuntu OCR 与 Ubuntu 四后端对照，04 包含 Windows/Ubuntu 自包含离线推理与模型缓存；均有正式 NuGet 可运行代码，尚未向博客平台发表 |
 
 ## 目录与命名
 

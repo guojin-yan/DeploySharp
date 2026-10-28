@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1080" viewBox="0 0 1440 1080" role="img" aria-labelledby="title desc">
+  <title id="title">DeploySharp 应用的模型、托管接口与原生依赖</title>
+  <desc id="desc">应用向 DeploySharp 的视觉配置和后端发起调用，后端加载原生推理引擎，再由引擎使用设备。左侧本地模型、字典和类别文件参与应用加载。模型、托管包、原生库与系统设备是不同的交付内容，托管引用成功不代表原生环境已具备。</desc>
+  <defs>
+    <filter id="shadow" x="-10%" y="-15%" width="120%" height="140%"><feDropShadow dx="0" dy="7" stdDeviation="7" flood-color="#243f55" flood-opacity="0.09"/></filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1L9 5L1 9Z" fill="#248d7e"/></marker>
+  </defs>
+  <rect width="1440" height="1080" rx="26" fill="#f3f7fa"/>
+  <g font-family="Segoe UI, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+    <text x="64" y="79" font-size="42" font-weight="750" fill="#142b43">能编译，还要能加载、能执行</text>
+    <text x="66" y="123" font-size="23" fill="#526c82">模型、托管组件、原生库和设备，分别准备，再组合运行</text>
+    <rect x="64" y="164" width="326" height="698" rx="24" fill="#e8f3f1"/>
+    <text x="96" y="214" font-size="28" font-weight="700" fill="#26675e">模型与任务资产</text>
+    <path d="M111 287H177L199 309H343V460H111Z" fill="#b4dbce" stroke="#6aab98" stroke-width="2"/>
+    <rect x="140" y="264" width="155" height="132" rx="10" fill="#ffffff" stroke="#94c6b8" stroke-width="2"/>
+    <text x="218" y="319" text-anchor="middle" font-size="28" font-weight="700" fill="#286e60">ONNX</text>
+    <path d="M159 345H275M159 363H256" stroke="#a0c8be" stroke-width="5" stroke-linecap="round"/>
+    <path d="M111 351H343V460H111Z" fill="#72b5a0" stroke="#5c9c89" stroke-width="2"/>
+    <text x="227" y="419" text-anchor="middle" font-size="27" font-weight="650" fill="#ffffff">本地文件</text>
+    <text x="96" y="514" font-size="24" fill="#294b48">模型 / external data</text>
+    <text x="96" y="563" font-size="24" fill="#294b48">类别 / 字典 / tokenizer</text>
+    <text x="96" y="612" font-size="24" fill="#294b48">输入输出与前后处理</text>
+    <path d="M96 654H356" stroke="#bdd8cd" stroke-width="2"/>
+    <text x="96" y="704" font-size="22" fill="#526c82">已有自有模型</text>
+    <text x="96" y="741" font-size="22" fill="#526c82">直接按路径加载</text>
+    <text x="96" y="800" font-size="21" fill="#526c82">所需 sidecar 要一起交付</text>
+
+    <g filter="url(#shadow)">
+      <rect x="496" y="164" width="874" height="128" rx="21" fill="#ffffff" stroke="#b6cadb" stroke-width="2"/>
+      <rect x="496" y="366" width="874" height="152" rx="21" fill="#ffffff" stroke="#a9cfc4" stroke-width="2"/>
+      <rect x="496" y="592" width="874" height="152" rx="21" fill="#ffffff" stroke="#ceb8df" stroke-width="2"/>
+      <rect x="496" y="818" width="874" height="140" rx="21" fill="#fffaf6" stroke="#ddb494" stroke-width="2"/>
+    </g>
+    <text x="527" y="212" font-size="28" font-weight="700" fill="#18354d">C# 应用</text>
+    <text x="527" y="257" font-size="24" fill="#526c82">读取配置、创建任务、调用推理、处理结果</text>
+    <text x="527" y="417" font-size="28" font-weight="700" fill="#26675e">DeploySharp 托管组件</text>
+    <text x="527" y="466" font-size="24" fill="#526c82">Visual / 图像适配器 / Backend.*</text>
+    <text x="527" y="693" font-size="24" fill="#526c82">OpenCV + 所选 ORT / OpenVINO / TensorRT</text>
+    <text x="527" y="643" font-size="28" font-weight="700" fill="#64447f">原生运行时 DLL / .so</text>
+    <text x="527" y="868" font-size="28" font-weight="700" fill="#985d3d">操作系统与设备</text>
+    <text x="527" y="916" font-size="24" fill="#526c82">CPU / GPU、驱动、系统依赖、匹配的进程架构</text>
+    <g fill="none" stroke="#248d7e" stroke-width="4" marker-end="url(#arrow)">
+      <path d="M936 302V348"/><path d="M936 528V574"/><path d="M936 754V800"/><path d="M400 442H477"/>
+    </g>
+    <g font-size="20" fill="#52776d"><text x="965" y="334">调用</text><text x="965" y="560">加载</text><text x="965" y="786">执行</text></g>
+    <rect x="64" y="984" width="1306" height="55" rx="14" fill="#e7eef5"/>
+    <text x="91" y="1020" font-size="24" fill="#29445b">NuGet 还原解决包引用；目标机运行还要满足模型、native、架构与设备条件。</text>
+  </g>
+</svg>

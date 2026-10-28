@@ -1,0 +1,11 @@
+{
+  "ModelPath": "models/yolo26n.onnx",
+  "ImagePath": "images/bus.jpg",
+  "ClassNamesPath": null,
+  "OutputDirectory": "results",
+  "InputName": "images",
+  "OutputName": "output0",
+  "ModelWidth": 640,
+  "ModelHeight": 640,
+  "ScoreThreshold": 0.25
+}

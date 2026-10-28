@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PlatformTarget>x64</PlatformTarget>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+    <RestorePackagesWithLockFile>false</RestorePackagesWithLockFile>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <IsPackable>false</IsPackable>
+    <DefaultItemExcludes>$(DefaultItemExcludes);publish/**</DefaultItemExcludes>
+    <DeploymentRid Condition="'$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</DeploymentRid>
+    <DeploymentRid Condition="'$(DeploymentRid)' == '' and '$(OS)' == 'Windows_NT'">win-x64</DeploymentRid>
+    <DeploymentRid Condition="'$(DeploymentRid)' == '' and $([MSBuild]::IsOSPlatform('Linux'))">linux-x64</DeploymentRid>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="JYPPX.DeploySharp.Visual.OpenCV" Version="2.0.0" />
+    <PackageReference Include="JYPPX.DeploySharp.Backend.OnnxRuntime" Version="2.0.0" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.28.0" />
+    <PackageReference Include="JYPPX.OpenCV.runtime.win-x64" Version="5.0.0" Condition="'$(DeploymentRid)' == 'win-x64'" />
+    <PackageReference Include="JYPPX.OpenCV.runtime.ubuntu.22.04-x64" Version="5.0.0" Condition="'$(DeploymentRid)' == 'linux-x64'" GeneratePathProperty="true" />
+    <None Update="deploysharp.json;models/**/*;images/**/*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+  <!-- .NET 10 的通用 linux-x64 RID 不会自动选择发行版专用的 OpenCV native 资产。 -->
+  <ItemGroup Condition="'$(DeploymentRid)' == 'linux-x64'">
+    <Content Include="$(PkgJYPPX_OpenCV_runtime_ubuntu_22_04-x64)/runtimes/ubuntu.22.04-x64/native/*">
+      <Link>native/opencv/%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+  <Target Name="ValidateDeploymentRid" BeforeTargets="PrepareForBuild">
+    <Error Condition="'$(DeploymentRid)' != 'win-x64' and '$(DeploymentRid)' != 'linux-x64'" Text="本教程仅配置了 Windows x64 与 Ubuntu 22.04 x64 的原生依赖。" />
+    <Error Condition="'$(DeploymentRid)' == 'linux-x64' and !Exists('$(PkgJYPPX_OpenCV_runtime_ubuntu_22_04-x64)/runtimes/ubuntu.22.04-x64/native/libJYPPX.OpenCV.Native.so')" Text="缺少 Ubuntu OpenCV 原生包；交叉发布请同时指定 -r linux-x64 -p:DeploymentRid=linux-x64。" />
+  </Target>
+</Project>

@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1000" viewBox="0 0 1440 1000" role="img" aria-labelledby="title desc">
+  <title id="title">联网准备，自包含发布，目标机离线运行</title>
+  <desc id="desc">左侧构建环境联网还原 NuGet、获取模型和图片，按目标 RID 执行 dotnet publish。中间完整发布目录含应用、.NET、自有配置、模型和所选原生库。右侧目标机复制整个目录并直接运行，不再使用 dotnet run 或还原 NuGet。底部区分自包含 .NET 与额外的 GPU 驱动和系统原生依赖。</desc>
+  <defs>
+    <filter id="shadow" x="-12%" y="-15%" width="124%" height="140%"><feDropShadow dx="0" dy="7" stdDeviation="7" flood-color="#243f55" flood-opacity="0.09"/></filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1L9 5L1 9Z" fill="#248d7e"/></marker>
+  </defs>
+  <rect width="1440" height="1000" rx="26" fill="#f3f7fa"/>
+  <g font-family="Segoe UI, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+    <text x="64" y="79" font-size="42" font-weight="750" fill="#142b43">联网准备一次，交付完整运行目录</text>
+    <text x="66" y="123" font-size="23" fill="#526c82">先确定目标 RID，再把应用、模型和依赖一起发布</text>
+    <g filter="url(#shadow)">
+      <rect x="64" y="176" width="365" height="570" rx="24" fill="#e8f3f1" stroke="#bad8cc" stroke-width="2"/>
+      <rect x="539" y="176" width="365" height="570" rx="24" fill="#e8eef7" stroke="#bacbe0" stroke-width="2"/>
+      <rect x="1014" y="176" width="362" height="570" rx="24" fill="#eeeaf6" stroke="#d1c5df" stroke-width="2"/>
+    </g>
+    <g font-size="21" font-weight="700" text-anchor="middle">
+      <circle cx="112" cy="224" r="22" fill="#2e8f7b"/><text x="112" y="231" fill="#ffffff">1</text>
+      <circle cx="587" cy="224" r="22" fill="#4f79a4"/><text x="587" y="231" fill="#ffffff">2</text>
+      <circle cx="1062" cy="224" r="22" fill="#82659d"/><text x="1062" y="231" fill="#ffffff">3</text>
+    </g>
+    <text x="151" y="233" font-size="29" font-weight="700" fill="#26675e">构建环境</text>
+    <text x="626" y="233" font-size="29" font-weight="700" fill="#385779">发布目录</text>
+    <text x="1101" y="233" font-size="29" font-weight="700" fill="#64447f">目标设备</text>
+    <rect x="97" y="285" width="298" height="161" rx="16" fill="#ffffff" stroke="#bdd8cd" stroke-width="2"/>
+    <text x="119" y="330" font-size="25" font-weight="650" fill="#18354d">NuGet + 模型文件</text>
+    <text x="119" y="374" font-size="23" fill="#526c82">还原托管包与 native</text>
+    <text x="119" y="414" font-size="23" fill="#526c82">准备图片与配套配置</text>
+    <rect x="97" y="475" width="298" height="103" rx="16" fill="#ffffff" stroke="#bdd8cd" stroke-width="2"/>
+    <text x="246" y="518" text-anchor="middle" font-size="25" font-weight="700" fill="#26675e">dotnet publish</text>
+    <text x="246" y="555" text-anchor="middle" font-size="21" fill="#526c82">指定 RID / 自包含</text>
+    <text x="96" y="636" font-size="23" fill="#294b48">Windows → win-x64</text>
+    <text x="96" y="677" font-size="23" fill="#294b48">Ubuntu → linux-x64</text>
+    <text x="96" y="721" font-size="20" fill="#526c82">本篇还演示 Windows 交叉发布 Linux</text>
+    <path d="M452 460H512M927 460H987" fill="none" stroke="#248d7e" stroke-width="5" stroke-linecap="round" marker-end="url(#arrow)"/>
+    <rect x="570" y="284" width="303" height="408" rx="17" fill="#ffffff" stroke="#bdccdf" stroke-width="2"/>
+    <text x="594" y="329" font-size="25" font-weight="700" fill="#18354d">OfflineInference/</text>
+    <g font-size="24" fill="#426079">
+      <text x="607" y="383">应用 + .NET runtime</text>
+      <text x="607" y="433">DeploySharp 组件</text>
+      <text x="607" y="483">匹配的原生运行库</text>
+      <text x="607" y="533">deploysharp.json</text>
+      <text x="607" y="583">models/</text>
+      <text x="607" y="633">images/</text>
+    </g>
+    <text x="722" y="726" text-anchor="middle" font-size="21" fill="#526c82">保持目录结构完整</text>
+    <rect x="1048" y="294" width="295" height="210" rx="17" fill="#ffffff" stroke="#cdbfdf" stroke-width="2"/>
+    <rect x="1073" y="315" width="245" height="133" rx="10" fill="#19384b"/>
+    <path d="M1118 352L1138 371L1118 390M1157 392H1228" fill="none" stroke="#98e4ce" stroke-width="6" stroke-linecap="round"/>
+    <text x="1195" y="483" text-anchor="middle" font-size="24" font-weight="650" fill="#64447f">直接运行可执行文件</text>
+    <text x="1048" y="559" font-size="24" fill="#526c82">读取本地模型与图片</text>
+    <text x="1048" y="605" font-size="24" fill="#526c82">输出 JSON 与结果图</text>
+    <text x="1048" y="651" font-size="24" fill="#526c82">不执行还原与模型下载</text>
+    <text x="1048" y="720" font-size="21" fill="#526c82">目标机检查操作系统原生依赖</text>
+    <rect x="64" y="790" width="1312" height="149" rx="21" fill="#fff7ee" stroke="#e0bf9e" stroke-width="2"/>
+    <text x="95" y="838" font-size="28" font-weight="700" fill="#985d3d">自包含带上 .NET，硬件环境仍需配套</text>
+    <text x="95" y="881" font-size="24" fill="#526c82">GPU 驱动、CUDA / cuDNN / TensorRT 与系统依赖按所选后端准备。</text>
+    <text x="95" y="918" font-size="22" fill="#526c82">CPU 案例使用 ORT + OpenCV；GPU 应用按模型与目标设备补齐相应工件。</text>
+  </g>
+</svg>

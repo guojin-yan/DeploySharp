@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1000" viewBox="0 0 1440 1000" role="img" aria-labelledby="title desc">
+  <title id="title">PaddleOCR 模型缓存的在线准备与严格离线读取</title>
+  <desc id="desc">在线阶段按模型 ID 下载需要的单模型与字典，并保存 Release 元数据。复制完整缓存根目录后，离线客户端读取相同目录：命中返回本地路径，缺失返回离线缓存错误，不回退联网。自有模型可直接按文件路径交给推理流程。</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1L9 5L1 9Z" fill="#248d7e"/></marker>
+    <marker id="error-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1L9 5L1 9Z" fill="#bb7351"/></marker>
+  </defs>
+  <rect width="1440" height="1000" rx="26" fill="#f3f7fa"/>
+  <g font-family="Segoe UI, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+    <text x="64" y="79" font-size="42" font-weight="750" fill="#142b43">模型缓存：先准备，再严格离线读取</text>
+    <text x="66" y="123" font-size="23" fill="#526c82">PaddleOcrReleaseClient 的在线与离线模式使用同一个缓存根目录</text>
+    <rect x="64" y="178" width="359" height="526" rx="23" fill="#e8f3f1" stroke="#bad8cc" stroke-width="2"/>
+    <text x="94" y="234" font-size="28" font-weight="700" fill="#26675e">在线准备</text>
+    <text x="94" y="283" font-size="23" fill="#526c82">按需选择一个模型 ID</text>
+    <rect x="94" y="320" width="299" height="173" rx="17" fill="#ffffff" stroke="#b7d8ca" stroke-width="2"/>
+    <text x="116" y="370" font-size="25" font-weight="700" fill="#18354d">models-paddleocr</text>
+    <text x="116" y="417" font-size="23" fill="#526c82">单个 DET / CLS / REC</text>
+    <text x="116" y="457" font-size="23" fill="#526c82">REC 的配套字典</text>
+    <text x="94" y="551" font-size="24" fill="#294b48">获取目录元数据</text>
+    <text x="94" y="597" font-size="24" fill="#294b48">下载所选文件</text>
+    <text x="94" y="654" font-size="22" fill="#526c82">不用下载整个模型集合</text>
+    <path d="M441 442H506" fill="none" stroke="#248d7e" stroke-width="5" marker-end="url(#arrow)"/>
+    <rect x="533" y="178" width="374" height="526" rx="23" fill="#e8eef7" stroke="#bacbe0" stroke-width="2"/>
+    <text x="562" y="234" font-size="28" font-weight="700" fill="#385779">完整缓存根目录</text>
+    <rect x="562" y="274" width="317" height="326" rx="17" fill="#ffffff" stroke="#bdccdf" stroke-width="2"/>
+    <text x="582" y="320" font-size="24" font-weight="700" fill="#18354d">model-cache/</text>
+    <text x="590" y="368" font-size="22" fill="#426079">.deploysharp-paddleocr/</text>
+    <text x="603" y="412" font-size="22" fill="#426079">models-paddleocr/</text>
+    <text x="622" y="460" font-size="23" fill="#426079">Release 元数据</text>
+    <text x="622" y="508" font-size="23" fill="#426079">模型 ONNX</text>
+    <text x="622" y="556" font-size="23" fill="#426079">配套字典</text>
+    <text x="562" y="650" font-size="23" fill="#526c82">迁移时复制完整目录</text>
+    <text x="562" y="684" font-size="21" fill="#526c82">保留隐藏子目录与元数据</text>
+    <path d="M924 442H987" fill="none" stroke="#248d7e" stroke-width="5" marker-end="url(#arrow)"/>
+    <rect x="1014" y="178" width="362" height="526" rx="23" fill="#eeeaf6" stroke="#d1c5df" stroke-width="2"/>
+    <text x="1044" y="234" font-size="28" font-weight="700" fill="#64447f">offline: true</text>
+    <text x="1044" y="283" font-size="23" fill="#526c82">只读取缓存，不发起下载</text>
+    <rect x="1044" y="331" width="303" height="111" rx="16" fill="#ffffff" stroke="#b1d2bf" stroke-width="2"/>
+    <text x="1067" y="377" font-size="26" font-weight="700" fill="#26675e">命中</text>
+    <text x="1067" y="418" font-size="23" fill="#526c82">返回本地模型与字典路径</text>
+    <rect x="1044" y="488" width="303" height="133" rx="16" fill="#fff8f2" stroke="#dfb89b" stroke-width="2"/>
+    <text x="1067" y="534" font-size="26" font-weight="700" fill="#985d3d">缺失</text>
+    <text x="1067" y="575" font-size="22" fill="#526c82">返回 offline-cache-miss</text>
+    <text x="1067" y="604" font-size="21" fill="#526c82">由应用提示补齐模型</text>
+    <rect x="64" y="757" width="1312" height="179" rx="21" fill="#e7eef5"/>
+    <text x="95" y="810" font-size="29" font-weight="700" fill="#18354d">缓存路径最终交给 Profile 与推理后端</text>
+    <text x="95" y="855" font-size="24" fill="#526c82">下载器负责文件交付；字典解析、图像处理和模型执行仍由对应任务完成。</text>
+    <text x="95" y="900" font-size="24" fill="#526c82">自己的模型可以直接使用本地路径，无需先加入公开模型目录。</text>
+  </g>
+</svg>
