@@ -40,7 +40,7 @@ https://www.nuget.org/packages?q=JYPPX.DeploySharp
 | 动态 Batch 与独立 Session 池 | 多条文本行可以分批识别，也可以交给多个独立推理器调度 |
 | 可配置的区域处理 | 按需要接入长文本策略、ROI 和文档区域工作流 |
 
-支持的 TensorRT 路径还提供 CUDA 裁剪、前后处理和缓冲复用。本篇先完成 **ONNX Runtime CPU** 路径；GPU 部署和完整 PP-Structure 页面处理会在对应专题展开。
+支持的 TensorRT 路径还提供 CUDA 裁剪、前后处理和缓冲复用。本篇先用 **ONNX Runtime CPU** 完成通用流程，再在 **Ubuntu 22.04** 上运行不同后端，展示从 Windows 桌面到 Linux 设备的部署方式；CUDA 专用流水线和完整 PP-Structure 页面处理仍在对应专题展开。
 
 ### 2.2 为什么 OCR 需要一条流水线
 
@@ -98,39 +98,53 @@ DeploySharp 已为以下七组核心组合提供目录与流水线配置。代�
 
 ## 四、创建项目与安装 NuGet
 
-### 4.1 本文实际运行环境
+### 4.1 同一份 C# 代码，在 Windows 与 Ubuntu 运行
 
-本篇继续使用普通 CPU 环境，完整代码通过 NuGet 包运行，没有引用 DeploySharp 源码项目：
+上一篇以 Windows 桌面为起点，这一篇再把相同模型和复杂页面放到 Ubuntu 设备上。两边都使用正式版 NuGet，没有引用 DeploySharp 源码项目：
 
-| 项目 | 实际环境 |
-| --- | --- |
-| 操作系统 | Windows 11 x64，系统版本 `10.0.26200` |
-| CPU | AMD Ryzen 7 5800H，8 核 16 线程 |
-| .NET | SDK `10.0.401`，运行时 `10.0.12`，目标框架 `net10.0` |
-| 应用架构 | `x64` |
-| DeploySharp | 正式版 `2.0.0` |
-| 推理引擎 | ONNX Runtime CPU `1.28.0` |
-| 图像组件 | JYPPX OpenCV 托管包与 Windows x64 runtime `5.0.0` |
-| 输入 | `pp_structure_v3_demo.png`，原图 `1524 × 1368`，官方多栏报纸页面 |
+| 项目 | Windows 本机 | Ubuntu 测试设备 |
+| --- | --- | --- |
+| 系统 | Windows 11 x64，`10.0.26200` | Ubuntu `22.04.5 LTS` x64，内核 `6.8.0-138-generic` |
+| CPU | Ryzen 7 5800H，8 核 16 线程 | Core i7-1165G7，4 核 8 线程 |
+| GPU | 本文 Windows 基线只使用 CPU | NVIDIA RTX 2060，6 GB；驱动 `580.178.04` |
+| .NET | SDK `10.0.401` / 运行时 `10.0.12` | SDK `10.0.301` / 运行时 `10.0.9` |
+| 应用与 DeploySharp | `net10.0`、`x64`、NuGet `2.0.0` | 同左 |
+| 基础图像与推理组件 | OpenCV `5.0.0`、ORT CPU `1.28.0` | OpenCV `5.0.0`、ORT CPU `1.28.0` |
+| 输入 | `pp_structure_v3_demo.png`，`1524 × 1368` | 相同图片、模型和字典 |
 
-准备 .NET 10 SDK，然后在 PowerShell 中创建项目：
+**Ubuntu 结果只说明本文这一组设备、模型与运行库已实际运行，不扩大为全部 Linux 发行版或全部模型的兼容承诺。** 2.0.0 的主要发布验证范围仍是 Windows x64。
 
-```powershell
+准备 .NET 10 SDK，然后在 PowerShell 或 Ubuntu Bash 中创建项目：
+
+```shell
 dotnet new console -n DeploySharpOcrDemo -f net10.0
 cd DeploySharpOcrDemo
 ```
 
 后续命令均在这个项目目录执行。使用 Visual Studio 的朋友，也可以创建 .NET 10 控制台应用，再从 NuGet 管理器安装相同依赖。
 
-### 4.2 CPU 完整 OCR 安装这四个包
+### 4.2 按操作系统安装 CPU 依赖
 
 OCR 编排、DB 检测后处理和 CTC 解码由视觉组件提供，`Visual.OpenCV` 负责图片和文本行处理，ONNX Runtime 后端执行模型。**不需要再寻找单独的 PaddleOCR NuGet 包，也不需要安装 Python 或 PaddlePaddle 才能运行本篇的 ONNX 模型。**
 
-```powershell
+三个托管/推理包在两种系统中相同，先安装：
+
+```shell
 dotnet add package JYPPX.DeploySharp.Visual.OpenCV --version 2.0.0
 dotnet add package JYPPX.DeploySharp.Backend.OnnxRuntime --version 2.0.0
 dotnet add package Microsoft.ML.OnnxRuntime --version 1.28.0
+```
+
+**Windows x64** 再安装图像原生库：
+
+```powershell
 dotnet add package JYPPX.OpenCV.runtime.win-x64 --version 5.0.0
+```
+
+**Ubuntu 22.04 x64** 选择相应的原生库：
+
+```bash
+dotnet add package JYPPX.OpenCV.runtime.ubuntu.22.04-x64 --version 5.0.0
 ```
 
 | 显式安装的包 | 在 OCR 中负责什么 |
@@ -138,9 +152,19 @@ dotnet add package JYPPX.OpenCV.runtime.win-x64 --version 5.0.0
 | `JYPPX.DeploySharp.Visual.OpenCV` | 解码原图、检测前处理、文本行透视裁剪、缩放与归一化 |
 | `JYPPX.DeploySharp.Backend.OnnxRuntime` | 将 DET、CLS、REC 推理交给 ONNX Runtime |
 | `Microsoft.ML.OnnxRuntime` | 提供 CPU 原生推理运行库 |
-| `JYPPX.OpenCV.runtime.win-x64` | 提供图像处理、绘制与保存所需的原生库 |
+| 对应操作系统的 `JYPPX.OpenCV.runtime.*` | 提供图像处理、绘制与保存所需的原生库，两种系统择一 |
 
 `Core`、`Visual` 等基础依赖由 NuGet 自动引入。这里的 OpenCV 用于图像处理，推理仍交给 ONNX Runtime；**`Visual.OpenCV` 和 `Backend.OpenCV` 的作用不同**。
+
+Ubuntu 下还需让系统找到 OpenCV 的 `.so` 及其同目录依赖。本例使用默认 NuGet 缓存目录，在完成还原后设置：
+
+```bash
+dotnet restore
+opencv_native="$HOME/.nuget/packages/jyppx.opencv.runtime.ubuntu.22.04-x64/5.0.0/runtimes/ubuntu.22.04-x64/native"
+export LD_LIBRARY_PATH="$opencv_native:${LD_LIBRARY_PATH:-}"
+```
+
+修改过 `NUGET_PACKAGES` 时，使用自己的缓存根目录替换 `$HOME/.nuget/packages`。这个环境变量要在启动 `dotnet` 之前设置。若 .NET 10 提示发行版 RID 的 `NETSDK1206` 警告，应继续核对原生库实际搜索路径；“包已还原”不等于系统能找到它的全部依赖。
 
 ### 4.3 其他场景怎样选包
 
@@ -151,10 +175,11 @@ dotnet add package JYPPX.OpenCV.runtime.win-x64 --version 5.0.0
 | ONNX Runtime CUDA | 保留 ORT 适配器，选择匹配的 GPU runtime 与 CUDA/cuDNN，显式启用 CUDA Provider |
 | OpenVINO | 选择 `Backend.OpenVINO`，准备匹配的 OpenVINO runtime |
 | OpenCV DNN | 选择 `Backend.OpenCV`，确认实际导出图的 Batch 与动态宽度支持 |
-| TensorRT CUDA OCR | 使用 `Visual.TensorRT` 与 `Backend.TensorRT` 的相应流程，在目标 GPU 构建匹配 Engine |
+| TensorRT 执行 DET/CLS/REC | 选择 `Backend.TensorRT`、匹配 bridge 和厂商运行库，在目标 GPU 构建 Engine；第八节有 Ubuntu 实跑 |
+| TensorRT CUDA 专用 OCR | 进一步使用 `Visual.TensorRT` 的 CUDA 裁剪与专用处理路径，按任务单独验证 |
 | 应用内自动下载模型 | 按需增加 `ModelFactory`，使用 `PaddleOcrReleaseClient` |
 
-**本地文件加载不要求安装 ModelFactory。** 各种场景的详细安装命令已在第二篇列出；CPU/GPU 原生包不要混装到同一个输出目录。本篇完整代码的后端固定为 CPU，安装其他包后还需要相应修改初始化。
+**本地文件加载不要求安装 ModelFactory。** Windows 按场景安装见第二篇；Ubuntu 后端例子见第 8.4 节。下面的基础代码固定为 ORT CPU，跨系统时替换图像 runtime 即可；切换引擎仍需调整注册、设备与模型格式。CPU/GPU 原生包不要混装到同一个输出目录。
 
 ```text
 按场景选择 NuGet（第二篇第四节）：
@@ -181,7 +206,8 @@ https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/docs/articles/ten
     <PackageReference Include="JYPPX.DeploySharp.Visual.OpenCV" Version="2.0.0" />
     <PackageReference Include="JYPPX.DeploySharp.Backend.OnnxRuntime" Version="2.0.0" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.28.0" />
-    <PackageReference Include="JYPPX.OpenCV.runtime.win-x64" Version="5.0.0" />
+    <PackageReference Include="JYPPX.OpenCV.runtime.win-x64" Version="5.0.0" Condition="'$(OS)' == 'Windows_NT'" />
+    <PackageReference Include="JYPPX.OpenCV.runtime.ubuntu.22.04-x64" Version="5.0.0" Condition="$([MSBuild]::IsOSPlatform('Linux'))" />
   </ItemGroup>
 </Project>
 ```
@@ -192,7 +218,34 @@ https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/docs/articles/ten
 
 PaddleOCR 模型放在独立的 **`models-paddleocr` Release** 中。每个 DET、CLS、REC 和字典均可单独下载，使用轻量组合时，不需要把全部模型打包下载。
 
-下面命令默认下载 v5 Mobile 的三个 ONNX 和一个字典。想切换组合，修改第一行 `$variant`，其余文件名会相应变化：
+下面分别给出 Bash 与 PowerShell 命令，**选择与当前终端对应的一组执行**。默认下载 v5 Mobile 的三个 ONNX 和一个字典；已有本地文件可以直接使用。
+
+**Ubuntu Bash：** 修改 `variant` 可选择七种组合之一。
+
+```bash
+variant=v5-mobile
+prefix="ppocr${variant}"
+case "$variant" in
+  v4-mobile|v4-server)
+    cls=ppocrv4-legacy-cls.onnx; dictionary=ppocrv4_keys.txt ;;
+  v5-mobile|v5-server)
+    cls="$prefix-cls.onnx"; dictionary=ppocrv5_dict.txt ;;
+  v6-tiny|v6-small|v6-medium)
+    cls=ppocrv5-mobile-cls.onnx
+    dictionary="PP-OCRv6_${variant#v6-}_rec_dict.txt" ;;
+  *) printf '不支持的组合：%s\n' "$variant"; exit 1 ;;
+esac
+mkdir -p models images
+model_base='https://github.com/guojin-yan/DeploySharp/releases/download/models-paddleocr'
+for file in "$prefix-det.onnx" "$cls" "$prefix-rec.onnx" "$dictionary"; do
+  curl -fL --retry 2 "$model_base/$file" -o "models/$file"
+done
+curl -fL --retry 2 \
+  'https://paddle-model-ecology.bj.bcebos.com/paddlex/imgs/demo_image/pp_structure_v3_demo.png' \
+  -o images/pp_structure_v3_demo.png
+```
+
+**Windows PowerShell：** 修改 `$variant` 选择相同组合。
 
 ```powershell
 $variant = 'v5-mobile'
@@ -482,11 +535,11 @@ REC 的类别数量与字典对应不上时，应先检查模型、字典和空�
 
 在项目目录执行：
 
-```powershell
+```shell
 dotnet run -c Release
 ```
 
-这次输入是前面的中文报纸页面，程序返回 **144 个文字区域**。下面完整列出当次控制台输出，没有省略中间区域；文字、分数、编号均来自实际运行，没有手工修正成“标准答案”。
+这次输入是前面的中文报纸页面，Windows ORT CPU 程序返回 **144 个文字区域**。下面只展示部分输出，省略位置已标明；文字、分数与编号均保留实际结果，没有手工修正成“标准答案”。**完整文字由程序保存到 `result.txt`，全部区域、分数和坐标保存在 `result.json` 中。** Ubuntu 的实际运行与后端对照见第 8.4、8.5 节。
 
 ```text
 backend=onnxruntime;device=cpu;variant=v5-mobile;batch=1;channels=1
@@ -500,148 +553,17 @@ prepare_ms=107.2;run_ms=5879.9
 [06] score=0.996;angle=0;年依次登台表演中国民族舞、现代舞、扇子舞
 [07] score=0.997;angle=0;设了中国语言课程和中国文化课程，注册学
 [08] score=0.997;angle=0;等，曼妙的舞姿赢得现场观众阵阵掌声。这
-[09] score=0.998;angle=0;生2万余人次。10余年来，厄特孔院已成为
-[10] score=0.999;angle=0;是日前厄立特里亚高等教育与研究院孔子学
-[11] score=0.998;angle=0;当地民众了解中国的一扇窗口。
-[12] score=0.943;angle=0;院（以下简称“厄特孔院”)举办“喜迎新年”中国
-[13] score=0.997;angle=0;黄鸣飞表示，随着来学习中文的人日益
-[14] score=1.000;angle=0;歌舞比赛的场景。
-[15] score=0.996;angle=0;增多，阿斯马拉大学教学点已难以满足教学
-[16] score=0.999;angle=0;中国和厄立特里亚传统友谊深厚。近年
-[17] score=0.999;angle=0;需要。2024年4月，由中企蜀道集团所属四
-[18] score=0.978;angle=0;来，在高质量共建“一带一路”框架下，中厄两
-[19] score=0.999;angle=0;川路桥承建的孔院教学楼项目在阿斯马拉开
-[20] score=0.979;angle=0;工建设，预计今年上半年竣工，建成后将为厄
-[21] score=0.998;angle=0;国人文交流不断深化，互利合作的民意基础
-[22] score=1.000;angle=0;特孔院提供全新的办学场地。
-[23] score=1.000;angle=0;日益深厚。
+...（第 09—23 项省略）...
 [24] score=0.234;angle=0;90-
-[25] score=0.994;angle=0;“学好中文，我们的
-[26] score=0.998;angle=0;“在中国学习的经历
-[27] score=0.958;angle=0;未来不是梦”
-[28] score=0.979;angle=0;让我看到更广阔的世界”
-[29] score=0.998;angle=0;多年来，厄立特里亚广大赴华留学生和
-[30] score=0.992;angle=0;“鲜花曾告诉我你怎样走过，大地知道你
-[31] score=0.953;angle=0;心中的每一个角落……”厄立特里亚阿斯马拉
-[32] score=0.999;angle=0;培训人员积极投身国家建设，成为助力该国
-[33] score=0.998;angle=0;大学综合楼二层，一阵优美的歌声在走廊里回
-[34] score=1.000;angle=0;发展的人才和厄中友好的见证者和推动者。
-[35] score=0.999;angle=0;响。循着熟悉的旋律轻轻推开一间教室的门，
-[36] score=0.996;angle=0;在厄立特里亚全国妇女联盟工作的约翰
-[37] score=0.982;angle=0;娜·特韦尔德·凯莱塔就是其中一位。她曾在
-[38] score=0.996;angle=0;学生们正跟着老师学唱中文歌曲《同一首歌》。
-[39] score=0.999;angle=0;这是厄特孔院阿斯马拉大学教学点的一
-[40] score=0.995;angle=0;中华女子学院攻读硕士学位，研究方向是女
-[41] score=0.996;angle=0;性领导力与社会发展。其间，她实地走访中国
-[42] score=1.000;angle=0;节中文歌曲课。为了让学生们更好地理解歌
-[43] score=0.996;angle=0;多个地区，获得了观察中国社会发展的第一
-[44] score=0.981;angle=0;词大意，老师尤斯拉·穆罕默德萨尔·侯赛因逐
+...（第 25—44 项省略）...
 [45] score=0.995;angle=0;在厄立特里亚不久前举办的第六届中国风筝文化节上，当地小学生体验风筝制作。
-[46] score=1.000;angle=0;手资料。
-[47] score=0.997;angle=0;字翻译和解释歌词。随着伴奏声响起，学生们
-[48] score=0.999;angle=0;中国驻厄立特里亚大使馆供图
-[49] score=0.992;angle=0;边唱边随着节拍摇动身体，现场气氛热烈。
-[50] score=0.998;angle=0;谈起在中国求学的经历，约翰娜记忆犹
-[51] score=0.975;angle=0;“不管远近都是客人，请不用客气；相约
-[52] score=0.991;angle=0;“这是中文歌曲初级班，共有32人。学
-[53] score=0.993;angle=0;新：“中国的发展在当今世界是独一无二的。
-[54] score=0.998;angle=0;瓦的北红海省博物馆。
-[55] score=0.996;angle=0;生大部分来自首都阿斯马拉的中小学，年龄
-[56] score=0.997;angle=0;沿着中国特色社会主义道路坚定前行，中国
-[57] score=0.955;angle=0;好了在一起，我们欢迎你……”在一场中厄青
-[58] score=0.996;angle=0;博物馆二层陈列着一个发掘自阿杜利
-[59] score=0.993;angle=0;最小的仅有6岁。”尤斯拉告诉记者。
-[60] score=0.996;angle=0;创造了发展奇迹，这一切都离不开中国共产党
-[61] score=0.999;angle=0;年联谊活动上，四川路桥中方员工同当地大
-[62] score=0.997;angle=0;斯古城的中国古代陶制酒器，罐身上写着
-[63] score=0.983;angle=0;“万”“和”“禅”“山”等汉字。“这件文物证
-[64] score=1.000;angle=0;的领导。中国的发展经验值得许多国家学习
-[65] score=0.996;angle=0;尤斯拉今年23岁，是厄立特里亚一所公立
-[66] score=1.000;angle=0;学生合唱《北京欢迎你》。厄立特里亚技术学
-[67] score=0.955;angle=0;借鉴。”
-[68] score=0.999;angle=0;学校的艺术老师。她12岁开始在厄特孔院学
-[69] score=0.993;angle=0;明，很早以前我们就通过海上丝绸之路进行
-[70] score=0.992;angle=0;院计算机科学与工程专业学生鲁夫塔·谢拉
-[71] score=0.981;angle=0;习中文，在2017年第十届“汉语桥”世界中学生
-[72] score=0.988;angle=0;正在西南大学学习的厄立特里亚博士生
-[73] score=0.997;angle=0;是其中一名演唱者，她很早便在孔院学习中
-[74] score=0.999;angle=0;贸易往来与文化交流。这也是厄立特里亚
-[75] score=0.995;angle=0;中文比赛中获得厄立特里亚赛区第一名，并和
-[76] score=0.990;angle=0;穆卢盖塔·泽穆伊对中国怀有深厚感情。8
-[77] score=0.996;angle=0;文，一直在为去中国留学作准备。“这句歌词
-[78] score=0.992;angle=0;与中国友好交往历史的有力证明。”北红海
-[79] score=0.990;angle=0;省博物馆研究与文献部负责人伊萨亚斯·特
-[80] score=0.998;angle=0;同伴代表厄立特里亚前往中国参加决赛，获得
-[81] score=0.994;angle=0;年前，在北京师范大学获得硕士学位后，穆卢
-[82] score=0.998;angle=0;是我们两国人民友谊的生动写照。无论是投
-[83] score=0.999;angle=0;斯法兹吉说。
-[84] score=0.997;angle=0;团体优胜奖。2022年起，尤斯拉开始在厄特孔
-[85] score=0.994;angle=0;盖塔在社交媒体上写下这样一段话：“这是我
-[86] score=0.998;angle=0;身于厄立特里亚基础设施建设的中企员工，
-[87] score=0.993;angle=0;院兼职教授中文歌曲，每周末两个课时。“中国
-[88] score=0.998;angle=0;人生的重要一步，自此我拥有了一双坚固的
-[89] score=0.998;angle=0;还是在中国留学的厄立特里亚学子，两国人
-[90] score=0.999;angle=0;厄立特里亚国家博物馆考古学和人类学
-[91] score=0.998;angle=0;文化博大精深，我希望我的学生们能够通过中
-[92] score=0.949;angle=0;鞋子，赋予我穿越荆棘的力量。“
-[93] score=0.997;angle=0;民携手努力，必将推动两国关系不断向前发
-[94] score=0.970;angle=0;研究员菲尔蒙·特韦尔德十分喜爱中国文
-[95] score=0.998;angle=0;穆卢盖塔密切关注中国在经济、科技、教
-[96] score=0.991;angle=0;展。”鲁夫塔说。
-[97] score=0.983;angle=0;化。他表示：“学习彼此的语言和文化，将帮
-[98] score=0.983;angle=0;文歌曲更好地理解中国文化。”她说。
-[99] score=0.983;angle=0;“姐姐，你想去中国吗?”“非常想！我想
-[100] score=0.997;angle=0;育等领域的发展，“中国在科研等方面的实力
-[101] score=0.999;angle=0;厄立特里亚高等教育委员会主任助理萨
-[102] score=0.998;angle=0;助厄中两国人民更好地理解彼此，助力双方
-[103] score=0.974;angle=0;交往，搭建友谊桥梁。”
-[104] score=0.989;angle=0;去看故宫、爬长城。”尤斯拉的学生中有一对
-[105] score=0.999;angle=0;与日俱增。在中国学习的经历让我看到更广
-[106] score=0.992;angle=0;马瑞表示：“每年我们都会组织学生到中国访
-[107] score=0.993;angle=0;能歌善舞的姐妹，姐姐露娅今年15岁，妹妹
-[108] score=0.957;angle=0;阔的世界，从中受益匪浅。“
-[109] score=0.993;angle=0;问学习，目前有超过5000名厄立特里亚学生
-[110] score=0.984;angle=0;厄立特里亚国家博物馆馆长塔吉丁·努
-[111] score=0.974;angle=0;里达姆·优素福曾多次访问中国，对中华文明
-[112] score=0.997;angle=0;莉娅14岁，两人都已在厄特孔院学习多年，
-[113] score=0.992;angle=0;23岁的莉迪亚·埃斯蒂法诺斯已在厄特
-[114] score=0.999;angle=0;在中国留学。学习中国的教育经验，有助于
-[115] score=0.999;angle=0;中文说得格外流利。
-[116] score=0.997;angle=0;孔院学习3年，在中国书法、中国画等方面表
-[117] score=0.999;angle=0;的传承与创新、现代化博物馆的建设与发展
-[118] score=0.967;angle=0;提升厄立特里亚的教育水平。”
-[119] score=0.999;angle=0;现十分优秀，在2024年厄立特里亚赛区的
-[120] score=0.997;angle=0;印象深刻。“中国博物馆不仅有许多保存完好
-[121] score=0.991;angle=0;露娅对记者说：“这些年来，怀着对中文
-[122] score=0.997;angle=0;“共同向世界展示非
-[123] score=0.998;angle=0;和中国文化的热爱，我们姐妹俩始终相互鼓
-[124] score=0.993;angle=0;“汉语桥”比赛中获得一等奖。莉迪亚说：“学
-[125] score=0.997;angle=0;的文物，还充分运用先进科技手段进行展示，
-[126] score=0.995;angle=0;励，一起学习。我们的中文一天比一天好，还
-[127] score=0.999;angle=0;习中国书法让我的内心变得安宁和纯粹。我
-[128] score=0.986;angle=0;帮助人们更好理解中华文明。”塔吉丁说，“厄
-[129] score=0.973;angle=0;洲和亚洲的灿烂文明”
-[130] score=0.999;angle=0;学会了中文歌和中国舞。我们一定要到中国
-[131] score=0.997;angle=0;也喜欢中国的服饰，希望未来能去中国学习，
-[132] score=0.994;angle=0;立特里亚与中国都拥有悠久的文明，始终相
-[133] score=0.981;angle=0;去。学好中文，我们的未来不是梦！”
-[134] score=0.999;angle=0;把中国不同民族元素融入服装设计中，创作
-[135] score=0.990;angle=0;从阿斯马拉出发，沿着蜿蜒曲折的盘山
-[136] score=0.999;angle=0;互理解、相互尊重。我希望未来与中国同行
-[137] score=0.998;angle=0;据厄特孔院中方院长黄鸣飞介绍，这所
-[138] score=0.998;angle=0;出更多精美作品，也把厄特文化分享给更多
-[139] score=0.999;angle=0;公路一路向东寻找丝路印迹。驱车两个小
-[140] score=0.997;angle=0;加强合作，共同向世界展示非洲和亚洲的灿
-[141] score=0.998;angle=0;时，记者来到位于厄立特里亚港口城市马萨
-[142] score=0.941;angle=0;烂文明。”
-[143] score=0.998;angle=0;孔院成立于2013年3月，由贵州财经大学和
-[144] score=0.976;angle=0;的中国朋友。”
+...（第 46—144 项省略）...
 saved=result.txt,result.json,result.jpg
 ```
 
 这是**未预热的单次功能运行**，计时范围见下一章，不能据此比较模型性能。这里的 144 是模型返回的区域数，不代表人工真值中的总行数，也不代表每条文字都正确。
 
-下图是同次运行生成的 `result.jpg`。绿色线标出区域，红色编号与上面的完整输出、JSON 中的 `index` 对应，结果保留原图 `1524 × 1368` 尺寸：
+下图是同次运行生成的 `result.jpg`。绿色线标出区域，红色编号与控制台编号、JSON 中的 `index` 对应，结果保留原图 `1524 × 1368` 尺寸：
 
 ![PP-OCRv5 Mobile 真实输出：中文多栏报纸页面上的 144 个文字候选区域，包含标题、正文、图注和照片内低分候选](assets/03-paddleocr-pipeline/v5-mobile-result.jpg)
 
@@ -665,11 +587,11 @@ JSON 的每个区域同时保留 `confidence` 和 `detectionScore`：前者是�
 
 ### 8.3 切换 v4、v6 或自己的图片
 
-先把第五节下载命令中的 `$variant` 改为所需组合，下载对应文件，再通过第二个程序参数选择相同组合：
+先把第五节下载命令中的 `variant`（PowerShell 为 `$variant`）改为所需组合，下载对应文件，再通过第二个程序参数选择相同组合。下面的正斜杠路径可用于 Bash 和 PowerShell：
 
-```powershell
-dotnet run -c Release -- .\images\pp_structure_v3_demo.png v4-mobile .\models
-dotnet run -c Release -- .\images\pp_structure_v3_demo.png v6-tiny .\models
+```shell
+dotnet run -c Release -- ./images/pp_structure_v3_demo.png v4-mobile ./models
+dotnet run -c Release -- ./images/pp_structure_v3_demo.png v6-tiny ./models
 ```
 
 同一份正文代码在三种组合上的功能验证结果如下，均使用 ORT CPU，执行了 DET、裁剪、CLS、REC 和结果合并：
@@ -684,13 +606,91 @@ dotnet run -c Release -- .\images\pp_structure_v3_demo.png v6-tiny .\models
 
 换自己的图片和模型目录时，传入实际路径：
 
-```powershell
-dotnet run -c Release -- .\images\my-document.jpg v5-mobile .\my-models
+```shell
+dotnet run -c Release -- ./images/my-document.jpg v5-mobile ./my-models
 ```
 
 程序按模型目录中的标准文件名加载。若使用自己训练或重新导出的模型，需要同时检查张量名称、输入高度、颜色、归一化、动态宽度/Batch 和配套字典。已知 PP-OCR 输出结构可以使用相应的 `PaddleOcrProfiles` 工厂，传入真实输入输出名；结构不同则需要自定义 Profile 或 decoder。给模型改名不会改变它的输入输出约定。
 
 三个结果文件会写到当前工作目录，再次运行会覆盖前一次。需要保留多个版本或多张图的结果时，应按图片或组合名称设置各自的输出目录。
+
+### 8.4 放到 Ubuntu，同一份代码怎样运行
+
+在第 4.1 节的 Ubuntu 设备上安装 .NET 10，按第 4.2 节选择 Linux OpenCV runtime，再使用 Bash 下载命令准备文件。**第六节的 C# 主程序可以直接使用**，相对路径不需要改成某台测试机的私人目录：
+
+```bash
+dotnet run -c Release -- ./images/pp_structure_v3_demo.png v5-mobile ./models
+```
+
+这条基础路径同样返回 **144 个区域**，写出 `result.txt/result.json/result.jpg`。在本次固定输入上，Ubuntu ORT CPU 的逐区域文字与 Windows 基线一致。原生组件通过 NuGet 与厂商运行库提供，运行这个 C# ONNX 案例不需要安装 PaddlePaddle。
+
+服务器或边缘设备没有图形桌面也可以运行。代码只读取、绘制和保存图片，没有调用 `ImShow` 或依赖窗口循环；把结果文件取回开发机查看即可。
+
+如果提示 `dotnet: command not found`，先检查 SDK 是否已安装且命令目录加入了 `PATH`；若 SDK 安装在用户的 `.dotnet` 目录，可设置 `DOTNET_ROOT` 与对应 `PATH`。如果是 OpenCV `.so` 加载失败，则检查 `LD_LIBRARY_PATH` 和真实缺失依赖，两者不是同一个问题。
+
+### 8.5 Ubuntu 上运行 OpenVINO、OpenCV DNN 与 TensorRT
+
+为了让大家能直接复现，我把后端切换整理成另一个可运行工程，仍使用正式版 NuGet。它为 DET、CLS、REC 分别配置后端注册表，并保留**同一字典、原图、检测尺寸、DB 阈值、裁剪与 CTC 解码**。
+
+```text
+Ubuntu PaddleOCR 后端对照工程：
+https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV2.0/docs/blog/2.0.0/2026-10/examples/03-paddleocr-backends
+```
+
+将该目录中的 `Program.cs` 与 `PaddleOcrBackends.csproj` 下载到一个与基础案例**并列的新目录**。工程里已引用各后端包；下面列出这次使用的引擎与原生环境，方便核对：
+
+| 后端 | 本次环境与准备 |
+| --- | --- |
+| ORT CPU | `Microsoft.ML.OnnxRuntime 1.28.0` |
+| OpenVINO CPU | `OpenVINO.runtime.ubuntu.22-x86_64 2026.3.1`，选择 Latency 提示 |
+| OpenCV DNN CPU | 与图像组件共用 `JYPPX.OpenCV.runtime.ubuntu.22.04-x64 5.0.0` |
+| TensorRT CUDA | TensorRT `11.0.0.114`、CUDA `12.9`、cuDNN `9.22.0`、RTX 2060 |
+| TensorRT bridge | `JYPPX.TensorRT.CSharp.API.Runtime.linux-x64.ubuntu22.04.trt11.0.cuda12.9.cudnn9.22.Bridge 4.0.0` |
+
+Linux 的 OpenVINO 原生库还有同目录的版本化 `.so` 依赖。本次先还原包，再把 OpenCV 和 OpenVINO 的 native 目录加入搜索路径，**不需要改全局系统环境**。在后端对照工程目录中执行：
+
+```bash
+dotnet restore
+opencv_native="$HOME/.nuget/packages/jyppx.opencv.runtime.ubuntu.22.04-x64/5.0.0/runtimes/ubuntu.22.04-x64/native"
+openvino_native="$HOME/.nuget/packages/openvino.runtime.ubuntu.22-x86_64/2026.3.1/runtimes/linux-x64/native"
+cuda_native=/usr/local/cuda-12.9/lib64
+export LD_LIBRARY_PATH="$opencv_native:$openvino_native:$cuda_native:${LD_LIBRARY_PATH:-}"
+
+image=../DeploySharpOcrDemo/images/pp_structure_v3_demo.png
+models=../DeploySharpOcrDemo/models
+dotnet run -c Release -- "$image" v5-mobile "$models" openvino
+dotnet run -c Release -- "$image" v5-mobile "$models" opencv-dnn
+dotnet run -c Release -- "$image" v5-mobile "$models" tensorrt
+```
+
+这里假定基础案例叫 `DeploySharpOcrDemo`；按自己的实际位置修改 `image/models`，CUDA 安装目录不同也要相应修改。需要重新运行 ORT CPU 时，最后一个参数使用 `ort-cpu`。结果按后端与组合写入 `results/<backend>/<variant>/`，控制台只打印前 10 个区域，完整文字和区域继续写入 TXT/JSON。
+
+TensorRT 首次运行会通过库的 `TensorRtOnnxEngineBuilder` **在 Ubuntu 目标 GPU 上构建三份 Engine**，以后复用模型旁的 `.ubuntu-trt11.engine`。本次 Profile 如下：
+
+| 阶段 | Engine 接受的输入 |
+| --- | --- |
+| DET | 固定 `1 × 3 × 1408 × 1536`，对应本文页面的前处理 |
+| CLS | 固定 `1 × 3 × 80 × 160` |
+| REC | `1 × 3 × 48 × W`，`W` 的 min/opt/max 为 `48/320/3200` |
+
+代码请求 `TensorRtApiVersion.TensorRt11`，Profile 与工件格式同时设置为 `tensorrt-engine`。TensorRT 11 使用强类型网络，本次保持原始 Float32 图并关闭 TF32，没有套用 TensorRT 10 的 `Float16` 构建标志，也没有搬用 Windows Engine。更换输入尺寸、模型、GPU 或 TensorRT 版本时，应重新生成匹配的 Engine；本例固定 DET Shape 不是任意尺寸都通用的缓存。
+
+下面是同一 Ubuntu 设备上的完整流程结果。四条路径都执行 **DET → 透视裁剪 → CLS → REC → 合并**，统一 `batch=1 / channels=1 / paddingRatio=1.0 / maximumRegions=512 / resizeLong=1600`：
+
+| 后端 | 区域数 | 相对 ORT CPU 的逐区域文字 | 完整调用 P50 / ms | P95 / ms |
+| --- | ---: | --- | ---: | ---: |
+| ORT CPU `1.28.0` | 144 | 基线 | 4893.204 | 5103.264 |
+| OpenVINO CPU `2026.3.1` | 144 | 144/144 一致 | 3882.420 | 3924.977 |
+| OpenCV DNN CPU `5.0.0` | 144 | 144/144 一致 | 14151.585 | 14544.885 |
+| TensorRT `11.0.0.114` CUDA | 144 | 144/144 一致 | 2160.845 | 2198.410 |
+
+该表使用 **预热 2 次、统计 5 次、nearest-rank P50/P95**。每次从读图和检测前处理开始，到完整 `RunAsync` 返回结束；不含 Session/Engine 构建、绘图和文件写出。只有 5 个样本，表中的 P95 实际取本次最大值，主要服务教程复现，不作稳态性能承诺。表中时间来自单独计时的完整调用，不能用两个阶段 P50 相加代替。
+
+**这张大图的结果不能与 500×500、十几行文字的商品图直接比较。** 本例有 144 个候选区域、较大的 DET 输入，并且逐行识别；TensorRT 只执行三种模型，图像裁剪与结果解码仍在 CPU，没有启用 CUDA 专用裁剪/CTC，也没有搜索最佳 Batch 或通道组合。因此不能把 2160ms 当作该显卡的最优 OCR 性能。
+
+OpenCV DNN 在这页上的耗时也明显更高。此工程保留动态识别宽度，并使用容量 16 的 Shape 缓存；宽度种类较多时，仍可能反复专门化和导入网络。后续可以单独评估固定宽度、宽度分桶及补边，但它们会改变输入和可能的识别结果，不能静默替换后仍宣称“同条件更快”。
+
+这里的 **144/144 一致只表示与本次 ORT CPU 输出一致**，不表示人工标注准确率为 100%；照片内低分候选、标点以及多栏阅读顺序仍有前面提到的边界。本次 Ubuntu 新增的是 **v5 Mobile 这一组完整流程**，不能据此扩大为 v4/v6 或 PP-Structure 全部模型的 Linux 多后端结论。
 
 ## 九、Batch、推理通道与时间应该怎样看
 
@@ -725,7 +725,7 @@ Batch 也可能影响识别结果。在一张商品图的对照测试中，v5 Mo
 | `prepare_ms` | 创建 OCR 输入时的图片解码、检测前处理和输入准备 | 模型加载、绘图画布的单独解码 |
 | `run_ms` | 等待完整 `RunAsync`：DET、文本行准备、CLS、REC、解码与结果合并 | 模型/Session 构建、前面的输入创建、绘图、TXT/JSON/JPG 写出 |
 
-两个数都来自一次未预热运行，**不是应用启动耗时，也不是稳态完整性能指标**。进一步定位时，可以读取 `result.Timing` 中的 `Detection`、`OrientationClassification`、`Recognition` 等阶段信息。
+第六节基础代码的两个数来自一次未预热运行，**不是应用启动耗时，也不是稳态完整性能指标**；第 8.5 节对照工程另有预热和重复测量，不能混为一次数据。进一步定位时，可以读取 `result.Timing` 中的 `Detection`、`OrientationClassification`、`Recognition` 等阶段信息。
 
 `Timing.Details` 中部分字段记录多个批次累计的准备或推理工作时间；阶段存在并发时，工作时间之和不能当作墙钟总耗时。也不要把不同测试的 P50/P95 分别相加得到一个“总时间”。
 
@@ -754,6 +754,7 @@ https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/docs/articles/per
 | --- | --- | --- |
 | 找不到模型、字典或图片 | 工作目录、所选 `variant`、第三个参数的模型根目录 | 按第五节下载所选组合，保留对应标准文件名 |
 | 原生 DLL 加载失败 | `x64`、OpenCV runtime、ORT CPU 原生包和本机依赖 | 使用本文同版本组合；缺少 MSVC 运行库时按异常提示补齐 |
+| Ubuntu 提示 `.so` 或版本化依赖找不到 | 对应 Linux runtime 是否已还原、native 目录是否在进程搜索路径 | 按第 4.2/8.5 节设置 `LD_LIBRARY_PATH`，结合 `ldd` 检查真实依赖；不要给 Linux 进程使用 Windows DLL |
 | 输出张量名称不匹配 | 模型是否来自本文这组 Release，是否替换了导出图 | 对照实际张量名配置 Profile，不只修改文件名 |
 | REC 类别数不一致或文字乱码 | 模型和字典是否配套、空格与 blank 的处理 | 保持字典顺序，确认空格类是否由加载器追加 |
 | 图片里有字，但没有框 | 检测输入尺寸、颜色、归一化及 DB 阈值 | 先用示例模型和图片复现，再针对小字与低对比度逐项调整 |
@@ -777,7 +778,7 @@ https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/docs/model-backen
 
 ## 十一、总结与后续
 
-这篇完成了从空项目、按需准备模型，到 **DET → 文本行裁剪 → CLS → REC → 原图区域与文字结果** 的完整流程。使用正式版 NuGet，应用可以复用配套处理，同时保留模型选择、字典、Batch、独立通道和区域结果的控制。
+这篇完成了从空项目、按需准备模型，到 **DET → 文本行裁剪 → CLS → REC → 原图区域与文字结果** 的完整流程；相同 C# 基础代码在 Windows 与 Ubuntu 运行，并在 Ubuntu 对照了四种后端。使用正式版 NuGet，应用可以复用配套处理，同时保留模型选择、字典、Batch、独立通道和区域结果的控制。
 
 大家可以先用 v5 Mobile 复现，再按自己的设备和图像评估 v4、v6 或 Server 组合；有了文字与原图坐标，就可以继续接入界面、业务规则或文档区域处理。模型部署成功后，仍要用实际数据检查文字是否正确，特别是小字、低分行和长文本。
 

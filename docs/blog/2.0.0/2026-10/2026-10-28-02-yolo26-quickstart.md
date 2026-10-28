@@ -45,7 +45,7 @@ DeploySharp 2.0 在模型接入和实际应用流程上做了扩展，主要包�
 
 接下来从一个空的 C# 控制台项目开始，使用 **YOLO26n + ONNX Runtime CPU** 完成目标检测，并把类别、置信度和检测框画到原图上。本文选用 YOLO26 的端到端 ONNX 检测输出，直接读取框、分数和类别，再完成筛选与坐标还原。使用正式发布的 NuGet 包即可运行，无需先编译 DeploySharp 源码。
 
-我们会依次完成 **选择 NuGet → 准备模型和图片 → 编写检测代码 → 查看与保存结果**，再演示如何替换自己的 YOLO26 模型和类别表。模型直接从本地路径加载，重点放在输入输出与前后处理配置上。
+我们会依次完成 **选择 NuGet → 准备模型和图片 → 编写检测代码 → 查看与保存结果**，再演示替换自有模型与类别表。第八节还会在同一台 Windows 设备上切换 OpenVINO、OpenCV DNN 和 TensorRT，检查结果与耗时。模型直接从本地路径加载，重点放在输入输出与前后处理配置上。
 
 ## 三、准备环境，创建控制台项目
 
@@ -124,7 +124,7 @@ dotnet add package JYPPX.OpenCV.runtime.win-x64 --version 5.0.0
 
 `Core`、`Visual`、`Extensibility`、`JYPPX.OpenCV.CSharp.API` 和 `Microsoft.ML.OnnxRuntime.Managed` 等依赖由 NuGet 自动解析，本文无需逐个添加。这里特别区分 **`Microsoft.ML.OnnxRuntime.Managed` 与 CPU runtime 包**：有托管接口，仍需要对应的原生运行库才能真正推理。
 
-**跟着本文运行时，到这里就完成选包了，可以直接进入第五节。** 下面几组供你在其他项目中选择；每个后端的初始化与运行细节会在多后端专题中展开。本篇实际运行验证的是上面的 CPU 组合。
+**先跟着本文跑通 CPU 时，到这里就完成选包了，可以直接进入第五节。** 下面按场景说明其他组合；第 8.4 节提供 Windows 四种后端的实际结果与可运行对照工程，更完整的设备和离线部署在后续专题展开。
 
 ### 4.3 场景二：NVIDIA 显卡，使用 ONNX Runtime CUDA
 
@@ -139,7 +139,9 @@ dotnet add package JYPPX.OpenCV.runtime.win-x64 --version 5.0.0
 
 这一组选择 GPU runtime。已有 CPU 工程切换时，先移除原来的显式 `Microsoft.ML.OnnxRuntime` 引用，再添加 GPU 包，避免两套原生文件在输出目录中互相覆盖。`Microsoft.ML.OnnxRuntime.Managed` 仍会作为依赖存在。
 
-此外还需要目标显卡驱动，以及 **与该 ONNX Runtime 版本匹配的 CUDA、cuDNN**。GPU 包不会替你安装全部 NVIDIA 环境。正式版适配器依赖 Managed `1.28.0`，选用的原生包也应保持匹配。
+此外还需要目标显卡驱动，以及 **与该 ONNX Runtime 版本匹配的 CUDA、cuDNN**。GPU 包不会替你安装全部 NVIDIA 环境。正式版适配器依赖 Managed `1.28.0`，选用的原生包也应保持匹配。本文尝试的 `Gpu.Windows 1.28.0` 原生文件依赖 `cublasLt64_13.dll` 等 CUDA 13 库，不能直接沿用 TensorRT 案例的 CUDA 12 环境。
+
+**本机这条 ORT CUDA 路径尚未跑通。** 补齐加载路径后仍在 `cudaSetDevice` 报错 801，第 8.4 节如实记录，没有自动退回 CPU 并当作 GPU 成功。
 
 安装完成后，程序还要显式配置 CUDA Provider 和设备请求。直接运行本文的 CPU 初始化代码，使用的仍然是 CPU。环境对应关系可以从官方说明中核对：
 
@@ -149,7 +151,7 @@ https://onnxruntime.ai/docs/execution-providers/CUDA-ExecutionProvider.html
 
 ### 4.4 场景三：使用 OpenVINO 执行视觉推理
 
-适合评估 OpenVINO 在目标 CPU 或受支持 Intel 设备上的部署效果。使用 OpenCV 准备图片，使用 OpenVINO 执行模型：
+适合评估 OpenVINO 在目标 CPU 上的部署效果。当前 DeploySharp 2.0.0 的这个适配器接受 **CPU** 设备；本文不把它写成已经验证 Intel GPU/NPU。使用 OpenCV 准备图片，使用 OpenVINO 执行模型：
 
 ```powershell
 dotnet add package JYPPX.DeploySharp.Visual.OpenCV --version 2.0.0
@@ -160,7 +162,7 @@ dotnet add package OpenVINO.runtime.win --version 2026.2.1
 
 后端自动引入 `JYPPX.OpenVINO.CSharp.API` 托管接口。OpenCV runtime 与 OpenVINO runtime 分别服务于读图和推理，两者都需要准备。
 
-推理时还需注册 OpenVINO 后端，选择目标设备，并确认具体模型是否已经在该后端验证。GPU/NPU 的设备驱动和插件要求另行核对，不能仅凭安装包成功判断设备可用。
+推理时还需注册 OpenVINO 后端并请求 `CPU`，确认具体模型是否已经在该后端验证。不能仅凭 OpenVINO 官方引擎支持某种设备，就认为当前适配器也已经开放相同入口。
 
 ### 4.5 场景四：使用 OpenCV DNN 执行视觉推理
 
@@ -490,7 +492,7 @@ saved=result.jpg
 
 ![DeploySharp 2.0.0 使用 ONNX Runtime CPU 对 bus.jpg 执行 YOLO26n 检测的实际输出，包含四个行人与一辆公交车](assets/02-yolo26-quickstart/yolo26n-cpu-result.jpg)
 
-坐标输出依次是 `X、Y、Width、Height`，分数保留三位小数。换用不同图片、模型、阈值或后端后，结果数量与分数可能变化。本文只展示这组固定输入的检测结果，不以一次运行时间评价后端性能。
+坐标输出依次是 `X、Y、Width、Height`，分数保留三位小数。换用不同图片、模型、阈值或后端后，结果数量与分数可能变化。本节展示固定输入的检测结果；同设备的多后端对照见第 8.4 节。
 
 ### 8.2 换成自己的图片
 
@@ -530,6 +532,76 @@ dotnet run -c Release -- .\images\my-image.jpg .\models\best.onnx .\models\class
 
 这里复用的是 **YOLO26 端到端检测输出 `[1, N, 6]`** 的解码方式。使用自有模型时，类别文件仍要与训练类别一一对应。若关闭端到端输出，导出的是原始检测头，或者使用分割、Pose 等任务，则需要选择对应的输出合同与 decoder。先确认实际输出结构，再选择处理方式。
 
+### 8.4 在 Windows 上切换后端，结果是否一致
+
+上面的完整代码保留最容易开始的 ORT CPU 路径。我另外用正式版 NuGet 建立了一个**后端对照工程**，复用相同模型、Letterbox、阈值和 decoder；切换的部分集中在引擎注册、设备请求与 Engine 准备中。
+
+测试仍在第 3.1 节的 Windows 设备上进行，GPU 是 **RTX 3060 Laptop，6 GB**，驱动 `576.02`。TensorRT 使用 `10.11.0.33`、CUDA `12.9`、cuDNN `9.22.0` 和 `4.0.0` bridge，在本机由 ONNX 构建 **FP32 Engine**；OpenVINO 使用 `2026.2.1` CPU，并选择 `Latency` 提示。图像准备统一由 OpenCV CPU 完成。
+
+| 后端与执行设备 | 运行结果 | `Run` P50 / ms | 总 P50 / ms | 总 P95 / ms |
+| --- | --- | ---: | ---: | ---: |
+| ORT `1.28.0` CPU | 4 person + 1 bus | 27.452 | 50.158 | 68.378 |
+| OpenVINO `2026.2.1` CPU | 4 person + 1 bus | 15.750 | 31.550 | 36.833 |
+| OpenCV DNN `5.0.0` CPU | 4 person + 1 bus | 69.897 | 85.677 | 111.027 |
+| TensorRT `10.11.0.33` CUDA，FP32 | 4 person + 1 bus | 6.245 | 19.993 | 21.863 |
+| ORT `1.28.0` CUDA | 环境组合未跑通，`cudaSetDevice` 报错 801 | — | — | — |
+
+**四条成功路径的类别与结果顺序一致**，相对 ORT CPU 的最大分数差小于 `0.000002`，框的 `X/Y/Width/Height` 最大差小于 `0.001` 像素。这说明本次切换保持了检测结果；它不是在完整数据集上的精度评测，也不代表其他模型自动兼容。
+
+计时采用 **预热 3 次、统计 20 次、nearest-rank P50/P95**。`Run` 包含后端执行和结果解码；“总”从每次读图、Letterbox、归一化开始，到检测完成及本次输入释放结束。两者都不含模型/Session 初始化、Engine 构建、绘图和文件写出。各引擎使用上述默认或 Latency 配置，没有统一锁频，因此表格是这台设备上的教程运行记录，不是所有 CPU/GPU 的性能排名；总 P50 也不能由各阶段 P50 相加得到。
+
+想直接切换运行，可以下载下面目录中的 `Program.cs` 和 `Yolo26Backends.csproj` 到一个新文件夹，**这个工程已经引用四个后端的托管组件与 Windows runtime**。已有本文模型和图片，直接传入路径即可：
+
+```text
+Windows YOLO26 后端对照工程：
+https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV2.0/docs/blog/2.0.0/2026-10/examples/02-yolo26-backends
+```
+
+例如在这个工程目录中，先运行三个 CPU 后端：
+
+```powershell
+foreach ($backend in @('ort-cpu', 'openvino', 'opencv-dnn')) {
+  $env:DEPLOYSHARP_DEMO_BACKEND = $backend
+  dotnet run -c Release -- .\images\bus.jpg .\models\yolo26n.onnx
+}
+```
+
+示例程序在测量循环外创建 Session，再执行预热与测量；输出分别保存在 `results/<backend>/` 的 JSON 和图片中。第三个程序参数仍可传入类别文件。这里的“创建一次”指一次程序运行，三个命令不会共享同一个原生 Session。
+
+以 OpenVINO 为例，先替换基础代码中的 `UseOnnxRuntime()` 与 `request` 定义，关键变化就是下面两部分，而前后处理和调用保持相同：
+
+```csharp
+// 文件顶部增加 using JYPPX.DeploySharp.Backends.OpenVINO;
+backends.UseOpenVino(new OpenVinoOptions(
+    performanceHint: OpenVinoPerformanceHint.Latency));
+var request = new BackendRequest(BackendCapabilities.TensorInference,
+    OpenVinoBackendProvider.BackendId, "CPU");
+```
+
+TensorRT 还要切换为 `tensorrt-engine` 模型格式，并在目标机生成 Engine。对照工程已经包含构建代码；设置好自己安装目录后运行：
+
+```powershell
+$env:JYPPX_TENSORRT_ROOT = '你的 TensorRT 安装目录'
+$cudaBin = '你的 CUDA 12.9 bin 目录'
+$cudnnBin = '你的 cuDNN 9.22 bin 目录'
+$env:PATH = "$env:JYPPX_TENSORRT_ROOT\lib;$cudaBin;$cudnnBin;$env:PATH"
+$env:DEPLOYSHARP_DEMO_BACKEND = 'tensorrt'
+dotnet run -c Release -- .\images\bus.jpg .\models\yolo26n.onnx
+```
+
+这些路径请替换为真实目录；需要加入搜索路径的是**实际包含 DLL 的目录**。有些 CUDA 安装把 DLL 放在 `bin/x64`，不能只看文件夹名称。本例首次转换可能需要等待，随后复用 ONNX 旁的 `.win-trt10.engine`。更换模型、GPU 或 TensorRT 版本时，应使用新的 Engine 文件名重新构建。这里加速的是模型执行，未启用 `Visual.TensorRT` 的 CUDA 前后处理。
+
+ORT CUDA 需要独立的 GPU 输出目录。对照工程提供 `UseCuda` 开关，但**当前这台机器尚未完成该组合**；在准备好匹配的驱动、CUDA 13 与 cuDNN 后可按下面的入口继续验证，不应把上面的 TensorRT 成功当作 ORT CUDA 的成功证据：
+
+```powershell
+dotnet publish -c Release -p:UseCuda=true -o .\cuda-runtime
+$env:DEPLOYSHARP_DEMO_BACKEND = 'ort-cuda'
+$env:DEPLOYSHARP_CUDA_NATIVE_DIR = '包含 cudart64_13.dll 和 cublasLt64_13.dll 的目录'
+dotnet .\cuda-runtime\Yolo26Backends.dll .\images\bus.jpg .\models\yolo26n.onnx
+```
+
+仍需让同版本 cuDNN 及其他依赖可被加载。示例的可选 `DEPLOYSHARP_CUDA_NATIVE_DIR` 会按绝对路径预加载 CUDA 核心库；它只能解决搜索路径问题，不能替代驱动和运行时兼容性。本次报错发生在 Session 创建阶段，因此没有给这条路径填入“推理时间”。
+
 ## 九、常见问题与检查方法
 
 | 现象 | 先检查什么 | 处理方法 |
@@ -558,7 +630,7 @@ https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/docs/model-backen
 
 ## 十、总结与后续
 
-这篇完成了从空项目、按场景选择 NuGet、下载模型和图片，到 YOLO26 CPU 检测及结果绘制的完整过程。对本文案例，显式安装四个包就能准备好图像与推理依赖；换成其他后端时，再按设备要求调整相应适配器、原生运行时和初始化代码。
+这篇完成了从空项目、按场景选择 NuGet、下载模型和图片，到 YOLO26 检测及结果绘制的完整过程。CPU 入门显式安装四个包；随后在同一台 Windows 设备跑通 ORT CPU、OpenVINO CPU、OpenCV DNN 与 TensorRT，对照了实际结果与计时，也保留了 ORT CUDA 的环境限制。
 
 接入自己的应用时，可以先保留这条已经跑通的路径，再通过模型路径、图片路径和类别文件切换到实际数据。输入尺寸与前后处理按训练和导出约定配置，pipeline 则可以在多次推理中复用。
 
