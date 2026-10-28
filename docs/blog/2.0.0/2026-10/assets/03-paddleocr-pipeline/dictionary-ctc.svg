@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1000" viewBox="0 0 1440 1000" role="img" aria-labelledby="title desc">
+  <title id="title">REC 输出索引怎样变成文字：字典与 CTC</title>
+  <desc id="desc">简化字典以 blank 为类别零，营、养、发为类别一、二、三。时间步索引一一零二二零三先合并连续重复，得到一零二零三，再移除 blank 并映射为营养发。没有 blank 的重复发合并为一字，有 blank 隔开的重复发保留两字。不是实际模型中间输出。</desc>
+  <defs><marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1L9 5L1 9Z" fill="#3c918a"/></marker></defs>
+  <rect width="1440" height="1000" rx="28" fill="#f3f7fb"/>
+  <g font-family="Segoe UI, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+    <text x="60" y="80" font-size="43" font-weight="750" fill="#142b43">REC 输出索引，怎样变成文字？</text>
+    <text x="60" y="128" font-size="26" fill="#557086">字典决定字符映射；CTC 规则决定哪些时间步真正输出</text>
+    <rect x="60" y="185" width="320" height="395" rx="22" fill="#e4eef6" stroke="#b8cbd9" stroke-width="2"/>
+    <text x="91" y="235" font-size="31" font-weight="700" fill="#24465d">简化类别映射</text>
+    <g font-size="29" fill="#315267"><text x="95" y="303">0 → blank</text><text x="95" y="363">1 → 营</text><text x="95" y="423">2 → 养</text><text x="95" y="483">3 → 发</text></g>
+    <text x="91" y="546" font-size="21" fill="#627e92">顺序来自训练与导出约定</text>
+    <rect x="418" y="185" width="962" height="395" rx="22" fill="#fff" stroke="#c8d6e1" stroke-width="2"/>
+    <text x="450" y="235" font-size="29" font-weight="700" fill="#24465d">① 每个时间步选取分数最高的类别</text>
+    <g font-size="30" text-anchor="middle" font-weight="700">
+      <rect x="456" y="269" width="105" height="60" rx="10" fill="#e0f2eb"/><text x="508" y="310" fill="#2c7d65">1</text>
+      <rect x="583" y="269" width="105" height="60" rx="10" fill="#e0f2eb"/><text x="635" y="310" fill="#2c7d65">1</text>
+      <rect x="710" y="269" width="105" height="60" rx="10" fill="#ede9f6"/><text x="762" y="310" fill="#8268a0">0</text>
+      <rect x="837" y="269" width="105" height="60" rx="10" fill="#e0f2eb"/><text x="889" y="310" fill="#2c7d65">2</text>
+      <rect x="964" y="269" width="105" height="60" rx="10" fill="#e0f2eb"/><text x="1016" y="310" fill="#2c7d65">2</text>
+      <rect x="1091" y="269" width="105" height="60" rx="10" fill="#ede9f6"/><text x="1143" y="310" fill="#8268a0">0</text>
+      <rect x="1218" y="269" width="105" height="60" rx="10" fill="#e0f2eb"/><text x="1270" y="310" fill="#2c7d65">3</text>
+    </g>
+    <path d="M899 343V369" stroke="#3c918a" stroke-width="3" marker-end="url(#a)"/>
+    <text x="450" y="415" font-size="27" fill="#315267">② 合并连续重复：1 · 0 · 2 · 0 · 3</text>
+    <path d="M899 437V463" stroke="#3c918a" stroke-width="3" marker-end="url(#a)"/>
+    <text x="450" y="515" font-size="27" fill="#315267">③ 移除 blank，按字典映射：<tspan font-size="34" font-weight="750" fill="#247c68">营养发</tspan></text>
+    <text x="60" y="650" font-size="32" font-weight="700" fill="#24465d">重复字能不能保留，要看中间有没有 blank</text>
+    <rect x="60" y="686" width="630" height="145" rx="20" fill="#e3f0ed"/>
+    <text x="92" y="746" font-size="33" font-weight="650" fill="#277c66">发 · 发 → 发</text>
+    <text x="92" y="794" font-size="24" fill="#526f7b">连续重复，对应同一个输出字符</text>
+    <rect x="720" y="686" width="660" height="145" rx="20" fill="#ece8f5"/>
+    <text x="751" y="746" font-size="33" font-weight="650" fill="#79608f">发 · blank · 发 → 发发</text>
+    <text x="751" y="794" font-size="24" fill="#67617d">blank 隔开，两次发都应保留</text>
+    <text x="60" y="902" font-size="25" font-weight="600" fill="#365e75">不要排序或去重字典；不要把 blank 与可见空格当成同一种类别。</text>
+    <text x="60" y="949" font-size="23" fill="#728799">原理示意，非真实 logits · 本文发布字典由加载器追加空格类，CTC 单独处理 blank</text>
+  </g>
+</svg>

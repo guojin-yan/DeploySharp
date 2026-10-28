@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1410" height="800" viewBox="0 0 1410 800" role="img" aria-labelledby="title desc">
+  <title id="title">DeploySharp 2.0.0：在 C# 中运行 PaddleOCR</title>
+  <desc id="desc">深蓝青绿的系列教程题图。文档图像进入 C# OCR 流水线，检测、方向分类和识别三个模型共同产生文字、区域和置信度；支持 v4/v5/v6 的按需组合。图形为流程示意，不是真实识别截图。</desc>
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#0c1a2f"/><stop offset="1" stop-color="#15243d"/></linearGradient>
+    <linearGradient id="teal"><stop stop-color="#65d9d5"/><stop offset="1" stop-color="#83e4b9"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-30%" width="150%" height="170%"><feDropShadow dx="0" dy="11" stdDeviation="12" flood-color="#050d19" flood-opacity="0.25"/></filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1L9 5L1 9Z" fill="#73e0c9"/></marker>
+  </defs>
+  <rect width="1410" height="800" rx="30" fill="url(#bg)"/>
+  <path d="M1090 0L1410 260M1200 0L1410 170M1300 0L1410 90" fill="none" stroke="#284660" stroke-width="2" opacity="0.65"/>
+  <g font-family="Segoe UI, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+    <rect x="60" y="42" width="178" height="34" rx="17" fill="#24425b"/>
+    <text x="149" y="66" text-anchor="middle" font-size="20" font-weight="600" fill="#bad8eb">JYPPX · 开源项目</text>
+    <text x="1347" y="66" text-anchor="end" font-size="23" font-weight="600" fill="#a6bfd3">实战教程 / 03</text>
+    <text x="54" y="176" font-size="94" font-weight="750" letter-spacing="-3" fill="#f5f8fc">DeploySharp <tspan fill="url(#teal)">2.0.0</tspan></text>
+    <text x="60" y="257" font-size="58" font-weight="750" fill="#f5f8fc">在 C# 中运行 PaddleOCR</text>
+    <text x="61" y="308" font-size="28" fill="#b5cadd">v4 / v5 / v6 · 从文字检测，到完整识别结果</text>
+    <rect x="48" y="350" width="1314" height="314" rx="24" fill="#173048" stroke="#335871" stroke-width="2"/>
+    <g filter="url(#shadow)">
+      <path d="M93 611L123 627H335L309 611Z" fill="#294a60"/>
+      <rect x="86" y="394" width="242" height="216" rx="20" fill="#10283c" stroke="#507e95" stroke-width="2"/>
+      <rect x="139" y="414" width="137" height="153" rx="10" fill="#e9f1ec"/>
+      <path d="M156 439H256M156 466H232M156 493H256M156 520H242M156 544H220" stroke="#789d9c" stroke-width="7" stroke-linecap="round"/>
+      <rect x="151" y="428" width="111" height="25" rx="3" fill="none" stroke="#47bfa1" stroke-width="3"/>
+      <rect x="151" y="483" width="111" height="23" rx="3" fill="none" stroke="#47bfa1" stroke-width="3"/>
+      <text x="207" y="596" text-anchor="middle" font-size="24" font-weight="600" fill="#cae4ed">一张图片，多条文字</text>
+      <path d="M489 603L662 654L845 602L672 553Z" fill="#22485b" stroke="#43768a"/>
+      <path d="M489 603V617L662 670V654ZM662 654V670L845 617V602" fill="#173a4f"/>
+      <rect x="510" y="439" width="310" height="144" rx="23" fill="#1d555b" stroke="#81dfc9" stroke-width="3"/>
+      <text x="665" y="497" text-anchor="middle" font-size="46" font-weight="750" fill="#f4fbfd">C# OCR</text>
+      <text x="665" y="543" text-anchor="middle" font-size="26" fill="#b2e7df">检测 · 裁剪 · 识别</text>
+      <g text-anchor="middle" font-size="21" font-weight="700">
+        <rect x="510" y="385" width="92" height="38" rx="11" fill="#284f65"/><text x="556" y="411" fill="#9ee6eb">DET</text>
+        <rect x="619" y="385" width="92" height="38" rx="11" fill="#4d455f"/><text x="665" y="411" fill="#dfcef7">CLS</text>
+        <rect x="728" y="385" width="92" height="38" rx="11" fill="#3a534a"/><text x="774" y="411" fill="#b5efd1">REC</text>
+      </g>
+      <rect x="996" y="397" width="324" height="213" rx="19" fill="#10283c" stroke="#507e95" stroke-width="2"/>
+      <circle cx="1017" cy="418" r="4" fill="#ee9a86"/><circle cx="1033" cy="418" r="4" fill="#e7c28e"/><circle cx="1049" cy="418" r="4" fill="#7ad3b7"/>
+      <text x="1298" y="424" text-anchor="end" font-size="18" fill="#9ebcd0">结构化结果 · 示意</text>
+      <text x="1022" y="469" font-size="27" font-weight="600" fill="#b1ebda">文字 + 置信度</text>
+      <text x="1022" y="511" font-size="25" fill="#d7e6f0">原图区域 + 方向</text>
+      <path d="M1023 532H1293" stroke="#355a71"/>
+      <text x="1022" y="577" font-size="25" fill="#efc6a5">TXT / JSON / 图像</text>
+    </g>
+    <g fill="none" stroke="#73e0c9" stroke-width="5" stroke-linecap="round" marker-end="url(#arrow)"><path d="M357 502H463"/><path d="M854 502H965"/></g>
+    <g font-size="21" fill="#9fbdcf" text-anchor="middle"><text x="411" y="469">准备输入</text><text x="910" y="469">合并结果</text></g>
+    <g text-anchor="middle" font-size="25" font-weight="650">
+      <rect x="60" y="692" width="300" height="54" rx="14" fill="#244856"/><text x="210" y="728" fill="#9de3d8">模型按需组合</text>
+      <rect x="390" y="692" width="300" height="54" rx="14" fill="#29435c"/><text x="540" y="728" fill="#bfd9ed">三代一套流程</text>
+      <rect x="720" y="692" width="300" height="54" rx="14" fill="#3c3e57"/><text x="870" y="728" fill="#dac8ef">Batch + 独立通道</text>
+      <rect x="1050" y="692" width="300" height="54" rx="14" fill="#45414b"/><text x="1200" y="728" fill="#f3c8a6">文字与原图坐标</text>
+    </g>
+    <text x="1347" y="778" text-anchor="end" font-size="17" fill="#829eb7">Windows x64 · ONNX Runtime CPU · 流程示意</text>
+  </g>
+</svg>

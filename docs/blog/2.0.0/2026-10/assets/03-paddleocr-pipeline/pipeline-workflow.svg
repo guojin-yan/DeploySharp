@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1000" viewBox="0 0 1440 1000" role="img" aria-labelledby="title desc">
+  <title id="title">一张图片，三个模型，一份 OCR 结果</title>
+  <desc id="desc">从左到右依次为图片、DET 定位、透视裁剪、可选 CLS 方向和 REC 识别。原图坐标与文本行保持关联，最终合并为文字、置信度、区域和方向。多个裁剪条来自同一源图，图为流程示意。</desc>
+  <defs><marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1L9 5L1 9Z" fill="#368e87"/></marker></defs>
+  <rect width="1440" height="1000" rx="28" fill="#f3f7fb"/>
+  <g font-family="Segoe UI, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+    <text x="60" y="80" font-size="43" font-weight="750" fill="#142b43">一张图片，三个模型，一份 OCR 结果</text>
+    <text x="60" y="128" font-size="26" fill="#557086">模型计算与图像处理，由同一条流水线组织</text>
+    <g stroke="#c3d2de" stroke-width="2">
+      <rect x="50" y="213" width="215" height="330" rx="22" fill="#e8f0f6"/>
+      <rect x="327" y="213" width="215" height="330" rx="22" fill="#e1f1ee"/>
+      <rect x="604" y="213" width="215" height="330" rx="22" fill="#e6edf7"/>
+      <rect x="881" y="213" width="215" height="330" rx="22" fill="#eee8f8" stroke-dasharray="8 5"/>
+      <rect x="1158" y="213" width="232" height="330" rx="22" fill="#e2f0e8"/>
+    </g>
+    <g text-anchor="middle" font-size="30" font-weight="700" fill="#1c3b53">
+      <text x="157" y="268">原始图片</text><text x="434" y="268">DET 定位</text><text x="711" y="268">透视裁剪</text><text x="988" y="268">CLS 方向</text><text x="1274" y="268">REC 识别</text>
+    </g>
+    <g fill="none" stroke="#368e87" stroke-width="4" marker-end="url(#a)"><path d="M275 376H315"/><path d="M552 376H592"/><path d="M829 376H869"/><path d="M1106 376H1146"/></g>
+    <rect x="102" y="303" width="110" height="143" rx="9" fill="#fff" stroke="#9bb4c6" stroke-width="2"/>
+    <path d="M119 329H194M119 355H182M119 381H195M119 407H179M119 428H191" stroke="#91acbb" stroke-width="6" stroke-linecap="round"/>
+    <rect x="376" y="303" width="116" height="143" rx="9" fill="#fff" stroke="#9abbb4" stroke-width="2"/>
+    <g fill="none" stroke="#41a88d" stroke-width="3"><rect x="386" y="319" width="94" height="22" rx="3"/><rect x="386" y="357" width="81" height="22" rx="3"/><path d="M386 398L481 390L483 416L388 424Z"/></g>
+    <g fill="#fdfefe" stroke="#8faec5" stroke-width="2"><rect x="628" y="316" width="167" height="31" rx="6"/><rect x="628" y="364" width="133" height="31" rx="6"/><rect x="628" y="412" width="151" height="31" rx="6"/></g>
+    <g stroke="#6c97ae" stroke-width="4" stroke-linecap="round"><path d="M640 332H780M640 380H746M640 428H763"/></g>
+    <text x="988" y="352" text-anchor="middle" font-size="38" font-weight="700" fill="#776098">0° / 180°</text>
+    <path d="M950 392C950 368 1025 368 1025 403" fill="none" stroke="#a48bb8" stroke-width="3"/>
+    <path d="M1017 395L1025 407L1033 394" fill="none" stroke="#a48bb8" stroke-width="3"/>
+    <rect x="1191" y="309" width="167" height="136" rx="12" fill="#fdfefe"/>
+    <text x="1274" y="355" text-anchor="middle" font-size="31" font-weight="650" fill="#34755d">字符序列</text>
+    <text x="1274" y="405" text-anchor="middle" font-size="28" fill="#34755d">CTC 解码</text>
+    <g text-anchor="middle" font-size="23" fill="#536e82"><text x="157" y="490">保留源图</text><text x="434" y="490">返回文字区域</text><text x="711" y="490">缩放 / 归一化</text><text x="988" y="490">本篇显式启用</text><text x="1274" y="490">查配套字典</text></g>
+    <path d="M1274 555V628" fill="none" stroke="#368e87" stroke-width="4" marker-end="url(#a)"/>
+    <rect x="60" y="642" width="1320" height="240" rx="24" fill="#183c50"/>
+    <text x="92" y="698" font-size="34" font-weight="700" fill="#f1fafb">OcrResult：把文字与原图区域对应起来</text>
+    <g font-size="29" text-anchor="middle" font-weight="650" fill="#e6f5f7">
+      <rect x="93" y="733" width="270" height="69" rx="13" fill="#2a5262"/><text x="228" y="778">Text 文字</text>
+      <rect x="402" y="733" width="270" height="69" rx="13" fill="#2a5262"/><text x="537" y="778">Confidence 分数</text>
+      <rect x="711" y="733" width="293" height="69" rx="13" fill="#2a5262"/><text x="857" y="778">Polygon 原图区域</text>
+      <rect x="1043" y="733" width="304" height="69" rx="13" fill="#2a5262"/><text x="1195" y="778">Orientation 方向</text>
+    </g>
+    <text x="93" y="850" font-size="24" fill="#bdd9e2">裁剪与模型输入可变化，返回区域仍对应原图；绘制时不再二次缩放坐标。</text>
+    <text x="60" y="945" font-size="24" fill="#647c8f">流程示意 · CLS 是可选阶段 · 各模型的输入、颜色、归一化和字典需分别匹配</text>
+  </g>
+</svg>

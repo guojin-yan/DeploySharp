@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1080" viewBox="0 0 1440 1080" role="img" aria-labelledby="title desc">
+  <title id="title">OCR Batch、独立 Session 与整图并发是三个维度</title>
+  <desc id="desc">文字行按宽度分组后形成有界批队列，再由空闲的独立 REC Session 执行。示意展示两个 Session，正文默认为一个。最大 Batch 控制每次送入行数，阶段 Session 数控制批任务通道，最大完整调用并发控制图片请求。增加配置值不保证提速。</desc>
+  <defs><marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1L9 5L1 9Z" fill="#3d9188"/></marker></defs>
+  <rect width="1440" height="1080" rx="28" fill="#f3f7fb"/>
+  <g font-family="Segoe UI, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+    <text x="60" y="80" font-size="43" font-weight="750" fill="#142b43">Batch ≠ Session 数 ≠ 整图并发</text>
+    <text x="60" y="130" font-size="26" fill="#557086">从文本行到批任务，再由空闲的独立推理器执行</text>
+    <rect x="60" y="205" width="350" height="343" rx="22" fill="#e3eef6" stroke="#bdd0df" stroke-width="2"/>
+    <text x="90" y="260" font-size="31" font-weight="700" fill="#24465d">按宽度规划文本行</text>
+    <g fill="#fdfefe" stroke="#89a9bd" stroke-width="2"><rect x="91" y="292" width="134" height="29" rx="5"/><rect x="91" y="337" width="152" height="29" rx="5"/><rect x="91" y="382" width="219" height="29" rx="5"/><rect x="91" y="427" width="286" height="29" rx="5"/></g>
+    <text x="90" y="512" font-size="23" fill="#56758b">宽度接近，减少无用补边</text>
+    <path d="M430 377H493" fill="none" stroke="#3d9188" stroke-width="4" marker-end="url(#a)"/>
+    <rect x="520" y="205" width="330" height="343" rx="22" fill="#e3f1ec" stroke="#b3cec4" stroke-width="2"/>
+    <text x="551" y="260" font-size="31" font-weight="700" fill="#285b52">有界批任务队列</text>
+    <g text-anchor="middle" font-size="26" font-weight="600" fill="#357968">
+      <rect x="551" y="294" width="267" height="52" rx="10" fill="#f9fdfb"/><text x="684" y="330">Batch A · 相近短行</text>
+      <rect x="551" y="363" width="267" height="52" rx="10" fill="#f9fdfb"/><text x="684" y="399">Batch B · 中等宽度</text>
+      <rect x="551" y="432" width="267" height="52" rx="10" fill="#f9fdfb"/><text x="684" y="468">Batch C · 长行</text>
+    </g>
+    <g fill="none" stroke="#3d9188" stroke-width="4" marker-end="url(#a)"><path d="M870 377H930V290H985"/><path d="M930 377V465H985"/></g>
+    <rect x="1008" y="205" width="372" height="144" rx="22" fill="#183d51"/>
+    <text x="1040" y="262" font-size="31" font-weight="700" fill="#e8f8f7">REC Session 1</text>
+    <text x="1040" y="310" font-size="24" fill="#b9ddd9">独立模型会话与执行资源</text>
+    <rect x="1008" y="405" width="372" height="144" rx="22" fill="#183d51"/>
+    <text x="1040" y="462" font-size="31" font-weight="700" fill="#e8f8f7">REC Session 2</text>
+    <text x="1040" y="510" font-size="24" fill="#b9ddd9">空闲通道领取下一个批任务</text>
+    <text x="60" y="606" font-size="24" fill="#6b7f92">多通道示意：图中为 2 个 REC Session，正文默认 channels=1；CLS 也有自己的 Session 配置。</text>
+    <g stroke="#c1d1dd" stroke-width="2">
+      <rect x="60" y="669" width="420" height="228" rx="22" fill="#fff"/>
+      <rect x="510" y="669" width="420" height="228" rx="22" fill="#fff"/>
+      <rect x="960" y="669" width="420" height="228" rx="22" fill="#fff"/>
+    </g>
+    <g font-size="30" font-weight="700" fill="#23465d"><text x="91" y="726">Batch 上限</text><text x="541" y="726">阶段 Session 数</text><text x="991" y="726">完整调用并发</text></g>
+    <g font-size="25" fill="#587486">
+      <text x="91" y="779">一次最多处理多少行</text><text x="91" y="821">受模型 Batch 能力限制</text><text x="91" y="863">正文：最多 8 行</text>
+      <text x="541" y="779">可用的独立推理通道</text><text x="541" y="821">更多通道占用更多资源</text><text x="541" y="863">正文：CLS / REC 各 1</text>
+      <text x="991" y="779">同时进入的图片请求数</text><text x="991" y="821">不等同于 REC 通道数</text><text x="991" y="863">正文：1 个完整 OCR 调用</text>
+    </g>
+    <rect x="60" y="938" width="1320" height="87" rx="18" fill="#e4eeed"/>
+    <text x="92" y="992" font-size="27" font-weight="650" fill="#326c63">固定输入与后端，逐个调整配置；比较完整流水线 P50/P95，也要核对输出是否变化。</text>
+  </g>
+</svg>
