@@ -11,7 +11,7 @@
   <a href="https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/LICENSE.txt"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="Apache-2.0 许可证" /></a>
   <a href="https://github.com/guojin-yan/DeploySharp/stargazers"><img src="https://img.shields.io/github/stars/guojin-yan/DeploySharp?style=flat&amp;label=stars" alt="GitHub Stars" /></a>
   <a href="https://dotnet.microsoft.com/"><img src="https://img.shields.io/badge/.NET-net46%20to%20net10.0-512BD4" alt=".NET Framework 4.6 至 .NET 10" /></a>
-  <a href="docs/articles/platform-support.md"><img src="https://img.shields.io/badge/platform-Windows%20x64%20Alpha-0078D4" alt="Windows x64 Alpha" /></a>
+  <a href="docs/articles/platform-support.md"><img src="https://img.shields.io/badge/platform-Windows%20x64-0078D4" alt="Windows x64 发布范围" /></a>
 </p>
 
 <p align="center">
@@ -42,19 +42,19 @@ V2 是全新 API 设计，不提供 V1 的源码、二进制、配置或行为�
 - Windows x64 上已完成 ONNX Runtime、OpenVINO、OpenCV DNN 与具名 TensorRT/CUDA 环境验证。
 - 支持会话池、批处理、视觉异步推理、滑动窗口检测和可复现实测工具。
 
-## 📢 当前更新：2.0.0（待发布）
+## 📢 当前更新：2.0.0
 
-<code>2.0.0-alpha.1</code> 是 DeploySharp V2 的首个公开预览版，已经发布到 NuGet.org。当前发布验证基线为 Windows 10/11 x64；正式版发布前，公共 API 和包边界仍可能调整。首发范围和已知边界见 [2.0.0-alpha.1 发布说明](docs/releases/2.0.0-alpha.1.md)。
+`2.0.0` 是 DeploySharp V2 的首个正式版本目标，包含类型化推理、视觉工作流、PaddleOCR/PP-Structure、模型下载和可替换后端。本版本的发布验证范围为 Windows 10/11 x64，各模型与后端继续保留明确的使用边界。完整功能和升级说明见 [2.0.0 版本说明](docs/releases/2.0.0.md)。
 
-当前源码正在准备 `2.0.0`，功能范围和使用限制见 [2.0.0 版本说明](docs/releases/2.0.0.md)。本 README 和使用指南以当前源码为准；预览版发布后新增的 API，在正式包发布前需要通过项目引用使用。已发布包的范围请以对应发布说明为准。
+正式版准备与验证使用 `DeploySharpV2.0` 分支，目前尚未发布。实际可用版本以 NuGet 徽章和 [GitHub Releases](https://github.com/guojin-yan/DeploySharp/releases) 为准；`2.0.0` 上线前，需要当前 API 的应用请使用项目引用，使用已发布 `2.0.0-alpha.1` 包时请参考其[预览版说明](docs/releases/2.0.0-alpha.1.md)。
 
 ## 🚀 30 秒开始
 
-安装同版本的 Core 与所需后端包；需要验证仓库内尚未发布的改动时，再改用项目引用：
+以下命令面向发布后的 `2.0.0` 正式包。Core 与所需后端包应安装相同版本；当前尚未发布，请先通过项目引用使用源码：
 
 ~~~powershell
-dotnet add package JYPPX.DeploySharp.Core --version 2.0.0-alpha.1
-dotnet add package JYPPX.DeploySharp.Backend.OnnxRuntime --version 2.0.0-alpha.1
+dotnet add package JYPPX.DeploySharp.Core --version 2.0.0
+dotnet add package JYPPX.DeploySharp.Backend.OnnxRuntime --version 2.0.0
 dotnet add package Microsoft.ML.OnnxRuntime --version 1.28.0
 ~~~
 
@@ -116,7 +116,7 @@ Console.WriteLine(outputs.Count);
 
 ## 🌐 公共包与 Release 资产
 
-DeploySharp 预览包已发布到 NuGet.org。版本列直接读取 NuGet 数据，后续发布新版本时会自动更新，无需手工修改 README 中的版本号。
+版本列直接读取 NuGet 数据，包含预览版，展示实际已发布的最新版本；`2.0.0` 发布后徽章会自动更新，无需手工维护表格中的版本号。
 
 | 包 | NuGet 版本 | 用途 |
 | --- | --- | --- |
@@ -137,9 +137,9 @@ DeploySharp 预览包已发布到 NuGet.org。版本列直接读取 NuGet 数据
 
 | 发布渠道 | 当前状态 | 资产 |
 | --- | --- | --- |
-| [NuGet.org](https://www.nuget.org/packages?q=JYPPX.DeploySharp) | 预览包已发布 | 公共托管包源 |
-| [GitHub Packages](https://github.com/guojin-yan/DeploySharp/packages) | DeploySharp 包待首次发布 | 包镜像 |
-| [GitHub Releases](https://github.com/guojin-yan/DeploySharp/releases) | 当前用于模型工件交付 | 版本化 ModelPack 资产和验证元数据 |
+| [NuGet.org](https://www.nuget.org/packages?q=JYPPX.DeploySharp) | 2.0.0 待发布；预览包可用 | 托管包和符号包 |
+| [GitHub Packages](https://github.com/guojin-yan/DeploySharp/packages) | 2.0.0 待发布 | 正式版包镜像 |
+| [GitHub Releases](https://github.com/guojin-yan/DeploySharp/releases) | 2.0.0 待发布；模型资产已提供 | 正式版包/校验和，以及独立的模型 Release |
 
 ### 🖼️ 默认测试图片
 
@@ -147,7 +147,7 @@ DeploySharp 预览包已发布到 NuGet.org。版本列直接读取 NuGet 数据
 
 ### 应用负责的运行时包
 
-以下是 Windows Alpha 使用的应用依赖/运行时包，不会因引用 DeploySharp 托管包而被静默安装：
+以下是 Windows x64 应用使用的依赖/运行时包，不会因引用 DeploySharp 托管包而被静默安装：
 
 | 包 | NuGet | 作用 |
 | --- | --- | --- |
@@ -163,9 +163,9 @@ DeploySharp 预览包已发布到 NuGet.org。版本列直接读取 NuGet 数据
 
 | 平台 | 构建/包边界 | 推理验证 |
 | --- | --- | --- |
-| Windows 10 x64 | Alpha 支持 | ONNX Runtime、OpenVINO、OpenCV DNN CPU；具名 TensorRT GPU 证据 |
-| Windows 11 x64 | Alpha 支持 | 同一代码路径；具名设备证据单独记录 |
-| Windows ARM64、Linux、macOS、移动端、NPU | 无 Alpha 推理声明 | 本版本尚未验证 |
+| Windows 10 x64 | 2.0.0 发布范围 | ONNX Runtime、OpenVINO、OpenCV DNN CPU；具名 TensorRT GPU 证据 |
+| Windows 11 x64 | 2.0.0 发布范围 | 同一代码路径；具名设备证据单独记录 |
+| Windows ARM64、Linux、macOS、移动端、NPU | 不在 2.0.0 完整发布验证范围内 | 本版本不作完整运行兼容性承诺 |
 
 完整框架列表和后端证据见[平台与后端支持](docs/articles/platform-support.md)。可构建不等于已完成推理验证。
 
@@ -211,7 +211,7 @@ DeploySharp 预览包已发布到 NuGet.org。版本列直接读取 NuGet 数据
 | 资源 | 链接 | 说明 |
 | --- | --- | --- |
 | 文档索引 | [docs/index.md](docs/index.md) | DocFX 公开文档入口 |
-| 首次版本说明 | [2.0.0-alpha.1](docs/releases/2.0.0-alpha.1.md) | 首发范围和已知边界 |
+| 正式版说明 | [2.0.0](docs/releases/2.0.0.md) | 完整 V2 功能、预览版升级指引和已知边界 |
 | 使用教程 | [使用教程](docs/articles/usage-tutorial.md) | 代码优先的张量和视觉工作流 |
 | 自定义视觉模型 | [自定义模型与预处理指南](docs/articles/visual-custom-model.md) | 强类型前后处理及几何/归一化切换 |
 | 平台/后端支持 | [支持表](docs/articles/platform-support.md) | 目标框架和验证边界 |
@@ -223,7 +223,7 @@ DeploySharp 预览包已发布到 NuGet.org。版本列直接读取 NuGet 数据
 
 ~~~powershell
 dotnet restore DeploySharp.sln --locked-mode
-dotnet build DeploySharp.sln -c Release --no-restore
+dotnet build DeploySharp.sln -c Release --no-restore -m:1
 dotnet test DeploySharp.sln -c Release --no-build --no-restore
 ~~~
 

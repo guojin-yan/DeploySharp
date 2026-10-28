@@ -1,4 +1,5 @@
 name: publish-nuget
+run-name: ${{ inputs.publish && 'Publish' || 'Validate' }} ${{ inputs.package_version }} · ${{ github.ref_name }}
 
 on:
   workflow_dispatch:
@@ -49,6 +50,7 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           if ($env:GITHUB_REPOSITORY -ne 'guojin-yan/DeploySharp') { throw 'Publication is configured for guojin-yan/DeploySharp.' }
+          if ($env:GITHUB_REF -ne 'refs/heads/DeploySharpV2.0') { throw 'Run release validation and publication from the DeploySharpV2.0 branch.' }
           $baseline = Get-Content ./eng/pack/release-candidate-packages.json -Raw | ConvertFrom-Json
           if ($env:PACKAGE_VERSION -ne $baseline.packageVersion) { throw 'Update and review the version, package baseline, and release evidence together before running this workflow.' }
           $arguments = @{ PackageVersion = $env:PACKAGE_VERSION; OutputDirectory = (Join-Path $env:RUNNER_TEMP 'deploysharp-release-config') }

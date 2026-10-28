@@ -11,7 +11,7 @@
   <a href="https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/LICENSE.txt"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="Apache-2.0 license" /></a>
   <a href="https://github.com/guojin-yan/DeploySharp/stargazers"><img src="https://img.shields.io/github/stars/guojin-yan/DeploySharp?style=flat&amp;label=stars" alt="GitHub stars" /></a>
   <a href="https://dotnet.microsoft.com/"><img src="https://img.shields.io/badge/.NET-net46%20to%20net10.0-512BD4" alt=".NET Framework 4.6 through .NET 10" /></a>
-  <a href="docs/articles/platform-support.md"><img src="https://img.shields.io/badge/platform-Windows%20x64%20Alpha-0078D4" alt="Windows x64 Alpha" /></a>
+  <a href="docs/articles/platform-support.md"><img src="https://img.shields.io/badge/platform-Windows%20x64-0078D4" alt="Windows x64 release scope" /></a>
 </p>
 
 <p align="center">
@@ -42,19 +42,19 @@ The V2 API is a clean redesign and does not provide V1 source, binary, configura
 - Windows x64 verification for ONNX Runtime, OpenVINO, OpenCV DNN, and named TensorRT/CUDA environments.
 - Session pools, batching, asynchronous visual inference, sliding-window detection, and repeatable benchmark tooling.
 
-## 📢 Latest Update: 2.0.0 (unreleased)
+## 📢 Latest Update: 2.0.0
 
-<code>2.0.0-alpha.1</code> is the first public DeploySharp V2 preview and is available from NuGet.org. Its verified release baseline is Windows 10/11 x64; the public API and package surface may still change before the stable release. The complete scope and known boundaries are in the [release notes](docs/releases/2.0.0-alpha.1.md).
+`2.0.0` is the first stable DeploySharp V2 release target, covering typed inference, visual workflows, PaddleOCR/PP-Structure, model downloads, and replaceable backends. Its release validation scope is Windows 10/11 x64; model and backend limits remain explicit. See the [2.0.0 release notes](docs/releases/2.0.0.md) for the complete scope and upgrade guidance.
 
-The source branch is preparing `2.0.0`; see its [version notes](docs/releases/2.0.0.md) for scope and limitations. This README and the guides describe that source branch. APIs added after the preview require project references until the stable packages are published; check the matching release notes for a published package's scope.
+Release preparation and validation use the `DeploySharpV2.0` branch. Publication is pending; the NuGet badges and [GitHub Releases](https://github.com/guojin-yan/DeploySharp/releases) show what is actually available. Until `2.0.0` is published, use project references for the current APIs, or use the published `2.0.0-alpha.1` packages with their [preview release notes](docs/releases/2.0.0-alpha.1.md).
 
 ## 🚀 Get Started In 30 Seconds
 
-Install the Core layer and the backend you need at the same version. Contributors who need to test unreleased repository changes can use project references instead.
+The following commands target the stable `2.0.0` packages once published. Install the Core layer and the backend you need at the same version; use project references while publication is pending.
 
 ~~~powershell
-dotnet add package JYPPX.DeploySharp.Core --version 2.0.0-alpha.1
-dotnet add package JYPPX.DeploySharp.Backend.OnnxRuntime --version 2.0.0-alpha.1
+dotnet add package JYPPX.DeploySharp.Core --version 2.0.0
+dotnet add package JYPPX.DeploySharp.Backend.OnnxRuntime --version 2.0.0
 dotnet add package Microsoft.ML.OnnxRuntime --version 1.28.0
 ~~~
 
@@ -117,7 +117,7 @@ See the [detailed package combination and installation guide](docs/articles/pack
 
 ## 🌐 Public Packages And Release Assets
 
-DeploySharp preview packages are available on NuGet.org. The version column reads NuGet directly, so it updates automatically when a new version is published without another README edit.
+The version column reads NuGet directly and includes previews. It shows the latest published version and updates automatically when `2.0.0` becomes available.
 
 | Package | NuGet version | Purpose |
 | --- | --- | --- |
@@ -138,9 +138,9 @@ DeploySharp preview packages are available on NuGet.org. The version column read
 
 | Publication channel | Current status | Assets |
 | --- | --- | --- |
-| [NuGet.org](https://www.nuget.org/packages?q=JYPPX.DeploySharp) | Preview packages published | Public managed package feed |
-| [GitHub Packages](https://github.com/guojin-yan/DeploySharp/packages) | DeploySharp packages await their first publication | Package mirror |
-| [GitHub Releases](https://github.com/guojin-yan/DeploySharp/releases) | Used for model artifact delivery | Immutable ModelPack assets and verification metadata |
+| [NuGet.org](https://www.nuget.org/packages?q=JYPPX.DeploySharp) | 2.0.0 pending; preview packages available | Managed packages and symbols |
+| [GitHub Packages](https://github.com/guojin-yan/DeploySharp/packages) | 2.0.0 pending | Stable package mirror |
+| [GitHub Releases](https://github.com/guojin-yan/DeploySharp/releases) | 2.0.0 pending; model assets available | Stable release packages/checksums and separate model releases |
 
 ### Default Test Images
 
@@ -148,7 +148,7 @@ Examples and benchmark tools use the dedicated [`test-assets.1` release](https:/
 
 ### Application-Owned Runtime Packages
 
-These are application dependencies/runtime packages used by the Windows Alpha. Referencing a DeploySharp managed package does not silently install them:
+These are application dependencies/runtime packages used by Windows x64 applications. Referencing a DeploySharp managed package does not silently install them:
 
 | Package | NuGet | Purpose |
 | --- | --- | --- |
@@ -164,9 +164,9 @@ The managed package tables do not mean native dependencies are installed automat
 
 | Platform | Build/package boundary | Inference verification |
 | --- | --- | --- |
-| Windows 10 x64 | Alpha support | ONNX Runtime, OpenVINO, OpenCV DNN CPU; named TensorRT GPU evidence |
-| Windows 11 x64 | Alpha support | Same code path; named-device evidence is recorded separately |
-| Windows ARM64, Linux, macOS, mobile, NPU | No Alpha inference claim | Not yet verified for this release |
+| Windows 10 x64 | 2.0.0 release scope | ONNX Runtime, OpenVINO, OpenCV DNN CPU; named TensorRT GPU evidence |
+| Windows 11 x64 | 2.0.0 release scope | Same code path; named-device evidence is recorded separately |
+| Windows ARM64, Linux, macOS, mobile, NPU | Outside the 2.0.0 validated release scope | No complete runtime compatibility claim for this release |
 
 The complete framework list and backend evidence are in [platform and backend support](docs/articles/platform-support.md). Build compatibility is not the same as inference verification.
 
@@ -212,7 +212,7 @@ See the [sample learning path](samples/README.md).
 | Resource | Link | Purpose |
 | --- | --- | --- |
 | Documentation index | [docs/index.md](docs/index.md) | Public DocFX entry point |
-| First release notes | [2.0.0-alpha.1](docs/releases/2.0.0-alpha.1.md) | Release scope and known boundaries |
+| Stable release notes | [2.0.0](docs/releases/2.0.0.md) | Complete V2 scope, preview upgrade guidance, and known boundaries |
 | Usage tutorial | [Usage tutorial](docs/articles/usage-tutorial.md) | Code-first tensor and visual workflows |
 | Custom visual models | [Custom model and preprocessing guide](docs/articles/visual-custom-model.md) | Typed preprocessing, result decoding, and geometry/normalization overrides |
 | Platform/backend support | [Support table](docs/articles/platform-support.md) | Target framework and verification boundaries |
@@ -224,7 +224,7 @@ See the [sample learning path](samples/README.md).
 
 ~~~powershell
 dotnet restore DeploySharp.sln --locked-mode
-dotnet build DeploySharp.sln -c Release --no-restore
+dotnet build DeploySharp.sln -c Release --no-restore -m:1
 dotnet test DeploySharp.sln -c Release --no-build --no-restore
 ~~~
 

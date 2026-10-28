@@ -2,6 +2,8 @@
 
 `publish-nuget` 工作流默认 `publish=false`，只构建、测试并保留制品。只有手动指定 `publish=true` 才写入发布渠道：预览版仅发布 NuGet；正式版发布 NuGet、GitHub Packages 和 GitHub Release，符号包保存在 NuGet 与 Release。GitHub Release 先保持 Draft，全部推送成功后才公开。跨服务发布无法原子回滚；失败时先检查已存在的包和 Draft，再处理重试，不要覆盖已有资产。
 
+2.0.0 的验证和发布固定使用 `DeploySharpV2.0` 分支；工作流会拒绝其它分支或 Tag。手动选择分支，或执行 `gh workflow run publish-nuget.yml --repo guojin-yan/DeploySharp --ref DeploySharpV2.0 -f package_version=2.0.0 -f publish=false`，可进行云端验证。
+
 版本由 `Directory.Build.props` 定义，包清单与依赖约束由 `release-candidate-packages.json` 定义。变更版本时同步检查 `release-evidence` 和 `docs/releases`，工作流会拒绝尚未核对的版本。默认源码按正式版候选构建；预览构建可传入 `-p:DeploySharpReleaseChannel=preview -p:DeploySharpVersionSuffix=preview.1`。
 
 本地仅打包：
