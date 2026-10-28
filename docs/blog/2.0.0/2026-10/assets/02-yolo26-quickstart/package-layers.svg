@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1080" viewBox="0 0 1440 1080" role="img" aria-labelledby="title desc">
-  <title id="title">YOLOv8 CPU 案例的 NuGet 与原生运行时关系</title>
+  <title id="title">YOLO26 CPU 案例的 NuGet 与原生运行时关系</title>
   <desc id="desc">两列分别是图像输入与推理执行。显式安装 Visual.OpenCV 与 Backend.OnnxRuntime，它们分别自动引入 OpenCV CSharp API 与 ONNX Runtime Managed。图像与推理执行还分别需要显式安装 OpenCV Windows x64 runtime 与 ONNX Runtime CPU 包。实线表示 NuGet 传递依赖，虚线表示运行时加载要求，省略 Core 等基础依赖。</desc>
   <defs>
     <filter id="shadow" x="-10%" y="-15%" width="120%" height="140%">

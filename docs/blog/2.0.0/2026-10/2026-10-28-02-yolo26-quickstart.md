@@ -1,22 +1,55 @@
-# 在 C# 中使用 DeploySharp 部署 YOLOv8：从 NuGet 安装到检测结果
+# 在 C# 中使用 DeploySharp 部署 YOLO26：从 NuGet 安装到检测结果
 
 > DeploySharp 2.0.0 系列 · 第 02 篇实战教程。基于正式版 NuGet `2.0.0`、源码 Tag `v2.0.0`，创建与修订：2026-10-28。
 
-![C# 部署 YOLOv8：选择 NuGet 包、准备模型、执行 CPU 推理并绘制检测结果](assets/02-yolov8-quickstart/cover.png)
+![DeploySharp 2.0.0：在 C# 中部署 YOLO26，从 NuGet 安装、本地模型加载到原图检测结果](assets/02-yolo26-quickstart/cover.png)
 
-上一篇介绍了 DeploySharp 2.0.0 的主要功能。这一篇我们从一个空的 C# 控制台项目开始，使用 **YOLOv8n + ONNX Runtime CPU** 完成一次目标检测，最后把类别、置信度和检测框画到原图上。
+## 一、DeploySharp 项目简介
 
-部署模型时，大家容易卡在两个地方：一个是包比较多，不知道应该装哪些；另一个是模型虽然能运行，前处理和坐标还原却没有配对，结果框的位置不正确。所以本文会把 **NuGet 选择、模型准备、完整代码和结果检查** 一起讲清楚。
+**DeploySharp** 是一个面向 **C#/.NET 开发者**的开源模型部署框架，由「椒颜皮皮虾」开发，项目源码遵循 **Apache License 2.0**。它基于 **ONNX Runtime、OpenVINO、TensorRT、OpenCV DNN** 等推理引擎，提供模型加载、图像前处理、推理执行和结果后处理接口，方便大家在桌面软件、工业视觉和文档应用中接入模型。
 
-本文使用正式发布的 NuGet 包，无需先编译 DeploySharp 源码。项目地址如下：
+目前，项目已接入 YOLO 等目标检测模型，以及分类、分割、关键点、旋转框、异常检测和背景移除等视觉任务；同时提供 **PP-OCRv4/v5/v6、PP-Structure 文档处理**和部分图文、本地语言模型的使用入口。
+
+常用模型可以直接复用配套前后处理，自有模型可以配置输入规格、类别、缩放与归一化方式，或进一步自定义解码和结果类型。大家可以按任务选择组件，再根据设备选择已经验证的推理后端。
+
+**项目地址：**
 
 ```text
 https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV2.0
 ```
 
-## 一、准备环境，创建控制台项目
+**NuGet 包：**在包管理器中搜索 `JYPPX.DeploySharp`，按场景选择所需组件。
 
-### 1.1 本文使用的环境
+```text
+https://www.nuget.org/packages?q=JYPPX.DeploySharp
+```
+
+当前 2.0.0 正式版主要验证 Windows 10/11 x64。不同模型、后端与组件的支持范围分别记录，可通过仓库中的模型支持指南和验证矩阵查看。
+
+## 二、2.0 新特性与本篇实战
+
+### 2.1 新版本主要带来了什么
+
+DeploySharp 2.0 在模型接入和实际应用流程上做了扩展，主要包括：
+
+| 新版能力 | 在项目中怎样使用 |
+| --- | --- |
+| 多后端与按需安装 | 图像处理、推理后端和原生运行时分别选择，按模型与设备准备部署组合 |
+| 更多视觉、OCR 与文档任务 | 复用已接入模型的前后处理，组合文字检测识别、区域 OCR 和表格等流程 |
+| 自定义模型与预处理配置 | 设置输入输出、类别、Resize / Letterbox / CenterCrop、颜色与归一化，接入自己的模型 |
+| 批量、视频和区域处理 | 根据模型能力组合 Batch、独立 Session 池、异步预取、ROI 与大图重叠切片 |
+
+支持的 TensorRT 路径还提供 CUDA 前后处理和缓冲复用。各项加速能力按具体模型与任务启用，详细使用方式会在相应专题中展开。
+
+### 2.2 这篇先完成一次 YOLO26 检测
+
+接下来从一个空的 C# 控制台项目开始，使用 **YOLO26n + ONNX Runtime CPU** 完成目标检测，并把类别、置信度和检测框画到原图上。本文选用 YOLO26 的端到端 ONNX 检测输出，直接读取框、分数和类别，再完成筛选与坐标还原。使用正式发布的 NuGet 包即可运行，无需先编译 DeploySharp 源码。
+
+我们会依次完成 **选择 NuGet → 准备模型和图片 → 编写检测代码 → 查看与保存结果**，再演示如何替换自己的 YOLO26 模型和类别表。模型直接从本地路径加载，重点放在输入输出与前后处理配置上。
+
+## 三、准备环境，创建控制台项目
+
+### 3.1 本文使用的环境
 
 我在下面的环境中运行了本文完整代码，使用的是 CPU 推理：
 
@@ -29,7 +62,7 @@ https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV2.0
 | DeploySharp | `2.0.0` |
 | ONNX Runtime | CPU `1.28.0` |
 | OpenCV | JYPPX 托管包与 Windows x64 runtime 均为 `5.0.0` |
-| 模型与输入 | YOLOv8n ONNX，输入 `640 × 640`；测试图片 `bus.jpg` |
+| 模型与输入 | YOLO26n ONNX，输入 `640 × 640`；测试图片 `bus.jpg` |
 
 这条 CPU 路径不需要 NVIDIA 显卡、CUDA 或 TensorRT。准备好 .NET 10 SDK 即可创建工程；Visual Studio 用户也可以新建 .NET 10 控制台应用，再进行后面的包安装。
 
@@ -38,7 +71,7 @@ https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV2.0
 https://dotnet.microsoft.com/download/dotnet/10.0
 ```
 
-### 1.2 创建项目
+### 3.2 创建项目
 
 打开 PowerShell，在你准备存放案例的目录执行：
 
@@ -49,9 +82,9 @@ cd DeploySharpYoloDemo
 
 后续安装、下载和运行命令都在 `DeploySharpYoloDemo` 项目目录中执行。已有 WPF、WinForms 或其他 C# 工程，也可以按相同组合添加依赖；先用控制台确认模型与环境，再接入自己的界面更方便排错。
 
-## 二、NuGet 应该装哪些？按部署场景选择
+## 四、NuGet 应该装哪些？按部署场景选择
 
-### 2.1 先分清任务组件、后端与原生运行时
+### 4.1 先分清任务组件、后端与原生运行时
 
 DeploySharp 的包按职责划分。选包时可以依次确定：**做什么任务、用哪个推理引擎、在哪个系统和设备上运行。**
 
@@ -67,11 +100,11 @@ DeploySharp 的包按职责划分。选包时可以依次确定：**做什么任
 
 下图以本文 CPU 组合为例，展示需要显式安装的四个包，以及 NuGet 自动引入的主要托管依赖。实线表示 NuGet 传递依赖，虚线表示执行时需要匹配的原生运行时；基础包依赖在图中省略。
 
-![YOLOv8 CPU 案例的包关系：图像输入与推理执行各自需要托管组件及匹配的原生运行时](assets/02-yolov8-quickstart/package-layers.png)
+![YOLO26 CPU 案例的包关系：图像输入与推理执行各自需要托管组件及匹配的原生运行时](assets/02-yolo26-quickstart/package-layers.png)
 
 所有 **DeploySharp 包统一使用 `2.0.0`**。第三方运行时有自己的版本号，不要把它们也改成 `2.0.0`。
 
-### 2.2 场景一：普通 CPU 视觉推理——本文使用这一组
+### 4.2 场景一：普通 CPU 视觉推理——本文使用这一组
 
 适合先完成 YOLO 检测、分类、分割等已接入模型的 CPU 案例。显式安装下面四个包：
 
@@ -91,9 +124,9 @@ dotnet add package JYPPX.OpenCV.runtime.win-x64 --version 5.0.0
 
 `Core`、`Visual`、`Extensibility`、`JYPPX.OpenCV.CSharp.API` 和 `Microsoft.ML.OnnxRuntime.Managed` 等依赖由 NuGet 自动解析，本文无需逐个添加。这里特别区分 **`Microsoft.ML.OnnxRuntime.Managed` 与 CPU runtime 包**：有托管接口，仍需要对应的原生运行库才能真正推理。
 
-**跟着本文运行时，到这里就完成选包了，可以直接进入第三节。** 下面几组供你在其他项目中选择；每个后端的初始化与运行细节会在多后端专题中展开。本篇实际运行验证的是上面的 CPU 组合。
+**跟着本文运行时，到这里就完成选包了，可以直接进入第五节。** 下面几组供你在其他项目中选择；每个后端的初始化与运行细节会在多后端专题中展开。本篇实际运行验证的是上面的 CPU 组合。
 
-### 2.3 场景二：NVIDIA 显卡，使用 ONNX Runtime CUDA
+### 4.3 场景二：NVIDIA 显卡，使用 ONNX Runtime CUDA
 
 适合希望继续使用 ONNX 模型，同时通过 ONNX Runtime CUDA Provider 执行推理的 Windows 应用。
 
@@ -114,7 +147,7 @@ dotnet add package JYPPX.OpenCV.runtime.win-x64 --version 5.0.0
 https://onnxruntime.ai/docs/execution-providers/CUDA-ExecutionProvider.html
 ```
 
-### 2.4 场景三：使用 OpenVINO 执行视觉推理
+### 4.4 场景三：使用 OpenVINO 执行视觉推理
 
 适合评估 OpenVINO 在目标 CPU 或受支持 Intel 设备上的部署效果。使用 OpenCV 准备图片，使用 OpenVINO 执行模型：
 
@@ -129,7 +162,7 @@ dotnet add package OpenVINO.runtime.win --version 2026.2.1
 
 推理时还需注册 OpenVINO 后端，选择目标设备，并确认具体模型是否已经在该后端验证。GPU/NPU 的设备驱动和插件要求另行核对，不能仅凭安装包成功判断设备可用。
 
-### 2.5 场景四：使用 OpenCV DNN 执行视觉推理
+### 4.5 场景四：使用 OpenCV DNN 执行视觉推理
 
 如果应用已经依赖 OpenCV，并且模型在 OpenCV DNN 的 importer 中可用，可以选择下面的组合：
 
@@ -143,7 +176,7 @@ dotnet add package JYPPX.OpenCV.runtime.win-x64 --version 5.0.0
 
 OpenCV DNN 对模型算子、动态 Shape 和导出图有自己的限制，具体型号需要查看验证矩阵。**后端包可安装，不代表任意 ONNX 模型都能导入。**
 
-### 2.6 场景五：使用 TensorRT 或 CUDA 视觉加速
+### 4.6 场景五：使用 TensorRT 或 CUDA 视觉加速
 
 TensorRT 的通用推理与视觉 CUDA 处理也分别提供组件。
 
@@ -173,7 +206,7 @@ dotnet add package JYPPX.TensorRT.CSharp.API.Runtime.win-x64.trt10.11.cuda12.9.c
 
 TensorRT 两个 DeploySharp 包发布 `net8.0` 托管资产，本文的 `net10.0` 工程可以引用。模型还需要与目标设备、TensorRT 版本和输入 Shape Profile 匹配的 Engine；可在目标设备转换，不能把某台机器生成的 Engine 当作所有显卡都通用的文件。CUDA 前后处理也按具体模型和任务提供支持。
 
-### 2.7 场景六：应用要自动下载、校验和缓存模型
+### 4.7 场景六：应用要自动下载、校验和缓存模型
 
 本文使用手动下载，下载接口并非必装。需要在自己的应用中按模型目录选择工件、校验并缓存时，再添加：
 
@@ -189,7 +222,7 @@ dotnet add package JYPPX.DeploySharp.ModelPack.Json --version 2.0.0
 
 这些组件负责模型文件的描述和获取，**推理仍需任务包、后端与原生运行时**。模型下载和后端环境安装是两项工作。
 
-### 2.8 其他任务：张量、OCR、LLM 与扩展
+### 4.8 其他任务：张量、OCR、LLM 与扩展
 
 下面几种需求可以沿用相同的选择方式：
 
@@ -215,11 +248,11 @@ dotnet add package LLamaSharp.Backend.Cpu --version 0.27.0
 https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/docs/articles/package-combinations.md
 ```
 
-## 三、检查工程配置，准备模型和图片
+## 五、检查工程配置，准备模型和图片
 
-### 3.1 锁定 x64 与依赖版本
+### 5.1 锁定 x64 与依赖版本
 
-回到本文主线，使用第二节的 **CPU 四包组合**。把项目文件 `DeploySharpYoloDemo.csproj` 检查为下面的配置，其中 `PlatformTarget` 明确设为 `x64`：
+回到本文主线，使用第 4.2 节的 **CPU 四包组合**。把项目文件 `DeploySharpYoloDemo.csproj` 检查为下面的配置，其中 `PlatformTarget` 明确设为 `x64`：
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
@@ -241,16 +274,16 @@ https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/docs/articles/pac
 
 也可以在 Visual Studio 的“管理 NuGet 程序包”中添加同名同版本的包。OpenCV 使用本项目对应的 `JYPPX.OpenCV.*` 包，后面的命名空间是 `JYPPX.OpenCvSharp.*`，请与其他 OpenCvSharp 包区分。
 
-### 3.2 下载本文对应的模型和测试图片
+### 5.2 准备模型和测试图片
 
-在项目目录执行下面的 PowerShell 命令，分别保存到 `models` 和 `images`：
+已有自己的 YOLO26 检测模型和图片，可以直接放入工程，按后面的配置使用。想先复现本文结果，可以在项目目录执行下面的 PowerShell 命令，下载示例模型和测试图片，分别保存到 `models` 和 `images`：
 
 ```powershell
 New-Item -ItemType Directory -Force -Path .\models, .\images
 
 Invoke-WebRequest `
-  -Uri 'https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v8-detect-n.model.onnx' `
-  -OutFile '.\models\yolov8n.onnx'
+  -Uri 'https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/yolo-v26-detect-n.model.onnx' `
+  -OutFile '.\models\yolo26n.onnx'
 
 Invoke-WebRequest `
   -Uri 'https://github.com/guojin-yan/DeploySharp/releases/download/test-assets.1/bus.jpg' `
@@ -264,50 +297,34 @@ DeploySharpYoloDemo/
   DeploySharpYoloDemo.csproj
   Program.cs
   models/
-    yolov8n.onnx
+    yolo26n.onnx
   images/
     bus.jpg
 ```
 
-本文固定使用这一份模型，相关参数如下：
+示例模型的输入输出如下，使用自有模型时按实际导出配置调整：
 
 | 配置 | 值 |
 | --- | --- |
-| 模型 ID | `yolo/v8/detect/n` |
-| 模型来源与类别 | Ultralytics YOLOv8n，COCO 80 类 |
-| 导出版本 | Ultralytics `8.3.78`，ONNX opset `19` |
+| 模型来源与类别 | Ultralytics YOLO26n，COCO 80 类 |
 | 输入 | `images`，`1 × 3 × 640 × 640`，Float32，RGB，NCHW |
+| 输出 | `output0`，端到端检测输出 `[1, N, 6]`；每行依次为 `x1、y1、x2、y2、score、class_id` |
 | 前处理 | Letterbox，填充值 `114`，像素值除以 `255` |
-| 输出解码 | YOLOv8 检测输出，分数阈值 `0.25`，NMS IoU 阈值 `0.45` |
-| 模型大小 | `12,836,453` 字节 |
+| 输出解码 | 按分数阈值 `0.25` 筛选，类别映射并还原原图坐标，库侧无需重复执行 NMS |
 
-模型 SHA-256：
+DeploySharp 库代码采用 Apache 2.0；本文 YOLO26 模型遵循其自身的 AGPL-3.0-only 许可。模型与第三方库的许可需分别遵守。
 
-```text
-50e299e848bb2586ca7fc5bfebd42eda43d43566cbb9a3ed7a3375243b0dbdf4
-```
+## 六、编写完整检测代码
 
-测试图片 SHA-256：
-
-```text
-33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c
-```
-
-需要自行检查时，执行 `Get-FileHash .\models\yolov8n.onnx -Algorithm SHA256` 和 `Get-FileHash .\images\bus.jpg -Algorithm SHA256` 即可。下面的程序也会在初始化时校验模型，避免把不同导出文件与当前 Profile 混用。
-
-DeploySharp 库代码采用 Apache 2.0；本文 YOLOv8 模型遵循其自身的 AGPL-3.0-only 许可。模型与第三方库的许可需分别遵守。
-
-## 四、编写完整检测代码
-
-下面这份代码完成模型校验、Profile 配置、CPU 后端初始化、图像前处理、推理、结果解码和原图绘制。直接替换项目中的 `Program.cs` 即可运行，下一节再解释关键部分。
+下面这份代码直接加载本地 ONNX，通过 `VisualModelProfile` 描述输入输出和图像预处理，并复用内置的 YOLO 检测解码器。替换项目中的 `Program.cs` 即可运行，下一节再解释关键部分。
 
 ```csharp
-using System.Security.Cryptography;
 using JYPPX.DeploySharp;
 using JYPPX.DeploySharp.Backends.OnnxRuntime;
 using JYPPX.DeploySharp.Models;
 using JYPPX.DeploySharp.Registry;
 using JYPPX.DeploySharp.Results.Vision;
+using JYPPX.DeploySharp.Tensors;
 using JYPPX.DeploySharp.Visual;
 using JYPPX.DeploySharp.Visual.Models.Yolo;
 using JYPPX.DeploySharp.Visual.OpenCV;
@@ -316,56 +333,57 @@ using JYPPX.OpenCvSharp.ImgProc;
 using ImageCodecs = JYPPX.OpenCvSharp.ImgCodecs.Cv2;
 using Drawing = JYPPX.OpenCvSharp.ImgProc.Cv2;
 
-const string modelSha256 =
-    "50e299e848bb2586ca7fc5bfebd42eda43d43566cbb9a3ed7a3375243b0dbdf4";
-string modelPath = Path.GetFullPath(Path.Combine("models", "yolov8n.onnx"));
+string modelPath = Path.GetFullPath(
+    args.Length > 1 ? args[1] : Path.Combine("models", "yolo26n.onnx"));
 string imagePath = Path.GetFullPath(
     args.Length > 0 ? args[0] : Path.Combine("images", "bus.jpg"));
+IReadOnlyList<string> classNames = args.Length > 2
+    ? File.ReadAllLines(args[2])
+    : YoloLabelSets.Coco80;
+var modelSize = new VisualSize(640, 640);
+const string inputName = "images";
+const string outputName = "output0";
 
 if (!File.Exists(modelPath))
-    throw new FileNotFoundException("请先下载本文对应的 YOLOv8n 模型。", modelPath);
+    throw new FileNotFoundException("找不到 ONNX 模型。", modelPath);
 if (!File.Exists(imagePath))
     throw new FileNotFoundException("找不到输入图片。", imagePath);
 
-using (var stream = File.OpenRead(modelPath))
-{
-    string actualHash = Convert.ToHexString(SHA256.HashData(stream));
-    if (!string.Equals(actualHash, modelSha256, StringComparison.OrdinalIgnoreCase))
-        throw new InvalidDataException("模型与本文 Profile 不匹配，请检查下载文件。");
-}
-
-// 绑定本文的具体模型、类别表、导出信息和前后处理配置。
-var profile = YoloDetectionProfiles.Create(
-    YoloDetectionFamily.YoloV8,
-    new ModelId("yolo/v8/detect/n"),
-    modelSha256,
-    YoloLabelSets.Coco80,
-    "1367566337fb8056223a1aeb469360747f1b1bcd",
-    "8.3.78",
-    new YoloDetectionProfileOptions(
-        opset: 19,
-        modelSize: new VisualSize(640, 640),
-        resizeMode: YoloImageResizeMode.Letterbox,
-        decoderOptions: new YoloDetectionDecoderOptions(
-            scoreThreshold: 0.25f, iouThreshold: 0.45f)));
+// 声明 YOLO26 端到端检测模型的输入输出，复用内置解码器。
+var modelId = new ModelId("local/yolo26-detect");
+var profile = new VisualModelProfile(
+    "yolo26.detect.local", modelId, VisualTaskId.ObjectDetection, "1", "onnx",
+    new VisualInputBinding(inputName, TensorElementType.Float32,
+        new TensorShape(1, 3, modelSize.Height, modelSize.Width), VisualTensorLayout.Nchw),
+    new[] { new VisualOutputBinding(outputName, TensorElementType.Float32,
+        new TensorShape(1, -1, 6)) },
+    classNames.Select((name, index) => new VisualLabel(index, name)),
+    new YoloDetectionDecoder(
+        new YoloDetectionOutputContract(outputName,
+            YoloDetectionOutputKind.EndToEnd, classNames.Count),
+        new YoloDetectionDecoderOptions(scoreThreshold: 0.25f)),
+    preprocessing: new VisualPreprocessingOptions(
+        modelSize, VisualResizeMode.Letterbox, VisualColorOrder.Rgb,
+        VisualNormalizationOptions.Scale(255f),
+        paddingColor: new VisualRgbColor(114, 114, 114)));
 
 // 选择 ONNX Runtime CPU，并注册视觉任务配置。
 using var backends = new BackendRegistry();
 backends.UseOnnxRuntime();
 var profiles = new VisualProfileRegistry();
-profiles.Register(profile.VisualProfile);
+profiles.Register(profile);
 profiles.Freeze();
 var request = new BackendRequest(
     BackendCapabilities.TensorInference,
     OnnxRuntimeBackendProvider.BackendId, "cpu");
-var artifact = profile.CreateArtifact(modelPath);
+var artifact = new ModelArtifact(modelId, "onnx", modelPath);
 
 using var pipeline = new VisualPipeline(
     backends,
     profiles.Select(artifact, backends, request, VisualTaskId.ObjectDetection),
     request);
 using PreparedVisualInput input = new OpenCvVisualInputFactory()
-    .CreateFromFile(imagePath, profile.VisualProfile);
+    .CreateFromFile(imagePath, profile);
 DetectionResult result = pipeline.Run(input).GetValue<DetectionResult>();
 
 // 结果坐标已经还原到原图，直接在原图上绘制。
@@ -399,27 +417,37 @@ if (!ImageCodecs.ImWrite("result.jpg", canvas))
 Console.WriteLine("saved=result.jpg");
 ```
 
-## 五、关键配置与调用说明
+## 七、关键配置与调用说明
 
-### 5.1 Profile 把模型文件与前后处理绑定起来
+### 7.1 声明模型输入输出，复用内置解码器
 
-`YoloDetectionProfiles.Create` 描述这份 YOLOv8n 模型如何使用。这里明确提供模型 ID、SHA-256、COCO 类别表、导出源码 revision、导出版本、opset 和输入大小，方便把模型身份与处理配置对应起来。
+`ModelArtifact` 接收本地模型路径，`VisualModelProfile` 描述模型应该怎样运行。代码将输入名称、尺寸、颜色和归一化集中写清楚，再用 `YoloDetectionDecoder` 将本文 YOLO26 端到端输出转换为 `DetectionResult`，不需要自己重写 YOLO 后处理。
 
-其中 `scoreThreshold: 0.25f` 用于过滤低分候选，`iouThreshold: 0.45f` 用于非极大值抑制（NMS），去除同类目标中高度重叠的重复候选框。调整它们会改变保留的结果，本文后面的输出对应这两个固定值。
+`classNames` 默认使用 COCO 80 类，也支持读取自己的类别文件。本文模型输出 `[1, N, 6]`，每一行包含左上角、右下角、分数和类别索引；`-1` 表示输出行数 `N` 可以变化。`local/yolo26-detect` 是应用内的逻辑标识，用于让模型与 Profile 对应。
 
-如果替换为自己的 YOLOv8 模型，类别数量、类别名称、输入尺寸、输出格式和导出信息都要一起确认，再创建对应 Profile。仅把文件名改成 `yolov8n.onnx`，并不会让不同模型拥有相同的输入输出约定。
+下面这张图把输出字段与类别文件放在一起：`class_id` 对应类别文件中的行号，坐标仍需要经过图像变换信息还原。
 
-### 5.2 Letterbox 与结果坐标怎样对应
+![YOLO26 端到端检测输出的六个字段，分数筛选、类别文件映射与原图坐标还原的关系](assets/02-yolo26-quickstart/output-and-labels.png)
 
-本文显式设置 `YoloImageResizeMode.Letterbox`。它保持宽高比例缩放，再用边缘填充补齐目标尺寸。RGB 转换、Float32 张量布局与除以 `255` 的归一化由配套前处理完成。
+`scoreThreshold: 0.25f` 用于过滤低分结果。这里选择 `YoloDetectionOutputKind.EndToEnd`，按 YOLO26 的端到端输出解码，库侧无需再次执行非极大值抑制（NMS）。因此本文只配置分数阈值，后面的日志对应这一设置。
+
+替换自己的 YOLO26 模型时，主要调整模型路径、类别表和输入尺寸；输入输出名称不同，再修改 `inputName`、`outputName`。第 8.3 节提供完整的替换方式。
+
+### 7.2 Letterbox 与结果坐标怎样对应
+
+本文显式设置 `VisualResizeMode.Letterbox`。它保持宽高比例缩放，再用边缘填充补齐目标尺寸。RGB 转换、Float32 张量布局与除以 `255` 的归一化由配套前处理完成。
 
 `bus.jpg` 原图为 `810 × 1080`，缩放到 `480 × 640` 后，左右分别填充 `80` 像素，得到模型需要的 `640 × 640` 输入。输入对象保存了这次变换信息，decoder 据此还原原图坐标。
 
+下图展示了这次缩放、填充，以及检测框从模型坐标返回原图的过程：
+
+![810×1080 原图经 Letterbox 缩放为 480×640 并左右各填充 80 像素，模型坐标减去填充再除以缩放比例还原原图](assets/02-yolo26-quickstart/letterbox-coordinates.png)
+
 因此，代码中的 `item.Box.X/Y/Width/Height` 已经对应原图像素，可以直接绘制到 `canvas`。**绘制时再次乘以原图与模型尺寸的比例，会把坐标缩放两次。**
 
-如果自有模型训练时采用强制缩放，可以在创建相应 Profile 时选择 `YoloImageResizeMode.Resize`；更通用的视觉预处理还提供 Resize、Letterbox、CenterCrop，以及颜色和归一化配置。切换方式要与模型训练和导出约定一致。自定义模型专题会进一步演示这些设置。
+如果自有模型训练时采用强制缩放，把预处理中的几何方式改为 `VisualResizeMode.Resize` 即可；需要居中裁剪时可以选择 `VisualResizeMode.CenterCrop`。颜色与归一化也在同一处配置。切换方式要与模型训练和导出约定一致，自定义模型专题会进一步演示这些设置。
 
-### 5.3 后端注册与执行设备都显式指定
+### 7.3 后端注册与执行设备都显式指定
 
 `UseOnnxRuntime()` 注册 ONNX Runtime 后端，`BackendRequest` 指定 `TensorInference` 能力、ONNX Runtime 后端 ID 和 `"cpu"` 设备。这样可以清楚知道本次推理交给谁执行。
 
@@ -427,17 +455,17 @@ Console.WriteLine("saved=result.jpg");
 
 所以，改用另一种引擎时，需要一起调整后端注册、设备请求以及对应的模型工件；安装另一组 NuGet 包只完成了环境准备。
 
-### 5.4 资源释放与多张图片复用
+### 7.4 资源释放与多张图片复用
 
 代码中通过 `using` 管理 `BackendRegistry`、`VisualPipeline`、`PreparedVisualInput` 和 OpenCV `Mat`。输入在本次 `Run` 完成后释放，pipeline 在使用结束后释放，注册表最后退出，保持依赖资源的正确生命周期。
 
 本文为了展示检测框，重新读取一次原图作为绘图画布。推理前处理与绘图输入分别持有自己的图像资源，读起来更直观；连续帧或高吞吐应用可以复用已解码图像和相应输入接口，减少重复读图。
 
-处理多张图片时，把模型校验、Profile、后端注册和 pipeline 初始化放在循环外，为每张图创建并及时释放输入对象即可。视频、Batch 和多个独立推理器的并发调度，会在后续专题展开。
+处理多张图片时，把 Profile、后端注册和 pipeline 初始化放在循环外，为每张图创建并及时释放输入对象即可。视频、Batch 和多个独立推理器的并发调度，会在后续专题展开。
 
-## 六、运行程序，检查实际结果
+## 八、运行程序，检查实际结果
 
-### 6.1 使用默认测试图片
+### 8.1 使用默认测试图片
 
 在项目目录运行：
 
@@ -450,21 +478,21 @@ dotnet run -c Release
 ```text
 backend=onnxruntime;device=cpu
 detections=5
-person 0.901 box=(671.0,378.0,139.0,501.8)
-person 0.884 box=(221.4,407.6,122.1,448.2)
-person 0.876 box=(50.4,398.1,193.7,506.7)
-bus 0.842 box=(34.3,229.3,761.2,539.2)
-person 0.436 box=(0.4,550.6,59.9,317.4)
+person 0.925 box=(46.3,398.4,195.8,503.5)
+bus 0.923 box=(7.3,228.7,799.2,525.3)
+person 0.904 box=(222.5,405.2,122.2,458.0)
+person 0.867 box=(669.3,391.5,140.7,487.8)
+person 0.520 box=(0.0,553.0,65.7,321.1)
 saved=result.jpg
 ```
 
 下面是这段代码真实生成的 `result.jpg`，可以看到检测框已经落在原图中的行人和车辆位置：
 
-![DeploySharp 2.0.0 使用 ONNX Runtime CPU 对 bus.jpg 执行 YOLOv8n 检测的实际输出，包含四个行人与一辆公交车](assets/02-yolov8-quickstart/yolov8n-cpu-result.jpg)
+![DeploySharp 2.0.0 使用 ONNX Runtime CPU 对 bus.jpg 执行 YOLO26n 检测的实际输出，包含四个行人与一辆公交车](assets/02-yolo26-quickstart/yolo26n-cpu-result.jpg)
 
 坐标输出依次是 `X、Y、Width、Height`，分数保留三位小数。换用不同图片、模型、阈值或后端后，结果数量与分数可能变化。本文只展示这组固定输入的检测结果，不以一次运行时间评价后端性能。
 
-### 6.2 换成自己的图片
+### 8.2 换成自己的图片
 
 把图片放到项目中，通过第一个命令行参数指定：
 
@@ -474,7 +502,35 @@ dotnet run -c Release -- .\images\my-image.jpg
 
 程序仍使用同一份 COCO 80 类模型，输出文件仍是项目当前目录中的 `result.jpg`，再次运行会覆盖前一次结果。需要识别自定义类别时，换图片还不够，还需使用训练了对应类别的模型和匹配 Profile。
 
-## 七、常见问题与检查方法
+### 8.3 换成自己的 YOLO26 模型
+
+把训练后导出的模型保存为 `models/best.onnx`。如果使用了自己的类别，在 `models/classes.txt` 中按训练时的类别索引顺序填写名称，每行一个，从索引 `0` 开始，不要加入序号、表头或空行。例如，两类模型的文件可以是：
+
+```text
+person
+helmet
+```
+
+程序的三个可选参数依次为 **图片路径、模型路径、类别文件路径**。在项目目录执行：
+
+```powershell
+dotnet run -c Release -- .\images\my-image.jpg .\models\best.onnx .\models\classes.txt
+```
+
+这样就会直接使用你提供的模型和类别。若导出时仍采用 `640 × 640`、`images` 输入与 `output0` 输出，其他配置可以沿用；规格不同时，按下表修改代码顶部和预处理配置：
+
+| 自有模型的变化 | 修改位置 |
+| --- | --- |
+| 模型与输入图片位置不同 | 通过命令行参数指定，或修改 `modelPath`、`imagePath` 的默认值 |
+| 自定义类别 | 提供 `classes.txt`；类别数量与顺序必须和模型输出一致 |
+| 输入尺寸不同，例如宽 1280、高 736 | 修改 `modelSize = new VisualSize(1280, 736)`，输入 Shape 和前处理尺寸会一起更新 |
+| 输入输出名称不同 | 修改 `inputName` 与 `outputName` |
+| 模型使用强制缩放或不同归一化 | 修改 `VisualPreprocessingOptions` 中的几何、颜色或归一化配置 |
+| 需要改变结果筛选 | 修改 `scoreThreshold`；端到端输出不重复执行 NMS |
+
+这里复用的是 **YOLO26 端到端检测输出 `[1, N, 6]`** 的解码方式。使用自有模型时，类别文件仍要与训练类别一一对应。若关闭端到端输出，导出的是原始检测头，或者使用分割、Pose 等任务，则需要选择对应的输出合同与 decoder。先确认实际输出结构，再选择处理方式。
+
+## 九、常见问题与检查方法
 
 | 现象 | 先检查什么 | 处理方法 |
 | --- | --- | --- |
@@ -483,7 +539,7 @@ dotnet run -c Release -- .\images\my-image.jpg
 | ONNX Runtime 提示缺少原生库 | 是否只还原了 Managed，或 CPU/GPU 原生包混用 | CPU 案例保留匹配的 `Microsoft.ML.OnnxRuntime 1.28.0`，移除多余原生包，清理本案例生成的 `bin/obj` 后重新还原 |
 | 找不到 `Mat`、`Cv2` 或 `HersheyFonts` | 包与命名空间是否属于同一套 OpenCV API | 使用本文的 `JYPPX.OpenCvSharp.*`，保留 `ImgProc` 的 using 和两个 `Cv2` 别名 |
 | 提示找不到模型或图片 | 是否从项目目录运行、相对文件是否存在 | 按目录结构存放文件，检查实际工作目录和传入图片路径 |
-| 提示模型与 Profile 不匹配 | 下载文件的 SHA-256 是否一致 | 使用本文工件；自有模型需重新创建匹配的身份和输入输出配置 |
+| 提示张量名称、Shape 或类别数不匹配 | `inputName`、`outputName`、`modelSize` 和类别文件是否符合实际模型 | 按第 8.3 节修改输入输出配置，确认是 `[1, N, 6]` 的 YOLO26 端到端检测导出 |
 | 框整体偏移或尺寸不对 | 缩放方式、填充、颜色和输出格式是否配套 | 先使用本文模型与 Letterbox 配置复现；绘图直接使用源图坐标 |
 | 装了 GPU 包，仍显示 CPU | Provider 与 `BackendRequest` 是否仍使用 CPU 配置 | 按 GPU 后端教程配置 CUDA Provider，并核对实际可用设备 |
 
@@ -500,17 +556,17 @@ https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/docs/articles/onn
 https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/docs/model-backend-verification-matrix.md
 ```
 
-## 八、总结与后续
+## 十、总结与后续
 
-这篇完成了从空项目、按场景选择 NuGet、下载模型和图片，到 YOLOv8 CPU 检测及结果绘制的完整过程。对本文案例，显式安装四个包就能准备好图像与推理依赖；换成其他后端时，再按设备要求调整相应适配器、原生运行时和初始化代码。
+这篇完成了从空项目、按场景选择 NuGet、下载模型和图片，到 YOLO26 CPU 检测及结果绘制的完整过程。对本文案例，显式安装四个包就能准备好图像与推理依赖；换成其他后端时，再按设备要求调整相应适配器、原生运行时和初始化代码。
 
-接入自己的应用时，可以先保留这条已经跑通的路径，再替换图片、接入界面和业务逻辑。模型与前后处理需要一起配置，pipeline 则可以在多次推理中复用。
+接入自己的应用时，可以先保留这条已经跑通的路径，再通过模型路径、图片路径和类别文件切换到实际数据。输入尺寸与前后处理按训练和导出约定配置，pipeline 则可以在多次推理中复用。
 
 下一篇会继续使用实际图片，介绍 **PaddleOCR v4/v5/v6 的模型选择、检测与识别组合、文字和区域结果读取**。多后端部署、自定义模型、视频并发与大图处理，也会分别用完整案例展开。
 
 ```text
 本文主稿与配图：
-https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/docs/blog/2.0.0/2026-10/2026-10-28-02-yolov8-quickstart.md
+https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/docs/blog/2.0.0/2026-10/2026-10-28-02-yolo26-quickstart.md
 
 系列目录：
 https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/docs/blog/2.0.0/README.md

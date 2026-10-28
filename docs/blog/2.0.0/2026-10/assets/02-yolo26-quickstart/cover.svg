@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1410" height="800" viewBox="0 0 1410 800" role="img" aria-labelledby="title desc">
+  <title id="title">DeploySharp 2.0.0：在 C# 中部署 YOLO26</title>
+  <desc id="desc">深蓝、青绿的系列技术海报。上方是项目名称与 YOLO26 实战主题，中间以本地 ONNX 和图像输入、C# CPU 推理模块、检测框结果说明部署过程，下方突出按需安装、本地模型、内置前后处理与原图坐标。图形为流程示意，非真实检测截图。</desc>
+  <defs>
+    <linearGradient id="bg" x2="0.8" y2="1"><stop stop-color="#0b192e"/><stop offset="1" stop-color="#152440"/></linearGradient>
+    <linearGradient id="accent"><stop stop-color="#62d8ec"/><stop offset="1" stop-color="#83e6b6"/></linearGradient>
+    <linearGradient id="panel" x2="1" y2="1"><stop stop-color="#18324b"/><stop offset="1" stop-color="#13263d"/></linearGradient>
+    <linearGradient id="chip-top" x2="0.7" y2="1"><stop stop-color="#9df2d8"/><stop offset="1" stop-color="#57bda9"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="150%" height="160%"><feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#030a15" flood-opacity="0.4"/></filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1L9 5L1 9Z" fill="#66dcc6"/></marker>
+    <symbol id="bus-scene" viewBox="0 0 260 136">
+      <rect width="260" height="136" rx="12" fill="#25475c"/>
+      <path d="M0 118L51 75L88 100L141 56L205 98L260 67V136H0Z" fill="#396874"/>
+      <path d="M0 125H260" stroke="#5d8590" stroke-width="3"/>
+      <rect x="44" y="43" width="171" height="72" rx="16" fill="#a5d5d5" stroke="#d5efed" stroke-width="2"/>
+      <path d="M59 55H199V82H59Z" fill="#345d72"/>
+      <path d="M94 55V82M132 55V82M170 55V82" stroke="#82b8bd" stroke-width="3"/>
+      <path d="M48 90H211" stroke="#e4ae86" stroke-width="6"/>
+      <circle cx="79" cy="113" r="13" fill="#12273e" stroke="#7ba3ad" stroke-width="3"/>
+      <circle cx="181" cy="113" r="13" fill="#12273e" stroke="#7ba3ad" stroke-width="3"/>
+      <circle cx="27" cy="79" r="7" fill="#e4ae86"/>
+      <path d="M27 90V114M18 98L27 90L36 98M27 114L19 129M27 114L35 129" fill="none" stroke="#d6e9e8" stroke-width="5" stroke-linecap="round"/>
+    </symbol>
+  </defs>
+  <rect width="1410" height="800" rx="30" fill="url(#bg)"/>
+  <path d="M1092 0L1410 245M1202 0L1410 160M1302 0L1410 80" stroke="#2c4966" stroke-width="2" opacity="0.55"/>
+  <g font-family="Segoe UI, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+    <rect x="60" y="42" width="178" height="34" rx="17" fill="#24425b"/>
+    <text x="149" y="66" text-anchor="middle" font-size="20" font-weight="600" fill="#b8d8ed">JYPPX · 开源项目</text>
+    <text x="1348" y="67" text-anchor="end" font-size="21" font-weight="600" fill="#9eb9cf">实战教程 / 02</text>
+    <text x="54" y="176" font-size="94" font-weight="750" letter-spacing="-3" fill="#f5f8fc">DeploySharp <tspan fill="url(#accent)">2.0.0</tspan></text>
+    <text x="60" y="258" font-size="61" font-weight="750" fill="#f5f8fc">在 C# 中部署 YOLO26</text>
+    <text x="63" y="307" font-size="27" fill="#b5cadd">从 NuGet 安装，到本地模型与检测结果</text>
+
+    <rect x="48" y="350" width="1314" height="314" rx="26" fill="url(#panel)" stroke="#375873" stroke-width="2"/>
+    <g filter="url(#shadow)">
+      <path d="M82 565L304 565L337 585L116 585Z" fill="#28465e"/>
+      <rect x="77" y="394" width="252" height="177" rx="18" fill="#10283d" stroke="#4d7890" stroke-width="2"/>
+      <use href="#bus-scene" x="91" y="408" width="224" height="117"/>
+      <text x="203" y="553" text-anchor="middle" font-size="21" font-weight="600" fill="#d0e9ec">输入图像</text>
+      <rect x="268" y="373" width="77" height="88" rx="12" fill="#294b59" stroke="#76c9bf" stroke-width="2"/>
+      <path d="M282 394H318M282 404H306" stroke="#8bd5ce" stroke-width="3" stroke-linecap="round"/>
+      <text x="306" y="441" text-anchor="middle" font-size="17" font-weight="700" fill="#b4f0dd">ONNX</text>
+    </g>
+    <path d="M357 495H460" fill="none" stroke="#66dcc6" stroke-width="5" stroke-linecap="round" marker-end="url(#arrow)"/>
+    <text x="407" y="466" text-anchor="middle" font-size="18" fill="#9ebbd0">准备输入</text>
+
+    <g filter="url(#shadow)">
+      <path d="M491 552L657 504L827 556L661 611Z" fill="#1c3c51" stroke="#477087" stroke-width="2"/>
+      <path d="M491 552L661 611V626L491 568Z" fill="#173246"/>
+      <path d="M661 611L827 556V572L661 626Z" fill="#25485b"/>
+      <path d="M531 447L648 414L779 457L661 493Z" fill="url(#chip-top)" stroke="#8bddc9" stroke-width="2"/>
+      <path d="M531 447L661 493V567L531 520Z" fill="#348e86" stroke="#5db6a9" stroke-width="2"/>
+      <path d="M661 493L779 457V531L661 567Z" fill="#51a999" stroke="#72cebb" stroke-width="2"/>
+      <path d="M549 439V423M574 432V416M599 424V408M624 417V401M690 435V419M715 443V427M740 452V436" stroke="#9bedda" stroke-width="5" stroke-linecap="round"/>
+      <rect x="575" y="445" width="153" height="90" rx="19" fill="#19394d" stroke="#b6f1df" stroke-width="3"/>
+      <text x="651" y="506" text-anchor="middle" font-size="54" font-weight="750" fill="#effcf7">C#</text>
+    </g>
+    <text x="655" y="395" text-anchor="middle" font-size="22" font-weight="650" fill="#b3ecd9">ONNX Runtime · CPU</text>
+    <path d="M845 495H939" fill="none" stroke="#66dcc6" stroke-width="5" stroke-linecap="round" marker-end="url(#arrow)"/>
+    <text x="891" y="466" text-anchor="middle" font-size="18" fill="#9ebbd0">解码结果</text>
+
+    <g filter="url(#shadow)">
+      <path d="M985 575H1307L1326 590H1005Z" fill="#28465e"/>
+      <rect x="968" y="386" width="342" height="195" rx="19" fill="#10283d" stroke="#4d7890" stroke-width="2"/>
+      <circle cx="989" cy="405" r="4" fill="#ee9a86"/>
+      <circle cx="1005" cy="405" r="4" fill="#e7c28e"/>
+      <circle cx="1021" cy="405" r="4" fill="#7ad3b7"/>
+      <text x="1289" y="411" text-anchor="end" font-size="16" fill="#9ebbd0">检测结果 · 示意</text>
+      <use href="#bus-scene" x="983" y="423" width="312" height="143"/>
+      <rect x="1032" y="458" width="209" height="93" rx="5" fill="none" stroke="#90ebca" stroke-width="3"/>
+      <rect x="997" y="481" width="31" height="75" rx="4" fill="none" stroke="#f3b48d" stroke-width="3"/>
+      <rect x="1032" y="436" width="46" height="23" rx="5" fill="#90ebca"/>
+      <text x="1055" y="453" text-anchor="middle" font-size="15" font-weight="700" fill="#173a3f">bus</text>
+    </g>
+    <text x="203" y="626" text-anchor="middle" font-size="23" font-weight="650" fill="#b9d6e5">图像 + 本地模型</text>
+    <text x="1138" y="626" text-anchor="middle" font-size="23" font-weight="650" fill="#b9d6e5">框 · 类别 · 置信度</text>
+
+    <g text-anchor="middle" font-size="24" font-weight="600">
+      <rect x="60" y="692" width="300" height="54" rx="14" fill="#234455"/>
+      <text x="210" y="728" fill="#a1e7dc">NuGet 按需组合</text>
+      <rect x="390" y="692" width="300" height="54" rx="14" fill="#243f56"/>
+      <text x="540" y="728" fill="#bddcf1">使用自己的 ONNX</text>
+      <rect x="720" y="692" width="300" height="54" rx="14" fill="#393b50"/>
+      <text x="870" y="728" fill="#d7c5f7">内置前后处理</text>
+      <rect x="1050" y="692" width="300" height="54" rx="14" fill="#3e3c44"/>
+      <text x="1200" y="728" fill="#f5c49f">还原原图坐标</text>
+    </g>
+    <text x="1347" y="778" text-anchor="end" font-size="17" fill="#829eb7">Windows x64 · YOLO26 CPU 实战 · 流程示意</text>
+  </g>
+</svg>

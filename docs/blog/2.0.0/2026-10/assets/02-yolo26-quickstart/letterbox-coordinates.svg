@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1080" viewBox="0 0 1440 1080" role="img" aria-labelledby="title desc">
+  <title id="title">Letterbox 输入与原图检测框坐标还原</title>
+  <desc id="desc">以 bus.jpg 的 810×1080 原图为例，按比例 640/1080 缩放为 480×640，左右各填充 80 像素得到 640×640 模型输入。模型坐标返回原图时，横坐标先减 80 再除以缩放比例，纵坐标除以缩放比例。示意框仅解释坐标变换，非实际检测数据。</desc>
+  <defs>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="135%"><feDropShadow dx="0" dy="7" stdDeviation="8" flood-color="#243f55" flood-opacity="0.09"/></filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1L9 5L1 9Z" fill="#208b7b"/></marker>
+    <symbol id="scene" viewBox="0 0 240 320">
+      <rect width="240" height="320" fill="#d9e8ec"/>
+      <path d="M0 221L47 142L109 190L173 115L240 184V320H0Z" fill="#a7c9c3"/>
+      <path d="M0 282H240" stroke="#7aaba5" stroke-width="3"/>
+      <rect x="31" y="132" width="179" height="106" rx="19" fill="#6c9ea6"/>
+      <rect x="44" y="148" width="152" height="45" rx="8" fill="#d3e8e9"/>
+      <path d="M83 148V193M125 148V193M167 148V193" stroke="#6c9ea6" stroke-width="4"/>
+      <circle cx="73" cy="239" r="17" fill="#456b7d"/>
+      <circle cx="174" cy="239" r="17" fill="#456b7d"/>
+    </symbol>
+  </defs>
+  <rect width="1440" height="1080" rx="26" fill="#f3f7fa"/>
+  <g font-family="Segoe UI, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+    <text x="60" y="78" font-size="42" font-weight="750" fill="#142b43">输入要缩放，检测框要回到原图</text>
+    <text x="62" y="123" font-size="24" fill="#526c82">本文 bus.jpg：保持比例缩放，左右填充，最后统一还原源图坐标</text>
+    <g filter="url(#shadow)">
+      <rect x="60" y="165" width="560" height="490" rx="22" fill="#ffffff" stroke="#c6d9e1" stroke-width="2"/>
+      <rect x="820" y="165" width="560" height="490" rx="22" fill="#ffffff" stroke="#c6d9e1" stroke-width="2"/>
+    </g>
+    <text x="340" y="211" text-anchor="middle" font-size="28" font-weight="700" fill="#29445b">原图 · 810 × 1080</text>
+    <text x="1100" y="211" text-anchor="middle" font-size="28" font-weight="700" fill="#29445b">模型输入 · 640 × 640</text>
+    <use href="#scene" x="220" y="246" width="240" height="320"/>
+    <rect x="251" y="378" width="179" height="115" rx="6" fill="none" stroke="#208b7b" stroke-width="4"/>
+    <text x="340" y="615" text-anchor="middle" font-size="23" fill="#26675e">示意框：原图像素坐标</text>
+
+    <rect x="940" y="246" width="320" height="320" fill="#ded8ce"/>
+    <use href="#scene" x="980" y="246" width="240" height="320"/>
+    <rect x="1011" y="378" width="179" height="115" rx="6" fill="none" stroke="#208b7b" stroke-width="4"/>
+    <path d="M940 583V591H980V583M980 583V591H1220V583M1220 583V591H1260V583" fill="none" stroke="#a8876f" stroke-width="2"/>
+    <text x="960" y="620" text-anchor="middle" font-size="21" fill="#995235">80</text>
+    <text x="1100" y="620" text-anchor="middle" font-size="21" fill="#26675e">480</text>
+    <text x="1240" y="620" text-anchor="middle" font-size="21" fill="#995235">80</text>
+
+    <path d="M642 372H792" fill="none" stroke="#208b7b" stroke-width="5" marker-end="url(#arrow)"/>
+    <text x="717" y="325" text-anchor="middle" font-size="24" font-weight="650" fill="#26675e">缩放 + 填充</text>
+    <text x="717" y="415" text-anchor="middle" font-size="22" fill="#526c82">比例不变</text>
+    <text x="717" y="451" text-anchor="middle" font-size="21" fill="#526c82">r = 640 / 1080</text>
+    <text x="717" y="487" text-anchor="middle" font-size="21" fill="#526c82">约 0.5926</text>
+
+    <rect x="60" y="690" width="1320" height="170" rx="22" fill="#e3f1ed" stroke="#b4d5ca" stroke-width="2"/>
+    <text x="88" y="735" font-size="28" font-weight="700" fill="#26675e">decoder 还原坐标（本例）</text>
+    <g font-family="Cascadia Code, Consolas, monospace" font-size="29" fill="#29445b">
+      <text x="90" y="792">x_source = (x_model - 80) / r</text>
+      <text x="820" y="792">y_source = y_model / r</text>
+    </g>
+    <text x="90" y="835" font-size="22" fill="#526c82">对两个角点应用同一变换，再将框裁剪到源图边界；填充值为 RGB (114, 114, 114)。</text>
+
+    <rect x="60" y="892" width="1320" height="108" rx="22" fill="#142b43"/>
+    <text x="720" y="939" text-anchor="middle" font-size="28" font-weight="650" fill="#d8f5e9">DetectionResult 已经是原图坐标，直接画到原图</text>
+    <text x="720" y="976" text-anchor="middle" font-size="22" fill="#b5cadd">PreparedVisualInput 保存变换信息 · 绘图时无需再次缩放</text>
+    <text x="62" y="1048" font-size="20" fill="#526c82">图形用于解释尺寸与坐标关系；真实检测效果见本文结果图。</text>
+  </g>
+</svg>

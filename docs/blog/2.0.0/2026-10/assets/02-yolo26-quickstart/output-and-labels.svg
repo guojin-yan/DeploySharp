@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1000" viewBox="0 0 1440 1000" role="img" aria-labelledby="title desc">
+  <title id="title">YOLO26：六个输出字段怎样变成检测结果</title>
+  <desc id="desc">常规端到端输出形状为一、N、六，每行包含 x1、y1、x2、y2、score、class_id。分数按阈值筛选，类别索引在 classes.txt 中查找名称，框由模型坐标还原至原图。示例两类标签为 person、helmet，只用于说明映射。端到端解码不重复执行 NMS。</desc>
+  <defs>
+    <filter id="shadow" x="-10%" y="-15%" width="120%" height="140%"><feDropShadow dx="0" dy="7" stdDeviation="8" flood-color="#243f55" flood-opacity="0.09"/></filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1L9 5L1 9Z" fill="#208b7b"/></marker>
+  </defs>
+  <rect width="1440" height="1000" rx="26" fill="#f3f7fa"/>
+  <g font-family="Segoe UI, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+    <text x="60" y="78" font-size="42" font-weight="750" fill="#142b43">YOLO26：六个字段，得到检测结果</text>
+    <text x="62" y="123" font-size="24" fill="#526c82">端到端检测输出 [1, N, 6] · N 为输出行数 · 每一行对应一条候选结果</text>
+
+    <g filter="url(#shadow)">
+      <rect x="60" y="165" width="1320" height="254" rx="22" fill="#ffffff" stroke="#c6d9e1" stroke-width="2"/>
+    </g>
+    <rect x="84" y="188" width="180" height="34" rx="10" fill="#e2edf4"/>
+    <text x="174" y="212" text-anchor="middle" font-size="19" font-weight="650" fill="#385779">output0 · 第 i 行</text>
+    <g text-anchor="middle" font-family="Cascadia Code, Consolas, monospace" font-size="30" font-weight="650">
+      <rect x="91" y="250" width="188" height="78" rx="13" fill="#e0f1ed"/>
+      <text x="185" y="301" fill="#26675e">x1</text>
+      <rect x="305" y="250" width="188" height="78" rx="13" fill="#e0f1ed"/>
+      <text x="399" y="301" fill="#26675e">y1</text>
+      <rect x="519" y="250" width="188" height="78" rx="13" fill="#e0f1ed"/>
+      <text x="613" y="301" fill="#26675e">x2</text>
+      <rect x="733" y="250" width="188" height="78" rx="13" fill="#e0f1ed"/>
+      <text x="827" y="301" fill="#26675e">y2</text>
+      <rect x="947" y="250" width="188" height="78" rx="13" fill="#fae7d8"/>
+      <text x="1041" y="301" fill="#995235">score</text>
+      <rect x="1161" y="250" width="188" height="78" rx="13" fill="#e8e3f7"/>
+      <text x="1255" y="301" fill="#68518c">class_id</text>
+    </g>
+    <path d="M96 341V354H916V341" fill="none" stroke="#6eaa9e" stroke-width="2"/>
+    <text x="506" y="387" text-anchor="middle" font-size="23" fill="#26675e">左上角 + 右下角 · 模型输入坐标</text>
+    <text x="1041" y="375" text-anchor="middle" font-size="22" fill="#995235">置信度</text>
+    <text x="1255" y="375" text-anchor="middle" font-size="22" fill="#68518c">类别索引</text>
+
+    <path d="M493 430V477" fill="none" stroke="#208b7b" stroke-width="4" marker-end="url(#arrow)"/>
+    <path d="M1041 430V452H918V477" fill="none" stroke="#208b7b" stroke-width="4" marker-end="url(#arrow)"/>
+    <path d="M1255 430V477" fill="none" stroke="#208b7b" stroke-width="4" marker-end="url(#arrow)"/>
+    <g filter="url(#shadow)">
+      <rect x="60" y="494" width="704" height="240" rx="22" fill="#ffffff" stroke="#b4d5ca" stroke-width="2"/>
+      <rect x="792" y="494" width="272" height="240" rx="22" fill="#fffaf6" stroke="#dfb28f" stroke-width="2"/>
+      <rect x="1092" y="494" width="288" height="240" rx="22" fill="#f5f2fb" stroke="#c7b9de" stroke-width="2"/>
+    </g>
+    <text x="88" y="540" font-size="27" font-weight="700" fill="#26675e">还原到原图</text>
+    <rect x="94" y="563" width="189" height="141" rx="11" fill="#e1edf0"/>
+    <rect x="115" y="588" width="99" height="91" rx="5" fill="none" stroke="#208b7b" stroke-width="3"/>
+    <path d="M115 588H146M115 588V619M214 679H183M214 679V648" stroke="#cb8058" stroke-width="4"/>
+    <text x="309" y="600" font-size="22" fill="#29445b">减去 Letterbox 填充</text>
+    <text x="309" y="640" font-size="22" fill="#29445b">除以缩放比例</text>
+    <text x="309" y="680" font-size="22" fill="#29445b">裁剪到源图边界</text>
+
+    <text x="928" y="540" text-anchor="middle" font-size="27" font-weight="700" fill="#995235">筛选分数</text>
+    <text x="928" y="602" text-anchor="middle" font-family="Cascadia Code, Consolas, monospace" font-size="23" fill="#995235">score &gt; 0.25</text>
+    <text x="928" y="650" text-anchor="middle" font-size="21" fill="#526c82">保留符合阈值</text>
+    <text x="928" y="682" text-anchor="middle" font-size="21" fill="#526c82">的检测结果</text>
+
+    <text x="1236" y="540" text-anchor="middle" font-size="26" font-weight="700" fill="#68518c">查找类别名称</text>
+    <text x="1117" y="578" font-size="20" font-weight="600" fill="#68518c">classes.txt（两类示例）</text>
+    <text x="1118" y="626" font-family="Cascadia Code, Consolas, monospace" font-size="24" fill="#8a799d">0</text>
+    <text x="1154" y="626" font-family="Cascadia Code, Consolas, monospace" font-size="24" fill="#29445b">person</text>
+    <text x="1118" y="671" font-family="Cascadia Code, Consolas, monospace" font-size="24" fill="#8a799d">1</text>
+    <text x="1154" y="671" font-family="Cascadia Code, Consolas, monospace" font-size="24" fill="#29445b">helmet</text>
+    <text x="1118" y="710" font-size="17" fill="#68518c">行号仅用于示意，不写入文件</text>
+
+    <path d="M412 744V776H715V810" fill="none" stroke="#208b7b" stroke-width="4" marker-end="url(#arrow)"/>
+    <path d="M928 744V776H743V810" fill="none" stroke="#208b7b" stroke-width="4" marker-end="url(#arrow)"/>
+    <path d="M1236 744V790H1030V810" fill="none" stroke="#208b7b" stroke-width="4" marker-end="url(#arrow)"/>
+    <rect x="60" y="826" width="1320" height="86" rx="20" fill="#142b43"/>
+    <text x="720" y="878" text-anchor="middle" font-size="29" font-weight="650" fill="#d8f5e9">DetectionResult = 原图检测框 + 类别名称 + 置信度</text>
+    <text x="62" y="962" font-size="23" fill="#526c82">本文使用 EndToEnd 解码：库侧无需重复执行 NMS。其他导出布局需选择对应 decoder。</text>
+  </g>
+</svg>
