@@ -4,7 +4,7 @@ DeploySharp 按“核心契约、领域流程、图像适配器、执行后端�
 
 ## 安装原则
 
-1. 同一 DeploySharp 版本的包保持一致，例如当前 Alpha 使用 `2.0.0-alpha.1`。
+1. 所有 DeploySharp 包保持同一版本，本指南使用 `2.0.0`。
 2. `Core` 是所有 DeploySharp 工作流的基础；其他包按任务和后端按需添加。
 3. 后端包是托管适配器，不会自动下载或安装厂商 native DLL。
 4. 模型文件、Tokenizer、OpenVINO XML/BIN、TensorRT Engine 和字典由应用部署。
@@ -28,25 +28,25 @@ DeploySharp 按“核心契约、领域流程、图像适配器、执行后端�
 
 ## 常用安装命令
 
-下面示例使用当前 Alpha 版本；正式发布后只需替换版本号和源地址。
+下面示例使用 `2.0.0` 正式版；版本可用性以 NuGet 徽章和对应包源为准。
 
 ### ONNX Runtime CPU
 
 ```powershell
-dotnet add package JYPPX.DeploySharp.Core --version 2.0.0-alpha.1
-dotnet add package JYPPX.DeploySharp.Visual --version 2.0.0-alpha.1
-dotnet add package JYPPX.DeploySharp.Visual.OpenCV --version 2.0.0-alpha.1
-dotnet add package JYPPX.DeploySharp.Backend.OnnxRuntime --version 2.0.0-alpha.1
+dotnet add package JYPPX.DeploySharp.Core --version 2.0.0
+dotnet add package JYPPX.DeploySharp.Visual --version 2.0.0
+dotnet add package JYPPX.DeploySharp.Visual.OpenCV --version 2.0.0
+dotnet add package JYPPX.DeploySharp.Backend.OnnxRuntime --version 2.0.0
 dotnet add package Microsoft.ML.OnnxRuntime --version 1.28.0
 ```
 
 ### OpenVINO 或 OpenCV DNN
 
 ```powershell
-dotnet add package JYPPX.DeploySharp.Visual --version 2.0.0-alpha.1
-dotnet add package JYPPX.DeploySharp.Visual.OpenCV --version 2.0.0-alpha.1
-dotnet add package JYPPX.DeploySharp.Backend.OpenVINO --version 2.0.0-alpha.1
-# 或：dotnet add package JYPPX.DeploySharp.Backend.OpenCV --version 2.0.0-alpha.1
+dotnet add package JYPPX.DeploySharp.Visual --version 2.0.0
+dotnet add package JYPPX.DeploySharp.Visual.OpenCV --version 2.0.0
+dotnet add package JYPPX.DeploySharp.Backend.OpenVINO --version 2.0.0
+# 或：dotnet add package JYPPX.DeploySharp.Backend.OpenCV --version 2.0.0
 ```
 
 应用还需要选择与目标 TFM/RID 匹配的 OpenVINO 或 OpenCV runtime。不要混用不同发布版本的 OpenCV 托管包与原生 runtime。
@@ -54,9 +54,9 @@ dotnet add package JYPPX.DeploySharp.Backend.OpenVINO --version 2.0.0-alpha.1
 ### TensorRT CUDA 视觉
 
 ```powershell
-dotnet add package JYPPX.DeploySharp.Visual --version 2.0.0-alpha.1
-dotnet add package JYPPX.DeploySharp.Visual.TensorRT --version 2.0.0-alpha.1
-dotnet add package JYPPX.DeploySharp.Backend.TensorRT --version 2.0.0-alpha.1
+dotnet add package JYPPX.DeploySharp.Visual --version 2.0.0
+dotnet add package JYPPX.DeploySharp.Visual.TensorRT --version 2.0.0
+dotnet add package JYPPX.DeploySharp.Backend.TensorRT --version 2.0.0
 ```
 
 TensorRT 目前只发布 `net8.0` 托管资产。应用需要自行准备 CUDA、cuDNN、TensorRT、bridge、驱动和与设备/输入 profile 匹配的 Engine；DeploySharp 不会自动下载或再分发这些 NVIDIA 文件。
@@ -64,17 +64,17 @@ TensorRT 目前只发布 `net8.0` 托管资产。应用需要自行准备 CUDA�
 ### 模型目录与插件探测
 
 ```powershell
-dotnet add package JYPPX.DeploySharp.Core --version 2.0.0-alpha.1
-dotnet add package JYPPX.DeploySharp.ModelPack.Json --version 2.0.0-alpha.1
-dotnet add package JYPPX.DeploySharp.ModelFactory --version 2.0.0-alpha.1
-dotnet add package JYPPX.DeploySharp.Extensibility --version 2.0.0-alpha.1
+dotnet add package JYPPX.DeploySharp.Core --version 2.0.0
+dotnet add package JYPPX.DeploySharp.ModelPack.Json --version 2.0.0
+dotnet add package JYPPX.DeploySharp.ModelFactory --version 2.0.0
+dotnet add package JYPPX.DeploySharp.Extensibility --version 2.0.0
 ```
 
 `ModelFactory` 只处理应用选择的模型目录、下载和缓存；`Extensibility` 只提供插件/运行时描述和探测合同。下载授权、签名信任、进程隔离和 UI 均属于宿主应用。
 
 ## 源码优先和 NuGet 消费
 
-公开的 `2.0.0-alpha.1` 可以直接使用 `PackageReference`。需要调试当前分支、修改库代码或验证尚未发布的改动时，可以在仓库内改用 `ProjectReference`；不要在同一应用中混用不同版本的 DeploySharp 包与项目引用。无论哪种方式，都应锁定同一版本的第三方运行时，并检查[平台与后端支持](platform-support.md)中的目标框架与真实验证范围。
+使用 `2.0.0` NuGet 包时选择 `PackageReference`。需要调试当前分支、修改库代码或验证后续改动时，可以在仓库内改用 `ProjectReference`；不要在同一应用中混用不同版本的 DeploySharp 包与项目引用。无论哪种方式，都应锁定同一版本的第三方运行时，并检查[平台与后端支持](platform-support.md)中的目标框架与真实验证范围。
 
 ## 选择顺序
 

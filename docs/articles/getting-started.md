@@ -2,7 +2,7 @@
 
 DeploySharp V2 使用显式后端注册。应用按需安装 Core、领域包和后端适配器；模型文件与厂商原生运行时由应用自行管理。
 
-当前 Alpha 提供 ONNX Runtime、OpenVINO、OpenCV DNN 和 TensorRT 适配器。请先查看[平台与后端支持](platform-support.md)及[模型支持指南](model-support.md)，再选择实际后端和模型工件。
+`2.0.0` 提供 ONNX Runtime、OpenVINO、OpenCV DNN 和 TensorRT 适配器。请先查看[平台与后端支持](platform-support.md)及[模型支持指南](model-support.md)，再选择实际后端和模型工件。
 
 ## 最小张量推理
 
@@ -61,8 +61,8 @@ Console.WriteLine(scores.Length);
 ```powershell
 dotnet new console -n DeploySharpQuickStart -f net8.0
 cd DeploySharpQuickStart
-dotnet add package JYPPX.DeploySharp.Core --version 2.0.0-alpha.1
-dotnet add package JYPPX.DeploySharp.Backend.OnnxRuntime --version 2.0.0-alpha.1
+dotnet add package JYPPX.DeploySharp.Core --version 2.0.0
+dotnet add package JYPPX.DeploySharp.Backend.OnnxRuntime --version 2.0.0
 dotnet add package Microsoft.ML.OnnxRuntime --version 1.28.0
 dotnet run
 ```

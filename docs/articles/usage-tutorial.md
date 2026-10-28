@@ -7,12 +7,12 @@
 ```powershell
 dotnet new console -n DeploySharpQuickstart
 cd DeploySharpQuickstart
-dotnet add package JYPPX.DeploySharp.Core --version 2.0.0-alpha.1
-dotnet add package JYPPX.DeploySharp.Backend.OnnxRuntime --version 2.0.0-alpha.1
+dotnet add package JYPPX.DeploySharp.Core --version 2.0.0
+dotnet add package JYPPX.DeploySharp.Backend.OnnxRuntime --version 2.0.0
 dotnet add package Microsoft.ML.OnnxRuntime --version 1.28.0
 ```
 
-如果 Alpha 包尚未出现在配置的 NuGet 源中，请改用本仓库的项目引用。模型文件和原生运行时放在应用自己的目录中。
+请确认配置的 NuGet 源提供 `2.0.0`，并保持所有 DeploySharp 包版本一致；开发源码时也可改用项目引用。模型文件和原生运行时放在应用自己的目录中。
 
 ## 2. 执行一次张量推理
 

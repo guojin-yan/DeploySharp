@@ -2,9 +2,9 @@
 
 ## 安装 DeploySharp
 
-当前公开版本为 `2.0.0-alpha.1`，已发布到 NuGet.org。使用者可以安装同版本 NuGet 包；需要调试当前分支或验证未发布改动时，也可以直接引用仓库项目。包 ID、职责和当前版本见根目录 README。
+本指南面向 `2.0.0`，使用者应安装同版本 NuGet 包；需要调试或修改源码时，也可以直接引用仓库项目。包 ID、职责和实际可用版本见根目录 README 的 NuGet 徽章。
 
-当前源码版本为 `2.0.0` 待发布候选，使用指南以该源码为准，可能包含预览版发包后新增的 API。这些功能在正式包发布前需要项目引用；不要把当前源码的全部能力视为已发布预览包的能力。版本范围见 [2.0.0 说明](../releases/2.0.0.md)。
+从 `2.0.0-alpha.1` 升级时，请同步升级全部 DeploySharp 包并重新编译应用；不要把正式版功能视为预览包已有的能力。完整范围与升级注意事项见 [2.0.0 说明](../releases/2.0.0.md)。
 
 如果不确定需要安装哪些包，请先阅读[NuGet 包组合与安装指南](package-combinations.md)；本文重点说明目标框架和原生运行时的部署边界。
 
@@ -31,7 +31,7 @@ DeploySharp 后端包主要包含托管适配器，不会静默安装厂商原�
 例如，Windows x64 的 ONNX Runtime CPU 项目可以使用：
 
 ```powershell
-dotnet add package JYPPX.DeploySharp.Backend.OnnxRuntime --version 2.0.0-alpha.1
+dotnet add package JYPPX.DeploySharp.Backend.OnnxRuntime --version 2.0.0
 dotnet add package Microsoft.ML.OnnxRuntime --version 1.28.0
 ```
 

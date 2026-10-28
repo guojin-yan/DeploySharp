@@ -3,7 +3,7 @@
 DeploySharp.Backend.OnnxRuntime 只提供托管适配层，不内置 onnxruntime.dll、CUDA、DirectML 或其他 native Provider。应用需要显式安装一个匹配的官方运行时。
 
 ~~~powershell
-dotnet add package JYPPX.DeploySharp.Backend.OnnxRuntime --version 2.0.0-alpha.1
+dotnet add package JYPPX.DeploySharp.Backend.OnnxRuntime --version 2.0.0
 dotnet add package Microsoft.ML.OnnxRuntime --version 1.28.0
 ~~~
 

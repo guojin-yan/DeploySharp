@@ -3,8 +3,8 @@
 DeploySharp 将稳定的文本生成接口、LlamaSharp 适配器和原生运行时分开。应用安装 DeploySharp.LLM、DeploySharp.Backend.LlamaSharp，并根据部署设备选择一个 LlamaSharp 原生包。
 
 ~~~powershell
-dotnet add package JYPPX.DeploySharp.LLM --version 2.0.0-alpha.1
-dotnet add package JYPPX.DeploySharp.Backend.LlamaSharp --version 2.0.0-alpha.1
+dotnet add package JYPPX.DeploySharp.LLM --version 2.0.0
+dotnet add package JYPPX.DeploySharp.Backend.LlamaSharp --version 2.0.0
 dotnet add package LLamaSharp.Backend.Cpu --version 0.27.0
 ~~~
 

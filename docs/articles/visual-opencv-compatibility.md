@@ -7,8 +7,8 @@ DeploySharp.Backend.OpenCV 通过 OpenCV DNN 加载调用方持有的 ONNX 工�
 图像输入适配器需要安装 Visual、OpenCV 适配器和匹配的 native runtime：
 
 ```powershell
-dotnet add package JYPPX.DeploySharp.Visual --version 2.0.0-alpha.1
-dotnet add package JYPPX.DeploySharp.Visual.OpenCV --version 2.0.0-alpha.1
+dotnet add package JYPPX.DeploySharp.Visual --version 2.0.0
+dotnet add package JYPPX.DeploySharp.Visual.OpenCV --version 2.0.0
 dotnet add package JYPPX.OpenCV.CSharp.API --version 5.0.0
 dotnet add package JYPPX.OpenCV.runtime.win-x64 --version 5.0.0
 ```

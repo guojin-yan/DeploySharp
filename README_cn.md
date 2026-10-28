@@ -46,11 +46,11 @@ V2 是全新 API 设计，不提供 V1 的源码、二进制、配置或行为�
 
 `2.0.0` 是 DeploySharp V2 的首个正式版本目标，包含类型化推理、视觉工作流、PaddleOCR/PP-Structure、模型下载和可替换后端。本版本的发布验证范围为 Windows 10/11 x64，各模型与后端继续保留明确的使用边界。完整功能和升级说明见 [2.0.0 版本说明](docs/releases/2.0.0.md)。
 
-正式版准备与验证使用 `DeploySharpV2.0` 分支，目前尚未发布。实际可用版本以 NuGet 徽章和 [GitHub Releases](https://github.com/guojin-yan/DeploySharp/releases) 为准；`2.0.0` 上线前，需要当前 API 的应用请使用项目引用，使用已发布 `2.0.0-alpha.1` 包时请参考其[预览版说明](docs/releases/2.0.0-alpha.1.md)。
+`2.0.0` 从 `DeploySharpV2.0` 分支发布，实际可用包和资产以 NuGet 徽章及 [GitHub Releases](https://github.com/guojin-yan/DeploySharp/releases) 为准。请将所有 DeploySharp 包升级到同一版本，并重新编译使用 `2.0.0-alpha.1` 的应用；版本差异见[升级说明](docs/releases/2.0.0.md#从预览版升级)和[预览版说明](docs/releases/2.0.0-alpha.1.md)。
 
 ## 🚀 30 秒开始
 
-以下命令面向发布后的 `2.0.0` 正式包。Core 与所需后端包应安装相同版本；当前尚未发布，请先通过项目引用使用源码：
+安装同为 `2.0.0` 版本的 Core 与所需后端包；参与源码开发时也可以使用项目引用：
 
 ~~~powershell
 dotnet add package JYPPX.DeploySharp.Core --version 2.0.0
@@ -135,11 +135,11 @@ Console.WriteLine(outputs.Count);
 | [`JYPPX.DeploySharp.Backend.TensorRT`](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.TensorRT/) | [![NuGet version](https://img.shields.io/nuget/vpre/JYPPX.DeploySharp.Backend.TensorRT.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.TensorRT/) | TensorRT 推理和 ONNX 转 Engine 边界 |
 | [`JYPPX.DeploySharp.Backend.LlamaSharp`](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.LlamaSharp/) | [![NuGet version](https://img.shields.io/nuget/vpre/JYPPX.DeploySharp.Backend.LlamaSharp.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.LlamaSharp/) | LLamaSharp GGUF 生成和 Embedding |
 
-| 发布渠道 | 当前状态 | 资产 |
+| 发布渠道 | 用途 | 资产 |
 | --- | --- | --- |
-| [NuGet.org](https://www.nuget.org/packages?q=JYPPX.DeploySharp) | 2.0.0 待发布；预览包可用 | 托管包和符号包 |
-| [GitHub Packages](https://github.com/guojin-yan/DeploySharp/packages) | 2.0.0 待发布 | 正式版包镜像 |
-| [GitHub Releases](https://github.com/guojin-yan/DeploySharp/releases) | 2.0.0 待发布；模型资产已提供 | 正式版包/校验和，以及独立的模型 Release |
+| [NuGet.org](https://www.nuget.org/packages?q=JYPPX.DeploySharp) | 主要包源 | 托管包和符号包 |
+| [GitHub Packages](https://github.com/guojin-yan/DeploySharp/packages) | 正式版包镜像 | 托管包 |
+| [GitHub Releases](https://github.com/guojin-yan/DeploySharp/releases) | 版本化发布资产 | 正式版包/校验和，以及独立的模型 Release |
 
 ### 🖼️ 默认测试图片
 

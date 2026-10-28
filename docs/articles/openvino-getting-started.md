@@ -1,13 +1,13 @@
 # OpenVINO 后端入门
 
-本文介绍在 Windows x64 上使用 OpenVINO 后端执行 DeploySharp 张量和视觉推理。页面适用于 `2.0.0-alpha.1`；OpenVINO 原生运行时由应用自行部署，模型文件也由应用管理。
+本文介绍在 Windows x64 上使用 OpenVINO 后端执行 DeploySharp 张量和视觉推理。页面适用于 `2.0.0`；OpenVINO 原生运行时由应用自行部署，模型文件也由应用管理。
 
 ## 安装
 
 安装 DeploySharp 适配器和与目标应用匹配的 OpenVINO 运行时：
 
 ~~~powershell
-dotnet add package JYPPX.DeploySharp.Backend.OpenVINO --version 2.0.0-alpha.1
+dotnet add package JYPPX.DeploySharp.Backend.OpenVINO --version 2.0.0
 dotnet add package OpenVINO.runtime.win --version 2026.2.1
 ~~~
 
@@ -48,7 +48,7 @@ InferenceOutputs outputs = await session.RunAsync(
 float[] scores = (float[])outputs.GetRequired("scores").Buffer;
 ~~~
 
-`OpenVinoOptions(device: "CPU")` 与 `BackendRequest` 中的设备名称应保持一致。使用 GPU、NPU 或其他插件时，需要同时满足本机插件、模型格式和目标设备的运行时条件；本页的 Windows Alpha 证据以 CPU 为准。
+`OpenVinoOptions(device: "CPU")` 与 `BackendRequest` 中的设备名称应保持一致。使用 GPU、NPU 或其他插件时，需要同时满足本机插件、模型格式和目标设备的运行时条件；本页的 Windows x64 证据以 CPU 为准。
 
 ## OpenVINO IR 与 ModelPack
 

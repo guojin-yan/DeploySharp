@@ -1,6 +1,6 @@
 # TensorRT CUDA 视觉流水线
 
-本文介绍 `JYPPX.DeploySharp.Visual.TensorRT` 的设备侧视觉推理路径，适用于 Windows x64 上由应用自行部署 TensorRT、CUDA、cuDNN 和 OpenCV 的场景。页面适用于 `2.0.0-alpha.1`；标准 `VisualPipeline` 仍是其他后端和不满足设备侧合同时的兼容路径。
+本文介绍 `JYPPX.DeploySharp.Visual.TensorRT` 的设备侧视觉推理路径，适用于 Windows x64 上由应用自行部署 TensorRT、CUDA、cuDNN 和 OpenCV 的场景。页面适用于 `2.0.0`；标准 `VisualPipeline` 仍是其他后端和不满足设备侧合同时的兼容路径。
 
 ## 适用范围
 
@@ -11,8 +11,8 @@
 ## 安装与所有权
 
 ~~~powershell
-dotnet add package JYPPX.DeploySharp.Backend.TensorRT --version 2.0.0-alpha.1
-dotnet add package JYPPX.DeploySharp.Visual.TensorRT --version 2.0.0-alpha.1
+dotnet add package JYPPX.DeploySharp.Backend.TensorRT --version 2.0.0
+dotnet add package JYPPX.DeploySharp.Visual.TensorRT --version 2.0.0
 ~~~
 
 调用方负责 TensorRT/CUDA 原生 DLL、序列化 Engine、模型 Profile、OpenCV 运行时和设备选择。DLL 的 API 主版本、Engine 构建环境和当前进程必须匹配；DeploySharp 不会替应用下载、锁定或替换这些原生依赖。

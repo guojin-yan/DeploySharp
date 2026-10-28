@@ -21,7 +21,7 @@ PP-Structure 模型使用 `paddle-doc/`、`paddle-table/`、`paddle-formula/` �
 ## 安装
 
 ```powershell
-dotnet add package JYPPX.DeploySharp.ModelFactory --version 2.0.0-alpha.1
+dotnet add package JYPPX.DeploySharp.ModelFactory --version 2.0.0
 ```
 
 ## 通过 API 下载

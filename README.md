@@ -46,11 +46,11 @@ The V2 API is a clean redesign and does not provide V1 source, binary, configura
 
 `2.0.0` is the first stable DeploySharp V2 release target, covering typed inference, visual workflows, PaddleOCR/PP-Structure, model downloads, and replaceable backends. Its release validation scope is Windows 10/11 x64; model and backend limits remain explicit. See the [2.0.0 release notes](docs/releases/2.0.0.md) for the complete scope and upgrade guidance.
 
-Release preparation and validation use the `DeploySharpV2.0` branch. Publication is pending; the NuGet badges and [GitHub Releases](https://github.com/guojin-yan/DeploySharp/releases) show what is actually available. Until `2.0.0` is published, use project references for the current APIs, or use the published `2.0.0-alpha.1` packages with their [preview release notes](docs/releases/2.0.0-alpha.1.md).
+The `2.0.0` release comes from the `DeploySharpV2.0` branch. The NuGet badges and [GitHub Releases](https://github.com/guojin-yan/DeploySharp/releases) show available packages and assets. Upgrade all DeploySharp packages together and recompile applications built against `2.0.0-alpha.1`; see the [upgrade guidance](docs/releases/2.0.0.md#从预览版升级) and [preview release notes](docs/releases/2.0.0-alpha.1.md) for version-specific changes.
 
 ## 🚀 Get Started In 30 Seconds
 
-The following commands target the stable `2.0.0` packages once published. Install the Core layer and the backend you need at the same version; use project references while publication is pending.
+Install the Core layer and the backend you need at the same `2.0.0` version. Contributors can use project references to work with the source.
 
 ~~~powershell
 dotnet add package JYPPX.DeploySharp.Core --version 2.0.0
@@ -136,11 +136,11 @@ The version column reads NuGet directly and includes previews. It shows the late
 | [`JYPPX.DeploySharp.Backend.TensorRT`](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.TensorRT/) | [![NuGet version](https://img.shields.io/nuget/vpre/JYPPX.DeploySharp.Backend.TensorRT.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.TensorRT/) | TensorRT inference and ONNX-to-engine boundary |
 | [`JYPPX.DeploySharp.Backend.LlamaSharp`](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.LlamaSharp/) | [![NuGet version](https://img.shields.io/nuget/vpre/JYPPX.DeploySharp.Backend.LlamaSharp.svg?label=version)](https://www.nuget.org/packages/JYPPX.DeploySharp.Backend.LlamaSharp/) | LLamaSharp GGUF generation and embeddings |
 
-| Publication channel | Current status | Assets |
+| Publication channel | Purpose | Assets |
 | --- | --- | --- |
-| [NuGet.org](https://www.nuget.org/packages?q=JYPPX.DeploySharp) | 2.0.0 pending; preview packages available | Managed packages and symbols |
-| [GitHub Packages](https://github.com/guojin-yan/DeploySharp/packages) | 2.0.0 pending | Stable package mirror |
-| [GitHub Releases](https://github.com/guojin-yan/DeploySharp/releases) | 2.0.0 pending; model assets available | Stable release packages/checksums and separate model releases |
+| [NuGet.org](https://www.nuget.org/packages?q=JYPPX.DeploySharp) | Primary package feed | Managed packages and symbols |
+| [GitHub Packages](https://github.com/guojin-yan/DeploySharp/packages) | Stable package mirror | Managed packages |
+| [GitHub Releases](https://github.com/guojin-yan/DeploySharp/releases) | Versioned release assets | Stable release packages/checksums and separate model releases |
 
 ### Default Test Images
 

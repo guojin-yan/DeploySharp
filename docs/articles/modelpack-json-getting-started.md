@@ -5,7 +5,7 @@
 ## 安装
 
 ~~~powershell
-dotnet add package JYPPX.DeploySharp.ModelPack.Json --version 2.0.0-alpha.1
+dotnet add package JYPPX.DeploySharp.ModelPack.Json --version 2.0.0
 ~~~
 
 ## 创建并校验清单
