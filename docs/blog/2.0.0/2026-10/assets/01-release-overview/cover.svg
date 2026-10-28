@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1410" height="600" viewBox="0 0 1410 600" role="img" aria-labelledby="title desc">
+  <title id="title">DeploySharp 2.0.0：在 C# 中部署视觉模型</title>
+  <desc id="desc">深蓝色技术题图。左侧为项目名称与视觉推理、OCR、文档处理三个主题；右侧用输入图像、C# 推理模块和结果卡片说明工作方式。插画为流程示意，不是真实检测输出。</desc>
+  <defs>
+    <pattern id="grid" width="36" height="36" patternUnits="userSpaceOnUse">
+      <path d="M36 0H0V36" fill="none" stroke="#20344f" stroke-width="1"/>
+    </pattern>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%">
+      <feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#050e1a" flood-opacity="0.3"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M1 1L9 5L1 9Z" fill="#5cdbbd"/>
+    </marker>
+  </defs>
+  <rect width="1410" height="600" rx="28" fill="#122238"/>
+  <path d="M750 0H1382Q1410 0 1410 28V572Q1410 600 1382 600H750Z" fill="url(#grid)"/>
+  <g font-family="Segoe UI, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+    <rect x="64" y="58" width="148" height="32" rx="16" fill="#243b55"/>
+    <text x="138" y="80" text-anchor="middle" font-size="16" font-weight="600" fill="#a3c5e4">JYPPX · 开源</text>
+    <text x="60" y="220" font-size="90" font-weight="750" letter-spacing="-3" fill="#f5f8fc">DeploySharp</text>
+    <text x="64" y="306" font-size="68" font-weight="700" fill="#5cdbbd">2.0.0</text>
+    <text x="66" y="380" font-size="33" font-weight="600" fill="#f5f8fc">在 C# 中部署视觉模型</text>
+    <text x="67" y="425" font-size="22" fill="#b8c9dd">从图像输入，到结构化结果</text>
+    <g font-size="18" font-weight="600" text-anchor="middle">
+      <rect x="66" y="482" width="125" height="42" rx="12" fill="#213c50"/>
+      <text x="128" y="510" fill="#91e7d2">视觉推理</text>
+      <rect x="205" y="482" width="90" height="42" rx="12" fill="#243b55"/>
+      <text x="250" y="510" fill="#c0d4ed">OCR</text>
+      <rect x="309" y="482" width="125" height="42" rx="12" fill="#3c3540"/>
+      <text x="371" y="510" fill="#ffbd9c">文档处理</text>
+    </g>
+    <path d="M941 193C1012 193 1000 262 1059 279" fill="none" stroke="#5cdbbd" stroke-width="5" stroke-linecap="round" marker-end="url(#arrow)"/>
+    <path d="M1177 334C1220 350 1191 394 1226 411" fill="none" stroke="#5cdbbd" stroke-width="5" stroke-linecap="round" marker-end="url(#arrow)"/>
+    <g filter="url(#shadow)">
+      <path d="M790 107L956 97L966 257L800 268Z" fill="#476280"/>
+      <rect x="779" y="93" width="166" height="160" rx="20" fill="#edf4fa" stroke="#bfd1e2" stroke-width="2"/>
+      <rect x="794" y="108" width="136" height="102" rx="10" fill="#d3e6ee"/>
+      <circle cx="900" cy="133" r="12" fill="#ffbd9c"/>
+      <path d="M794 196L832 151L868 181L890 160L930 203V210H794Z" fill="#6ba79f"/>
+      <text x="862" y="237" text-anchor="middle" font-size="19" font-weight="600" fill="#27435b">输入图像</text>
+    </g>
+    <g filter="url(#shadow)">
+      <path d="M1024 259L1137 228L1203 266L1090 300Z" fill="#8ce6d2" stroke="#234b55" stroke-width="2"/>
+      <path d="M1024 259L1090 300V367L1024 328Z" fill="#388f88" stroke="#234b55" stroke-width="2"/>
+      <path d="M1090 300L1203 266V333L1090 367Z" fill="#59b9a8" stroke="#234b55" stroke-width="2"/>
+      <rect x="1049" y="244" width="112" height="77" rx="16" fill="#24465b" stroke="#a2ecdb" stroke-width="3"/>
+      <text x="1105" y="298" text-anchor="middle" font-size="44" font-weight="700" fill="#f5f8fc">C#</text>
+      <path d="M1059 235V220M1081 235V214M1103 235V208M1125 235V214M1147 235V220" stroke="#a2ecdb" stroke-width="5" stroke-linecap="round"/>
+      <text x="1111" y="398" text-anchor="middle" font-size="20" font-weight="600" fill="#d5f3ec">推理流程</text>
+    </g>
+    <g filter="url(#shadow)">
+      <path d="M1190 425L1335 415V551L1190 562Z" fill="#46617c"/>
+      <rect x="1178" y="410" width="150" height="138" rx="18" fill="#edf4fa" stroke="#bfd1e2" stroke-width="2"/>
+      <rect x="1195" y="426" width="116" height="74" rx="8" fill="#d3e6ee"/>
+      <path d="M1195 490L1226 453L1250 475L1270 454L1311 489V500H1195Z" fill="#6ba79f"/>
+      <rect x="1212" y="447" width="53" height="47" rx="4" fill="none" stroke="#d87555" stroke-width="3"/>
+      <path d="M1277 438H1299M1277 447H1293" stroke="#526e88" stroke-width="3" stroke-linecap="round"/>
+      <text x="1253" y="532" text-anchor="middle" font-size="18" font-weight="600" fill="#27435b">结构化结果</text>
+    </g>
+    <circle cx="1285" cy="119" r="8" fill="#ffbd9c"/>
+    <path d="M1275 190H1291M1283 182V198" stroke="#778ca7" stroke-width="3" stroke-linecap="round"/>
+    <text x="800" y="506" font-size="47" font-weight="600" fill="#334c67">{ }</text>
+  </g>
+</svg>
