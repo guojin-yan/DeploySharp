@@ -58,7 +58,11 @@ https://www.nuget.org/packages?q=JYPPX.DeploySharp
 
 ![OCR 流水线：原图经 DET 定位，透视裁剪后交给可选 CLS 和 REC，最终合并文字、分数与原图区域](assets/03-paddleocr-pipeline/pipeline-workflow.png)
 
-本文默认使用 **PP-OCRv5 Mobile DET + Mobile CLS + Mobile REC**，识别一张商品说明图片，并生成三个文件：`result.txt`、`result.json`、`result.jpg`。随后用同一份代码切换到 v4 Mobile 和 v6 Tiny，讲清模型、字典和方向分类怎样配对。
+本文默认使用 **PP-OCRv5 Mobile DET + Mobile CLS + Mobile REC**，识别一张包含**大标题、多栏小字、照片、图注和引语**的中文报纸页面，并生成三个文件：`result.txt`、`result.json`、`result.jpg`。随后用同一份代码切换到 v4 Mobile 和 v6 Tiny，讲清模型、字典和方向分类怎样配对。
+
+下面是实际使用的输入，来自 PaddleOCR 官方 PP-Structure 示例，原图为 `1524 × 1368`。本篇借用它验证通用 OCR；尚未运行版面分析，也不把 OCR 文本行拼接当作完整文章阅读顺序。
+
+![实际输入：PaddleOCR 官方中文多栏报纸页面，包含标题、署名、密集正文、照片及图注](assets/03-paddleocr-pipeline/complex-page-input.png)
 
 ## 三、v4、v5、v6 应该怎样选择
 
@@ -107,7 +111,7 @@ DeploySharp 已为以下七组核心组合提供目录与流水线配置。代�
 | DeploySharp | 正式版 `2.0.0` |
 | 推理引擎 | ONNX Runtime CPU `1.28.0` |
 | 图像组件 | JYPPX OpenCV 托管包与 Windows x64 runtime `5.0.0` |
-| 输入 | `ocr-demo_1.jpg`，原图 `500 × 500` |
+| 输入 | `pp_structure_v3_demo.png`，原图 `1524 × 1368`，官方多栏报纸页面 |
 
 准备 .NET 10 SDK，然后在 PowerShell 中创建项目：
 
@@ -218,8 +222,8 @@ foreach ($file in @("$prefix-det.onnx", $cls, "$prefix-rec.onnx", $dictionary)) 
   Invoke-WebRequest -Uri "$modelBase/$file" -OutFile (Join-Path '.\models' $file)
 }
 Invoke-WebRequest `
-  -Uri 'https://github.com/guojin-yan/DeploySharp/releases/download/test-assets.1/ocr-demo_1.jpg' `
-  -OutFile '.\images\ocr-demo_1.jpg'
+  -Uri 'https://paddle-model-ecology.bj.bcebos.com/paddlex/imgs/demo_image/pp_structure_v3_demo.png' `
+  -OutFile '.\images\pp_structure_v3_demo.png'
 ```
 
 如果命令行下载不方便，也可以在 Release 页面选择对应文件下载。已有本地模型和图片，直接按名称放入目录即可。本文选用的默认文件是：
@@ -230,14 +234,14 @@ Invoke-WebRequest `
 | `ppocrv5-mobile-cls.onnx` | 文本行 0°/180° 方向分类 |
 | `ppocrv5-mobile-rec.onnx` | 文本行识别 |
 | `ppocrv5_dict.txt` | v5 REC 字符索引表 |
-| `ocr-demo_1.jpg` | 本篇输入图片 |
+| `pp_structure_v3_demo.png` | 官方中文多栏报纸输入图片 |
 
 ```text
 PaddleOCR 单文件模型：
 https://github.com/guojin-yan/DeploySharp/releases/tag/models-paddleocr
 
 默认测试图片：
-https://github.com/guojin-yan/DeploySharp/releases/download/test-assets.1/ocr-demo_1.jpg
+https://paddle-model-ecology.bj.bcebos.com/paddlex/imgs/demo_image/pp_structure_v3_demo.png
 ```
 
 模型 Release 中还包含 PP-Structure 和 PaddleOCR-VL 等其他任务的资产，不能因为文件出现在同一个 Release 中，就把它当作本篇的 DET/CLS/REC。这里使用的是目录明确登记的核心 PP-OCR 工件。
@@ -256,14 +260,14 @@ DeploySharpOcrDemo/
     ppocrv5-mobile-rec.onnx
     ppocrv5_dict.txt
   images/
-    ocr-demo_1.jpg
+    pp_structure_v3_demo.png
 ```
 
 ## 六、编写完整 OCR 程序
 
 下面代码可以直接替换 `Program.cs`。它根据组合选择模型，加载本地文件和配套字典，创建三阶段流水线，最后保存文字、结构化结果和原图文字框。
 
-为方便切换，三个可选命令行参数依次为：**图片路径、模型组合、模型目录**。这里的 `batch=8`、`channels=1` 是本篇的演示配置，后面会说明怎样调整。
+为方便切换，三个可选命令行参数依次为：**图片路径、模型组合、模型目录**。这里先使用 `batch=1`、`channels=1` 建立逐行识别基线，后面再说明怎样评估 Batch 和通道；密集页面的检测后处理与流水线区域上限都显式设为 512。
 
 ```csharp
 using System.Diagnostics;
@@ -283,10 +287,10 @@ using ImageCodecs = JYPPX.OpenCvSharp.ImgCodecs.Cv2;
 using Drawing = JYPPX.OpenCvSharp.ImgProc.Cv2;
 
 Console.OutputEncoding = Encoding.UTF8;
-string imagePath = Path.GetFullPath(args.Length > 0 ? args[0] : "images/ocr-demo_1.jpg");
+string imagePath = Path.GetFullPath(args.Length > 0 ? args[0] : "images/pp_structure_v3_demo.png");
 string variant = args.Length > 1 ? args[1].ToLowerInvariant() : "v5-mobile";
 string modelRoot = Path.GetFullPath(args.Length > 2 ? args[2] : "models");
-const int batch = 8;
+const int batch = 1;
 const int channels = 1;
 
 var ids = variant switch
@@ -325,8 +329,9 @@ using var pipeline = new OcrPipeline(
     Select(det, detRow), request,
     Select(cls, clsRow), request, cls.CropProfile!,
     Select(rec, recRow), request, rec.CropProfile!,
-    new OcrPipelineOptions(maximumConcurrency: 1, maximumRegions: 128,
-        maximumRecognitionBatch: batch, maximumRecognitionPaddingRatio: 1.5),
+    new OcrPipelineOptions(maximumConcurrency: 1, maximumRegions: 512,
+        maximumRecognitionBatch: batch, maximumRecognitionPaddingRatio: 1.0,
+        autoRotateVerticalText: true),
     detectionSessionOptions: new SessionOptions(1),
     orientationSessionOptions: new SessionOptions(channels),
     recognitionSessionOptions: new SessionOptions(channels),
@@ -340,7 +345,7 @@ var sourceSize = new VisualSize(canvas.Cols, canvas.Rows);
 var prepare = Stopwatch.StartNew();
 using OpenCvOcrImageInput input = new OpenCvOcrImageInputFactory().CreateFromFile(
     imagePath, det.VisualProfile.Input.Name,
-    OpenCvStage19Preprocessing.CreatePaddleOcrOfficialInferenceDetectionOptions(sourceSize));
+    OpenCvStage19Preprocessing.CreatePaddleOcrOfficialInferenceDetectionOptions(sourceSize, resizeLong: 1600));
 prepare.Stop();
 using var cancellation = new CancellationTokenSource();
 Console.CancelKeyPress += (_, e) => { e.Cancel = true; cancellation.Cancel(); };
@@ -414,6 +419,9 @@ PaddleOcrProfile CreateProfile(PaddleOcrModelDescriptor row, int maximumBatch, O
     // 本地加载：使用目录中的模型规格，不要求填写模型来源元数据。
     var contract = new PaddleOcrArtifactContract(row.ReleaseArtifact!.Opset,
         "", "", "", "Apache-2.0", "local-input-v1", "local-output-v1");
+    if (row.Family == "det")
+        return PaddleOcrProfiles.CreateDetection(row.ModelId, contract, row.InputName, row.OutputName,
+            postprocess: new PaddleDbPostprocessOptions(maximumRegions: 512), maximumBatch: maximumBatch);
     return PaddleOcrModelCatalog.CreateProfile(row, contract, dictionary, maximumBatch);
 }
 
@@ -430,11 +438,13 @@ VisualProfileSelection Select(PaddleOcrProfile profile, PaddleOcrModelDescriptor
 
 `ReleaseArtifact` 在这里仅提供已知文件名和模型规格，**不会自动联网下载**。`Require` 检查本地文件存在，`CreateArtifact` 把实际路径交给后端。`PaddleOcrArtifactContract` 中的可选来源字段留空，前后处理版本用本地标识，用户可以直接准备文件并运行。
 
-`CreateProfile` 为 DET 声明单图输入，为 CLS 和 REC 声明最多 8 行的 Batch。这里选择的是实际支持相应输入的发布工件；只在代码中把 Batch 改大，不能让固定 Batch 模型自动变成动态模型。
+`CreateProfile` 为 DET 声明单图输入；CLS 和 REC 的 Batch 上限由顶部的 `batch` 控制，本文默认逐行运行。这里选择的是实际支持相应输入的发布工件；只在代码中把 Batch 改大，不能让固定 Batch 模型自动变成动态模型。
+
+**密集页面要同时检查两个区域上限。** DB 后处理的 `PaddleDbPostprocessOptions.maximumRegions` 默认是 128，即使只把 `OcrPipelineOptions.maximumRegions` 调到 512，前面仍可能只返回 128 个区域。因此示例为 DET 显式创建后处理配置，将两处上限一起设为 512。本图修改前返回 128 个，修改后返回 144 个；不能把“刚好到达默认上限”直接理解为整页已经处理完整。
 
 ### 7.2 检测前处理与文本行裁剪
 
-检测输入使用 `CreatePaddleOcrOfficialInferenceDetectionOptions`。本文 `500 × 500` 图片按该方法的尺寸对齐规则准备为 `512 × 512`；使用 BGR 与配套均值、标准差归一化，**不是沿用 YOLO 的 640×640 Letterbox 配置**。
+检测输入使用 `CreatePaddleOcrOfficialInferenceDetectionOptions`。为保留这张页面中的小字，本文显式传入 `resizeLong: 1600`；`1524 × 1368` 原图按该方法的尺寸对齐规则准备为 `1536 × 1408`。使用 BGR 与配套均值、标准差归一化，**不是沿用 YOLO 的 640×640 Letterbox 配置**。更大的检测输入会增加计算与内存开销，换图时应按文字大小与设备能力调整。
 
 DET 的 DB 后处理将概率图转换为文字区域，默认采用概率阈值 `0.3`、框阈值 `0.6` 和扩张比例 `1.5`。随后，`OcrPipeline` 从 OCR 输入保留的同一张原图中透视裁剪文本行，再按 CLS 和 REC 各自的配置准备输入。
 
@@ -456,7 +466,9 @@ REC 的类别数量与字典对应不上时，应先检查模型、字典和空�
 
 ### 7.4 方向、坐标、异步和资源释放
 
-本例为每个文本行启用 CLS。`UseZeroDegrees` 表示方向分类被拒识时，明确按 0° 继续识别；默认方向拒识阈值为 `0.9`。这是一种应用选择，并不证明低置信度文本行一定正向。需要严格暴露方向问题时，可以使用 `Fail` 策略。
+本例为普通文本行启用 CLS，并显式开启 `autoRotateVerticalText`：对于高宽比至少为 1.5 的细长文字框，流水线先按几何规则逆时针旋转 90°，其余区域执行文本行 0°/180° 分类。它适合侧着印刷的长条文字，不等同于完整的中文竖排阅读分析。
+
+`UseZeroDegrees` 表示 CLS 被拒识时，明确按 0° 继续识别；默认方向拒识阈值为 `0.9`。这是一种应用选择，并不证明低置信度文本行一定正向。需要严格暴露方向问题时，可以使用 `Fail` 策略。
 
 `item.Region.Polygon` 返回原图像素坐标，绘制时直接使用。`Region.Orientation` 表示文本行的离散方向处理，不是文字框倾斜角，也不代表本篇具备整页四方向自动矫正。
 
@@ -474,28 +486,168 @@ REC 的类别数量与字典对应不上时，应先检查模型、字典和空�
 dotnet run -c Release
 ```
 
-本文环境下返回 **16 个文字区域**。下面摘录实际控制台输出，保留了一个低置信度结果，方便对照原图检查：
+这次输入是前面的中文报纸页面，程序返回 **144 个文字区域**。下面完整列出当次控制台输出，没有省略中间区域；文字、分数、编号均来自实际运行，没有手工修正成“标准答案”。
 
 ```text
-backend=onnxruntime;device=cpu;variant=v5-mobile;batch=8;channels=1
-regions=16
-prepare_ms=57.5;run_ms=1229.3
-[01] score=0.996;angle=0;纯臻营养护发素
-[02] score=0.993;angle=0;产品信息/参数
-[03] score=0.916;angle=0;(45元/每公，100公起订）
-[04] score=0.821;angle=0;每瓶22元,1000瓶起订）
-[05] score=0.945;angle=0;【品牌】：代加式/OEMODM
-[06] score=0.970;angle=0;【品名】：纯臻营养护发素
-[07] score=0.331;angle=0;10
+backend=onnxruntime;device=cpu;variant=v5-mobile;batch=1;channels=1
+regions=144
+prepare_ms=107.2;run_ms=5879.9
+[01] score=0.997;angle=0;助力双方交往
+[02] score=0.999;angle=0;搭建友谊桥梁
+[03] score=0.955;angle=0;本报记者沈小晓任彦黄培昭
+[04] score=0.999;angle=0;身着中国传统民族服装的厄立特里亚青
+[05] score=0.998;angle=0;厄立特里亚高等教育与研究院合作建立，开
+[06] score=0.996;angle=0;年依次登台表演中国民族舞、现代舞、扇子舞
+[07] score=0.997;angle=0;设了中国语言课程和中国文化课程，注册学
+[08] score=0.997;angle=0;等，曼妙的舞姿赢得现场观众阵阵掌声。这
+[09] score=0.998;angle=0;生2万余人次。10余年来，厄特孔院已成为
+[10] score=0.999;angle=0;是日前厄立特里亚高等教育与研究院孔子学
+[11] score=0.998;angle=0;当地民众了解中国的一扇窗口。
+[12] score=0.943;angle=0;院（以下简称“厄特孔院”)举办“喜迎新年”中国
+[13] score=0.997;angle=0;黄鸣飞表示，随着来学习中文的人日益
+[14] score=1.000;angle=0;歌舞比赛的场景。
+[15] score=0.996;angle=0;增多，阿斯马拉大学教学点已难以满足教学
+[16] score=0.999;angle=0;中国和厄立特里亚传统友谊深厚。近年
+[17] score=0.999;angle=0;需要。2024年4月，由中企蜀道集团所属四
+[18] score=0.978;angle=0;来，在高质量共建“一带一路”框架下，中厄两
+[19] score=0.999;angle=0;川路桥承建的孔院教学楼项目在阿斯马拉开
+[20] score=0.979;angle=0;工建设，预计今年上半年竣工，建成后将为厄
+[21] score=0.998;angle=0;国人文交流不断深化，互利合作的民意基础
+[22] score=1.000;angle=0;特孔院提供全新的办学场地。
+[23] score=1.000;angle=0;日益深厚。
+[24] score=0.234;angle=0;90-
+[25] score=0.994;angle=0;“学好中文，我们的
+[26] score=0.998;angle=0;“在中国学习的经历
+[27] score=0.958;angle=0;未来不是梦”
+[28] score=0.979;angle=0;让我看到更广阔的世界”
+[29] score=0.998;angle=0;多年来，厄立特里亚广大赴华留学生和
+[30] score=0.992;angle=0;“鲜花曾告诉我你怎样走过，大地知道你
+[31] score=0.953;angle=0;心中的每一个角落……”厄立特里亚阿斯马拉
+[32] score=0.999;angle=0;培训人员积极投身国家建设，成为助力该国
+[33] score=0.998;angle=0;大学综合楼二层，一阵优美的歌声在走廊里回
+[34] score=1.000;angle=0;发展的人才和厄中友好的见证者和推动者。
+[35] score=0.999;angle=0;响。循着熟悉的旋律轻轻推开一间教室的门，
+[36] score=0.996;angle=0;在厄立特里亚全国妇女联盟工作的约翰
+[37] score=0.982;angle=0;娜·特韦尔德·凯莱塔就是其中一位。她曾在
+[38] score=0.996;angle=0;学生们正跟着老师学唱中文歌曲《同一首歌》。
+[39] score=0.999;angle=0;这是厄特孔院阿斯马拉大学教学点的一
+[40] score=0.995;angle=0;中华女子学院攻读硕士学位，研究方向是女
+[41] score=0.996;angle=0;性领导力与社会发展。其间，她实地走访中国
+[42] score=1.000;angle=0;节中文歌曲课。为了让学生们更好地理解歌
+[43] score=0.996;angle=0;多个地区，获得了观察中国社会发展的第一
+[44] score=0.981;angle=0;词大意，老师尤斯拉·穆罕默德萨尔·侯赛因逐
+[45] score=0.995;angle=0;在厄立特里亚不久前举办的第六届中国风筝文化节上，当地小学生体验风筝制作。
+[46] score=1.000;angle=0;手资料。
+[47] score=0.997;angle=0;字翻译和解释歌词。随着伴奏声响起，学生们
+[48] score=0.999;angle=0;中国驻厄立特里亚大使馆供图
+[49] score=0.992;angle=0;边唱边随着节拍摇动身体，现场气氛热烈。
+[50] score=0.998;angle=0;谈起在中国求学的经历，约翰娜记忆犹
+[51] score=0.975;angle=0;“不管远近都是客人，请不用客气；相约
+[52] score=0.991;angle=0;“这是中文歌曲初级班，共有32人。学
+[53] score=0.993;angle=0;新：“中国的发展在当今世界是独一无二的。
+[54] score=0.998;angle=0;瓦的北红海省博物馆。
+[55] score=0.996;angle=0;生大部分来自首都阿斯马拉的中小学，年龄
+[56] score=0.997;angle=0;沿着中国特色社会主义道路坚定前行，中国
+[57] score=0.955;angle=0;好了在一起，我们欢迎你……”在一场中厄青
+[58] score=0.996;angle=0;博物馆二层陈列着一个发掘自阿杜利
+[59] score=0.993;angle=0;最小的仅有6岁。”尤斯拉告诉记者。
+[60] score=0.996;angle=0;创造了发展奇迹，这一切都离不开中国共产党
+[61] score=0.999;angle=0;年联谊活动上，四川路桥中方员工同当地大
+[62] score=0.997;angle=0;斯古城的中国古代陶制酒器，罐身上写着
+[63] score=0.983;angle=0;“万”“和”“禅”“山”等汉字。“这件文物证
+[64] score=1.000;angle=0;的领导。中国的发展经验值得许多国家学习
+[65] score=0.996;angle=0;尤斯拉今年23岁，是厄立特里亚一所公立
+[66] score=1.000;angle=0;学生合唱《北京欢迎你》。厄立特里亚技术学
+[67] score=0.955;angle=0;借鉴。”
+[68] score=0.999;angle=0;学校的艺术老师。她12岁开始在厄特孔院学
+[69] score=0.993;angle=0;明，很早以前我们就通过海上丝绸之路进行
+[70] score=0.992;angle=0;院计算机科学与工程专业学生鲁夫塔·谢拉
+[71] score=0.981;angle=0;习中文，在2017年第十届“汉语桥”世界中学生
+[72] score=0.988;angle=0;正在西南大学学习的厄立特里亚博士生
+[73] score=0.997;angle=0;是其中一名演唱者，她很早便在孔院学习中
+[74] score=0.999;angle=0;贸易往来与文化交流。这也是厄立特里亚
+[75] score=0.995;angle=0;中文比赛中获得厄立特里亚赛区第一名，并和
+[76] score=0.990;angle=0;穆卢盖塔·泽穆伊对中国怀有深厚感情。8
+[77] score=0.996;angle=0;文，一直在为去中国留学作准备。“这句歌词
+[78] score=0.992;angle=0;与中国友好交往历史的有力证明。”北红海
+[79] score=0.990;angle=0;省博物馆研究与文献部负责人伊萨亚斯·特
+[80] score=0.998;angle=0;同伴代表厄立特里亚前往中国参加决赛，获得
+[81] score=0.994;angle=0;年前，在北京师范大学获得硕士学位后，穆卢
+[82] score=0.998;angle=0;是我们两国人民友谊的生动写照。无论是投
+[83] score=0.999;angle=0;斯法兹吉说。
+[84] score=0.997;angle=0;团体优胜奖。2022年起，尤斯拉开始在厄特孔
+[85] score=0.994;angle=0;盖塔在社交媒体上写下这样一段话：“这是我
+[86] score=0.998;angle=0;身于厄立特里亚基础设施建设的中企员工，
+[87] score=0.993;angle=0;院兼职教授中文歌曲，每周末两个课时。“中国
+[88] score=0.998;angle=0;人生的重要一步，自此我拥有了一双坚固的
+[89] score=0.998;angle=0;还是在中国留学的厄立特里亚学子，两国人
+[90] score=0.999;angle=0;厄立特里亚国家博物馆考古学和人类学
+[91] score=0.998;angle=0;文化博大精深，我希望我的学生们能够通过中
+[92] score=0.949;angle=0;鞋子，赋予我穿越荆棘的力量。“
+[93] score=0.997;angle=0;民携手努力，必将推动两国关系不断向前发
+[94] score=0.970;angle=0;研究员菲尔蒙·特韦尔德十分喜爱中国文
+[95] score=0.998;angle=0;穆卢盖塔密切关注中国在经济、科技、教
+[96] score=0.991;angle=0;展。”鲁夫塔说。
+[97] score=0.983;angle=0;化。他表示：“学习彼此的语言和文化，将帮
+[98] score=0.983;angle=0;文歌曲更好地理解中国文化。”她说。
+[99] score=0.983;angle=0;“姐姐，你想去中国吗?”“非常想！我想
+[100] score=0.997;angle=0;育等领域的发展，“中国在科研等方面的实力
+[101] score=0.999;angle=0;厄立特里亚高等教育委员会主任助理萨
+[102] score=0.998;angle=0;助厄中两国人民更好地理解彼此，助力双方
+[103] score=0.974;angle=0;交往，搭建友谊桥梁。”
+[104] score=0.989;angle=0;去看故宫、爬长城。”尤斯拉的学生中有一对
+[105] score=0.999;angle=0;与日俱增。在中国学习的经历让我看到更广
+[106] score=0.992;angle=0;马瑞表示：“每年我们都会组织学生到中国访
+[107] score=0.993;angle=0;能歌善舞的姐妹，姐姐露娅今年15岁，妹妹
+[108] score=0.957;angle=0;阔的世界，从中受益匪浅。“
+[109] score=0.993;angle=0;问学习，目前有超过5000名厄立特里亚学生
+[110] score=0.984;angle=0;厄立特里亚国家博物馆馆长塔吉丁·努
+[111] score=0.974;angle=0;里达姆·优素福曾多次访问中国，对中华文明
+[112] score=0.997;angle=0;莉娅14岁，两人都已在厄特孔院学习多年，
+[113] score=0.992;angle=0;23岁的莉迪亚·埃斯蒂法诺斯已在厄特
+[114] score=0.999;angle=0;在中国留学。学习中国的教育经验，有助于
+[115] score=0.999;angle=0;中文说得格外流利。
+[116] score=0.997;angle=0;孔院学习3年，在中国书法、中国画等方面表
+[117] score=0.999;angle=0;的传承与创新、现代化博物馆的建设与发展
+[118] score=0.967;angle=0;提升厄立特里亚的教育水平。”
+[119] score=0.999;angle=0;现十分优秀，在2024年厄立特里亚赛区的
+[120] score=0.997;angle=0;印象深刻。“中国博物馆不仅有许多保存完好
+[121] score=0.991;angle=0;露娅对记者说：“这些年来，怀着对中文
+[122] score=0.997;angle=0;“共同向世界展示非
+[123] score=0.998;angle=0;和中国文化的热爱，我们姐妹俩始终相互鼓
+[124] score=0.993;angle=0;“汉语桥”比赛中获得一等奖。莉迪亚说：“学
+[125] score=0.997;angle=0;的文物，还充分运用先进科技手段进行展示，
+[126] score=0.995;angle=0;励，一起学习。我们的中文一天比一天好，还
+[127] score=0.999;angle=0;习中国书法让我的内心变得安宁和纯粹。我
+[128] score=0.986;angle=0;帮助人们更好理解中华文明。”塔吉丁说，“厄
+[129] score=0.973;angle=0;洲和亚洲的灿烂文明”
+[130] score=0.999;angle=0;学会了中文歌和中国舞。我们一定要到中国
+[131] score=0.997;angle=0;也喜欢中国的服饰，希望未来能去中国学习，
+[132] score=0.994;angle=0;立特里亚与中国都拥有悠久的文明，始终相
+[133] score=0.981;angle=0;去。学好中文，我们的未来不是梦！”
+[134] score=0.999;angle=0;把中国不同民族元素融入服装设计中，创作
+[135] score=0.990;angle=0;从阿斯马拉出发，沿着蜿蜒曲折的盘山
+[136] score=0.999;angle=0;互理解、相互尊重。我希望未来与中国同行
+[137] score=0.998;angle=0;据厄特孔院中方院长黄鸣飞介绍，这所
+[138] score=0.998;angle=0;出更多精美作品，也把厄特文化分享给更多
+[139] score=0.999;angle=0;公路一路向东寻找丝路印迹。驱车两个小
+[140] score=0.997;angle=0;加强合作，共同向世界展示非洲和亚洲的灿
+[141] score=0.998;angle=0;时，记者来到位于厄立特里亚港口城市马萨
+[142] score=0.941;angle=0;烂文明。”
+[143] score=0.998;angle=0;孔院成立于2013年3月，由贵州财经大学和
+[144] score=0.976;angle=0;的中国朋友。”
+saved=result.txt,result.json,result.jpg
 ```
 
-这是**未预热的单次功能运行**，计时范围见下一章，不能据此比较模型性能。截图、文字结果也不能替代有标注数据集上的准确率评测。
+这是**未预热的单次功能运行**，计时范围见下一章，不能据此比较模型性能。这里的 144 是模型返回的区域数，不代表人工真值中的总行数，也不代表每条文字都正确。
 
-下图就是这次程序生成的 `result.jpg`。绿色线标出文字区域，红色编号对应控制台和 JSON 中的 `index`：
+下图是同次运行生成的 `result.jpg`。绿色线标出区域，红色编号与上面的完整输出、JSON 中的 `index` 对应，结果保留原图 `1524 × 1368` 尺寸：
 
-![PP-OCRv5 Mobile 真实 OCR 输出：商品图片上的 16 个文字区域和结果编号，瓶身小字区域也保留](assets/03-paddleocr-pipeline/v5-mobile-result.jpg)
+![PP-OCRv5 Mobile 真实输出：中文多栏报纸页面上的 144 个文字候选区域，包含标题、正文、图注和照片内低分候选](assets/03-paddleocr-pipeline/v5-mobile-result.jpg)
 
-这张图中的瓶身小字是第 07 区域，识别分数较低；价格行也有漏字。可以看到，检测到一个区域和正确读出其中全部文字是两件事。业务使用时应结合原图、文本和置信度检查，不能把本次输出当作已经校对的真值。
+可以看到，大标题、密集正文和长图注都进入了识别结果。第 24 区域位于照片内，输出 `90-`，识别分数仅为 `0.234`，应当作为低置信度候选检查，不能当作已确认文字。引号、标点和个别字也仍需校验；本篇保留这些实际结果，便于大家复现和判断。
+
+**这是一页多栏排版，编号不是文章的语义阅读顺序。** 当前通用 OCR 主要按几何位置排序，因此相近高度的左右栏文字会穿插。需要“先读完左栏，再读下一栏”、区分标题/正文/图注或还原整页文档时，应进一步使用版面分析与区域 OCR；这部分会在 PP-Structure 专题展开。
 
 ### 8.2 三种输出文件怎样使用
 
@@ -516,19 +668,19 @@ JSON 的每个区域同时保留 `confidence` 和 `detectionScore`：前者是�
 先把第五节下载命令中的 `$variant` 改为所需组合，下载对应文件，再通过第二个程序参数选择相同组合：
 
 ```powershell
-dotnet run -c Release -- .\images\ocr-demo_1.jpg v4-mobile .\models
-dotnet run -c Release -- .\images\ocr-demo_1.jpg v6-tiny .\models
+dotnet run -c Release -- .\images\pp_structure_v3_demo.png v4-mobile .\models
+dotnet run -c Release -- .\images\pp_structure_v3_demo.png v6-tiny .\models
 ```
 
 同一份正文代码在三种组合上的功能验证结果如下，均使用 ORT CPU，执行了 DET、裁剪、CLS、REC 和结果合并：
 
 | 本篇新实跑组合 | 返回区域数 | 第一行识别文字 | 运行结果 |
 | --- | ---: | --- | --- |
-| v4 Mobile + legacy CLS | 16 | 纯臻营养护发素 | 完整运行并保存三个结果文件 |
-| v5 Mobile + Mobile CLS | 16 | 纯臻营养护发素 | 完整运行并保存三个结果文件 |
-| v6 Tiny + v5 Mobile CLS | 16 | 纯臻营养护发素 | 完整运行并保存三个结果文件 |
+| v4 Mobile + legacy CLS | 143 | 助力双方交往 | 完整运行并保存三个结果文件 |
+| v5 Mobile + Mobile CLS | 144 | 助力双方交往 | 完整运行并保存三个结果文件 |
+| v6 Tiny + v5 Mobile CLS | 145 | 助力双方交往 | 完整运行并保存三个结果文件 |
 
-返回区域数相同不代表全部文字和分数相同。本表说明版本切换与完整流程已经跑通，不作 CER/WER 或速度排名。
+不同 DET 返回的候选区域、文字和分数均可能不同，区域数更多也不代表准确率更高。本表说明在同一张复杂页面上的版本切换与完整流程已经跑通，不作 CER/WER 或速度排名。
 
 换自己的图片和模型目录时，传入实际路径：
 
@@ -552,15 +704,17 @@ dotnet run -c Release -- .\images\my-document.jpg v5-mobile .\my-models
 
 | 配置 | 本文值 | 控制什么 |
 | --- | ---: | --- |
-| `maximumRecognitionBatch` | 8 | 一个识别批次最多包含多少条文本行 |
-| CLS/REC Profile 的 `maximumBatch` | 8 | 声明对应模型允许的最大 Batch，要与实际导出能力匹配 |
+| `maximumRecognitionBatch` | 1 | 一个识别批次最多包含多少条文本行 |
+| CLS/REC Profile 的 `maximumBatch` | 1 | 声明对应模型允许的最大 Batch，要与实际导出能力匹配 |
 | `orientationSessionOptions` / `recognitionSessionOptions` | 各 1 | 各阶段独立 Session 的数量 |
 | `maximumConcurrency` | 1 | 同时进入这条流水线的完整 OCR 调用上限 |
-| `maximumRecognitionPaddingRatio` | 1.5 | 宽度组批时允许的补边计算比例 |
+| `maximumRecognitionPaddingRatio` | 1.0 | 宽度组批时允许的补边计算比例 |
 
 想评估两个独立 CLS/REC 通道，可以将代码顶部的 `channels` 改为 `2`。这会创建独立推理会话，增加内存或显存开销；CPU 后端本身也可能使用多线程，因此增加通道不一定更快。
 
-同样，`batch=8` 表示上限，**不保证每一批恰好有 8 行**。程序会考虑文本行宽度和补边比例；较短的文字与超长行放在同一批，可能浪费大量补边计算。默认比例为 `1.0`，本文显式使用 `1.5`，是用于演示的取舍，不宣称是设备最优值。
+评估批处理时，可以将顶部 `batch` 从 `1` 改为 `8`，相应 Profile 与流水线会使用同一个上限；它**不保证每一批恰好有 8 行**。程序会考虑文本行宽度和补边比例，较短的文字与超长行放在同一批，可能浪费补边计算。本文保留默认补边比例 `1.0`；放宽到 `1.5` 会改变分组与实际输入，应同时对照每行文字，不能只比较耗时。
+
+Batch 也可能影响识别结果。在一张商品图的对照测试中，v5 Mobile 使用 `batch=8 / paddingRatio=1.5` 时，价格行出现漏字；改为逐行识别后，该行恢复。因此本篇先采用逐行基线，再讨论吞吐调优，不把一个批处理配置当作通用最优组合。换用其他模型、补边方式或后端，都要重新验证，并核对补边归一化与模型的预期是否一致。
 
 ### 9.2 本文记录的时间包含什么
 

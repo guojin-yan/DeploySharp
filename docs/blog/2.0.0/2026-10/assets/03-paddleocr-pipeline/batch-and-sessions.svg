@@ -33,7 +33,7 @@
     </g>
     <g font-size="30" font-weight="700" fill="#23465d"><text x="91" y="726">Batch 上限</text><text x="541" y="726">阶段 Session 数</text><text x="991" y="726">完整调用并发</text></g>
     <g font-size="25" fill="#587486">
-      <text x="91" y="779">一次最多处理多少行</text><text x="91" y="821">受模型 Batch 能力限制</text><text x="91" y="863">正文：最多 8 行</text>
+      <text x="91" y="779">一次最多处理多少行</text><text x="91" y="821">受模型 Batch 能力限制</text><text x="91" y="863">正文：先用 1 行建基线</text>
       <text x="541" y="779">可用的独立推理通道</text><text x="541" y="821">更多通道占用更多资源</text><text x="541" y="863">正文：CLS / REC 各 1</text>
       <text x="991" y="779">同时进入的图片请求数</text><text x="991" y="821">不等同于 REC 通道数</text><text x="991" y="863">正文：1 个完整 OCR 调用</text>
     </g>
