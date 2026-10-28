@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900" role="img" aria-labelledby="title desc">
+  <title id="title">YOLO26 后端选择路径</title>
+  <desc id="desc">先确认任务、模型合同和设备，再选择能够接受该模型的推理后端，最后准备对应的托管包和原生运行时。图中将 CPU、NVIDIA GPU 和 OpenVINO 场景分开表示。</desc>
+  <defs>
+    <filter id="shadow" x="-10%" y="-20%" width="120%" height="150%"><feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#18354d" flood-opacity=".11"/></filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1L9 5L1 9Z" fill="#318d82"/></marker>
+  </defs>
+  <rect width="1440" height="900" rx="28" fill="#f4f8fb"/>
+  <g font-family="Segoe UI, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+    <text x="64" y="78" font-size="43" font-weight="750" fill="#142b43">先看模型合同，再选推理后端</text>
+    <text x="66" y="123" font-size="24" fill="#557086">YOLO26 的前处理和 decoder 可以复用，执行引擎要按设备与图结构单独确认</text>
+    <g filter="url(#shadow)">
+      <rect x="64" y="190" width="270" height="198" rx="22" fill="#e3f1ee" stroke="#a8cfc3" stroke-width="2"/>
+      <rect x="386" y="190" width="270" height="198" rx="22" fill="#e7edf7" stroke="#adc0d7" stroke-width="2"/>
+      <rect x="708" y="190" width="270" height="198" rx="22" fill="#f4eaf8" stroke="#ceb5da" stroke-width="2"/>
+      <rect x="1030" y="190" width="346" height="198" rx="22" fill="#fff4e8" stroke="#dfbd98" stroke-width="2"/>
+    </g>
+    <g fill="none" stroke="#318d82" stroke-width="4" marker-end="url(#arrow)"><path d="M336 289H376"/><path d="M658 289H698"/><path d="M980 289H1020"/></g>
+    <g text-anchor="middle" fill="#18354d">
+      <text x="199" y="243" font-size="28" font-weight="700">① 任务</text>
+      <text x="199" y="290" font-size="24">目标检测？</text><text x="199" y="326" font-size="22" fill="#557086">YOLO26 端到端输出</text><text x="199" y="358" font-size="20" fill="#557086">需要哪一种 decoder</text>
+      <text x="521" y="243" font-size="28" font-weight="700">② 模型合同</text>
+      <text x="521" y="290" font-size="23">输入 / 输出 / Shape</text><text x="521" y="326" font-size="22" fill="#557086">颜色、缩放、归一化</text><text x="521" y="358" font-size="20" fill="#557086">动态维度与 opset</text>
+      <text x="843" y="243" font-size="28" font-weight="700">③ 设备</text>
+      <text x="843" y="290" font-size="23">CPU 还是 NVIDIA GPU</text><text x="843" y="326" font-size="22" fill="#557086">系统、架构、驱动</text><text x="843" y="358" font-size="20" fill="#557086">是否已有 CUDA / TRT</text>
+      <text x="1203" y="243" font-size="28" font-weight="700">④ 可执行组合</text>
+      <text x="1203" y="292" font-size="23">后端 + runtime</text><text x="1203" y="328" font-size="21" fill="#557086">再决定 NuGet 与 native 文件</text><text x="1203" y="360" font-size="20" fill="#557086">不是安装包越多越好</text>
+    </g>
+    <text x="64" y="466" font-size="30" font-weight="700" fill="#18354d">同一个 ONNX 文件，按设备进入不同路径</text>
+    <g filter="url(#shadow)">
+      <rect x="64" y="502" width="404" height="246" rx="22" fill="#ffffff" stroke="#a8cfc3" stroke-width="2"/>
+      <rect x="518" y="502" width="404" height="246" rx="22" fill="#ffffff" stroke="#adc0d7" stroke-width="2"/>
+      <rect x="972" y="502" width="404" height="246" rx="22" fill="#ffffff" stroke="#ceb5da" stroke-width="2"/>
+    </g>
+    <g fill="#18354d">
+      <text x="96" y="550" font-size="28" font-weight="700">普通 CPU</text><text x="96" y="591" font-size="24" fill="#2c746a">ORT CPU</text><text x="96" y="633" font-size="21" fill="#557086">Visual.OpenCV + Backend.OnnxRuntime</text><text x="96" y="674" font-size="21" fill="#557086">准备图像 runtime 与 ORT CPU native</text><text x="96" y="714" font-size="20" fill="#7a5b48">先跑通、最容易迁移</text>
+      <text x="550" y="550" font-size="28" font-weight="700">NVIDIA GPU</text><text x="550" y="591" font-size="24" fill="#385779">ORT CUDA / TensorRT</text><text x="550" y="633" font-size="21" fill="#557086">CUDA、cuDNN、驱动与 GPU native</text><text x="550" y="674" font-size="21" fill="#557086">TensorRT 还要匹配目标机 Engine</text><text x="550" y="714" font-size="20" fill="#7a5b48">按实际设备单独验证</text>
+      <text x="1004" y="550" font-size="28" font-weight="700">其他 CPU 方案</text><text x="1004" y="591" font-size="24" fill="#64447f">OpenVINO / OpenCV DNN</text><text x="1004" y="633" font-size="21" fill="#557086">检查 importer、动态 Shape 与算子</text><text x="1004" y="674" font-size="21" fill="#557086">可安装不等于任意模型可导入</text><text x="1004" y="714" font-size="20" fill="#7a5b48">以验证矩阵为准</text>
+    </g>
+    <text x="64" y="825" font-size="22" fill="#557086">前处理与结果类型可以保持一致；真正执行的 native 组件和可接受的模型图，需要随后端重新确认。</text>
+  </g>
+</svg>

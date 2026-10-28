@@ -102,6 +102,10 @@ DeploySharp 的包按职责划分。选包时可以依次确定：**做什么任
 
 ![YOLO26 CPU 案例的包关系：图像输入与推理执行各自需要托管组件及匹配的原生运行时](assets/02-yolo26-quickstart/package-layers.png)
 
+上图解决“这几个包分别做什么”的问题；真正决定后端的顺序还要再往前一步：先看任务和模型合同，再看目标设备。下面的决策图把这条选择路径压缩成一次检查，避免把 CPU、CUDA 和 TensorRT 的 native 文件混装到同一个输出目录。
+
+![YOLO26 后端选择路径：先确认任务、模型合同和设备，再准备对应的后端与原生运行时](assets/02-yolo26-quickstart/backend-decision.png)
+
 所有 **DeploySharp 包统一使用 `2.0.0`**。第三方运行时有自己的版本号，不要把它们也改成 `2.0.0`。
 
 ### 4.2 场景一：普通 CPU 视觉推理——本文使用这一组
@@ -425,6 +429,10 @@ Console.WriteLine("saved=result.jpg");
 
 ## 七、关键配置与调用说明
 
+从一次完整调用看，前处理、后端、decoder 和坐标还原是连续的数据流。先看这张总图，再分别阅读输入输出合同和 Letterbox 的细节，会更容易理解为什么 `DetectionResult` 可以直接画回原图。
+
+![YOLO26 从原图、图像前处理、后端执行到原图坐标结果的完整数据流](assets/02-yolo26-quickstart/yolo26-dataflow.png)
+
 ### 7.1 声明模型输入输出，复用内置解码器
 
 `ModelArtifact` 接收本地模型路径，`VisualModelProfile` 描述模型应该怎样运行。代码将输入名称、尺寸、颜色和归一化集中写清楚，再用 `YoloDetectionDecoder` 将本文 YOLO26 端到端输出转换为 `DetectionResult`，不需要自己重写 YOLO 后处理。
@@ -549,6 +557,10 @@ dotnet run -c Release -- .\images\my-image.jpg .\models\best.onnx .\models\class
 | OpenVINO `2026.2.1` CPU | 4 person + 1 bus | 15.750 | 31.550 | 36.833 |
 | OpenCV DNN `5.0.0` CPU | 4 person + 1 bus | 69.897 | 85.677 | 111.027 |
 | TensorRT `10.11.0.33` CUDA，FP32 | 4 person + 1 bus | 6.245 | 19.993 | 21.863 |
+
+表格中的 `Run` 和“总”容易在长文里被混在一起看。下面把同一组数字画成两条横向条形，绿色是 `Run P50`，橙色是“从读图开始”的总 P50；图只改变呈现方式，没有加入新的测量结果。
+
+![Windows RTX 3060 Laptop 上 YOLO26 五条执行路径的 Run P50 与总 P50 对比](assets/02-yolo26-quickstart/backend-latency.png)
 
 **五条路径的类别与结果顺序一致**，相对 ORT CPU 的最大分数差小于 `0.000002`，框的 `X/Y/Width/Height` 最大差小于 `0.001` 像素。另一次独立的 ORT Profiling 检查记录到 `CUDAExecutionProvider` 的节点执行，确认这条路径确实使用 GPU；该诊断运行不纳入计时表。这说明本次切换保持了检测结果；它不是在完整数据集上的精度评测，也不代表其他模型自动兼容。
 

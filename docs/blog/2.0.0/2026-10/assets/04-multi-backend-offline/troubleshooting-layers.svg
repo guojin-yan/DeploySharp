@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="840" viewBox="0 0 1440 840" role="img" aria-labelledby="title desc">
+  <title id="title">DeploySharp 换机排障分层</title>
+  <desc id="desc">当离线程序在新设备失败时，从上到下检查发布目录、托管运行时、native 库、模型合同、设备驱动和输出权限，每层对应不同的错误类型。</desc>
+  <rect width="1440" height="840" rx="28" fill="#f4f8fb"/>
+  <g font-family="Segoe UI, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+    <text x="60" y="78" font-size="42" font-weight="750" fill="#142b43">换机失败，按层定位，不要盲目重装</text>
+    <text x="62" y="122" font-size="24" fill="#557086">每一层的故障证据不同：先确定程序到了哪一层，再处理对应文件</text>
+    <g font-size="24" font-weight="700" fill="#18354d"><rect x="70" y="180" width="1300" height="76" rx="17" fill="#e3f1ee" stroke="#a7cfc3" stroke-width="2"/><text x="102" y="228">1 · 发布层</text><text x="360" y="228" font-size="21" font-weight="400" fill="#557086">EXE、.dll、deps.json、RID 是否完整</text><rect x="70" y="278" width="1300" height="76" rx="17" fill="#e8edf7" stroke="#afc0d7" stroke-width="2"/><text x="102" y="326">2 · 托管层</text><text x="360" y="326" font-size="21" font-weight="400" fill="#557086">.NET Runtime / framework-dependent 与 self-contained 选择</text><rect x="70" y="376" width="1300" height="76" rx="17" fill="#f3eaf8" stroke="#ccb7d8" stroke-width="2"/><text x="102" y="424">3 · native 层</text><text x="360" y="424" font-size="21" font-weight="400" fill="#557086">OpenCV、ORT、OpenVINO、TensorRT DLL/.so 与搜索路径</text><rect x="70" y="474" width="1300" height="76" rx="17" fill="#fff4e8" stroke="#dfbd98" stroke-width="2"/><text x="102" y="522">4 · 模型合同</text><text x="360" y="522" font-size="21" font-weight="400" fill="#557086">输入输出名称、Shape、颜色、缩放、字典、Engine Profile</text><rect x="70" y="572" width="1300" height="76" rx="17" fill="#e8f3f1" stroke="#a7cfc3" stroke-width="2"/><text x="102" y="620">5 · 设备层</text><text x="360" y="620" font-size="21" font-weight="400" fill="#557086">CPU/GPU、驱动、CUDA/cuDNN、系统库与进程架构</text><rect x="70" y="670" width="1300" height="76" rx="17" fill="#e7eff6" stroke="#afc3d4" stroke-width="2"/><text x="102" y="718">6 · 输出层</text><text x="360" y="718" font-size="21" font-weight="400" fill="#557086">模型能运行但结果不对，或结果目录不可写</text></g>
+    <text x="70" y="800" font-size="21" fill="#557086">例：缺少 DLL 属于 native 层；动态 Shape 越界属于模型合同；找不到 result.jpg 可能只是输出目录权限。</text>
+  </g>
+</svg>

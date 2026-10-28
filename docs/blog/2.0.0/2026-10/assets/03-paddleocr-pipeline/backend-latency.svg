@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="780" viewBox="0 0 1440 780" role="img" aria-labelledby="title desc">
+  <title id="title">Ubuntu PP-OCRv5 Mobile 四后端完整流水线耗时</title>
+  <desc id="desc">文章第八节已有 Ubuntu RTX 2060 实测数据，四条路径都执行同一张页面的 DET、裁剪、CLS、REC 和合并，展示完整调用 P50 与 P95 毫秒数。</desc>
+  <rect width="1440" height="780" rx="28" fill="#f4f8fb"/>
+  <g font-family="Segoe UI, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+    <text x="64" y="76" font-size="42" font-weight="750" fill="#142b43">PP-OCRv5 Mobile：完整流水线的后端差异</text>
+    <text x="66" y="120" font-size="23" fill="#557086">Ubuntu 22.04 + RTX 2060；同一页面、144 个区域、batch=1；单位为 ms</text>
+    <g font-size="20" fill="#557086"><text x="410" y="178">0</text><text x="650" y="178">4,000</text><text x="890" y="178">8,000</text><text x="1130" y="178">12,000</text></g>
+    <g stroke="#d5e0e8" stroke-width="2"><path d="M410 194V594"/><path d="M650 194V594"/><path d="M890 194V594"/><path d="M1130 194V594"/></g>
+    <g font-size="24" fill="#18354d"><text x="70" y="260">ORT CPU</text><text x="70" y="350">OpenVINO CPU</text><text x="70" y="440">OpenCV DNN CPU</text><text x="70" y="530">TensorRT CUDA</text></g>
+    <g fill="#378f84"><rect x="410" y="228" width="293" height="28" rx="8"/><rect x="410" y="318" width="233" height="28" rx="8"/><rect x="410" y="408" width="849" height="28" rx="8"/><rect x="410" y="498" width="130" height="28" rx="8"/></g>
+    <g fill="#d58a5b"><rect x="410" y="262" width="306" height="28" rx="8"/><rect x="410" y="352" width="236" height="28" rx="8"/><rect x="410" y="442" width="873" height="28" rx="8"/><rect x="410" y="532" width="132" height="28" rx="8"/></g>
+    <g font-size="20" font-weight="650" fill="#18354d"><text x="715" y="250">P50 4,893.204</text><text x="728" y="284">P95 5,103.264</text><text x="655" y="340">P50 3,882.420</text><text x="658" y="374">P95 3,924.977</text><text x="1270" y="430">P50 14,151.585</text><text x="1294" y="464">P95 14,544.885</text><text x="552" y="520">P50 2,160.845</text><text x="554" y="554">P95 2,198.410</text></g>
+    <rect x="80" y="640" width="1280" height="55" rx="14" fill="#e7eef5"/><rect x="104" y="657" width="22" height="22" rx="5" fill="#378f84"/><text x="140" y="676" font-size="21" fill="#29445b">P50：典型一次完整调用</text><rect x="470" y="657" width="22" height="22" rx="5" fill="#d58a5b"/><text x="506" y="676" font-size="21" fill="#29445b">P95：本次少量样本的尾部时间</text>
+    <text x="64" y="730" font-size="20" fill="#557086">表中不含 Session/Engine 构建、绘图和文件写出；144/144 一致只表示与本次 ORT CPU 输出一致。</text>
+  </g>
+</svg>

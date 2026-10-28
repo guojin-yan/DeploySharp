@@ -69,6 +69,10 @@ https://www.nuget.org/packages?q=JYPPX.DeploySharp
 | 已经依赖 OpenCV，模型图可以被 DNN 导入 | OpenCV DNN CPU | OpenCV 原生库、实际输出合同及 Shape/importer 兼容性 |
 | NVIDIA GPU，需要进一步调优 | TensorRT | 匹配的 bridge、TensorRT/CUDA/cuDNN、输入 Profile 和目标机 Engine |
 
+把上表变成一张决策图后，可以看到后端选择不是“哪个名字更快”的单选题，而是设备、模型合同和交付方式共同决定的组合。
+
+![DeploySharp 多后端选择决策图：从设备、模型和交付目标选择 ORT、OpenVINO、OpenCV DNN 或 TensorRT](assets/04-multi-backend-offline/backend-choice.png)
+
 **先确认精确模型，再评估后端。** 相同的 ONNX 后缀，不代表所有引擎都能接受其中的算子、动态 Shape、数据类型和辅助输入。OpenCV DNN 某个图无法导入，也不意味着换一个阈值就能解决。
 
 第二篇在 Windows 上已运行 **YOLO26n + ORT CPU / ORT CUDA / OpenVINO / OpenCV DNN / TensorRT**；第三篇在 Ubuntu 上已运行 **PP-OCRv5 Mobile 完整流水线 + ORT CPU / OpenVINO / OpenCV DNN / TensorRT**。这些结果可以帮助选择起点，具体模型仍以验证矩阵为准：
@@ -292,6 +296,10 @@ OfflineInference/
   images/
     bus.jpg
 ```
+
+这个目录在开发机上看起来只是几个文件，发布后还会多出 .NET 和 native 依赖。下面的目录图把“应该一起复制什么”与“目标机启动时先后加载什么”画出来，避免只复制 EXE、DLL 或 ONNX 后得到难以判断的缺失错误。
+
+![DeploySharp 离线交付目录结构：可执行文件、native、模型、图片、配置和结果目录应一起迁移](assets/04-multi-backend-offline/directory-tree.png)
 
 ## 六、编写可以随目录迁移的推理程序
 
@@ -703,6 +711,10 @@ https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV2.0/docs/blog/2.0.0/2
 | Linux 报 `.so` 或版本化依赖缺失 | `native/opencv` 是否完整、`LD_LIBRARY_PATH`、系统库 | 用 `ldd` 查缺失项，补齐实际依赖，保持整组 `.so` |
 | 离线缓存未命中 | 缓存根目录、元数据、所选模型 ID 与文件是否完整 | 在联网准备端补齐后重新复制，或直接使用已有本地模型路径 |
 | 结果无法写出 | 程序安装目录是否可写 | 第三个参数指定应用有权限的输出目录 |
+
+把这些现象按加载顺序分层，排障时就不必把“缺少 DLL”“模型输入不匹配”和“输出目录不可写”混成一种问题。下面这张图可以作为换机后的快速检查顺序。
+
+![DeploySharp 换机排障分层：从发布目录、托管层、native、模型合同到设备和输出权限逐层检查](assets/04-multi-backend-offline/troubleshooting-layers.png)
 
 后端选择是启动配置的一部分。若业务允许降级，应由应用在启动时明确选择并记录最终设备；本篇不会在 CUDA 或 TensorRT 失败后静默运行 CPU，再把结果写成 GPU 成功。
 

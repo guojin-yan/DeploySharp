@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="760" viewBox="0 0 1440 760" role="img" aria-labelledby="title desc">
+  <title id="title">PaddleOCR 三个输出文件与结果对象</title>
+  <desc id="desc">同一次 OcrPipeline 调用将文字、分数、原图 polygon 和计时合并为结果对象，再分别写入 result.txt、result.json 和 result.jpg。三个文件服务于不同的使用场景。</desc>
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1L9 5L1 9Z" fill="#328c82"/></marker><filter id="shadow" x="-10%" y="-20%" width="120%" height="150%"><feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#18354d" flood-opacity=".1"/></filter></defs>
+  <rect width="1440" height="760" rx="28" fill="#f4f8fb"/>
+  <g font-family="Segoe UI, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+    <text x="60" y="78" font-size="42" font-weight="750" fill="#142b43">一次 OCR 调用，三种结果用途</text>
+    <text x="62" y="122" font-size="24" fill="#557086">业务读取文字，程序保留结构，人工检查定位；输出文件各有职责</text>
+    <g filter="url(#shadow)"><rect x="60" y="188" width="410" height="188" rx="22" fill="#e3f1ee" stroke="#a7cfc3" stroke-width="2"/><rect x="515" y="188" width="410" height="188" rx="22" fill="#e8edf7" stroke="#afc0d7" stroke-width="2"/><rect x="970" y="188" width="410" height="188" rx="22" fill="#f3eaf8" stroke="#ccb7d8" stroke-width="2"/></g>
+    <g text-anchor="middle"><text x="265" y="240" font-size="30" font-weight="700" fill="#286e60">OcrResult</text><text x="265" y="286" font-size="23" fill="#18354d">Text · Score · Polygon</text><text x="265" y="325" font-size="21" fill="#557086">Orientation · Timing</text><text x="720" y="240" font-size="30" font-weight="700" fill="#385779">result.json</text><text x="720" y="286" font-size="23" fill="#18354d">结构化结果</text><text x="720" y="325" font-size="21" fill="#557086">接业务、检索与回放</text><text x="1175" y="240" font-size="30" font-weight="700" fill="#64447f">result.txt</text><text x="1175" y="286" font-size="23" fill="#18354d">按顺序的文字</text><text x="1175" y="325" font-size="21" fill="#557086">复制、搜索和下游文本处理</text></g>
+    <path d="M720 395V444" fill="none" stroke="#328c82" stroke-width="4" marker-end="url(#arrow)"/>
+    <rect x="60" y="455" width="1320" height="160" rx="22" fill="#183c50"/>
+    <text x="92" y="505" font-size="30" font-weight="700" fill="#f1fafb">result.jpg：把模型判断放回原图</text>
+    <text x="92" y="550" font-size="23" fill="#cce4e7">绿色 polygon / 编号用于检查漏检、误检、坐标和阅读顺序；它不是业务文本的唯一来源。</text>
+    <text x="92" y="590" font-size="21" fill="#bdd9e2">当多栏页面需要按版面顺序阅读时，继续使用区域 OCR 或 PP-Structure，而不是直接拼接 result.txt。</text>
+    <g fill="none" stroke="#328c82" stroke-width="4" marker-end="url(#arrow)"><path d="M265 383V437"/><path d="M1175 383V437"/></g>
+    <text x="60" y="696" font-size="22" fill="#557086">同一次 Run 的三个输出都来自同一份 OcrResult，编号和原图区域保持对应。</text>
+  </g>
+</svg>

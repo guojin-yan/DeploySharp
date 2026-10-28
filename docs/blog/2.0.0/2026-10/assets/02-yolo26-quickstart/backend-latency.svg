@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="760" viewBox="0 0 1440 760" role="img" aria-labelledby="title desc">
+  <title id="title">Windows YOLO26 多后端实测延迟对比</title>
+  <desc id="desc">基于文章第八节已有 Windows RTX 3060 Laptop 实测数据的横向条形图，展示 ORT CPU、ORT CUDA、OpenVINO、OpenCV DNN 和 TensorRT 的 Run P50 与总 P50 毫秒数。</desc>
+  <rect width="1440" height="760" rx="28" fill="#f4f8fb"/>
+  <g font-family="Segoe UI, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+    <text x="64" y="76" font-size="42" font-weight="750" fill="#142b43">同一 YOLO26，后端改变后时间怎样变化</text>
+    <text x="66" y="120" font-size="23" fill="#557086">数据来自本文第 8.4 节：RTX 3060 Laptop，预热 3 次、统计 20 次；单位为 ms</text>
+    <g font-size="20" fill="#557086"><text x="410" y="178">0</text><text x="620" y="178">25</text><text x="830" y="178">50</text><text x="1040" y="178">75</text><text x="1250" y="178">100</text></g>
+    <g stroke="#d5e0e8" stroke-width="2"><path d="M410 194V610"/><path d="M620 194V610"/><path d="M830 194V610"/><path d="M1040 194V610"/><path d="M1250 194V610"/></g>
+    <g font-size="24" fill="#18354d"><text x="70" y="250">ORT CPU</text><text x="70" y="330">ORT CUDA</text><text x="70" y="410">OpenVINO</text><text x="70" y="490">OpenCV DNN</text><text x="70" y="570">TensorRT</text></g>
+    <g fill="#378f84"><rect x="410" y="220" width="230" height="28" rx="8"/><rect x="410" y="300" width="77" height="28" rx="8"/><rect x="410" y="380" width="132" height="28" rx="8"/><rect x="410" y="460" width="587" height="28" rx="8"/><rect x="410" y="540" width="52" height="28" rx="8"/></g>
+    <g fill="#d58a5b"><rect x="410" y="254" width="421" height="28" rx="8"/><rect x="410" y="334" width="315" height="28" rx="8"/><rect x="410" y="414" width="265" height="28" rx="8"/><rect x="410" y="494" width="719" height="28" rx="8"/><rect x="410" y="574" width="168" height="28" rx="8"/></g>
+    <g font-size="20" font-weight="650" fill="#18354d"><text x="652" y="242">Run 27.452</text><text x="843" y="276">总 50.158</text><text x="499" y="322">Run 9.139</text><text x="737" y="356">总 37.539</text><text x="554" y="402">Run 15.750</text><text x="687" y="436">总 31.550</text><text x="1008" y="482">Run 69.897</text><text x="1141" y="516">总 85.677</text><text x="472" y="562">Run 6.245</text><text x="591" y="596">总 19.993</text></g>
+    <rect x="80" y="650" width="1280" height="55" rx="14" fill="#e7eef5"/><rect x="104" y="667" width="22" height="22" rx="5" fill="#378f84"/><text x="140" y="686" font-size="21" fill="#29445b">Run P50：后端执行与结果解码</text><rect x="470" y="667" width="22" height="22" rx="5" fill="#d58a5b"/><text x="506" y="686" font-size="21" fill="#29445b">总 P50：读图、前处理、Run、输入释放</text>
+    <text x="64" y="738" font-size="20" fill="#557086">这是一台设备上的固定输入记录，不是跨设备排名；总耗时还受图像前处理与 native 环境影响。</text>
+  </g>
+</svg>

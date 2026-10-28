@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="820" viewBox="0 0 1440 820" role="img" aria-labelledby="title desc">
+  <title id="title">DeploySharp 离线交付目录结构</title>
+  <desc id="desc">一个自包含离线应用目录包含可执行文件、托管依赖、native 目录、模型、图片、配置和输出目录。复制时要保留整个发布目录，不能只拿一个 DLL 或 ONNX 文件。</desc>
+  <defs><filter id="shadow" x="-10%" y="-20%" width="120%" height="150%"><feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#18354d" flood-opacity=".1"/></filter><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1L9 5L1 9Z" fill="#328c82"/></marker></defs>
+  <rect width="1440" height="820" rx="28" fill="#f4f8fb"/>
+  <g font-family="Segoe UI, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+    <text x="60" y="78" font-size="42" font-weight="750" fill="#142b43">离线交付：复制整个应用目录</text>
+    <text x="62" y="122" font-size="24" fill="#557086">EXE / .dll、native、模型、图片和配置一起迁移，目标机不需要 dotnet restore</text>
+    <g filter="url(#shadow)"><rect x="70" y="180" width="610" height="545" rx="24" fill="#e8f3f1" stroke="#a7cfc3" stroke-width="2"/><rect x="760" y="180" width="610" height="545" rx="24" fill="#e8edf7" stroke="#afc0d7" stroke-width="2"/></g>
+    <text x="104" y="231" font-size="30" font-weight="700" fill="#286e60">publish/win-x64/</text><text x="794" y="231" font-size="30" font-weight="700" fill="#385779">目标机启动</text>
+    <g font-family="Consolas, Cascadia Mono, monospace" font-size="23" fill="#18354d"><text x="108" y="282">├─ OfflineInference.exe</text><text x="108" y="321">├─ *.dll / *.deps.json</text><text x="108" y="360">├─ native/</text><text x="108" y="399">│  ├─ OpenCV / ORT native</text><text x="108" y="438">│  └─ 其他运行时依赖</text><text x="108" y="477">├─ models/</text><text x="108" y="516">│  └─ yolo26n.onnx</text><text x="108" y="555">├─ images/</text><text x="108" y="594">│  └─ bus.jpg</text><text x="108" y="633">├─ deploysharp.json</text><text x="108" y="672">└─ results/</text></g>
+    <g fill="#fff" stroke="#afc0d7" stroke-width="2"><rect x="832" y="284" width="466" height="74" rx="14"/><rect x="832" y="390" width="466" height="74" rx="14"/><rect x="832" y="496" width="466" height="74" rx="14"/><rect x="832" y="602" width="466" height="74" rx="14"/></g>
+    <g text-anchor="middle"><text x="1065" y="330" font-size="25" font-weight="700" fill="#18354d">读取配置与本地模型</text><text x="1065" y="436" font-size="25" font-weight="700" fill="#18354d">加载 native runtime</text><text x="1065" y="542" font-size="25" font-weight="700" fill="#18354d">执行 ORT / OpenVINO / DNN</text><text x="1065" y="648" font-size="25" font-weight="700" fill="#18354d">写入结果到可写目录</text></g>
+    <path d="M682 454H742" fill="none" stroke="#328c82" stroke-width="5" marker-end="url(#arrow)"/>
+    <text x="70" y="778" font-size="21" fill="#557086">框架依赖发布进目录；系统驱动、glibc、MSVC 等目标机基础依赖仍需满足。</text>
+  </g>
+</svg>
