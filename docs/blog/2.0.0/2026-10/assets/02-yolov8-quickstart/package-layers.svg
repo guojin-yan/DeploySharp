@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1080" viewBox="0 0 1440 1080" role="img" aria-labelledby="title desc">
+  <title id="title">YOLOv8 CPU 案例的 NuGet 与原生运行时关系</title>
+  <desc id="desc">两列分别是图像输入与推理执行。显式安装 Visual.OpenCV 与 Backend.OnnxRuntime，它们分别自动引入 OpenCV CSharp API 与 ONNX Runtime Managed。图像与推理执行还分别需要显式安装 OpenCV Windows x64 runtime 与 ONNX Runtime CPU 包。实线表示 NuGet 传递依赖，虚线表示运行时加载要求，省略 Core 等基础依赖。</desc>
+  <defs>
+    <filter id="shadow" x="-10%" y="-15%" width="120%" height="140%">
+      <feDropShadow dx="0" dy="7" stdDeviation="7" flood-color="#243f55" flood-opacity="0.09"/>
+    </filter>
+    <marker id="solid-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M1 1L9 5L1 9Z" fill="#208b7b"/>
+    </marker>
+    <marker id="dashed-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M1 1L9 5L1 9Z" fill="#c8784f"/>
+    </marker>
+  </defs>
+  <rect width="1440" height="1080" rx="26" fill="#f3f7fa"/>
+  <g font-family="Segoe UI, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+    <text x="64" y="79" font-size="42" font-weight="750" fill="#142b43">两条链路，四个显式安装包</text>
+    <text x="66" y="121" font-size="23" fill="#526c82">本文组合：OpenCV 准备图片，ONNX Runtime CPU 执行模型</text>
+    <rect x="64" y="156" width="624" height="776" rx="25" fill="#e8f3f1"/>
+    <rect x="752" y="156" width="624" height="776" rx="25" fill="#e9eff7"/>
+    <text x="94" y="204" font-size="27" font-weight="700" fill="#26675e">图像输入</text>
+    <text x="782" y="204" font-size="27" font-weight="700" fill="#385779">推理执行</text>
+
+    <g filter="url(#shadow)">
+      <rect x="88" y="232" width="576" height="164" rx="19" fill="#ffffff" stroke="#a2cfc4" stroke-width="2"/>
+      <rect x="776" y="232" width="576" height="164" rx="19" fill="#ffffff" stroke="#aabfd8" stroke-width="2"/>
+    </g>
+    <rect x="112" y="250" width="102" height="29" rx="9" fill="#e2f3ed"/>
+    <text x="163" y="271" text-anchor="middle" font-size="17" font-weight="650" fill="#26675e">显式安装</text>
+    <text x="112" y="316" font-size="25" fill="#526c82">JYPPX.DeploySharp.</text>
+    <text x="112" y="356" font-size="32" font-weight="700" fill="#142b43">Visual.OpenCV</text>
+    <text x="112" y="381" font-size="18" fill="#526c82">图像读取与前处理</text>
+
+    <rect x="800" y="250" width="102" height="29" rx="9" fill="#e2eaf6"/>
+    <text x="851" y="271" text-anchor="middle" font-size="17" font-weight="650" fill="#385779">显式安装</text>
+    <text x="800" y="316" font-size="25" fill="#526c82">JYPPX.DeploySharp.</text>
+    <text x="800" y="356" font-size="32" font-weight="700" fill="#142b43">Backend.OnnxRuntime</text>
+    <text x="800" y="381" font-size="18" fill="#526c82">ONNX Runtime 后端适配</text>
+
+    <path d="M376 404V466" fill="none" stroke="#208b7b" stroke-width="4" marker-end="url(#solid-arrow)"/>
+    <text x="402" y="443" font-size="19" fill="#26675e">NuGet 自动引入</text>
+    <path d="M1064 404V466" fill="none" stroke="#208b7b" stroke-width="4" marker-end="url(#solid-arrow)"/>
+    <text x="1090" y="443" font-size="19" fill="#26675e">NuGet 自动引入</text>
+
+    <g filter="url(#shadow)">
+      <rect x="88" y="480" width="576" height="156" rx="19" fill="#ffffff" stroke="#cedee0" stroke-width="2"/>
+      <rect x="776" y="480" width="576" height="156" rx="19" fill="#ffffff" stroke="#ccd7e5" stroke-width="2"/>
+    </g>
+    <rect x="112" y="499" width="102" height="29" rx="9" fill="#edf1f5"/>
+    <text x="163" y="520" text-anchor="middle" font-size="17" font-weight="600" fill="#526c82">传递依赖</text>
+    <text x="112" y="569" font-size="29" font-weight="700" fill="#142b43">JYPPX.OpenCV.CSharp.API</text>
+    <text x="112" y="610" font-size="22" fill="#526c82">OpenCV 托管接口 · 5.0.0</text>
+
+    <rect x="800" y="499" width="102" height="29" rx="9" fill="#edf1f5"/>
+    <text x="851" y="520" text-anchor="middle" font-size="17" font-weight="600" fill="#526c82">传递依赖</text>
+    <text x="800" y="564" font-size="26" font-weight="700" fill="#142b43">Microsoft.ML.OnnxRuntime.</text>
+    <text x="800" y="600" font-size="29" font-weight="700" fill="#142b43">Managed</text>
+    <text x="996" y="600" font-size="22" fill="#526c82">托管接口 · 1.28.0</text>
+
+    <path d="M376 644V716" fill="none" stroke="#c8784f" stroke-width="4" stroke-dasharray="8 7" marker-end="url(#dashed-arrow)"/>
+    <text x="402" y="687" font-size="19" fill="#a36040">需要原生运行时</text>
+    <path d="M1064 644V716" fill="none" stroke="#c8784f" stroke-width="4" stroke-dasharray="8 7" marker-end="url(#dashed-arrow)"/>
+    <text x="1090" y="687" font-size="19" fill="#a36040">需要原生运行时</text>
+
+    <g filter="url(#shadow)">
+      <rect x="88" y="730" width="576" height="174" rx="19" fill="#fffaf6" stroke="#dfb28f" stroke-width="2"/>
+      <rect x="776" y="730" width="576" height="174" rx="19" fill="#fffaf6" stroke="#dfb28f" stroke-width="2"/>
+    </g>
+    <rect x="112" y="750" width="102" height="29" rx="9" fill="#fae7d8"/>
+    <text x="163" y="771" text-anchor="middle" font-size="17" font-weight="650" fill="#995235">显式安装</text>
+    <text x="112" y="821" font-size="28" font-weight="700" fill="#142b43">JYPPX.OpenCV.runtime.</text>
+    <text x="112" y="857" font-size="28" font-weight="700" fill="#142b43">win-x64</text>
+    <text x="112" y="885" font-size="20" fill="#526c82">OpenCV Windows x64 · 5.0.0</text>
+
+    <rect x="800" y="750" width="102" height="29" rx="9" fill="#fae7d8"/>
+    <text x="851" y="771" text-anchor="middle" font-size="17" font-weight="650" fill="#995235">显式安装</text>
+    <text x="800" y="821" font-size="29" font-weight="700" fill="#142b43">Microsoft.ML.OnnxRuntime</text>
+    <text x="800" y="865" font-size="22" fill="#526c82">CPU 原生运行库 · 1.28.0</text>
+
+    <path d="M70 977H135" stroke="#208b7b" stroke-width="4" marker-end="url(#solid-arrow)"/>
+    <text x="154" y="985" font-size="22" fill="#29445b">NuGet 传递依赖</text>
+    <path d="M469 977H534" stroke="#c8784f" stroke-width="4" stroke-dasharray="8 7" marker-end="url(#dashed-arrow)"/>
+    <text x="555" y="985" font-size="22" fill="#29445b">运行时加载要求</text>
+    <text x="69" y="1030" font-size="21" fill="#526c82">为突出选包关系，省略 Core、Visual、Extensibility 等基础依赖。</text>
+  </g>
+</svg>
