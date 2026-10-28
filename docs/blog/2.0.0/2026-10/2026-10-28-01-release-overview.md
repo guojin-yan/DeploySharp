@@ -32,6 +32,8 @@ https://www.nuget.org/packages?q=JYPPX.DeploySharp
 
 当前 2.0.0 正式版主要验证 **Windows 10/11 x64**；新项目建议使用 .NET 10，也可根据现有工程选择 .NET 8 等兼容目标框架。不同组件、模型和后端的支持范围有所差异，后文提供详细文档与验证矩阵入口。
 
+本系列也提供 **Ubuntu 22.04 x64 上的 PP-OCRv5 Mobile 完整流程与多后端实跑**，展示同一份 C# 基础代码在不同系统中的使用方式。跨平台组合以对应教程和验证矩阵中的具体记录为准。
+
 ## 二、DeploySharp 2.0.0 核心特性
 
 ### 2.1 多推理引擎支持，按设备选择部署方案
@@ -76,7 +78,9 @@ OCR 需要把文字检测、文本行裁剪、方向处理、识别和结果合�
 
 **对文档处理，**可以按需要组合页面准备、版面定位和区域任务。仓库已有区域 OCR、有线表格到 HTML 等案例，后续文章会展开完整过程。
 
-当前 v6 OCR 组合复用 v5 Mobile CLS；文档模块各自的后端范围独立。后续会分别用 OCR 和 PP-Structure 的完整案例，讲清模型选择、阶段组合和结果使用。
+第三篇已经用一张包含大标题、多栏正文、照片和图注的中文报纸页面，展示了完整 OCR、文字框绘制和 TXT/JSON 导出。通用 OCR 提供逐区域文字；跨栏阅读顺序和标题、正文等区域划分，需要进一步结合版面分析。
+
+当前 v6 OCR 组合复用 v5 Mobile CLS；文档模块各自的后端范围独立。PP-Structure 专题会在此基础上继续展开区域 OCR、表格与其他文档任务。
 
 ### 2.4 简洁的调用方式，保留自定义扩展能力
 
@@ -91,7 +95,7 @@ foreach (var item in result.Detections)
     Console.WriteLine($"{item.Label.Label}: {item.Label.Score:F3}");
 ```
 
-这里的 `profile` 是描述输入输出与前后处理的 `VisualModelProfile`，`pipeline` 持有对应推理流程。片段只展示初始化后的调用；第二篇 YOLO26 实战提供包安装、模型准备、初始化和结果绘制的完整代码，已使用正式版 NuGet 包完成 CPU 实跑。
+这里的 `profile` 是描述输入输出与前后处理的 `VisualModelProfile`，`pipeline` 持有对应推理流程。片段只展示初始化后的调用；第二篇 YOLO26 实战提供包安装、模型准备、初始化和结果绘制的完整代码，并使用正式版 NuGet 包完成了 Windows 多后端对照。
 
 对于自己的模型，接入方式也保留了选择：
 
@@ -115,7 +119,7 @@ foreach (var item in result.Detections)
 
 **TensorRT CUDA：**支持的路径可以在 GPU 上执行图像缩放、归一化和部分后处理，复用缓冲与 Stream，减少中间数据传输；其他处理保留 CPU 回退。
 
-这些功能可以用于批量任务和连续帧处理。实际提速效果取决于模型、输入和设备，项目文档记录了不同设备的实测结果，可供选择 Batch、推理通道和预取配置时参考。
+这些功能可以用于批量任务和连续帧处理。调优时应同时检查完整耗时、结果质量和资源占用，Batch 与通道数量需要按模型、输入和设备选择。第三篇先建立逐行 OCR 基线，再解释调度参数；设备实测文档另有相应组合的结果可供参考。
 
 ### 2.6 模型按需下载，支持缓存与离线复用
 
@@ -163,7 +167,8 @@ DeploySharp 2.0.0 已发布到 **NuGet.org、GitHub Packages 和 GitHub Release*
 | --- | --- |
 | 使用 OpenCV 读图，ONNX Runtime 执行视觉推理 | `Visual.OpenCV` + `Backend.OnnxRuntime` |
 | 使用 OpenVINO 或 OpenCV DNN 执行视觉推理 | `Visual.OpenCV` + `Backend.OpenVINO` 或 `Backend.OpenCV` |
-| 使用 TensorRT CUDA 视觉流程 | `Visual.TensorRT` + `Backend.TensorRT` |
+| 使用 OpenCV 处理图像，TensorRT 执行模型 | `Visual.OpenCV` + `Backend.TensorRT` |
+| 使用 TensorRT CUDA 图像处理与专用视觉流程 | `Visual.TensorRT` + `Backend.TensorRT`，按输入来源选择图像适配器 |
 | 按模型目录下载并缓存模型 | 需要自动下载时，再加入 `ModelFactory`；已有本地模型可直接加载 |
 
 以上是主要组件组合，基础包依赖由 NuGet 解析。所有 DeploySharp 包请保持同为 `2.0.0`，再按后端准备对应的 OpenCV、ONNX Runtime、OpenVINO 或 CUDA/TensorRT 等原生运行时。
@@ -184,14 +189,24 @@ https://github.com/guojin-yan/DeploySharp/releases/tag/v2.0.0
 
 ### 5.2 模型、案例与使用文档
 
-想先体验目标检测，建议从**第二篇 YOLO26 入门实战**开始：从空控制台项目选择 NuGet 包，加载本地 ONNX 模型，再把检测框、类别和置信度画到原图上。教程使用 **YOLO26n + ONNX Runtime CPU**，在测试图片中实际检测到 4 个行人和 1 辆公交车，并说明了如何换用自己的模型、图片和类别文件。
+目标检测可以从**第二篇 YOLO26 入门实战**开始，文字识别可以直接看**第三篇 PaddleOCR 完整流水线**。两篇都使用正式版 NuGet，提供可运行代码、真实结果和按后端选择的运行配置：
+
+| 实战案例 | 本系列已运行的环境与路径 | 实际展示 |
+| --- | --- | --- |
+| YOLO26n 目标检测 | Windows：ORT CPU/CUDA、OpenVINO CPU、OpenCV DNN CPU、TensorRT CUDA | 4 个行人、1 辆公交车；坐标还原、结果绘制与后端一致性对照 |
+| PP-OCRv5 Mobile 完整识别 | Windows 与 Ubuntu 22.04；Ubuntu 对照 ORT CPU、OpenVINO CPU、OpenCV DNN CPU、TensorRT CUDA | 复杂中文报纸页面的 144 个文字候选区域，保存 TXT、JSON 和文字框图片 |
+
+第二篇还说明如何替换自己的模型、图片和类别文件，并提供本机 ORT CUDA 使用的同版本 CUDA 12 运行库配置。第三篇另外在 Windows 切换运行了 v4 Mobile、v6 Tiny，说明字典配对、Batch 和独立推理通道。各篇保留具体设备、输入与计时范围，便于大家复现。
 
 ```text
 YOLO26 入门实战（第二篇）：
 https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/docs/blog/2.0.0/2026-10/2026-10-28-02-yolo26-quickstart.md
+
+PaddleOCR v4/v5/v6 完整流水线（第三篇）：
+https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/docs/blog/2.0.0/2026-10/2026-10-28-03-paddleocr-pipeline.md
 ```
 
-需要文字识别，可以选择 PP-OCR 对应组合。仓库也按功能和具体模型整理了使用案例；模型支持指南列出精确型号，验证矩阵说明各模型在哪些后端完成了运行验证。
+仓库也按功能和具体模型整理了其他使用案例；模型支持指南列出精确型号，验证矩阵说明各模型在哪些后端完成了运行验证。
 
 ```text
 使用教程：
@@ -217,10 +232,10 @@ https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/docs/articles/dev
 
 DeploySharp 2.0.0 把常用模型的部署、多个推理引擎的接入，以及 OCR、文档、视频和大图处理整理到了一套可组合的 C# 类库中。对于已经接入的模型，大家可以使用现成处理流程；有自己的模型和业务需求，也可以继续扩展。
 
-这篇先把新版的主要功能介绍给大家。第二篇已经给出了 YOLO26 检测的完整实战，后续会继续结合真实图片、代码和运行结果，展开以下几组专题：
+这篇先把新版的主要功能介绍给大家。第二、第三篇已经给出了 YOLO26 检测和 PaddleOCR 完整识别的实战，并展示 Windows 多后端与 Ubuntu OCR 部署。后续会在这些案例基础上，继续展开以下几组专题：
 
 - **视觉模型部署：**以 YOLO26 检测为起点，再讲分类、分割、关键点和旋转框，完成从模型获取到结果绘制的过程。
-- **OCR 与文档处理：**分别演示 PP-OCRv4/v5/v6 的完整识别流程，以及 PP-Structure 的区域 OCR、表格识别与 HTML 输出。
+- **OCR 与文档处理：**承接第三篇的完整识别流程，进一步讲解 PP-Structure 的版面分析、区域 OCR、表格识别与 HTML 输出。
 - **自定义模型与区域处理：**接入自己的前后处理和结果类型，配置 ROI，并用重叠切片处理大图中的小目标。
 - **多引擎部署与性能优化：**展开运行环境、离线部署、Batch、多推理器、视频异步预取和 TensorRT CUDA 优化，结合设备实测解释参数选择。
 
