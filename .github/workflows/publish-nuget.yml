@@ -64,6 +64,7 @@ jobs:
           if ($env:PACKAGE_VERSION -notmatch '-') {
             if (-not (Test-Path "./docs/releases/$env:PACKAGE_VERSION.md")) { throw 'Stable release notes are missing.' }
           }
+          ./eng/pack/Test-ReleaseEvidenceCollections.ps1
 
       - name: Restore and build
         shell: pwsh

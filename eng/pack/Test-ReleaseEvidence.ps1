@@ -123,7 +123,8 @@ function Get-CanonicalValue {
         return $ordered
     }
     if ($Value -is [Collections.IEnumerable]) {
-        return @($Value | ForEach-Object { Get-CanonicalValue $_ })
+        # Keep empty and singleton JSON arrays intact across PowerShell's output pipeline.
+        return ,@($Value | ForEach-Object { Get-CanonicalValue $_ })
     }
     $properties = @($Value.PSObject.Properties | Where-Object { $_.MemberType -in @('NoteProperty', 'Property') } | Sort-Object Name)
     $object = [ordered]@{}
@@ -133,7 +134,7 @@ function Get-CanonicalValue {
 
 function Get-CanonicalJson {
     param([object]$Value)
-    return (Get-CanonicalValue $Value) | ConvertTo-Json -Depth 100 -Compress
+    return ConvertTo-Json -InputObject (Get-CanonicalValue $Value) -Depth 100 -Compress
 }
 
 function Convert-ToNuspecFramework {
