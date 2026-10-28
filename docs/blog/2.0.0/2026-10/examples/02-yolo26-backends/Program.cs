@@ -56,7 +56,7 @@ var profile = new VisualModelProfile(
         VisualNormalizationOptions.Scale(255f),
         paddingColor: new VisualRgbColor(114, 114, 114)));
 
-// 选择 ONNX Runtime CPU，并注册视觉任务配置。
+// 选择推理后端，并注册视觉任务配置。
 using var backends = new BackendRegistry();
 BackendId backendId;
 string device;
@@ -66,11 +66,9 @@ switch (backend)
         backends.UseOnnxRuntime();
         backendId = OnnxRuntimeBackendProvider.BackendId; device = "cpu"; break;
     case "ort-cuda":
-        string? cudaNative = Environment.GetEnvironmentVariable("DEPLOYSHARP_CUDA_NATIVE_DIR");
-        if (!string.IsNullOrWhiteSpace(cudaNative))
-            foreach (string library in new[] { "cudart64_13.dll", "cublasLt64_13.dll", "cublas64_13.dll" })
-                System.Runtime.InteropServices.NativeLibrary.Load(Path.Combine(cudaNative, library));
-        backends.UseOnnxRuntime(new OnnxRuntimeOptions(executionProvider: OnnxRuntimeExecutionProvider.Cuda));
+        backends.UseOnnxRuntime(new OnnxRuntimeOptions(
+            executionProvider: OnnxRuntimeExecutionProvider.Cuda,
+            cudaProviderOptions: new Dictionary<string, string> { ["use_tf32"] = "0" }));
         backendId = OnnxRuntimeBackendProvider.BackendId; device = "cuda"; break;
     case "openvino":
         backends.UseOpenVino(new OpenVinoOptions(performanceHint: OpenVinoPerformanceHint.Latency));

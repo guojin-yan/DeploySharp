@@ -7,7 +7,7 @@ dotnet add package JYPPX.DeploySharp.Backend.OnnxRuntime --version 2.0.0
 dotnet add package Microsoft.ML.OnnxRuntime --version 1.28.0
 ~~~
 
-CUDA 场景将 CPU 包替换为 Microsoft.ML.OnnxRuntime.Gpu.Windows，并安装匹配的 CUDA、cuDNN 和 NVIDIA 驱动；代码中显式选择 CUDA，不会静默回退到 CPU。
+CUDA 场景需要将 CPU 原生包替换为匹配的 GPU 发行包，并安装对应的 CUDA、cuDNN 和 NVIDIA 驱动；代码中显式选择 CUDA，不会在设备初始化失败时静默改建 CPU Session。`Gpu.Windows 1.28.0` NuGet 原生包使用 CUDA 13；已有 CUDA 12 环境时可选择下文的官方同版本 CUDA 12 发行包。
 
 ~~~csharp
 using var provider = new OnnxRuntimeBackendProvider(
@@ -60,10 +60,36 @@ CUDA 提供程序缺失或设备初始化失败会报告 `DS-ORT-5008`/`DS-NATIV
 | 运行时 | 适用场景 | 说明 |
 | --- | --- | --- |
 | `Microsoft.ML.OnnxRuntime 1.28.0` | CPU | Windows/Linux 应用显式安装 |
-| `Microsoft.ML.OnnxRuntime.Gpu.Windows 1.28.0` | Windows x64 CUDA | 还需匹配驱动、CUDA 与 cuDNN |
+| `Microsoft.ML.OnnxRuntime.Gpu.Windows 1.28.0` | Windows x64 CUDA 13 | 还需匹配驱动、CUDA 与 cuDNN |
+| `Microsoft.ML.OnnxRuntime.Managed 1.28.0` + 官方 CUDA 12 原生包 | Windows x64 CUDA 12 | 使用同版本完整原生库，应用负责部署 |
 | DirectML | Windows GPU | 不是当前默认发布验证后端 |
 
 `OnnxRuntimeOptions` 可设置图优化、线程、执行模式、内存模式、日志和 Provider 选项。版本相关的 `cudaProviderOptions` 只应使用当前 ORT 明确支持的键；未知选项应保留原始错误，不能被当作 CUDA 已通过的证据。
+
+### CUDA 12 环境的部署
+
+托管版本相同不代表 CUDA 主版本相同。驱动 `576.02` 的 RTX 3060 Laptop 已使用 **Managed 1.28.0 + 官方 CUDA 12 原生包 + CUDA 12.9 + cuDNN 9.22** 完成 YOLO26 推理；相同设备使用 CUDA 13 包会在 `cudaSetDevice` 报错 801。只安装新 Toolkit 不能替代驱动兼容性检查。
+
+复用 CUDA 12 环境时：
+
+1. 保留 `JYPPX.DeploySharp.Backend.OnnxRuntime 2.0.0`，引用 `Microsoft.ML.OnnxRuntime.Managed 1.28.0`；移除显式的 ORT CPU 和 `Gpu.Windows` 原生包引用。
+2. 从 [ORT 1.28.0 官方发行页](https://github.com/microsoft/onnxruntime/releases/tag/v1.28.0) 获取 `onnxruntime-win-x64-gpu_cuda12-1.28.0.zip`。
+3. 将其 `lib` 中的 `onnxruntime.dll`、`onnxruntime_providers_shared.dll`、`onnxruntime_providers_cuda.dll` 完整部署到新的应用输出目录。三者必须来自同一个包，避免旧 `runtimes/win-x64/native` 目录中残留另一套同名 DLL。
+4. 在启动前配置实际包含 CUDA 12 和对应 cuDNN DLL 的目录，显式选择 CUDA Provider 后运行真实模型。
+
+```powershell
+$env:CUDA_PATH = '你的 CUDA 12.9 安装目录'
+$env:CUDNN_PATH = '你的 cuDNN 9.22 CUDA 12 版安装目录'
+$env:CUDNN_ROOT = $env:CUDNN_PATH
+$cudaBin = Join-Path $env:CUDA_PATH 'bin'
+$cudnnBin = Join-Path $env:CUDNN_PATH 'bin'
+$env:DEPLOYSHARP_ONNXRUNTIME_CUDA_DLL_DIRECTORIES = "$cudaBin;$cudnnBin"
+$env:PATH = "$cudaBin;$cudnnBin;$env:PATH"
+```
+
+变量仅影响当前进程及其子进程。`$cudaBin` 应包含 `cudart64_12.dll`、`cublas64_12.dll`、`cublasLt64_12.dll`；不要仅按安装目录名称推断依赖存在。可运行的 [YOLO26 后端示例](../blog/2.0.0/2026-10/examples/02-yolo26-backends/Yolo26Backends.csproj) 提供 `OrtCuda12NativeDir` 发布参数，自动选择 Managed 包并复制上述三份 DLL；完整命令和结果见[随文教程第 8.4 节](../blog/2.0.0/2026-10/2026-10-28-02-yolo26-quickstart.md#84-在-windows-上切换后端结果是否一致)。该结果不扩大为 CUDA 13 或所有模型已经验证。
+
+### CPU 线程配置
 
 一个可复现的 CPU 配置如下：
 

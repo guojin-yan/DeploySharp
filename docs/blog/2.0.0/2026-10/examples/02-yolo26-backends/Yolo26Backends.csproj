@@ -10,6 +10,7 @@
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <IsPackable>false</IsPackable>
+    <UseCuda Condition="'$(OrtCuda12NativeDir)' != ''">true</UseCuda>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="JYPPX.DeploySharp.Visual.OpenCV" Version="2.0.0" />
@@ -20,7 +21,20 @@
     <PackageReference Include="JYPPX.OpenCV.runtime.win-x64" Version="5.0.0" />
     <PackageReference Include="OpenVINO.runtime.win" Version="2026.2.1" />
     <PackageReference Include="JYPPX.TensorRT.CSharp.API.Runtime.win-x64.trt10.11.cuda12.9.cudnn9.22.Bridge" Version="4.0.0" />
-    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.28.0" Condition="'$(UseCuda)' != 'true'" />
-    <PackageReference Include="Microsoft.ML.OnnxRuntime.Gpu.Windows" Version="1.28.0" Condition="'$(UseCuda)' == 'true'" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.28.0" Condition="'$(UseCuda)' != 'true' and '$(OrtCuda12NativeDir)' == ''" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Gpu.Windows" Version="1.28.0" Condition="'$(UseCuda)' == 'true' and '$(OrtCuda12NativeDir)' == ''" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.28.0" Condition="'$(OrtCuda12NativeDir)' != ''" />
   </ItemGroup>
+  <!-- CUDA 12 使用官方同版本发行包的完整三件套，避免同时部署 NuGet 的 CUDA 13 原生文件。 -->
+  <ItemGroup Condition="'$(OrtCuda12NativeDir)' != ''">
+    <Content Include="$(OrtCuda12NativeDir)\onnxruntime.dll;$(OrtCuda12NativeDir)\onnxruntime_providers_shared.dll;$(OrtCuda12NativeDir)\onnxruntime_providers_cuda.dll">
+      <Link>%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+  <Target Name="ValidateOrtCuda12Native" BeforeTargets="PrepareForBuild" Condition="'$(OrtCuda12NativeDir)' != ''">
+    <Error Condition="!Exists('$(OrtCuda12NativeDir)\onnxruntime.dll') or !Exists('$(OrtCuda12NativeDir)\onnxruntime_providers_shared.dll') or !Exists('$(OrtCuda12NativeDir)\onnxruntime_providers_cuda.dll')"
+           Text="OrtCuda12NativeDir 必须指向官方 onnxruntime-win-x64-gpu_cuda12-1.28.0 发行包的 lib 目录，其中需包含 ORT、shared 和 CUDA 三个 DLL。" />
+  </Target>
 </Project>

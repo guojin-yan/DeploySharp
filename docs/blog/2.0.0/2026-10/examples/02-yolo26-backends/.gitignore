@@ -3,3 +3,5 @@ models/
 images/
 cpu-runtime/
 cuda-runtime/
+cuda12-runtime/
+native/

@@ -45,7 +45,7 @@ DeploySharp 2.0 在模型接入和实际应用流程上做了扩展，主要包�
 
 接下来从一个空的 C# 控制台项目开始，使用 **YOLO26n + ONNX Runtime CPU** 完成目标检测，并把类别、置信度和检测框画到原图上。本文选用 YOLO26 的端到端 ONNX 检测输出，直接读取框、分数和类别，再完成筛选与坐标还原。使用正式发布的 NuGet 包即可运行，无需先编译 DeploySharp 源码。
 
-我们会依次完成 **选择 NuGet → 准备模型和图片 → 编写检测代码 → 查看与保存结果**，再演示替换自有模型与类别表。第八节还会在同一台 Windows 设备上切换 OpenVINO、OpenCV DNN 和 TensorRT，检查结果与耗时。模型直接从本地路径加载，重点放在输入输出与前后处理配置上。
+我们会依次完成 **选择 NuGet → 准备模型和图片 → 编写检测代码 → 查看与保存结果**，再演示替换自有模型与类别表。第八节还会在同一台 Windows 设备上切换 ORT CUDA、OpenVINO、OpenCV DNN 和 TensorRT，检查结果与耗时。模型直接从本地路径加载，重点放在输入输出与前后处理配置上。
 
 ## 三、准备环境，创建控制台项目
 
@@ -124,7 +124,7 @@ dotnet add package JYPPX.OpenCV.runtime.win-x64 --version 5.0.0
 
 `Core`、`Visual`、`Extensibility`、`JYPPX.OpenCV.CSharp.API` 和 `Microsoft.ML.OnnxRuntime.Managed` 等依赖由 NuGet 自动解析，本文无需逐个添加。这里特别区分 **`Microsoft.ML.OnnxRuntime.Managed` 与 CPU runtime 包**：有托管接口，仍需要对应的原生运行库才能真正推理。
 
-**先跟着本文跑通 CPU 时，到这里就完成选包了，可以直接进入第五节。** 下面按场景说明其他组合；第 8.4 节提供 Windows 四种后端的实际结果与可运行对照工程，更完整的设备和离线部署在后续专题展开。
+**先跟着本文跑通 CPU 时，到这里就完成选包了，可以直接进入第五节。** 下面按场景说明其他组合；第 8.4 节提供 Windows 四种推理引擎、五条执行路径的实际结果与可运行对照工程，更完整的设备和离线部署在后续专题展开。
 
 ### 4.3 场景二：NVIDIA 显卡，使用 ONNX Runtime CUDA
 
@@ -139,14 +139,18 @@ dotnet add package JYPPX.OpenCV.runtime.win-x64 --version 5.0.0
 
 这一组选择 GPU runtime。已有 CPU 工程切换时，先移除原来的显式 `Microsoft.ML.OnnxRuntime` 引用，再添加 GPU 包，避免两套原生文件在输出目录中互相覆盖。`Microsoft.ML.OnnxRuntime.Managed` 仍会作为依赖存在。
 
-此外还需要目标显卡驱动，以及 **与该 ONNX Runtime 版本匹配的 CUDA、cuDNN**。GPU 包不会替你安装全部 NVIDIA 环境。正式版适配器依赖 Managed `1.28.0`，选用的原生包也应保持匹配。本文尝试的 `Gpu.Windows 1.28.0` 原生文件依赖 `cublasLt64_13.dll` 等 CUDA 13 库，不能直接沿用 TensorRT 案例的 CUDA 12 环境。
+此外还需要目标显卡驱动，以及 **与该 ONNX Runtime 原生发行包匹配的 CUDA、cuDNN**。GPU 包不会替你安装全部 NVIDIA 环境。正式版适配器依赖 Managed `1.28.0`，原生库也要保持 `1.28.0`。
 
-**本机这条 ORT CUDA 路径尚未跑通。** 补齐加载路径后仍在 `cudaSetDevice` 报错 801，第 8.4 节如实记录，没有自动退回 CPU 并当作 GPU 成功。
+这里还要区分 **CUDA 主版本**：本次使用的 `Gpu.Windows 1.28.0` NuGet 原生文件依赖 CUDA 13。本机驱动 `576.02` 支持到 CUDA `12.9`，直接使用它会在 `cudaSetDevice` 报错 801；安装 CUDA 13 Toolkit 不能代替更新驱动。
+
+**本机已通过官方同版本 CUDA 12 发行包跑通 ORT CUDA。** 对这类已有 CUDA 12 环境的设备，可以改用 `Microsoft.ML.OnnxRuntime.Managed 1.28.0` 加官方 `onnxruntime-win-x64-gpu_cuda12-1.28.0.zip`，完整部署其中的原生库，不必降级托管包。第 8.4 节提供了下载、发布和运行命令；对照工程会在两种原生来源中只选择一种。
 
 安装完成后，程序还要显式配置 CUDA Provider 和设备请求。直接运行本文的 CPU 初始化代码，使用的仍然是 CPU。环境对应关系可以从官方说明中核对：
 
 ```text
 https://onnxruntime.ai/docs/execution-providers/CUDA-ExecutionProvider.html
+https://github.com/microsoft/onnxruntime/releases/tag/v1.28.0
+https://docs.nvidia.com/deploy/cuda-compatibility/minor-version-compatibility.html
 ```
 
 ### 4.4 场景三：使用 OpenVINO 执行视觉推理
@@ -536,17 +540,17 @@ dotnet run -c Release -- .\images\my-image.jpg .\models\best.onnx .\models\class
 
 上面的完整代码保留最容易开始的 ORT CPU 路径。我另外用正式版 NuGet 建立了一个**后端对照工程**，复用相同模型、Letterbox、阈值和 decoder；切换的部分集中在引擎注册、设备请求与 Engine 准备中。
 
-测试仍在第 3.1 节的 Windows 设备上进行，GPU 是 **RTX 3060 Laptop，6 GB**，驱动 `576.02`。TensorRT 使用 `10.11.0.33`、CUDA `12.9`、cuDNN `9.22.0` 和 `4.0.0` bridge，在本机由 ONNX 构建 **FP32 Engine**；OpenVINO 使用 `2026.2.1` CPU，并选择 `Latency` 提示。图像准备统一由 OpenCV CPU 完成。
+测试仍在第 3.1 节的 Windows 设备上进行，GPU 是 **RTX 3060 Laptop，6 GB**，驱动 `576.02`。ORT CUDA 使用 Managed `1.28.0` 与官方同版本 CUDA 12 原生发行包，配合 CUDA `12.9`、cuDNN `9.22.0`；为便于与 CPU 比较，显式设置 `use_tf32=0`。TensorRT 使用 `10.11.0.33` 和 `4.0.0` bridge，复用上述 CUDA/cuDNN，在本机由 ONNX 构建 **FP32 Engine**；OpenVINO 使用 `2026.2.1` CPU，并选择 `Latency` 提示。图像准备统一由 OpenCV CPU 完成。
 
 | 后端与执行设备 | 运行结果 | `Run` P50 / ms | 总 P50 / ms | 总 P95 / ms |
 | --- | --- | ---: | ---: | ---: |
 | ORT `1.28.0` CPU | 4 person + 1 bus | 27.452 | 50.158 | 68.378 |
+| ORT `1.28.0` CUDA 12，关闭 TF32 | 4 person + 1 bus | 9.139 | 37.539 | 39.947 |
 | OpenVINO `2026.2.1` CPU | 4 person + 1 bus | 15.750 | 31.550 | 36.833 |
 | OpenCV DNN `5.0.0` CPU | 4 person + 1 bus | 69.897 | 85.677 | 111.027 |
 | TensorRT `10.11.0.33` CUDA，FP32 | 4 person + 1 bus | 6.245 | 19.993 | 21.863 |
-| ORT `1.28.0` CUDA | 环境组合未跑通，`cudaSetDevice` 报错 801 | — | — | — |
 
-**四条成功路径的类别与结果顺序一致**，相对 ORT CPU 的最大分数差小于 `0.000002`，框的 `X/Y/Width/Height` 最大差小于 `0.001` 像素。这说明本次切换保持了检测结果；它不是在完整数据集上的精度评测，也不代表其他模型自动兼容。
+**五条路径的类别与结果顺序一致**，相对 ORT CPU 的最大分数差小于 `0.000002`，框的 `X/Y/Width/Height` 最大差小于 `0.001` 像素。另一次独立的 ORT Profiling 检查记录到 `CUDAExecutionProvider` 的节点执行，确认这条路径确实使用 GPU；该诊断运行不纳入计时表。这说明本次切换保持了检测结果；它不是在完整数据集上的精度评测，也不代表其他模型自动兼容。
 
 计时采用 **预热 3 次、统计 20 次、nearest-rank P50/P95**。`Run` 包含后端执行和结果解码；“总”从每次读图、Letterbox、归一化开始，到检测完成及本次输入释放结束。两者都不含模型/Session 初始化、Engine 构建、绘图和文件写出。各引擎使用上述默认或 Latency 配置，没有统一锁频，因此表格是这台设备上的教程运行记录，不是所有 CPU/GPU 的性能排名；总 P50 也不能由各阶段 P50 相加得到。
 
@@ -591,16 +595,34 @@ dotnet run -c Release -- .\images\bus.jpg .\models\yolo26n.onnx
 
 这些路径请替换为真实目录；需要加入搜索路径的是**实际包含 DLL 的目录**。有些 CUDA 安装把 DLL 放在 `bin/x64`，不能只看文件夹名称。本例首次转换可能需要等待，随后复用 ONNX 旁的 `.win-trt10.engine`。更换模型、GPU 或 TensorRT 版本时，应使用新的 Engine 文件名重新构建。这里加速的是模型执行，未启用 `Visual.TensorRT` 的 CUDA 前后处理。
 
-ORT CUDA 需要独立的 GPU 输出目录。对照工程提供 `UseCuda` 开关，但**当前这台机器尚未完成该组合**；在准备好匹配的驱动、CUDA 13 与 cuDNN 后可按下面的入口继续验证，不应把上面的 TensorRT 成功当作 ORT CUDA 的成功证据：
+本机 ORT CUDA 采用 **Managed 1.28.0 + 官方 CUDA 12 原生发行包**。先在对照工程目录下载并解压；已有这个官方包时，直接将 `$ortLib` 指向其 `lib` 目录即可：
 
 ```powershell
-dotnet publish -c Release -p:UseCuda=true -o .\cuda-runtime
-$env:DEPLOYSHARP_DEMO_BACKEND = 'ort-cuda'
-$env:DEPLOYSHARP_CUDA_NATIVE_DIR = '包含 cudart64_13.dll 和 cublasLt64_13.dll 的目录'
-dotnet .\cuda-runtime\Yolo26Backends.dll .\images\bus.jpg .\models\yolo26n.onnx
+New-Item -ItemType Directory -Force .\native | Out-Null
+$ortZip = '.\native\onnxruntime-win-x64-gpu_cuda12-1.28.0.zip'
+Invoke-WebRequest -Uri 'https://github.com/microsoft/onnxruntime/releases/download/v1.28.0/onnxruntime-win-x64-gpu_cuda12-1.28.0.zip' -OutFile $ortZip
+Expand-Archive -LiteralPath $ortZip -DestinationPath .\native
+$ortLib = (Resolve-Path '.\native\onnxruntime-win-x64-gpu_cuda12-1.28.0\lib').Path
 ```
 
-仍需让同版本 cuDNN 及其他依赖可被加载。示例的可选 `DEPLOYSHARP_CUDA_NATIVE_DIR` 会按绝对路径预加载 CUDA 核心库；它只能解决搜索路径问题，不能替代驱动和运行时兼容性。本次报错发生在 Session 创建阶段，因此没有给这条路径填入“推理时间”。
+发布时传入 `OrtCuda12NativeDir`，工程会引用 Managed 包，并自动复制 `onnxruntime.dll`、`onnxruntime_providers_shared.dll`、`onnxruntime_providers_cuda.dll`，不会再引入 NuGet 的 CUDA 13 原生文件。请使用新的独立输出目录：
+
+```powershell
+dotnet publish -c Release "-p:OrtCuda12NativeDir=$ortLib" -o .\cuda12-runtime
+$env:CUDA_PATH = '你的 CUDA 12.9 安装目录'
+$env:CUDNN_PATH = '你的 cuDNN 9.22 CUDA 12 版安装目录'
+$env:CUDNN_ROOT = $env:CUDNN_PATH
+$cudaBin = Join-Path $env:CUDA_PATH 'bin'
+$cudnnBin = Join-Path $env:CUDNN_PATH 'bin'
+$env:DEPLOYSHARP_ONNXRUNTIME_CUDA_DLL_DIRECTORIES = "$cudaBin;$cudnnBin"
+$env:PATH = "$cudaBin;$cudnnBin;$env:PATH"
+$env:DEPLOYSHARP_DEMO_BACKEND = 'ort-cuda'
+dotnet .\cuda12-runtime\Yolo26Backends.dll .\images\bus.jpg .\models\yolo26n.onnx
+```
+
+`$cudaBin` 应实际包含 `cudart64_12.dll`、`cublas64_12.dll` 和 `cublasLt64_12.dll`，`$cudnnBin` 应来自 CUDA 12 版 cuDNN。不要只替换某一个 ORT DLL，也不要将 CUDA 12 与 CUDA 13 的 Provider 混在一个输出目录中。这里配置的是当前进程环境，不修改系统全局设置。
+
+代码中的 CUDA 分支显式选择 `OnnxRuntimeExecutionProvider.Cuda`，并通过 `cudaProviderOptions` 设置 `use_tf32=0`。后者用于本次结果对照，启用 TF32 后应重新比较精度和计时。若目标机已具备匹配 CUDA 13 的驱动与依赖，也可以省略 `OrtCuda12NativeDir`，使用 `-p:UseCuda=true -o .\cuda-runtime` 选择 NuGet GPU 包；这条 CUDA 13 组合未计入本机通过范围。
 
 ## 九、常见问题与检查方法
 
@@ -614,6 +636,7 @@ dotnet .\cuda-runtime\Yolo26Backends.dll .\images\bus.jpg .\models\yolo26n.onnx
 | 提示张量名称、Shape 或类别数不匹配 | `inputName`、`outputName`、`modelSize` 和类别文件是否符合实际模型 | 按第 8.3 节修改输入输出配置，确认是 `[1, N, 6]` 的 YOLO26 端到端检测导出 |
 | 框整体偏移或尺寸不对 | 缩放方式、填充、颜色和输出格式是否配套 | 先使用本文模型与 Letterbox 配置复现；绘图直接使用源图坐标 |
 | 装了 GPU 包，仍显示 CPU | Provider 与 `BackendRequest` 是否仍使用 CPU 配置 | 按 GPU 后端教程配置 CUDA Provider，并核对实际可用设备 |
+| `cudaSetDevice` 报错 801 | 本机驱动与 ORT 原生包的 CUDA 主版本是否兼容 | 本文 CUDA 12 设备按第 8.4 节选择同版本官方 CUDA 12 包，并同步配置 CUDA/cuDNN 目录 |
 
 后端选择需要同时看模型和运行环境，可以先核对以下入口，再根据完整异常信息排查：
 
@@ -630,7 +653,7 @@ https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/docs/model-backen
 
 ## 十、总结与后续
 
-这篇完成了从空项目、按场景选择 NuGet、下载模型和图片，到 YOLO26 检测及结果绘制的完整过程。CPU 入门显式安装四个包；随后在同一台 Windows 设备跑通 ORT CPU、OpenVINO CPU、OpenCV DNN 与 TensorRT，对照了实际结果与计时，也保留了 ORT CUDA 的环境限制。
+这篇完成了从空项目、按场景选择 NuGet、下载模型和图片，到 YOLO26 检测及结果绘制的完整过程。CPU 入门显式安装四个包；随后在同一台 Windows 设备跑通 ORT CPU、ORT CUDA、OpenVINO CPU、OpenCV DNN 与 TensorRT，对照了实际结果与计时，也说明了 CUDA 主版本与原生包的选择。
 
 接入自己的应用时，可以先保留这条已经跑通的路径，再通过模型路径、图片路径和类别文件切换到实际数据。输入尺寸与前后处理按训练和导出约定配置，pipeline 则可以在多次推理中复用。
 

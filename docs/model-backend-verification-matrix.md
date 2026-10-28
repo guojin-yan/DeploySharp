@@ -63,6 +63,8 @@ SAM v1、CLIP 和 BLIP Caption Base 的 `✓` 绑定公共 ModelPack 中的精�
 
 PaddleOCR-VL-1.6 使用四图 ONNX Bundle；TensorRT 使用带独立 Prefill 图的五图 Bundle。ORT CPU、OpenVINO CPU 和 TensorRT CUDA 已完成声明任务的生成与 EOS/文本合同，OpenCV DNN 因动态 Shape 和高阶辅助输入导入限制不支持。该行不表示任意页面质量、任意 TensorRT profile 或全设备端 KV 路径均已验证。
 
+**ORT CUDA 补充验证：** `yolo/v26/detect/n` 的同一公开 ONNX 工件已在 Windows 11 x64、RTX 3060 Laptop、驱动 `576.02`、Managed `1.28.0` + 官方 CUDA 12 原生发行包 `1.28.0`、CUDA `12.9` / cuDNN `9.22` 上通过。输入为 `bus.jpg`、640×640 Letterbox，关闭 TF32；5 个检测框的类别和顺序与 CPU 一致，最大分数差小于 `0.000002`，最大坐标差小于 `0.001` 像素，并由 ORT Profiling 核实 CUDA 节点执行。部署命令和计时见 [YOLO26 教程第 8.4 节](blog/2.0.0/2026-10/2026-10-28-02-yolo26-quickstart.md#84-在-windows-上切换后端结果是否一致)。此项独立于上表的 ORT CPU 列，不表示其它模型或 CUDA 13 组合已验证。
+
 ## PP-OCR 全版本发布工件
 
 本表绑定 `PaddleOcrReleaseArtifacts` 登记的 `models-paddleocr` ONNX、字典和 SHA-256，由 `PaddleOcrReleaseClient` 获取。它与主目录中的同名 Preview 是不同的下载路径。
