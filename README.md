@@ -44,9 +44,9 @@ The V2 API is a clean redesign and does not provide V1 source, binary, configura
 
 ## 📢 Latest Update: 2.0.0
 
-`2.0.0` is the first stable DeploySharp V2 release target, covering typed inference, visual workflows, PaddleOCR/PP-Structure, model downloads, and replaceable backends. Its release validation scope is Windows 10/11 x64; model and backend limits remain explicit. See the [2.0.0 release notes](docs/releases/2.0.0.md) for the complete scope and upgrade guidance.
+`2.0.0` is the first stable DeploySharp V2 release, covering typed inference, visual workflows, PaddleOCR/PP-Structure, model downloads, and replaceable backends. Its release validation scope is Windows 10/11 x64; model and backend limits remain explicit. See the [2.0.0 release notes](docs/releases/2.0.0.md) for the complete scope and upgrade guidance.
 
-The `2.0.0` release comes from the `DeploySharpV2.0` branch. The NuGet badges and [GitHub Releases](https://github.com/guojin-yan/DeploySharp/releases) show available packages and assets. Upgrade all DeploySharp packages together and recompile applications built against `2.0.0-alpha.1`; see the [upgrade guidance](docs/releases/2.0.0.md#从预览版升级) and [preview release notes](docs/releases/2.0.0-alpha.1.md) for version-specific changes.
+Published on October 28, 2026 from the `DeploySharpV2.0` branch: [DeploySharp 2.0.0](https://github.com/guojin-yan/DeploySharp/releases/tag/v2.0.0). Packages are distributed through NuGet.org and GitHub Packages. Upgrade all DeploySharp packages together and recompile applications built against `2.0.0-alpha.1`; see the [upgrade guidance](docs/releases/2.0.0.md#从预览版升级) and [preview release notes](docs/releases/2.0.0-alpha.1.md) for version-specific changes.
 
 ## 🚀 Get Started In 30 Seconds
 
@@ -117,7 +117,7 @@ See the [detailed package combination and installation guide](docs/articles/pack
 
 ## 🌐 Public Packages And Release Assets
 
-The version column reads NuGet directly and includes previews. It shows the latest published version and updates automatically when `2.0.0` becomes available.
+The version column reads NuGet directly and includes previews. It updates automatically as new versions become available.
 
 | Package | NuGet version | Purpose |
 | --- | --- | --- |

@@ -44,9 +44,9 @@ V2 是全新 API 设计，不提供 V1 的源码、二进制、配置或行为�
 
 ## 📢 当前更新：2.0.0
 
-`2.0.0` 是 DeploySharp V2 的首个正式版本目标，包含类型化推理、视觉工作流、PaddleOCR/PP-Structure、模型下载和可替换后端。本版本的发布验证范围为 Windows 10/11 x64，各模型与后端继续保留明确的使用边界。完整功能和升级说明见 [2.0.0 版本说明](docs/releases/2.0.0.md)。
+`2.0.0` 是 DeploySharp V2 的首个正式版本，包含类型化推理、视觉工作流、PaddleOCR/PP-Structure、模型下载和可替换后端。本版本的发布验证范围为 Windows 10/11 x64，各模型与后端继续保留明确的使用边界。完整功能和升级说明见 [2.0.0 版本说明](docs/releases/2.0.0.md)。
 
-`2.0.0` 从 `DeploySharpV2.0` 分支发布，实际可用包和资产以 NuGet 徽章及 [GitHub Releases](https://github.com/guojin-yan/DeploySharp/releases) 为准。请将所有 DeploySharp 包升级到同一版本，并重新编译使用 `2.0.0-alpha.1` 的应用；版本差异见[升级说明](docs/releases/2.0.0.md#从预览版升级)和[预览版说明](docs/releases/2.0.0-alpha.1.md)。
+已于 2026 年 10 月 28 日从 `DeploySharpV2.0` 分支发布：[DeploySharp 2.0.0](https://github.com/guojin-yan/DeploySharp/releases/tag/v2.0.0)。NuGet.org 和 GitHub Packages 同步提供包。请将所有 DeploySharp 包升级到同一版本，并重新编译使用 `2.0.0-alpha.1` 的应用；版本差异见[升级说明](docs/releases/2.0.0.md#从预览版升级)和[预览版说明](docs/releases/2.0.0-alpha.1.md)。
 
 ## 🚀 30 秒开始
 
@@ -116,7 +116,7 @@ Console.WriteLine(outputs.Count);
 
 ## 🌐 公共包与 Release 资产
 
-版本列直接读取 NuGet 数据，包含预览版，展示实际已发布的最新版本；`2.0.0` 发布后徽章会自动更新，无需手工维护表格中的版本号。
+版本列直接读取 NuGet 数据，包含预览版，随新版本发布自动更新，无需手工维护表格中的版本号。
 
 | 包 | NuGet 版本 | 用途 |
 | --- | --- | --- |
