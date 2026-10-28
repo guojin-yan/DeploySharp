@@ -54,7 +54,7 @@ DeploySharp 将视觉任务与推理引擎分开组织。对于已验证的模�
 
 | 你要完成的任务 | 当前已接入的代表模型 |
 | --- | --- |
-| 目标检测 | YOLOv5/v6/v7/v8/v9/v10、YOLO11/12/13/26 的具体型号；DEIMv2、RF-DETR、PP-YOLOE、RT-DETR |
+| 目标检测 | YOLO26n，以及 YOLOv5/v6/v7/v8/v9/v10、YOLO11/12/13 的具体型号；DEIMv2、RF-DETR、PP-YOLOE、RT-DETR |
 | 分类、实例分割、关键点、旋转框 | YOLO 的相应任务模型，以及 RF-DETR Segment |
 | 工业异常与背景移除 | PaDiM MVTec AD Bottle、BRIA RMBG 1.4/2.0 |
 | 文字识别 | PP-OCRv4、v5、v6 的具体 DET/REC 与方向分类组合 |
@@ -80,18 +80,18 @@ OCR 需要把文字检测、文本行裁剪、方向处理、识别和结果合�
 
 ### 2.4 简洁的调用方式，保留自定义扩展能力
 
-完成模型 Profile 和后端初始化后，核心检测调用可以保持得很短：
+以 YOLO26 检测为例，完成模型 Profile 和后端初始化后，核心调用可以保持得很短：
 
 ```csharp
 using var input = new OpenCvVisualInputFactory()
-    .CreateFromFile(imagePath, profile.VisualProfile);
+    .CreateFromFile(imagePath, profile);
 var result = pipeline.Run(input).GetValue<DetectionResult>();
 
 foreach (var item in result.Detections)
     Console.WriteLine($"{item.Label.Label}: {item.Label.Score:F3}");
 ```
 
-这里的 `profile` 描述模型输入输出，`pipeline` 持有对应推理流程。片段展示的是初始化后的调用；包安装、模型下载、初始化和结果绘制会放到下一篇完整教程中。上述路径已经使用正式版 NuGet 包实际运行。
+这里的 `profile` 是描述输入输出与前后处理的 `VisualModelProfile`，`pipeline` 持有对应推理流程。片段只展示初始化后的调用；第二篇 YOLO26 实战提供包安装、模型准备、初始化和结果绘制的完整代码，已使用正式版 NuGet 包完成 CPU 实跑。
 
 对于自己的模型，接入方式也保留了选择：
 
@@ -121,9 +121,9 @@ foreach (var item in result.Detections)
 
 公开模型已经按视觉、PaddleOCR、GGUF 等集合整理到 GitHub Release。可以选择单个模型或所需 Bundle，不必为了一个轻量模型下载整个集合。
 
-ModelFactory 与专用下载器负责模型选择、大小和 SHA-256 校验、本地缓存与离线复用。模型、字典和 tokenizer 按配套清单获取，应用再准备所选后端的原生运行时。
+需要在线获取公开模型时，可以使用 ModelFactory 与专用下载器，按配套清单准备模型、字典和 tokenizer，并复用本地缓存。应用再准备所选后端的原生运行时。
 
-对应用交付来说，同一套模型清单可以用于在线获取和离线准备，也更容易明确应用实际使用的是哪一份模型。
+**已有本地模型或自己训练的模型，也可以直接通过文件路径加载。** 配置好类别、输入规格和对应的前后处理后，就能接入同一套推理流程；第二篇提供了图片、模型和类别文件的替换方法。
 
 ## 三、模块组成与应用场景
 
@@ -164,9 +164,11 @@ DeploySharp 2.0.0 已发布到 **NuGet.org、GitHub Packages 和 GitHub Release*
 | 使用 OpenCV 读图，ONNX Runtime 执行视觉推理 | `Visual.OpenCV` + `Backend.OnnxRuntime` |
 | 使用 OpenVINO 或 OpenCV DNN 执行视觉推理 | `Visual.OpenCV` + `Backend.OpenVINO` 或 `Backend.OpenCV` |
 | 使用 TensorRT CUDA 视觉流程 | `Visual.TensorRT` + `Backend.TensorRT` |
-| 按模型目录下载并缓存模型 | 在任务组件之外加入 `ModelFactory` |
+| 按模型目录下载并缓存模型 | 需要自动下载时，再加入 `ModelFactory`；已有本地模型可直接加载 |
 
-以上是主要组件组合，基础包依赖由 NuGet 解析。所有 DeploySharp 包请保持同为 `2.0.0`，再按后端准备对应的 OpenCV、ONNX Runtime、OpenVINO 或 CUDA/TensorRT 等原生运行时。详细安装组合与依赖说明如下：
+以上是主要组件组合，基础包依赖由 NuGet 解析。所有 DeploySharp 包请保持同为 `2.0.0`，再按后端准备对应的 OpenCV、ONNX Runtime、OpenVINO 或 CUDA/TensorRT 等原生运行时。
+
+**`Visual.OpenCV` 负责图像输入与前处理，`Backend.OpenCV` 负责 OpenCV DNN 推理**；使用 ONNX Runtime 推理时，也可以用 OpenCV 处理图片。第二篇按 CPU、CUDA、OpenVINO、OpenCV DNN 和 TensorRT 等场景列出安装组合；通用依赖说明如下：
 
 ```text
 https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/docs/articles/package-combinations.md
@@ -182,7 +184,14 @@ https://github.com/guojin-yan/DeploySharp/releases/tag/v2.0.0
 
 ### 5.2 模型、案例与使用文档
 
-仓库已经按功能和具体模型整理了使用案例，公开模型也提供了相应的下载入口。想先体验目标检测，可以从 YOLOv8 案例开始；需要文字识别，可以选择 PP-OCR 对应组合。模型支持指南会列出精确模型名称，验证矩阵则说明各模型在哪些后端完成了运行验证。
+想先体验目标检测，建议从**第二篇 YOLO26 入门实战**开始：从空控制台项目选择 NuGet 包，加载本地 ONNX 模型，再把检测框、类别和置信度画到原图上。教程使用 **YOLO26n + ONNX Runtime CPU**，在测试图片中实际检测到 4 个行人和 1 辆公交车，并说明了如何换用自己的模型、图片和类别文件。
+
+```text
+YOLO26 入门实战（第二篇）：
+https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/docs/blog/2.0.0/2026-10/2026-10-28-02-yolo26-quickstart.md
+```
+
+需要文字识别，可以选择 PP-OCR 对应组合。仓库也按功能和具体模型整理了使用案例；模型支持指南列出精确型号，验证矩阵说明各模型在哪些后端完成了运行验证。
 
 ```text
 使用教程：
@@ -208,9 +217,9 @@ https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/docs/articles/dev
 
 DeploySharp 2.0.0 把常用模型的部署、多个推理引擎的接入，以及 OCR、文档、视频和大图处理整理到了一套可组合的 C# 类库中。对于已经接入的模型，大家可以使用现成处理流程；有自己的模型和业务需求，也可以继续扩展。
 
-这篇先把新版的主要功能介绍给大家。后续我会结合真实图片、代码和运行结果，陆续整理以下几组实战教程：
+这篇先把新版的主要功能介绍给大家。第二篇已经给出了 YOLO26 检测的完整实战，后续会继续结合真实图片、代码和运行结果，展开以下几组专题：
 
-- **视觉模型部署：**从 YOLOv8 检测开始，再讲分类、分割、关键点和旋转框，完成从模型获取到结果绘制的过程。
+- **视觉模型部署：**以 YOLO26 检测为起点，再讲分类、分割、关键点和旋转框，完成从模型获取到结果绘制的过程。
 - **OCR 与文档处理：**分别演示 PP-OCRv4/v5/v6 的完整识别流程，以及 PP-Structure 的区域 OCR、表格识别与 HTML 输出。
 - **自定义模型与区域处理：**接入自己的前后处理和结果类型，配置 ROI，并用重叠切片处理大图中的小目标。
 - **多引擎部署与性能优化：**展开运行环境、离线部署、Batch、多推理器、视频异步预取和 TensorRT CUDA 优化，结合设备实测解释参数选择。

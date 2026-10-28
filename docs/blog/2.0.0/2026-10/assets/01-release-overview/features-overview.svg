@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1440" height="2050" viewBox="0 0 1440 2050" role="img" aria-labelledby="title desc">
   <title id="title">DeploySharp 2.0.0 核心特色：多后端、多模型、简洁接入</title>
-  <desc id="desc">项目特色总览。五类后端分别服务视觉张量推理和 GGUF 生成；展示视觉任务、PaddleOCR 与文档处理、初始化后的核心调用、Batch 与会话池、异步预取、ROI 与大图切片，以及按需模型下载。所有图形为能力示意，不表示性能实测或任意模型均可在全部后端运行。</desc>
+  <desc id="desc">项目特色总览。五类后端分别服务视觉张量推理和 GGUF 生成；展示 YOLO26 等视觉任务、PaddleOCR 与文档处理、初始化后的核心调用、Batch 与会话池、异步预取、ROI 与大图切片，以及按需模型下载和本地模型加载。所有图形为能力示意，不表示性能实测或任意模型均可在全部后端运行。</desc>
   <defs>
     <linearGradient id="bg" x2="0.8" y2="1"><stop stop-color="#0b192e"/><stop offset="1" stop-color="#152440"/></linearGradient>
     <linearGradient id="accent"><stop stop-color="#62d8ec"/><stop offset="1" stop-color="#83e6b6"/></linearGradient>
@@ -51,7 +51,7 @@
       <rect x="48" y="526" width="660" height="430" rx="24" fill="url(#panel)" stroke="#396e89" stroke-width="2"/>
       <text x="78" y="578" font-size="34" font-weight="700" fill="#eff8ff">常用视觉任务，配套前后处理</text>
       <use href="#image" x="78" y="608" width="239" height="153"/>
-      <text x="345" y="642" font-size="28" font-weight="600" fill="#91e8d6">YOLO 系列</text>
+      <text x="345" y="642" font-size="28" font-weight="600" fill="#91e8d6">YOLO26 / YOLO 系列</text>
       <text x="345" y="683" font-size="25" fill="#d3e2ef">RT-DETR / RF-DETR</text>
       <text x="345" y="721" font-size="25" fill="#d3e2ef">DEIMv2 / PP-YOLOE</text>
       <g font-size="24" text-anchor="middle" fill="#e3f0f8">
@@ -126,11 +126,11 @@
       <text x="762" y="1421" font-size="34" font-weight="700" fill="#eff8ff">模型按需获取，支持离线复用</text>
       <g text-anchor="middle">
         <rect x="762" y="1465" width="165" height="98" rx="17" fill="#2d4360"/><text x="844" y="1505" font-size="29" font-weight="700" fill="#e3d5ff">Release</text><text x="844" y="1538" font-size="23" fill="#c3d4e4">选择模型</text>
-        <rect x="979" y="1465" width="165" height="98" rx="17" fill="#274b53"/><text x="1061" y="1505" font-size="29" font-weight="700" fill="#8be2cf">SHA-256</text><text x="1061" y="1538" font-size="23" fill="#c3d4e4">完整性校验</text>
+        <rect x="979" y="1465" width="165" height="98" rx="17" fill="#274b53"/><text x="1061" y="1505" font-size="29" font-weight="700" fill="#8be2cf">按需下载</text><text x="1061" y="1538" font-size="23" fill="#c3d4e4">配套文件</text>
         <rect x="1196" y="1465" width="165" height="98" rx="17" fill="#3d414f"/><text x="1278" y="1505" font-size="29" font-weight="700" fill="#f5ca9e">本地缓存</text><text x="1278" y="1538" font-size="23" fill="#c3d4e4">离线使用</text>
       </g>
       <g stroke="#66dcc6" stroke-width="3" marker-end="url(#arrow)"><path d="M936 1515H966"/><path d="M1153 1515H1183"/></g>
-      <text x="762" y="1616" font-size="25" fill="#e0eaf4">按单个模型或所需 Bundle 下载</text>
+      <text x="762" y="1616" font-size="25" fill="#e0eaf4">自有模型也可直接从本地路径加载</text>
       <text x="762" y="1672" font-size="22" fill="#9fbad0">模型资产与原生运行时分别准备</text>
     </g>
 
