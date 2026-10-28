@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="700" viewBox="0 0 1440 700" role="img" aria-labelledby="title desc">
+  <title id="title">视觉工作流与多后端选择</title>
+  <desc id="desc">C# 应用通过 DeploySharp 的模型 Profile 和视觉工作流显式选择 ONNX Runtime、OpenVINO、TensorRT 或 OpenCV DNN。每次执行选择一个后端，模型与运行时必须匹配。LlamaSharp 的 GGUF 生成路径未混入此视觉图。</desc>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M1 1L9 5L1 9Z" fill="#258c83"/></marker>
+    <filter id="s" x="-15%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="7" stdDeviation="9" flood-color="#324f70" flood-opacity="0.08"/></filter>
+  </defs>
+  <rect width="1440" height="700" rx="26" fill="#f2f6fb"/>
+  <g font-family="Segoe UI, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+    <text x="56" y="68" font-size="36" font-weight="700" fill="#16324a">业务围绕任务组织，后端按部署环境选择</text>
+    <text x="57" y="111" font-size="24" fill="#63788d">以视觉张量推理为例</text>
+    <g filter="url(#s)">
+      <rect x="56" y="270" width="272" height="196" rx="22" fill="#203c57"/>
+      <rect x="80" y="294" width="224" height="27" rx="7" fill="#3a5671"/><circle cx="97" cy="308" r="4" fill="#8de2d0"/><circle cx="113" cy="308" r="4" fill="#f2c29d"/>
+      <text x="192" y="383" text-anchor="middle" font-size="44" font-weight="700" fill="#f6faff">C# 应用</text>
+      <text x="192" y="427" text-anchor="middle" font-size="24" fill="#c3d7e8">图像输入 / 业务结果</text>
+      <rect x="410" y="248" width="387" height="240" rx="22" fill="#fff" stroke="#c1d8df" stroke-width="2"/>
+      <text x="603" y="302" text-anchor="middle" font-size="35" font-weight="700" fill="#226c69">DeploySharp</text>
+      <text x="603" y="350" text-anchor="middle" font-size="26" fill="#325068">模型 Profile / 任务工作流</text>
+      <path d="M440 372H766" stroke="#d3e2e9"/>
+      <text x="603" y="414" text-anchor="middle" font-size="25" fill="#536d7c">预处理 → 推理 → 结果解码</text>
+      <text x="603" y="456" text-anchor="middle" font-size="24" fill="#258c83">保持任务与结果的语义</text>
+    </g>
+    <path d="M337 368H395" stroke="#258c83" stroke-width="4" marker-end="url(#a)"/>
+    <path d="M806 368H858M858 207V555" fill="none" stroke="#258c83" stroke-width="4"/>
+    <g fill="none" stroke="#258c83" stroke-width="4" marker-end="url(#a)"><path d="M858 207H911"/><path d="M858 323H911"/><path d="M858 439H911"/><path d="M858 555H911"/></g>
+    <g>
+      <rect x="927" y="164" width="457" height="88" rx="18" fill="#e5e0f4"/><text x="954" y="202" font-size="29" font-weight="700" fill="#514478">ONNX Runtime</text><text x="954" y="233" font-size="23" fill="#676182">CPU / CUDA</text>
+      <rect x="927" y="280" width="457" height="88" rx="18" fill="#dceef2"/><text x="954" y="318" font-size="29" font-weight="700" fill="#2b687b">OpenVINO</text><text x="954" y="349" font-size="23" fill="#536f7f">已验证 CPU 路径</text>
+      <rect x="927" y="396" width="457" height="88" rx="18" fill="#e0eedc"/><text x="954" y="434" font-size="29" font-weight="700" fill="#52743a">TensorRT</text><text x="954" y="465" font-size="23" fill="#62745c">NVIDIA CUDA · 匹配目标 Engine</text>
+      <rect x="927" y="512" width="457" height="88" rx="18" fill="#f5e5dc"/><text x="954" y="550" font-size="29" font-weight="700" fill="#8c5a42">OpenCV DNN</text><text x="954" y="581" font-size="23" fill="#846e60">已验证 CPU 路径</text>
+    </g>
+    <text x="720" y="660" text-anchor="middle" font-size="24" fill="#526c81">显式选择后端 · 配对模型与运行时 · 逐模型查看验证矩阵</text>
+  </g>
+</svg>

@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="740" viewBox="0 0 1440 740" role="img" aria-labelledby="title desc">
+  <title id="title">视频异步预取与大图重叠切片</title>
+  <desc id="desc">左侧为处理顺序示意：准备帧一后开始推理，在其推理期间准备帧二与帧三，随后继续推理。图中宽度不代表实测耗时。右侧为原图中的重叠窗口，切片检测后将结果映射到源图并合并重复目标。</desc>
+  <defs><marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1L9 5L1 9Z" fill="#258c83"/></marker></defs>
+  <rect width="1440" height="740" rx="26" fill="#f2f6fb"/>
+  <g font-family="Segoe UI, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+    <text x="56" y="67" font-size="36" font-weight="700" fill="#17364e">把单图推理，放进真实的连续处理场景</text>
+    <rect x="40" y="112" width="668" height="548" rx="24" fill="#fff" stroke="#d1e2e8" stroke-width="2"/>
+    <text x="68" y="164" font-size="31" font-weight="700" fill="#276e6c">视频：让准备与推理重叠</text>
+    <text x="69" y="206" font-size="23" fill="#6e8293">处理顺序示意，条宽不代表实测耗时</text>
+    <path d="M174 260H654" stroke="#c5d5df" stroke-width="2" marker-end="url(#a)"/>
+    <text x="169" y="244" font-size="21" fill="#718698">开始</text><text x="653" y="244" text-anchor="end" font-size="21" fill="#718698">向后处理</text>
+    <text x="69" y="326" font-size="24" fill="#48687e">准备</text>
+    <text x="69" y="426" font-size="24" fill="#48687e">推理</text>
+    <g text-anchor="middle" font-size="24" font-weight="600">
+      <rect x="174" y="290" width="138" height="61" rx="12" fill="#d9eee6"/><text x="243" y="330" fill="#2d7065">帧 1</text>
+      <rect x="312" y="290" width="138" height="61" rx="12" fill="#d9eee6"/><text x="381" y="330" fill="#2d7065">帧 2</text>
+      <rect x="450" y="290" width="138" height="61" rx="12" fill="#d9eee6"/><text x="519" y="330" fill="#2d7065">帧 3</text>
+      <rect x="312" y="390" width="170" height="61" rx="12" fill="#dfdef2"/><text x="397" y="430" fill="#655083">帧 1</text>
+      <rect x="482" y="390" width="170" height="61" rx="12" fill="#dfdef2"/><text x="567" y="430" fill="#655083">帧 2</text>
+    </g>
+    <path d="M312 356V381M450 356V370H482V381" fill="none" stroke="#8ba8b8" stroke-width="2" stroke-dasharray="4 4"/>
+    <rect x="69" y="489" width="607" height="66" rx="14" fill="#f0f6f7"/>
+    <text x="372" y="532" text-anchor="middle" font-size="26" fill="#396b70">有界预取 · 保持结果顺序</text>
+    <text x="69" y="603" font-size="24" fill="#627a8c">Batch / 独立 Session 池按模型与设备配置</text>
+
+    <rect x="732" y="112" width="668" height="548" rx="24" fill="#fff" stroke="#d1e2e8" stroke-width="2"/>
+    <text x="762" y="164" font-size="31" font-weight="700" fill="#655084">大图：重叠切片，再统一还原</text>
+    <rect x="827" y="204" width="477" height="286" rx="16" fill="#e3ecef" stroke="#a8bfcb" stroke-width="2"/>
+    <path d="M831 462L915 283L1000 400L1120 257L1299 464V486H831Z" fill="#aec9be"/>
+    <circle cx="1247" cy="247" r="21" fill="#f0ca9e"/>
+    <g fill="#6acbad" fill-opacity="0.1" stroke="#318f80" stroke-width="3">
+      <rect x="848" y="225" width="228" height="137" rx="6"/><rect x="1055" y="225" width="228" height="137" rx="6"/>
+      <rect x="848" y="342" width="228" height="126" rx="6"/><rect x="1055" y="342" width="228" height="126" rx="6"/>
+    </g>
+    <rect x="1055" y="225" width="21" height="243" fill="#6acbad" fill-opacity="0.21"/>
+    <rect x="848" y="342" width="435" height="20" fill="#6acbad" fill-opacity="0.21"/>
+    <text x="1065" y="528" text-anchor="middle" font-size="25" fill="#627a8c">ROI / 重叠区域 · 覆盖边缘目标</text>
+    <path d="M1065 541V563" stroke="#258c83" stroke-width="3" marker-end="url(#a)"/>
+    <rect x="762" y="578" width="608" height="50" rx="12" fill="#f0edf7"/>
+    <text x="1066" y="612" text-anchor="middle" font-size="25" fill="#655084">切片检测 → 源图坐标 → 合并去重</text>
+    <text x="720" y="708" text-anchor="middle" font-size="23" fill="#6c8294">适合连续帧、批量图像与局部检测需求；配置收益需要在目标设备验证。</text>
+  </g>
+</svg>

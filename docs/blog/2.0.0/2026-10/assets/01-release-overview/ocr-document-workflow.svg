@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900" role="img" aria-labelledby="title desc">
+  <title id="title">从完整 OCR 到文档区域任务</title>
+  <desc id="desc">上半部为文字检测、文本行裁剪、可选方向分类、文字识别、结果合并。下半部为可选页面方向与矫正、版面定位，以及按区域选择 OCR、表格、公式、印章或图表任务，最后得到对应任务的结构化结果。图示表示可组合的流程，各模型与后端支持范围独立。</desc>
+  <defs><marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1L9 5L1 9Z" fill="#258c83"/></marker></defs>
+  <rect width="1440" height="900" rx="26" fill="#f2f6fb"/>
+  <g font-family="Segoe UI, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+    <text x="56" y="67" font-size="36" font-weight="700" fill="#17364e">从读取文字，到处理文档中的不同区域</text>
+    <rect x="40" y="109" width="1360" height="300" rx="24" fill="#fff" stroke="#d3e3e9" stroke-width="2"/>
+    <text x="69" y="158" font-size="30" font-weight="700" fill="#276e6c">PP-OCR · 完整文字识别流水线</text>
+    <text x="1364" y="158" text-anchor="end" font-size="24" fill="#667c90">v4 / v5 / v6</text>
+    <g text-anchor="middle">
+      <rect x="70" y="193" width="213" height="133" rx="18" fill="#e0eeeb"/><text x="176" y="246" font-size="30" font-weight="700" fill="#275f5f">检测文字</text><text x="176" y="289" font-size="23" fill="#536f79">DET / 区域</text>
+      <rect x="340" y="193" width="213" height="133" rx="18" fill="#e5edf6"/><text x="446" y="246" font-size="30" font-weight="700" fill="#385f7d">裁剪文本行</text><text x="446" y="289" font-size="23" fill="#5b7289">原图透视裁剪</text>
+      <rect x="610" y="193" width="213" height="133" rx="18" fill="#f3e6dc" stroke="#d7bda7" stroke-dasharray="7 5"/><text x="716" y="246" font-size="30" font-weight="700" fill="#8b6648">调整方向</text><text x="716" y="289" font-size="23" fill="#826d5b">按需启用 CLS</text>
+      <rect x="880" y="193" width="213" height="133" rx="18" fill="#e7e1f3"/><text x="986" y="246" font-size="30" font-weight="700" fill="#655084">识别文字</text><text x="986" y="289" font-size="23" fill="#786b89">REC / 可配置 Batch</text>
+      <rect x="1150" y="193" width="213" height="133" rx="18" fill="#e0eeeb"/><text x="1256" y="246" font-size="30" font-weight="700" fill="#275f5f">合并结果</text><text x="1256" y="289" font-size="23" fill="#536f79">文字 / 坐标 / 分数</text>
+    </g>
+    <g stroke="#258c83" stroke-width="4" marker-end="url(#a)"><path d="M293 260H326"/><path d="M563 260H596"/><path d="M833 260H866"/><path d="M1103 260H1136"/></g>
+    <text x="69" y="376" font-size="24" fill="#5f7789">检测定位，识别批量执行；方向分类可选，v6 组合复用 v5 Mobile CLS。</text>
+
+    <rect x="40" y="440" width="1360" height="389" rx="24" fill="#fff" stroke="#d3e3e9" stroke-width="2"/>
+    <text x="69" y="490" font-size="30" font-weight="700" fill="#655084">PP-Structure · 按页面区域组合任务</text>
+    <g text-anchor="middle">
+      <rect x="70" y="562" width="225" height="140" rx="18" fill="#e5edf6"/><text x="182" y="615" font-size="29" font-weight="700" fill="#385f7d">页面准备</text><text x="182" y="658" font-size="23" fill="#5b7289">方向 / UVDoc（可选）</text>
+      <rect x="355" y="562" width="225" height="140" rx="18" fill="#e0eeeb"/><text x="467" y="615" font-size="29" font-weight="700" fill="#275f5f">版面定位</text><text x="467" y="658" font-size="23" fill="#536f79">得到不同区域</text>
+      <rect x="1134" y="562" width="229" height="140" rx="18" fill="#e5edf6"/><text x="1248" y="615" font-size="29" font-weight="700" fill="#385f7d">任务结果</text><text x="1248" y="658" font-size="22" fill="#5b7289">文字 / HTML / LaTeX…</text>
+    </g>
+    <path d="M590 632H641M641 548V749M1068 548V749" fill="none" stroke="#258c83" stroke-width="4"/>
+    <g fill="none" stroke="#258c83" stroke-width="4" marker-end="url(#a)"><path d="M305 632H341"/><path d="M1068 632H1120"/></g>
+    <g font-size="25" font-weight="600" text-anchor="middle" fill="#695582">
+      <rect x="696" y="521" width="318" height="55" rx="12" fill="#eee6f5"/><text x="855" y="558">区域 OCR</text>
+      <rect x="696" y="582" width="318" height="55" rx="12" fill="#eee6f5"/><text x="855" y="619">表格分类 / 单元格 / 结构</text>
+      <rect x="696" y="643" width="318" height="55" rx="12" fill="#eee6f5"/><text x="855" y="680">公式 / 印章</text>
+      <rect x="696" y="704" width="318" height="55" rx="12" fill="#eee6f5"/><text x="855" y="741">Chart2Table 图表解析</text>
+    </g>
+    <g stroke="#258c83" stroke-width="3" marker-end="url(#a)"><path d="M641 548H682"/><path d="M641 609H682"/><path d="M641 670H682"/><path d="M641 731H682"/><path d="M1024 548H1068"/><path d="M1024 609H1068"/><path d="M1024 670H1068"/><path d="M1024 731H1068"/></g>
+    <text x="69" y="800" font-size="23" fill="#5f7789">图示为可组合流程；按页面需要启用模块，各模型与后端范围分别查看支持矩阵。</text>
+    <text x="720" y="869" text-anchor="middle" font-size="23" fill="#708599">从模型输出到可用的任务结果，让应用围绕业务组织流程。</text>
+  </g>
+</svg>
