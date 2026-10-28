@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1410" height="800" viewBox="0 0 1410 800" role="img" aria-labelledby="title desc">
+  <title id="title">DeploySharp 2.0.0：让 C# 看懂更多视觉信息</title>
+  <desc id="desc">深蓝青绿系列题图，C# 视觉处理台连接分类标签、实例掩码、人体骨架和旋转框四种结果。插画为任务示意，真实结果见正文。</desc>
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#0b192e"/><stop offset="1" stop-color="#182e48"/></linearGradient>
+    <linearGradient id="accent"><stop stop-color="#62d8ec"/><stop offset="1" stop-color="#83e6b6"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="150%" height="160%"><feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#020a15" flood-opacity=".35"/></filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M1 1L9 5L1 9Z" fill="#75dacb"/></marker>
+  </defs>
+  <rect width="1410" height="800" rx="30" fill="url(#bg)"/>
+  <path d="M1140 0L1410 208M1250 0L1410 125M1355 0L1410 45" stroke="#36506a" stroke-width="2" opacity=".55"/>
+  <g font-family="Segoe UI, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+    <rect x="60" y="42" width="178" height="34" rx="17" fill="#24425b"/><text x="149" y="66" text-anchor="middle" font-size="20" font-weight="600" fill="#b8d8ed">JYPPX · 开源项目</text>
+    <text x="1348" y="67" text-anchor="end" font-size="21" font-weight="600" fill="#9eb9cf">实战教程 / 05</text>
+    <text x="54" y="177" font-size="94" font-weight="750" letter-spacing="-3" fill="#f5f8fc">DeploySharp <tspan fill="url(#accent)">2.0.0</tspan></text>
+    <text x="60" y="255" font-size="58" font-weight="750" fill="#f5f8fc">让 C# 看懂更多视觉信息</text>
+    <text x="63" y="305" font-size="28" fill="#b5cadd">分类 · 实例分割 · 关键点 · 旋转框</text>
+
+    <rect x="48" y="348" width="1314" height="324" rx="26" fill="#142c42" stroke="#375873" stroke-width="2"/>
+    <g filter="url(#shadow)">
+      <rect x="82" y="409" width="216" height="159" rx="18" fill="#203f54" stroke="#68b8b1" stroke-width="2"/>
+      <path d="M103 432H277M103 445H233" stroke="#5c879d" stroke-width="3" stroke-linecap="round"/>
+      <rect x="132" y="465" width="116" height="78" rx="16" fill="#73d6bf"/>
+      <text x="190" y="522" text-anchor="middle" font-size="52" font-weight="750" fill="#173749">C#</text>
+    </g>
+    <text x="190" y="610" text-anchor="middle" font-size="24" font-weight="650" fill="#cee6ee">视觉任务流水线</text>
+    <path d="M318 497H364V384H1218" fill="none" stroke="#75dacb" stroke-width="3"/>
+    <path d="M525 384V399M753 384V399M981 384V399M1218 384V399" fill="none" stroke="#75dacb" stroke-width="2" marker-end="url(#arrow)"/>
+    <g filter="url(#shadow)">
+      <rect x="429" y="405" width="192" height="211" rx="18" fill="#203b50" stroke="#476c83"/>
+      <rect x="657" y="405" width="192" height="211" rx="18" fill="#203b50" stroke="#476c83"/>
+      <rect x="885" y="405" width="192" height="211" rx="18" fill="#203b50" stroke="#476c83"/>
+      <rect x="1113" y="405" width="210" height="211" rx="18" fill="#203b50" stroke="#476c83"/>
+    </g>
+    <g transform="translate(461 434)">
+      <rect width="128" height="91" rx="10" fill="#315b66"/>
+      <path d="M30 57L64 17L103 66Z" fill="#8fcdb5"/><circle cx="39" cy="25" r="10" fill="#edb68f"/>
+      <rect x="10" y="104" width="108" height="25" rx="12" fill="#80dfc5"/><text x="64" y="122" text-anchor="middle" font-size="15" font-weight="700" fill="#153b40">类别 · Top-K</text>
+    </g>
+    <g transform="translate(688 434)">
+      <rect width="130" height="129" rx="10" fill="#2a4b60"/>
+      <path d="M21 111C13 78 32 36 51 33C74 27 76 68 67 107Z" fill="#80dfc5" opacity=".8"/>
+      <path d="M77 107C67 88 68 65 89 54C109 45 116 72 111 111Z" fill="#c5a7ed" opacity=".8"/>
+      <path d="M10 116H121" stroke="#5d8294" stroke-width="2"/>
+    </g>
+    <g transform="translate(916 432)" stroke-linecap="round">
+      <rect width="130" height="131" rx="10" fill="#2a4b60"/>
+      <g fill="none" stroke="#80dfc5" stroke-width="6"><path d="M65 35V80M36 49L65 39L96 51M65 80L39 115M65 80L91 115"/></g>
+      <g fill="#f3b58c"><circle cx="65" cy="18" r="10"/><circle cx="36" cy="49" r="5"/><circle cx="96" cy="51" r="5"/><circle cx="65" cy="80" r="5"/><circle cx="39" cy="115" r="5"/><circle cx="91" cy="115" r="5"/></g>
+    </g>
+    <g transform="translate(1149 435)">
+      <rect width="138" height="128" rx="10" fill="#2a4b60"/>
+      <g transform="translate(69 63) rotate(-30)"><rect x="-49" y="-33" width="98" height="66" rx="4" fill="none" stroke="#f1b790" stroke-width="3"/><path d="M-39 3L-7-6L-4-27H5L9-6L40 3V12L8 6L7 24L17 29H-17L-7 24L-8 6L-39 12Z" fill="#d7e8ec"/></g>
+    </g>
+    <g text-anchor="middle" font-size="23" font-weight="650" fill="#d2e6ec"><text x="525" y="594">图像分类</text><text x="753" y="594">实例掩码</text><text x="981" y="594">人体骨架</text><text x="1218" y="594">旋转四边形</text></g>
+    <g text-anchor="middle" font-size="24" font-weight="600">
+      <rect x="60" y="699" width="300" height="52" rx="14" fill="#234455"/><text x="210" y="734" fill="#a1e7dc">同一套推理流程</text>
+      <rect x="390" y="699" width="300" height="52" rx="14" fill="#243f56"/><text x="540" y="734" fill="#bddcf1">任务专用结果类型</text>
+      <rect x="720" y="699" width="300" height="52" rx="14" fill="#393b50"/><text x="870" y="734" fill="#d7c5f7">四组真实运行结果</text>
+      <rect x="1050" y="699" width="300" height="52" rx="14" fill="#3e3c44"/><text x="1200" y="734" fill="#f5c49f">图像 + JSON 输出</text>
+    </g>
+    <text x="1347" y="780" text-anchor="end" font-size="16" fill="#829eb7">Windows x64 · ONNX Runtime CPU · 插画为任务示意</text>
+  </g>
+</svg>

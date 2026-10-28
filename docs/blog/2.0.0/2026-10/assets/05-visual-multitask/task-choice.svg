@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="720" viewBox="0 0 1440 720" role="img" aria-labelledby="title desc">
+  <title id="title">先明确业务需要什么结果，再选择视觉模型</title>
+  <desc id="desc">四栏比较图像分类、实例分割、关键点和旋转框：整图类别、逐目标像素、人体关节点和有方向的目标范围。图中均为概念示意。</desc>
+  <rect width="1440" height="720" rx="24" fill="#f1f5fa"/>
+  <g font-family="Segoe UI, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+    <text x="48" y="66" fill="#173047" font-size="36" font-weight="700">业务要的结果，决定你选的模型</text>
+    <text x="48" y="106" fill="#586e83" font-size="22">同样是“看图”，返回的信息粒度不同；这四个任务分别加载对应的模型。</text>
+    <g fill="#fff" stroke="#d6e0eb" stroke-width="2"><rect x="40" y="144" width="325" height="516" rx="20"/><rect x="385" y="144" width="325" height="516" rx="20"/><rect x="730" y="144" width="325" height="516" rx="20"/><rect x="1075" y="144" width="325" height="516" rx="20"/></g>
+    <g text-anchor="middle" font-size="28" font-weight="700" fill="#203d55"><text x="202" y="195">这张图是什么？</text><text x="547" y="195">每个目标占哪些像素？</text><text x="892" y="195">关节点在哪里？</text><text x="1237" y="195">目标朝哪个方向？</text></g>
+    <g transform="translate(80 226)"><rect width="245" height="182" rx="16" fill="#e8f2ed"/><path d="M30 149L100 61L149 109L181 77L218 149Z" fill="#9cc5af"/><circle cx="67" cy="48" r="22" fill="#e5b087"/><rect x="36" y="105" width="174" height="48" rx="12" fill="#186e62"/><text x="123" y="137" text-anchor="middle" fill="#fff" font-size="22">brown_bear</text></g>
+    <g transform="translate(425 226)"><rect width="245" height="182" rx="16" fill="#edf0fa"/><path d="M24 161C19 115 36 58 70 50C102 43 113 95 104 161Z" fill="#67bda8"/><path d="M129 162C120 112 148 79 179 70C213 61 225 123 214 162Z" fill="#b296d6"/><circle cx="69" cy="37" r="23" fill="#67bda8"/><circle cx="181" cy="51" r="20" fill="#b296d6"/></g>
+    <g transform="translate(770 226)" stroke-linecap="round"><rect width="245" height="182" rx="16" fill="#e8f3f7"/><circle cx="123" cy="31" r="14" fill="#edac7e"/><path d="M123 53V109M78 78L123 58L168 77M123 109L86 162M123 109L160 162" stroke="#208b93" stroke-width="8" fill="none"/><g fill="#edac7e"><circle cx="78" cy="78" r="7"/><circle cx="168" cy="77" r="7"/><circle cx="123" cy="109" r="7"/><circle cx="86" cy="162" r="7"/><circle cx="160" cy="162" r="7"/></g></g>
+    <g transform="translate(1115 226)"><rect width="245" height="182" rx="16" fill="#f8eee5"/><g transform="translate(123 91) rotate(-27)"><rect x="-83" y="-48" width="166" height="96" rx="4" fill="none" stroke="#bb7338" stroke-width="3"/><path d="M-67 4L-14-12L-8-40H8L14-12L67 4V19L13 9L10 36L27 44H-27L-10 36L-13 9L-67 19Z" fill="#d0a37c"/></g></g>
+    <g text-anchor="middle" font-size="26" font-weight="700" fill="#203d55"><text x="202" y="459">图像分类 · Top-K</text><text x="547" y="459">实例分割 · Mask</text><text x="892" y="459">姿态估计 · Pose</text><text x="1237" y="459">旋转框检测 · OBB</text></g>
+    <g text-anchor="middle" fill="#526d80" font-size="21"><text x="202" y="505">一张图 → 类别与分数</text><text x="202" y="543">不定位其中的每个目标</text><text x="547" y="505">每个实例 → 框 + 二值掩码</text><text x="547" y="543">保留轮廓与目标身份</text><text x="892" y="505">每个人 → 点 + 骨架关系</text><text x="892" y="543">有效点才参与连线</text><text x="1237" y="505">每个目标 → 四个顶点</text><text x="1237" y="543">保留方向与边界</text></g>
+    <g text-anchor="middle" font-size="20" font-weight="600"><text x="202" y="613" fill="#217365">类别筛选 / 工件判别</text><text x="547" y="613" fill="#7b5ea2">轮廓提取 / 像素统计</text><text x="892" y="613" fill="#24838c">动作规则 / 姿态分析</text><text x="1237" y="613" fill="#aa6c35">遥感 / 有方向的工件</text></g>
+    <text x="1398" y="697" text-anchor="end" fill="#72869a" font-size="17">DeploySharp 2.0.0 · 任务选型示意，非模型结果</text>
+  </g>
+</svg>

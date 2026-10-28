@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="740" viewBox="0 0 1440 740" role="img" aria-labelledby="title desc">
+  <title id="title">Resize、Letterbox、CenterCrop 会怎样改变输入</title>
+  <desc id="desc">使用同一幅宽图中的圆形目标比较三种输入几何。强制缩放会改变宽高比，Letterbox 保持比例并留边，CenterCrop 放大填满后裁掉左右。所有图形为预处理示意。</desc>
+  <defs><symbol id="scene" viewBox="0 0 260 160"><rect width="260" height="160" fill="#e1efe9"/><path d="M0 124L70 72L116 113L186 63L260 113V160H0Z" fill="#a8c9bb"/><circle cx="130" cy="68" r="35" fill="#dfae83"/><rect x="13" y="22" width="26" height="112" rx="10" fill="#739c88"/><rect x="221" y="22" width="26" height="112" rx="10" fill="#739c88"/></symbol></defs>
+  <rect width="1440" height="740" rx="24" fill="#f1f5fa"/>
+  <g font-family="Segoe UI, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+    <text x="48" y="66" fill="#173047" font-size="36" font-weight="700">模型输入一样大，图像内容却可能完全不同</text>
+    <text x="48" y="109" fill="#586e83" font-size="22">下面都变成正方形；请按模型训练与导出的预处理选择，不能只看哪种图更好看。</text>
+    <g fill="#fff" stroke="#d6e0eb"><rect x="40" y="145" width="430" height="489" rx="20"/><rect x="505" y="145" width="430" height="489" rx="20"/><rect x="970" y="145" width="430" height="489" rx="20"/></g>
+    <g text-anchor="middle" font-size="28" font-weight="700" fill="#203d55"><text x="255" y="194">Resize · 强制缩放</text><text x="720" y="194">Letterbox · 等比留边</text><text x="1185" y="194">CenterCrop · 中心裁剪</text></g>
+    <svg x="125" y="226" width="260" height="260" viewBox="0 0 260 160" preserveAspectRatio="none"><use href="#scene" width="260" height="160"/></svg>
+    <rect x="590" y="226" width="260" height="260" fill="#b8bdc4"/><use href="#scene" x="590" y="276" width="260" height="160"/>
+    <svg x="1055" y="226" width="260" height="260" viewBox="50 0 160 160"><use href="#scene" width="260" height="160"/></svg>
+    <g text-anchor="middle" fill="#526d80" font-size="23"><text x="255" y="530">圆被拉长，宽高独立缩放</text><text x="255" y="568">保留全图，形状发生改变</text><text x="720" y="530">圆仍为圆，上下增加留边</text><text x="720" y="568">保留全图，需要逆变换坐标</text><text x="1185" y="530">圆仍为圆，两侧内容被裁掉</text><text x="1185" y="568">适合本例分类，不保证边缘信息</text></g>
+    <rect x="48" y="662" width="1344" height="47" rx="12" fill="#e2ecf4"/>
+    <text x="720" y="693" text-anchor="middle" font-size="21" fill="#31556e">本文：分类为 224 × 224 中心裁剪；YOLO26 分割 / Pose 为 640 × 640 留边；OBB 为 1024 × 1024 留边。</text>
+  </g>
+</svg>

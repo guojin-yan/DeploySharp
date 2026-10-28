@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="630" viewBox="0 0 1440 630" role="img" aria-labelledby="title desc">
+  <title id="title">四种视觉任务共用同一组 NuGet</title>
+  <desc id="desc">Windows CPU 示例使用 Visual.OpenCV 图像适配器、ONNX Runtime 后端和各自的原生运行时。Visual 与 Core 通过依赖自动引入，四种任务无需各装一个任务包。</desc>
+  <defs><marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1L9 5L1 9Z" fill="#66859d"/></marker></defs>
+  <rect width="1440" height="630" rx="24" fill="#f1f5fa"/>
+  <g font-family="Segoe UI, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+    <text x="48" y="66" fill="#173047" font-size="36" font-weight="700">四种任务，共用这组 Windows CPU 依赖</text>
+    <text x="48" y="108" fill="#586e83" font-size="22">按职责装包：图像处理负责输入，推理后端执行模型；模型文件单独准备。</text>
+    <rect x="48" y="147" width="1344" height="69" rx="16" fill="#203e57"/>
+    <text x="720" y="191" text-anchor="middle" fill="#fff" font-size="27" font-weight="650">你的 C# 应用：分类 / 分割 / Pose / OBB</text>
+    <path d="M390 216V250M1042 216V250" stroke="#66859d" stroke-width="3" marker-end="url(#a)"/>
+    <rect x="48" y="265" width="650" height="119" rx="18" fill="#e0f1eb" stroke="#92c3b3"/>
+    <rect x="742" y="265" width="650" height="119" rx="18" fill="#e3eef9" stroke="#9ebad6"/>
+    <text x="77" y="306" fill="#176052" font-size="22" font-weight="700">图像输入与前处理</text><text x="77" y="350" fill="#234e49" font-size="24">JYPPX.DeploySharp.Visual.OpenCV  2.0.0</text>
+    <text x="771" y="306" fill="#2b5d87" font-size="22" font-weight="700">模型推理适配器</text><text x="771" y="350" fill="#294c69" font-size="23">JYPPX.DeploySharp.Backend.OnnxRuntime  2.0.0</text>
+    <path d="M390 384V415M1042 384V415" stroke="#66859d" stroke-width="3" marker-end="url(#a)"/>
+    <rect x="48" y="430" width="650" height="91" rx="18" fill="#fff" stroke="#cbdce5"/>
+    <rect x="742" y="430" width="650" height="91" rx="18" fill="#fff" stroke="#cbdce5"/>
+    <text x="77" y="465" fill="#526d80" font-size="20">OpenCV 原生运行时</text><text x="77" y="498" fill="#294c69" font-size="23">JYPPX.OpenCV.runtime.win-x64  5.0.0</text>
+    <text x="771" y="465" fill="#526d80" font-size="20">ORT CPU 原生运行时 + 托管接口</text><text x="771" y="498" fill="#294c69" font-size="23">Microsoft.ML.OnnxRuntime  1.28.0</text>
+    <text x="48" y="576" fill="#526d80" font-size="22">Visual / Core 自动传递引入；这里的 OpenCV 用于图像处理，推理仍由 ONNX Runtime CPU 执行。</text>
+    <text x="1390" y="610" text-anchor="end" fill="#72869a" font-size="17">DeploySharp 2.0.0 · 包与职责</text>
+  </g>
+</svg>

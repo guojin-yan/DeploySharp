@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="700" viewBox="0 0 1440 700" role="img" aria-labelledby="title desc">
+  <title id="title">同一套流水线，返回不同的视觉结果</title>
+  <desc id="desc">本地模型和任务 Profile 参与流水线初始化，图像通过 OpenCV 前处理变成张量，再交给 VisualPipeline 推理解码，按任务获得分类、实例分割、Pose 或旋转框结果，最后绘图和保存 JSON。</desc>
+  <defs><marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1L9 5L1 9Z" fill="#528d96"/></marker></defs>
+  <rect width="1440" height="700" rx="24" fill="#f1f5fa"/>
+  <g font-family="Segoe UI, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+    <text x="48" y="66" fill="#173047" font-size="36" font-weight="700">模型、Profile 与结果类型，需要成套对应</text>
+    <text x="48" y="108" fill="#586e83" font-size="22">复用公共执行流程，保留每种任务真实需要的输入输出和解码方式。</text>
+    <rect x="544" y="148" width="404" height="96" rx="16" fill="#e8e3f5" stroke="#b9a8d4"/>
+    <text x="746" y="186" text-anchor="middle" fill="#5b477d" font-size="25" font-weight="700">本地 ONNX + 任务 Profile</text><text x="746" y="220" text-anchor="middle" fill="#675b7e" font-size="21">尺寸 / 标签 / 输出布局 / Decoder</text>
+    <path d="M746 244V292" stroke="#528d96" stroke-width="3" marker-end="url(#a)"/>
+    <g stroke="#b5ccd8"><rect x="40" y="309" width="214" height="112" rx="18" fill="#fff"/><rect x="310" y="309" width="280" height="112" rx="18" fill="#e0f1eb"/><rect x="646" y="309" width="280" height="112" rx="18" fill="#203e57"/><rect x="982" y="309" width="418" height="112" rx="18" fill="#e3eef9"/></g>
+    <path d="M254 365H299M590 365H635M926 365H971" fill="none" stroke="#528d96" stroke-width="3" marker-end="url(#a)"/>
+    <g text-anchor="middle"><text x="147" y="354" fill="#294c69" font-size="28" font-weight="700">输入图片</text><text x="147" y="391" fill="#526d80" font-size="21">本地文件</text><text x="450" y="354" fill="#176052" font-size="27" font-weight="700">OpenCV 前处理</text><text x="450" y="391" fill="#315e55" font-size="21">几何 / RGB / NCHW / 归一化</text><text x="786" y="354" fill="#fff" font-size="27" font-weight="700">VisualPipeline</text><text x="786" y="391" fill="#c0d8e7" font-size="21">ORT CPU 推理 + 任务解码</text><text x="1191" y="354" fill="#294c69" font-size="27" font-weight="700">GetValue&lt;对应结果类型&gt;()</text><text x="1191" y="391" fill="#526d80" font-size="21">几何结果已映射到源图坐标</text></g>
+    <path d="M1191 421V463H228M228 463V488M555 463V488M882 463V488M1209 463V488" fill="none" stroke="#528d96" stroke-width="2"/>
+    <g fill="#fff" stroke="#d2deea"><rect x="48" y="494" width="308" height="97" rx="16"/><rect x="383" y="494" width="308" height="97" rx="16"/><rect x="718" y="494" width="308" height="97" rx="16"/><rect x="1053" y="494" width="339" height="97" rx="16"/></g>
+    <g text-anchor="middle" fill="#294c69" font-size="21" font-weight="650"><text x="202" y="530">ClassificationResult</text><text x="537" y="530">InstanceSegmentationResult</text><text x="872" y="530">PoseEstimationResult</text><text x="1222" y="530">Visual.OrientedDetectionResult</text></g>
+    <g text-anchor="middle" fill="#526d80" font-size="21"><text x="202" y="566">类别与分数 → Top-K 图表</text><text x="537" y="566">框与 Mask → 叠色 + PNG</text><text x="872" y="566">有效关键点 → 骨架绘图</text><text x="1222" y="566">四顶点 → 闭合边框</text></g>
+    <text x="48" y="654" fill="#526d80" font-size="22">长期复用 Pipeline；每次推理释放 PreparedVisualInput；绘图 Mat 与 Pipeline 用 using 释放。</text>
+  </g>
+</svg>
