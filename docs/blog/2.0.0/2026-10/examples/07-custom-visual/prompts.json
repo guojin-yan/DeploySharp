@@ -1,0 +1,26 @@
+[
+  {
+    "Name": "person-clothing",
+    "ClassIds": [0],
+    "Candidates": [
+      { "Key": "person-white", "Text": "a photo of a person wearing a white shirt." },
+      { "Key": "person-black", "Text": "a photo of a person wearing a black shirt." },
+      { "Key": "person-blue", "Text": "a photo of a person wearing a blue shirt." },
+      { "Key": "person-red", "Text": "a photo of a person wearing a red shirt." },
+      { "Key": "person-yellow", "Text": "a photo of a person wearing a yellow shirt." },
+      { "Key": "person-gray", "Text": "a photo of a person wearing a gray shirt." }
+    ]
+  },
+  {
+    "Name": "vehicle-appearance",
+    "ClassIds": [2, 5, 7],
+    "Candidates": [
+      { "Key": "vehicle-white", "Text": "a photo of a white vehicle." },
+      { "Key": "vehicle-black", "Text": "a photo of a black vehicle." },
+      { "Key": "vehicle-blue", "Text": "a photo of a blue vehicle." },
+      { "Key": "vehicle-red", "Text": "a photo of a red vehicle." },
+      { "Key": "vehicle-yellow", "Text": "a photo of a yellow vehicle." },
+      { "Key": "vehicle-green", "Text": "a photo of a green vehicle." }
+    ]
+  }
+]
