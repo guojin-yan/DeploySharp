@@ -28,12 +28,14 @@ internal static class NanoDetModel
         NanoDetLevel[] levels = [new(8, 52, 52, "792", "795"),
             new(16, 26, 26, "814", "817"), new(32, 13, 13, "836", "839")];
 
-        // 原始 NanoDet 验证配置：BGR、直接缩放、逐通道 mean/std。CLIP 不能复用这组参数。
+        // Zoo demo.py 先 BGR→RGB，再居中黑边 Letterbox；nanodet.py 本身不完成这两步。
+        // 使用已发布适配器提供的 Linear 插值（官方 demo 为 Area），下文独立参考采用相同插值。
         var processing = new VisualPreprocessingOptions(
-            new VisualSize(416, 416), VisualResizeMode.Resize, VisualColorOrder.Bgr,
+            new VisualSize(416, 416), VisualResizeMode.Letterbox, VisualColorOrder.Rgb,
             VisualNormalizationOptions.MeanStandardDeviation(
                 [103.53f, 116.28f, 123.675f], [57.375f, 57.12f, 58.395f]),
-            VisualTensorLayout.Nchw, interpolation: VisualInterpolationMode.Linear);
+            VisualTensorLayout.Nchw, paddingColor: VisualRgbColor.Black,
+            dimensionRounding: VisualDimensionRounding.Floor, interpolation: VisualInterpolationMode.Linear);
         var builder = new VisualModelDefinitionBuilder<OpenCvDecodedRoiImage, ObjectDetections>(
                 "blog.nanodet-plus-416", new ModelId("blog/nanodet-plus-416"), Task, "1", "onnx")
             .WithInput("input.1", TensorElementType.Float32, new TensorShape(1, 3, 416, 416), VisualTensorLayout.Nchw)

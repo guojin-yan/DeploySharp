@@ -4,7 +4,7 @@
 
 | 基于版本 | 系列入口 | 当前状态 |
 | --- | --- | --- |
-| 2.0.0 | [2.0.0 系列](2.0.0/README.md) | 第 01—07 篇主稿完成；02 展示 Windows YOLO26 五条执行路径，03—04 展示跨平台 OCR 与离线部署，05 展示四类视觉任务，06 展示页面区域 OCR 与表格 HTML，07 自定义接入 NanoDet-Plus 并联合 CLIP 图文编码器，在 Windows/Ubuntu 的 ORT、OpenVINO CPU 完成场景分析；均有正式 NuGet 可运行代码，尚未向博客平台发表 |
+| 2.0.0 | [2.0.0 系列](2.0.0/README.md) | 第 01—07 篇主稿完成；02 展示 Windows YOLO26 五条执行路径，03—04 展示跨平台 OCR 与离线部署，05 展示四类视觉任务，06 展示页面区域 OCR 与表格 HTML，07 自定义接入 NanoDet-Plus 并联合 CLIP，使用六张固定视角截图完成车辆与人员区域巡检、事件证据和 HTML 复核台，在 Windows/Ubuntu 的 ORT、OpenVINO CPU 实跑；均有正式 NuGet 可运行代码，尚未向博客平台发表 |
 
 ## 目录与命名
 

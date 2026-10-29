@@ -1,0 +1,28 @@
+{
+  "SchemaVersion": 1,
+  "Name": "园区车辆与人员巡检：公开道路及庭院片段复现",
+  "Cameras": [
+    {
+      "Id": "road", "Name": "车辆通道（公开道路素材）",
+      "Zones": [
+        { "Id": "vehicle-lane", "Name": "近侧车辆通道", "Polygon": [[0.01,0.99],[0.30,0.40],[0.44,0.40],[0.49,0.99]], "ClassIds": [2,5,7], "TriggerAtLeast": 2, "Reason": "vehicle-occupancy-review" },
+        { "Id": "pedestrian-watch", "Name": "车道人员关注区", "Polygon": [[0.01,0.99],[0.30,0.40],[0.44,0.40],[0.49,0.99]], "ClassIds": [0], "TriggerAtLeast": 1, "Reason": "pedestrian-in-vehicle-area" }
+      ]
+    },
+    {
+      "Id": "courtyard", "Name": "庭院通行区（OpenCV 示例素材）",
+      "Zones": [
+        { "Id": "pedestrian-area", "Name": "通行人员关注区", "Polygon": [[0.27,0.30],[0.94,0.30],[0.98,0.77],[0.25,0.69]], "ClassIds": [0], "TriggerAtLeast": 2, "Reason": "pedestrian-occupancy-review" },
+        { "Id": "keep-clear", "Name": "前景绿地区域", "Polygon": [[0.01,0.50],[0.24,0.50],[0.64,0.83],[0.65,0.99],[0.01,0.99]], "ClassIds": [0], "TriggerAtLeast": 1, "Reason": "person-in-configured-area" }
+      ]
+    }
+  ],
+  "Snapshots": [
+    { "Id": "road-00", "CameraId": "road", "Image": "demo-inputs/road-00.jpg", "SourceSeconds": 0 },
+    { "Id": "road-04", "CameraId": "road", "Image": "demo-inputs/road-04.jpg", "SourceSeconds": 4 },
+    { "Id": "road-08", "CameraId": "road", "Image": "demo-inputs/road-08.jpg", "SourceSeconds": 8 },
+    { "Id": "courtyard-00", "CameraId": "courtyard", "Image": "demo-inputs/courtyard-00.jpg", "SourceSeconds": 0 },
+    { "Id": "courtyard-04", "CameraId": "courtyard", "Image": "demo-inputs/courtyard-04.jpg", "SourceSeconds": 4 },
+    { "Id": "courtyard-08", "CameraId": "courtyard", "Image": "demo-inputs/courtyard-08.jpg", "SourceSeconds": 8 }
+  ]
+}
