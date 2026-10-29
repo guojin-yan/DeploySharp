@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="760" viewBox="0 0 1440 760" role="img" aria-labelledby="title desc">
+  <title id="title">普通 OCR 与文档结构化的任务边界</title><desc id="desc">同一页图像可以做文字检测与识别，也可以先识别版面再把文字、表格和其他区域交给各自的任务。本文实跑文字区域和表格两条路径。</desc>
+  <defs><marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1L9 5L1 9Z" fill="#37a58d"/></marker></defs>
+  <rect width="1440" height="760" rx="22" fill="#f4f7fb"/>
+  <g font-family="Segoe UI, Microsoft YaHei, sans-serif" fill="#173047">
+    <text x="48" y="65" font-size="35" font-weight="700">文字识别之后，还需要知道“它属于哪里”</text>
+    <text x="48" y="110" font-size="22" fill="#586e83">普通 OCR 回答写了什么；文档结构化继续组织区域、任务和结构。</text>
+    <rect x="60" y="253" width="200" height="280" rx="15" fill="white" stroke="#a6bbcf" stroke-width="2"/>
+    <rect x="84" y="282" width="152" height="28" rx="5" fill="#8fd4c2"/>
+    <path d="M84 334H233M84 349H220M84 364H235M84 380H234" stroke="#8ca4b7" stroke-width="6"/>
+    <rect x="84" y="409" width="152" height="91" fill="#e5eaf3"/>
+    <path d="M84 439H236M84 469H236M135 409V500M185 409V500" stroke="#a4b6c7" stroke-width="2"/>
+    <text x="160" y="573" text-anchor="middle" font-size="24" font-weight="650">一页图像</text>
+    <rect x="380" y="175" width="414" height="157" rx="20" fill="#e2edf7" stroke="#b8cfdf"/>
+    <text x="409" y="219" font-size="27" font-weight="650">普通 OCR</text>
+    <text x="409" y="264" font-size="24">DET → 文字行裁剪 → REC</text>
+    <text x="409" y="301" font-size="21" fill="#586e83">可选文字方向分类</text>
+    <rect x="932" y="185" width="438" height="137" rx="18" fill="white" stroke="#b8cfdf"/>
+    <text x="958" y="230" font-size="27" font-weight="650">文字、置信度、位置</text>
+    <text x="958" y="277" font-size="22" fill="#586e83">不自动得到表格行列或版面语义</text>
+    <rect x="380" y="402" width="414" height="213" rx="20" fill="#e1f4ec" stroke="#a4d5c1"/>
+    <text x="409" y="449" font-size="27" font-weight="650">文档结构化</text>
+    <text x="409" y="496" font-size="24">页面 → 版面区域 → 按类型路由</text>
+    <text x="409" y="540" font-size="22" fill="#436d65">文字：区域内 DET + REC</text>
+    <text x="409" y="578" font-size="22" fill="#436d65">表格：结构 + 单元格 + 文字</text>
+    <rect x="932" y="417" width="438" height="184" rx="18" fill="white" stroke="#a4d5c1"/>
+    <text x="958" y="466" font-size="27" font-weight="650">区域 JSON / 分区文字 / HTML</text>
+    <text x="958" y="513" font-size="22" fill="#586e83">公式、印章、图表可追加专用阶段</text>
+    <text x="958" y="556" font-size="22" fill="#586e83">本篇只实跑文字区域与表格</text>
+    <g fill="none" stroke="#37a58d" stroke-width="3" marker-end="url(#a)">
+      <path d="M280 393H322V254H351"/><path d="M322 393V509H351"/><path d="M814 254H903"/><path d="M814 509H903"/>
+    </g>
+    <text x="48" y="713" font-size="22" fill="#586e83">PP-Structure 是多个模型和任务的组合；下载一个 SLANeXt 文件，并不等于完成整页解析。</text>
+  </g>
+</svg>

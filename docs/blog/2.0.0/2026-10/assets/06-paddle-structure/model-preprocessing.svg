@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="760" viewBox="0 0 1440 760" role="img" aria-labelledby="title desc">
+  <title id="title">PP-Structure 模型各有自己的预处理约定</title><desc id="desc">PP-DocLayout-L 和 RT-DETR 使用 RGB 直接缩放和几何辅助输入；LCNet 使用短边缩放后中心裁剪；SLANeXt 使用 BGR 等比例缩放后右下补齐；OCR DET 和 REC 也有独立约定。</desc>
+  <rect width="1440" height="760" rx="22" fill="#f4f7fb"/>
+  <g font-family="Segoe UI, Microsoft YaHei, sans-serif" fill="#173047">
+    <text x="48" y="65" font-size="35" font-weight="700">同属 PaddleOCR，预处理不能共用一套参数</text>
+    <text x="48" y="109" font-size="22" fill="#586e83">使用已匹配导出图的 Profile 与预处理适配器；更换导出文件时重新核对输入、颜色、缩放和输出。</text>
+    <rect x="48" y="152" width="1344" height="61" rx="13" fill="#173b53"/>
+    <g fill="white" font-size="24" font-weight="650"><text x="73" y="192">模型</text><text x="442" y="192">输入几何 / 颜色</text><text x="970" y="192">归一化 / 额外输入</text></g>
+    <g font-size="23">
+      <rect x="48" y="220" width="1344" height="94" rx="12" fill="#e4edf6"/>
+      <text x="73" y="257">PP-DocLayout-L /</text><text x="73" y="291">RT-DETR cell</text>
+      <text x="442" y="276">640 × 640 Resize · RGB</text><text x="970" y="257">像素 / 255</text><text x="970" y="291">im_shape + scale_factor</text>
+      <rect x="48" y="323" width="1344" height="81" rx="12" fill="#e4f3ec"/>
+      <text x="73" y="373">PP-LCNet table-cls</text><text x="442" y="373">短边 256 → 中心裁 224 · RGB</text><text x="970" y="373">ImageNet</text>
+      <rect x="48" y="413" width="1344" height="96" rx="12" fill="#fff0de"/>
+      <text x="73" y="469">SLANeXt</text><text x="442" y="453">最长边缩放至 512 · BGR</text><text x="442" y="488">右侧 / 下侧补齐至 512 × 512</text><text x="970" y="453">ImageNet</text><text x="970" y="488">归一化后补零</text>
+      <rect x="48" y="518" width="1344" height="81" rx="12" fill="#e9e7f5"/>
+      <text x="73" y="568">PP-OCRv5 DET</text><text x="442" y="568">区域限长 960，stride 128 · BGR</text><text x="970" y="568">ImageNet 参数</text>
+      <rect x="48" y="608" width="1344" height="81" rx="12" fill="#e4edf6"/>
+      <text x="73" y="658">PP-OCRv5 REC</text><text x="442" y="658">文字行高 48，按宽度组批 · BGR</text><text x="970" y="658">(像素 / 255 − 0.5) / 0.5</text>
+    </g>
+    <text x="48" y="731" font-size="21" fill="#586e83">几何辅助输入由 OpenCvPaddleDocumentPreprocessing 创建；手填为 1 或沿用其他模型的颜色顺序，都会影响结果。</text>
+  </g>
+</svg>

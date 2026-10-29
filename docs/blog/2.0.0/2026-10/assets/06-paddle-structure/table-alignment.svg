@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="860" viewBox="0 0 1440 860" role="img" aria-labelledby="title desc">
+  <title id="title">表格结构、单元格位置和 OCR 文字如何对齐</title><desc id="desc">分类选择 wired 或 wireless 的模型对；SLANeXt 输出结构，RT-DETR 输出单元格位置；对齐检查通过后才能识别并填充文字，失败则保存诊断与结构。</desc>
+  <defs><marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1L9 5L1 9Z" fill="#37a58d"/></marker></defs>
+  <rect width="1440" height="860" rx="22" fill="#f4f7fb"/>
+  <g font-family="Segoe UI, Microsoft YaHei, sans-serif" fill="#173047">
+    <text x="48" y="65" font-size="35" font-weight="700">HTML 骨架、裁剪位置和文字，分别由不同步骤负责</text>
+    <text x="48" y="109" font-size="22" fill="#586e83">分类选择模型对；结构槽位与检测框只有通过对齐检查后，才能按索引填入 OCR。</text>
+    <rect x="60" y="163" width="292" height="166" rx="19" fill="#e1f4ec" stroke="#a4d5c1"/>
+    <text x="84" y="211" font-size="26" font-weight="650">PP-LCNet 分类</text>
+    <text x="84" y="259" font-size="23">wired / wireless</text><text x="84" y="299" font-size="22" fill="#586e83">决定后续模型文件</text>
+    <rect x="491" y="150" width="371" height="135" rx="19" fill="#e4edf6" stroke="#b8cfdf"/>
+    <text x="517" y="197" font-size="26" font-weight="650">RT-DETR cell</text><text x="517" y="245" font-size="23">负责原图单元格位置</text>
+    <rect x="491" y="333" width="371" height="135" rx="19" fill="#e9e7f5" stroke="#c7bfdf"/>
+    <text x="517" y="380" font-size="26" font-weight="650">SLANeXt</text><text x="517" y="428" font-size="23">负责行、格子、colspan</text>
+    <rect x="1001" y="195" width="379" height="225" rx="19" fill="#fff0de" stroke="#dfc4a2"/>
+    <text x="1026" y="241" font-size="26" font-weight="650">CellAligner 检查</text>
+    <text x="1026" y="289" font-size="23">同页同源 · 完整结构</text><text x="1026" y="333" font-size="23">数量一致 · 行几何可判断</text>
+    <text x="1026" y="378" font-size="22" fill="#8e6540">rowspan 暂不自动对齐</text>
+    <g fill="none" stroke="#37a58d" stroke-width="3" marker-end="url(#a)">
+      <path d="M363 247H417V219H461"/><path d="M417 247V401H461"/><path d="M874 219H970"/><path d="M874 401H930V362H970"/>
+    </g>
+    <rect x="651" y="552" width="729" height="195" rx="20" fill="#e1f4ec" stroke="#a4d5c1"/>
+    <text x="678" y="598" font-size="26" font-weight="650">通过 → REC 单元格 → FillMarkup → HTML</text>
+    <text x="678" y="646" font-size="23">StructureCellIndex 连接位置、文字和槽位</text>
+    <text x="678" y="693" font-size="23">填入时自动转义 &amp;、&lt; 等字符</text>
+    <rect x="60" y="552" width="509" height="195" rx="20" fill="#f7e8e1" stroke="#d9b9a6"/>
+    <text x="86" y="598" font-size="26" font-weight="650">失败 → 保存结构与诊断</text>
+    <text x="86" y="646" font-size="23">不盲目截取格子，不强行填充</text>
+    <text x="86" y="693" font-size="23">检查漏框、重框、跨行与模型匹配</text>
+    <g fill="none" stroke="#37a58d" stroke-width="3" marker-end="url(#a)"><path d="M1192 431V522"/><path d="M1043 431V499H316V522"/></g>
+    <text x="1206" y="490" font-size="22" fill="#397d6d">通过</text><text x="748" y="489" font-size="22" fill="#8e6540">失败</text>
+    <text x="48" y="814" font-size="22" fill="#586e83">本篇单行单元格使用 REC-only；多行单元格应改为“单元格内 DET + REC”，再聚合文字填入同一槽位。</text>
+  </g>
+</svg>

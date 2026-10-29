@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="800" viewBox="0 0 1440 800" role="img" aria-labelledby="title desc">
+  <title id="title">共享原图的版面区域 DET 与文字行 REC</title><desc id="desc">先解码整页，在版面 ROI 上准备检测张量；几何变换将检测文字框还原到整页坐标；识别输入共享原图像素，在整页坐标中裁文字行。不逐区域编码解码，但推理张量和文字行裁剪仍需要计算和分配。</desc>
+  <defs><marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1L9 5L1 9Z" fill="#37a58d"/></marker></defs>
+  <rect width="1440" height="800" rx="22" fill="#f4f7fb"/>
+  <g font-family="Segoe UI, Microsoft YaHei, sans-serif" fill="#173047">
+    <text x="48" y="65" font-size="35" font-weight="700">版面框是一段内容，REC 要的是其中的文字行</text>
+    <text x="48" y="109" font-size="22" fill="#586e83">PrepareRectangle 保留 ROI → 源图变换；PageRoiOcrInput 将检测输入与共享原图识别视图组合。</text>
+    <rect x="60" y="171" width="328" height="464" rx="21" fill="white" stroke="#b0c6d6" stroke-width="2"/>
+    <text x="84" y="214" font-size="25" font-weight="650">已解码整页 · 唯一像素源</text>
+    <rect x="104" y="252" width="237" height="328" rx="10" fill="#e8eff5"/>
+    <rect x="127" y="301" width="190" height="200" rx="8" fill="#d3efe4" stroke="#47a891" stroke-width="3"/>
+    <path d="M144 331H296M144 355H282M144 379H300M144 403H292M144 427H280M144 451H299M144 475H275" stroke="#718fa0" stroke-width="6"/>
+    <text x="135" y="535" font-size="22" fill="#397d6d">版面 ROI = 多行段落</text>
+    <rect x="485" y="201" width="394" height="139" rx="19" fill="#e4edf6" stroke="#b8cfdf"/>
+    <text x="511" y="246" font-size="25" font-weight="650">ROI → DET 张量 → 检测</text>
+    <text x="511" y="291" font-size="22" fill="#586e83">按 ROI 尺寸缩放，变换中保留偏移</text>
+    <rect x="485" y="411" width="394" height="139" rx="19" fill="#fff0de" stroke="#dfc4a2"/>
+    <text x="511" y="456" font-size="25" font-weight="650">文字四边形 → 整页坐标</text>
+    <text x="511" y="501" font-size="22" fill="#586e83">由变换还原，不再手工加一次偏移</text>
+    <rect x="1004" y="309" width="376" height="231" rx="20" fill="#e1f4ec" stroke="#a4d5c1"/>
+    <text x="1030" y="355" font-size="25" font-weight="650">共享原图 → REC 裁剪与组批</text>
+    <text x="1030" y="403" font-size="22">按整页四边形透视裁文字行</text>
+    <text x="1030" y="444" font-size="22">Batch ≤ 16 → CTC 解码</text>
+    <text x="1030" y="491" font-size="22" fill="#436d65">输出文字 + 置信度 + 原图位置</text>
+    <g fill="none" stroke="#37a58d" stroke-width="3" marker-end="url(#a)"><path d="M397 271H456"/><path d="M683 350V382"/><path d="M889 480H975"/></g>
+    <path d="M225 645V682H1192V558" fill="none" stroke="#6793b5" stroke-width="3" stroke-dasharray="9 7" marker-end="url(#a)"/>
+    <text x="540" y="670" font-size="22" fill="#567e9b">共享像素视图：不逐 ROI 编码、解码</text>
+    <text x="48" y="755" font-size="22" fill="#586e83">张量准备和透视裁剪仍有计算与分配；该示例不宣称整条流水线零拷贝，也不自动推断复杂阅读顺序。</text>
+  </g>
+</svg>

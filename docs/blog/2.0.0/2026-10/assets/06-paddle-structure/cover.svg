@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1410" height="800" viewBox="0 0 1410 800" role="img" aria-labelledby="title desc">
+  <title id="title">DeploySharp 2.0.0：在 C# 中还原文档结构</title>
+  <desc id="desc">深蓝青绿系列技术题图。一页混合文档经过版面区域识别和任务路由，输出分区文字和带文字的表格。插画表达流程，不是推理截图。</desc>
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#0b192e"/><stop offset="1" stop-color="#182e48"/></linearGradient>
+    <linearGradient id="accent"><stop stop-color="#62d8ec"/><stop offset="1" stop-color="#83e6b6"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="150%" height="160%"><feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#020a15" flood-opacity=".35"/></filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M1 1L9 5L1 9Z" fill="#75dacb"/></marker>
+  </defs>
+  <rect width="1410" height="800" rx="30" fill="url(#bg)"/>
+  <path d="M1140 0L1410 208M1250 0L1410 125M1355 0L1410 45" stroke="#36506a" stroke-width="2" opacity=".55"/>
+  <g font-family="Segoe UI, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+    <rect x="60" y="42" width="178" height="34" rx="17" fill="#24425b"/><text x="149" y="66" text-anchor="middle" font-size="20" font-weight="600" fill="#b8d8ed">JYPPX · 开源项目</text>
+    <text x="1348" y="67" text-anchor="end" font-size="21" font-weight="600" fill="#9eb9cf">实战教程 / 06</text>
+    <text x="54" y="177" font-size="94" font-weight="750" letter-spacing="-3" fill="#f5f8fc">DeploySharp <tspan fill="url(#accent)">2.0.0</tspan></text>
+    <text x="60" y="255" font-size="58" font-weight="750" fill="#f5f8fc">在 C# 中还原文档结构</text>
+    <text x="63" y="305" font-size="28" fill="#b5cadd">PP-Structure · 页面区域 · OCR · 表格 HTML</text>
+    <rect x="48" y="348" width="1314" height="324" rx="26" fill="#142c42" stroke="#375873" stroke-width="2"/>
+    <g filter="url(#shadow)">
+      <rect x="108" y="383" width="200" height="246" rx="14" fill="#eaf3f8"/>
+      <rect x="129" y="404" width="157" height="26" rx="5" fill="#81d7c0"/>
+      <path d="M131 448H282M131 460H265M131 472H280" stroke="#7894aa" stroke-width="5" stroke-linecap="round"/>
+      <rect x="129" y="492" width="69" height="80" rx="5" fill="#c3d6e7"/><rect x="211" y="492" width="76" height="80" rx="5" fill="#f2d6b4"/>
+      <path d="M129 589H285M129 604H256" stroke="#7894aa" stroke-width="5" stroke-linecap="round"/>
+      <rect x="492" y="421" width="225" height="169" rx="20" fill="#24495b" stroke="#72ccbd" stroke-width="2"/>
+      <rect x="550" y="449" width="110" height="75" rx="14" fill="#76d7bf"/><text x="605" y="505" text-anchor="middle" font-size="48" font-weight="750" fill="#183c48">C#</text>
+      <text x="605" y="558" text-anchor="middle" font-size="24" font-weight="650" fill="#e1f3f2">按区域组织任务</text>
+      <rect x="921" y="386" width="365" height="110" rx="15" fill="#254457" stroke="#577e91"/>
+      <text x="944" y="420" font-size="22" font-weight="650" fill="#8fe2d0">分区文字</text>
+      <path d="M945 441H1256M945 458H1230M945 475H1184" stroke="#a6becb" stroke-width="5" stroke-linecap="round"/>
+      <rect x="921" y="520" width="365" height="110" rx="15" fill="#254457" stroke="#577e91"/>
+      <path d="M944 541H1261V610H944ZM944 565H1261M1048 565V610M1154 565V610M944 588H1261" fill="none" stroke="#e7bb8e" stroke-width="3"/>
+      <path d="M958 553H1244M956 576H1033M1061 576H1140M1167 576H1247M956 600H1033M1061 600H1140M1167 600H1247" stroke="#c2d4df" stroke-width="3"/>
+    </g>
+    <g fill="none" stroke="#75dacb" stroke-width="4" stroke-linejoin="round" marker-end="url(#arrow)">
+      <path d="M333 506H464"/><path d="M741 506H831V440H893"/><path d="M831 506V575H893"/>
+    </g>
+    <text x="208" y="651" text-anchor="middle" font-size="21" fill="#b6cede">页面图像</text>
+    <text x="1103" y="651" text-anchor="middle" font-size="21" fill="#b6cede">结构 + 文字</text>
+    <rect x="61" y="710" width="1288" height="44" rx="22" fill="#233e54"/>
+    <text x="705" y="740" text-anchor="middle" font-size="23" fill="#cae2eb">版面检测 → 区域 OCR　｜　表格分类 → 单元格与结构 → HTML</text>
+  </g>
+</svg>

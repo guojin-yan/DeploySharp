@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="730" viewBox="0 0 1440 730" role="img" aria-labelledby="title desc">
+  <title id="title">PP-Structure 示例的包职责与安装选择</title><desc id="desc">共用视觉和图像库，再按 ORT CPU 或 OpenVINO CPU 选择后端和运行时。随文项目保留两条路径用于切换；业务项目可以只安装一组。</desc>
+  <defs><marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1L9 5L1 9Z" fill="#37a58d"/></marker></defs>
+  <rect width="1440" height="730" rx="22" fill="#f4f7fb"/>
+  <g font-family="Segoe UI, Microsoft YaHei, sans-serif" fill="#173047">
+    <text x="48" y="65" font-size="35" font-weight="700">公共图像层 + 一组推理后端与运行时</text>
+    <text x="48" y="109" font-size="22" fill="#586e83">图像由 OpenCV 处理，不代表模型使用 OpenCV DNN；二者的职责不同。</text>
+    <rect x="60" y="169" width="1320" height="118" rx="19" fill="#e2edf7" stroke="#b8cfdf"/>
+    <text x="85" y="209" font-size="25" font-weight="650">两种场景共用</text>
+    <text x="85" y="256" font-size="24">JYPPX.DeploySharp.Visual.OpenCV 2.0.0</text>
+    <text x="796" y="256" font-size="23">JYPPX.OpenCV.runtime.win-x64 5.0.0</text>
+    <g stroke="#37a58d" stroke-width="3" marker-end="url(#a)"><path d="M380 292V334"/><path d="M1055 292V334"/></g>
+    <rect x="60" y="347" width="643" height="231" rx="20" fill="#e1f4ec" stroke="#a4d5c1"/>
+    <rect x="737" y="347" width="643" height="231" rx="20" fill="#fff1df" stroke="#e1c9a9"/>
+    <text x="86" y="393" font-size="28" font-weight="700">场景 A · ONNX Runtime CPU</text>
+    <text x="86" y="443" font-size="23">JYPPX.DeploySharp.Backend.OnnxRuntime</text>
+    <text x="86" y="482" font-size="23">2.0.0</text>
+    <text x="86" y="533" font-size="23">Microsoft.ML.OnnxRuntime 1.28.0</text>
+    <text x="763" y="393" font-size="28" font-weight="700">场景 B · OpenVINO CPU</text>
+    <text x="763" y="443" font-size="23">JYPPX.DeploySharp.Backend.OpenVINO</text>
+    <text x="763" y="482" font-size="23">2.0.0</text>
+    <text x="763" y="533" font-size="23">OpenVINO.runtime.win 2026.2.1</text>
+    <text x="60" y="638" font-size="23">随文工程同时引用 A / B，方便对照；只用 ORT 的项目保留公共层 + A 即可。</text>
+    <text x="60" y="683" font-size="22" fill="#586e83">本文在 Windows x64 验证。Linux 需要替换原生运行时包，不能直接沿用 win-x64 包。</text>
+  </g>
+</svg>
