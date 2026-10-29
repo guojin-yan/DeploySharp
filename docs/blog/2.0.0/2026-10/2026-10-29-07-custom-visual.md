@@ -1,16 +1,16 @@
 # 用 C# 做园区车辆与人员巡检：自定义 NanoDet，联合 CLIP 输出区域事件与复核台
 
-> DeploySharp 2.0.0 系列 · 第 07 篇实战教程。基于正式 NuGet `2.0.0`、源码 Tag `v2.0.0`，创建与修订：2026-10-29。随文工程以当前文章目录为准。
+> DeploySharp 2.0.0 系列 · 第 07 篇实战教程，使用正式 NuGet `2.0.0`。
 
 ![DeploySharp 园区巡检：NanoDet 检测、区域规则、CLIP 车型候选与事件复核](assets/07-custom-visual/cover.png)
 
 ## 一、DeploySharp 项目简介
 
-**DeploySharp** 是一个面向 **C#/.NET 开发者**的开源模型部署框架，由「椒颜皮皮虾」开发，项目源码遵循 **Apache License 2.0**。它基于 **ONNX Runtime、OpenVINO、TensorRT、OpenCV DNN** 等推理引擎，将模型加载、图像前处理、推理执行和结果后处理组织成可复用的接口，方便大家在桌面软件、工业视觉和文档应用中接入模型。
+**DeploySharp** 是一个面向 **C#/.NET 开发者**的开源模型部署框架，由「椒颜皮皮虾」开发，项目源码遵循 **Apache License 2.0**。项目封装了 **ONNX Runtime、OpenVINO、TensorRT、OpenCV DNN** 等推理引擎，提供模型加载、图像前处理、推理和结果后处理接口，方便大家在桌面软件、工业视觉和文档应用中部署模型。
 
-目前项目已接入目标检测、分类、实例分割、关键点、旋转框、异常检测、背景移除等视觉任务，也提供 **PP-OCRv4/v5/v6、PP-Structure 文档处理**及部分图文、本地语言模型的使用入口。常用模型可以直接使用配套前后处理，自有模型可以配置输入输出、缩放、颜色和归一化，也可以扩展自己的解码器和结果类。
+目前项目已接入目标检测、分类、实例分割、关键点、旋转框、异常检测、背景移除等视觉任务，也提供 **PP-OCRv4/v5/v6、PP-Structure 文档处理**及部分图文、本地语言模型的使用入口。常用模型有配套的前后处理，自有模型也可以通过扩展接口接入。
 
-2.0 版本增加了按需组合的 NuGet 包、Batch 与独立 Session 池、异步输入、ROI 和大图重叠切片等能力。支持的 TensorRT 路径还可以使用 CUDA 前后处理与缓冲复用；具体模型、平台和后端的可用范围分别记录。
+2.0 版本增加了按需安装的 NuGet 包、Batch 批量推理、独立 Session 会话池、异步输入、感兴趣区域（ROI）管理和大图重叠切片等功能。本篇重点介绍其中的**自定义模型接入**：怎样配置模型输入输出，编写自己的前后处理，再把多个模型组合到一个应用中。
 
 **项目源码与 NuGet：**
 
@@ -22,45 +22,43 @@ NuGet（搜索 JYPPX.DeploySharp）：
 https://www.nuget.org/packages?q=JYPPX.DeploySharp
 ```
 
-当前正式版主要验证 Windows 10/11 x64，其他系统及各模型的后端状态请查看仓库验证矩阵。库代码、第三方引擎和模型分别遵循各自的许可。
+前面几篇文章讲了已有模型的使用方法。这一篇我们接入 **NanoDet-Plus**，联合 **CLIP** 做一个园区车辆与人员巡检示例，完成目标检测、区域统计、车型匹配和事件记录，最后生成一个可以直接打开的 HTML 复核页面。
 
-前面几篇文章讲了已有模型怎样使用。这一篇我们做一个更贴近业务的案例：**接入库中尚未内置的 NanoDet-Plus，联合 CLIP，对多个固定视角的截图进行车辆与人员区域巡检。** 最终交付的不只是几个检测框，还有区域统计、待复核事件、证据图片及一个能直接打开的 HTML 复核台。
+## 二、巡检场景与实现思路
 
-## 二、从监控截图到可以复核的巡检结果
+### 2.1 这个案例要做什么
 
-### 2.1 先明确要完成的业务
+做园区巡检时，通常需要在画面中划定车辆通道、人员通行区等关注区域，统计区域内的目标，并在达到条件时保存截图。车辆还可以进一步细分，方便后续检索和复核。
 
-园区里通常有车辆通道、人员通行区和需要关注的区域。仅把模型检测结果画出来，还缺少几个环节：哪些目标属于当前关注区？什么时候需要查看截图？能否补充车型候选？结果能不能交给后面的业务程序？
-
-这次使用两组公开固定视角视频，各取 **0 s、4 s、8 s** 三张截图，模拟两台相机的输入。一组是道路车辆，一组是建筑庭院内的行人。它们用于复现方法，**不是作者已经部署的真实园区项目，也不是带人工真值的准确率数据集**。
+这里用两组公开的固定视角视频模拟两台相机，各取 **0 s、4 s、8 s** 三张截图。一组是道路车辆，一组是建筑庭院内的行人，共六张输入图。
 
 ![两台相机、六张截图与车辆和人员区域巡检的业务流程示意](assets/07-custom-visual/decode-route.png)
 
-| 环节 | 实现 | 交付给下一步的内容 |
+| 环节 | 实现 | 输出 |
 | --- | --- | --- |
-| 接收截图 | `inspection.json` 绑定相机、文件和来源时间 | 明确截图来自哪个视角 |
+| 接收截图 | `inspection.json` 绑定相机、文件和来源时间 | 相机与截图信息 |
 | 找到目标 | 自定义 NanoDet-Plus | COCO 类别、分数、源图检测框 |
 | 应用区域规则 | 多边形、类别过滤、底边中心点与数量阈值 | 每区域目标 ID、计数及是否触发 |
 | 补充车型候选 | CLIP 图像与文本编码器 | 区域内车辆的 Top-3 候选和分差 |
-| 留存与复核 | C# 结果类、图片、CSV、JSON、HTML | 可回看、可筛选、可继续集成的报告 |
+| 保存结果 | 图片、CSV、JSON、HTML | 检测图、区域统计、事件清单和复核页面 |
 
-例如，近侧车辆通道内检测到至少两个车辆目标时，生成一条数量关注事件；通行人员区域达到两个人员目标时，也生成待复核事件。阈值只是教程配置，读者应按现场需求调整。
+示例中，近侧车辆通道检测到至少两个车辆目标时，生成一条待复核事件；人员通行区达到两个人员目标时，也保存事件。区域、类别和数量阈值都放在配置文件中，可以按现场需求修改。
 
-**事件只由检测和几何规则产生，CLIP 的车型猜测不参与触发。** 这样即使车型候选不合适，区域计数与事件依据仍然可以单独检查。
+事件根据区域内的检测类别和数量触发，CLIP 则为车辆补充车型候选，供查看截图时参考。
 
-### 2.2 这篇要学会的扩展方式
+### 2.2 自定义模型从哪里接入
 
-一个常见问题是：库中没有自己的模型，能不能直接接？可以。本文用 `VisualModelDefinitionBuilder<TInput, TResult>` 定义 NanoDet 的输入输出、前处理器、解码器以及自己的结果类，不修改 DeploySharp 主库。
+NanoDet-Plus 还没有内置到 DeploySharp 中，这里通过 `VisualModelDefinitionBuilder<TInput, TResult>` 定义它的输入输出、前处理器、解码器和结果类，直接在应用项目中完成接入。
 
 ![已有模型调整前处理与新模型自定义接入的两条路径](assets/07-custom-visual/extension-points.png)
 
-如果只是调整已有模型的缩放、颜色或归一化，可以通过 `profile.WithPreprocessing(...)` 创建配置副本；如果输出含义不同，就需要自己的 Decoder。后续区域规则、候选匹配和事件报告则属于应用层，不必为了业务字段给主库增加新的模型类别。
+已有模型的缩放、颜色和归一化可以通过 `profile.WithPreprocessing(...)` 调整；新模型的输出结构不同，则需要编写对应的 Decoder。接入后，区域规则、车型匹配和报告生成都在应用层完成。
 
 ## 三、准备工程与 NuGet 依赖
 
 ### 3.1 获取随文完整工程
 
-完整源码、配置和六张输入图都放在随文目录。下载仓库后进入这个目录运行，辅助类已经配齐，无需照着正文逐段拼接。
+完整源码、配置和六张输入图都放在下面的目录中。可以先下载运行，再结合正文阅读关键实现。
 
 ```text
 随文工程：
@@ -72,7 +70,7 @@ https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/docs/articles/vis
 
 ```text
 07-custom-visual/
-  CustomVisual.csproj       # 正式 NuGet，不引用本地主库项目
+  CustomVisual.csproj       # NuGet 依赖与原生库部署配置
   Program.cs               # 会话初始化与多截图任务编排
   NanoDetModel.cs           # 自定义检测模型与六输出解码
   ClipModels.cs             # 图文编码、英文 tokenizer、相似度
@@ -81,16 +79,16 @@ https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/docs/articles/vis
   PreviewWriter.cs          # 区域、检测框与 ROI 图片
   inspection.json
   prompts.json
-  demo-inputs/              # 六张小型教程输入及来源说明
-  models/                   # 自行下载，忽略提交
-  results/                  # 运行生成，忽略提交
+  demo-inputs/              # 六张输入图及来源说明
+  models/                   # 下载的模型与词表
+  results/                  # 运行结果
 ```
 
-随文工程的目标框架为 `net10.0`，需要 .NET 10 SDK、x64 环境。读者运行不需要 Python、视频解码脚本或本地 DeploySharp 源码。
+随文工程使用 `net10.0`，需要安装 .NET 10 SDK，并在 x64 环境运行。
 
 ### 3.2 按运行场景选择依赖
 
-如果自行创建项目，ORT CPU 的基础安装如下；使用随文工程时，直接 `dotnet restore` 即可。
+如果自行创建项目，先安装 ONNX Runtime（下文简称 ORT）的 CPU 后端和图像适配器；使用随文工程时，直接执行 `dotnet restore` 即可。
 
 ```powershell
 dotnet new console -n CustomVisual -f net10.0
@@ -100,7 +98,7 @@ dotnet add package JYPPX.DeploySharp.Backend.OnnxRuntime --version 2.0.0
 dotnet add package Microsoft.ML.OnnxRuntime --version 1.28.0
 ```
 
-图像适配器和推理后端分别负责不同工作，原生运行时还要按操作系统选择：
+图像适配器负责解码、变换和绘图，推理后端负责运行模型。两者依赖的原生包按操作系统选择：
 
 | 使用场景 | 额外安装的包 | 作用 |
 | --- | --- | --- |
@@ -114,13 +112,13 @@ dotnet add package Microsoft.ML.OnnxRuntime --version 1.28.0
 
 ![托管接口、各系统原生库与三个 ONNX 模型分别准备](assets/07-custom-visual/deployment.png)
 
-只运行 ORT 的应用，可以删除 OpenVINO 的包、原生文件复制项及代码注册分支。包安装完成后，还需要下载下面的模型；NuGet 不会自动带上这些权重。
+只运行 ORT 时，可以删除 OpenVINO 的包、原生文件复制项及注册代码。NuGet 安装好后，再单独下载模型文件。
 
 ## 四、准备模型、截图与相机区域
 
 ### 4.1 下载三个模型和 CLIP 词表
 
-NanoDet 图来自 OpenCV Zoo 的固定提交，CLIP 使用项目模型 Release 的双编码器。文件统一放入 `models`，保留以下名称。
+NanoDet 使用 OpenCV Zoo 提供的 ONNX 模型，CLIP 使用项目模型 Release 中的图像、文本双编码器。将下面的文件下载到 `models` 目录，保持文件名不变。
 
 ```text
 NanoDet 固定版本目录：
@@ -143,13 +141,13 @@ CLIP 许可：
 https://github.com/guojin-yan/DeploySharp/releases/download/models-visual.1/clip-vit-b-32.LICENSE
 ```
 
-NanoDet 图约 3.8 MB，CLIP 的图像、文本 FP32 图分别约 352 MB、254 MB。NanoDet 目录采用 Apache 2.0，CLIP 资产保留 MIT 许可。具体的 PowerShell/Bash 下载命令放在随文 README 中，也可以用浏览器下载已有本地文件。
+NanoDet 模型约 3.8 MB，CLIP 的图像、文本 FP32 模型分别约 352 MB、254 MB。NanoDet 目录采用 Apache 2.0，CLIP 资产采用 MIT 许可。随文 README 提供了 PowerShell 和 Bash 下载命令，也可以直接用浏览器下载。
 
-不需要用户计算模型或图片的 SHA-256。替换自有模型时，应检查真实端口、形状和处理约定，不能只修改文件名。
+已有这些模型的本地文件时，直接复制到目录中即可。更换其他导出版本时，需要同步调整输入输出名称、形状和前后处理。
 
 ### 4.2 六张输入随工程提供
 
-道路图为 1920×1080，庭院图为 768×576。同一相机的三张图对应原视频 0 s、4 s、8 s；`SourceSeconds` 只表示素材位置，不虚构拍摄日期或墙钟告警时间。
+道路图为 1920×1080，庭院图为 768×576。配置中的 `SourceSeconds` 记录截图在原视频中的位置。
 
 ```text
 道路素材：
@@ -159,13 +157,13 @@ https://media.roboflow.com/supervision/video-examples/vehicles.mp4
 https://github.com/opencv/opencv/blob/4.x/samples/data/vtest.avi
 ```
 
-来源与处理方式记录在 `demo-inputs/README.md`。第三方素材的权利归其原权利人，本项目代码许可不授予额外素材许可。
+素材来源与截图方式记录在 `demo-inputs/README.md`，素材使用遵循其各自的许可。
 
-换成自己的截图时，修改 `inspection.json` 中的 `Image` 和 `CameraId`。图像相对路径以配置文件所在目录解析；每台相机的视角变化后，要重新配置区域。
+使用自己的截图时，修改 `inspection.json` 中的 `Image` 和 `CameraId`。图像相对路径以配置文件所在目录解析，区域按对应相机的视角配置。
 
 ### 4.3 区域规则采用归一化多边形
 
-下面节选车辆通道规则。多边形坐标位于 `[0,1]`，用来表达当前相机视角下的关注区；它不是地面真实距离。
+下面是车辆通道的一条规则。多边形使用 `[0,1]` 的归一化坐标，横、纵坐标分别对应图像宽、高的比例。
 
 ```json
 {
@@ -180,7 +178,7 @@ https://github.com/opencv/opencv/blob/4.x/samples/data/vtest.avi
 
 本例 COCO 标签中，`0` 为 person，`2/5/7` 为 car/bus/truck。同一多边形可以分别配置车辆规则与人员规则；每条规则独立筛选类别、计数和触发。
 
-区域归属使用检测框的**底边中心点**，近似表达行人脚部或车辆落地点。它比“框与区域只要有交集就算进入”更适合本例固定地面视角，但遮挡、截断和俯视角仍会影响判断。
+判断目标是否进入区域时，这里取检测框的**底边中心点**，近似表示行人脚部或车辆落地点。相比检测框与多边形求交，这种方式更适合本例的地面通行区域。
 
 ![源图检测框底边中心归一化后判断多边形归属，按类别计数再产生待复核事件](assets/07-custom-visual/zone-rules.png)
 
@@ -196,19 +194,19 @@ bool belongs = zone.ClassIds.Contains(classId)
     && InspectionConfig.Geometry(zone).Contains(anchor);
 ```
 
-图中黄色线是配置区域，青绿色框是命中任一区域规则的目标，灰框保留其他检测，圆点标出底边参考点。**这是先做整图检测，再按业务区域过滤**；没有把多边形外的图像抹掉后重新推理，也没有把本例等同于完整视频跟踪系统。
+程序先做整图检测，再按区域过滤结果。图中黄色线表示配置区域，青绿色框表示命中区域规则的目标，灰框表示其他检测，圆点标出了底边参考点。
 
 ## 五、自定义 NanoDet 的输入、前处理与六输出解码
 
-### 5.1 端口以实际 ONNX 图为准
+### 5.1 查看模型输入输出
 
-工程提供检查入口，打印三个图的真实端口，不执行截图任务：
+先通过 `--inspect` 查看三个模型的输入输出名称、类型和形状：
 
 ```powershell
 dotnet run -c Release -- --inspect
 ```
 
-NanoDet 的输入是 `input.1`，形状 `[1,3,416,416]`。这个 Zoo 导出只有 **8、16、32 三个 stride、六个输出**，不能照着其他训练配置再加一个尺度。
+NanoDet 的输入是 `input.1`，形状为 `[1,3,416,416]`。本次使用的模型有 **8、16、32 三个 stride、六个输出**，每个尺度各输出一组分类概率和一组边框距离。
 
 ![NanoDet 三尺度分类概率与距离分布，解码后还原到源图并执行按类 NMS](assets/07-custom-visual/model-contract.png)
 
@@ -218,13 +216,13 @@ NanoDet 的输入是 `input.1`，形状 `[1,3,416,416]`。这个 Zoo 导出只�
 | 16 | 676 | `814`：`[1,676,80]` | `817`：`[1,676,32]` |
 | 32 | 169 | `836`：`[1,169,80]` | `839`：`[1,169,32]` |
 
-分类输出已经是概率，不重复 Sigmoid；32 个边框值表示四条边，每边八档距离分布，需要分别做稳定 Softmax 并求期望。
+分类输出已经是概率，可以直接与阈值比较。32 个边框值对应四条边，每边八档距离分布，分别做 Softmax 后求期望，就能得到目标框到当前位置的距离。
 
-### 5.2 不要只检查归一化，颜色和几何同样重要
+### 5.2 配置 NanoDet 与 CLIP 的前处理
 
-OpenCV Zoo 的 `demo.py` 在调用模型前先做 BGR→RGB 和居中黑边 Letterbox，`nanodet.py` 内部才进行 mean/std。只读模型封装里的归一化代码，很容易遗漏入口处的颜色与几何步骤。
+OpenCV Zoo 的 `demo.py` 先做 BGR→RGB 和居中黑边 Letterbox，再由 `nanodet.py` 完成 mean/std 归一化。接入时要把这两部分一起配置。
 
-本例采用 **RGB、416×416 Letterbox、短边尺寸向下取整、黑色填充**。已发布的公共适配器使用 Linear 插值，官方 demo 使用 Area，二者不作逐像素一致声明。CLIP 使用自己的 RGB、短边缩放与中心裁剪，不能共享 NanoDet 处理后的输入张量。
+本例采用 **RGB、416×416 Letterbox、短边尺寸向下取整、黑色填充**。适配器使用 Linear 插值，官方 demo 使用 Area，缩放后的像素会有差异。CLIP 则从源图裁剪目标区域，单独执行 RGB 转换、短边缩放和中心裁剪。
 
 ![NanoDet 使用 RGB 黑边 Letterbox，CLIP 对源图 ROI 使用独立的短边缩放中心裁剪与归一化](assets/07-custom-visual/normalization.png)
 
@@ -242,13 +240,13 @@ var processing = new VisualPreprocessingOptions(
     interpolation: VisualInterpolationMode.Linear);
 ```
 
-mean/std 对应 0—255 像素域，不再额外除以 255。CLIP 的 mean/std 也换算到等价像素域，采用 OpenCV Cubic；它与官方 Pillow 处理器仍有像素差异。
+这里的 mean/std 对应 0—255 像素值，归一化时不再除以 255。CLIP 的 mean/std 也换算到了相同的像素域，缩放采用 OpenCV Cubic，与官方 Pillow 处理器存在插值差异。
 
-接口提供 `Resize/Letterbox/CenterCrop`、颜色和归一化切换，目的是匹配各模型约定。**能配置不代表可以随意改变而不影响精度。** 本例没有把更换几何当成无损操作。
+换模型时，可以通过这组参数选择 `Resize/Letterbox/CenterCrop`、颜色顺序和归一化方式，按照模型训练及导出时的处理方式配置。
 
-### 5.3 自己的结果类也能接入 Runner
+### 5.3 定义结果类并组合模型
 
-检测结果可以是普通 C# 记录，不需要继承库内置的结果类型：
+这里用三个普通 C# 记录保存目标框、类别、分数和检测结果：
 
 ```csharp
 public sealed record PixelBox(
@@ -294,7 +292,7 @@ foreach (var level in levels)
 var definition = builder.Build();
 ```
 
-`VisualTaskId` 是开放标识，新任务不需要修改主库枚举。前处理既可以用委托，也可以实现 `IVisualInputPreprocessor<TInput>`，适合逐步迁移自己的模型代码。
+`VisualTaskId` 使用自定义任务标识。前处理可以像上面这样传入委托，也可以实现 `IVisualInputPreprocessor<TInput>`，把已有的处理代码封装成独立类。
 
 ### 5.4 距离分布与坐标还原
 
@@ -307,15 +305,15 @@ var definition = builder.Build();
 模型框 = [中心 x − 左, 中心 y − 上, 中心 x + 右, 中心 y + 下]
 ```
 
-然后通过 `context.Input.Transform.ToSource(...)` 去掉 padding 并还原缩放，再裁到源图。默认 `--nms 0.6`，按类别执行非极大值抑制（NMS），保留不同类别的重叠目标。
+得到模型坐标后，通过 `context.Input.Transform.ToSource(...)` 去掉 padding、还原缩放，并将框裁到源图范围内。最后按类别执行非极大值抑制（NMS），阈值由 `--nms` 指定，默认为 `0.6`。
 
-Decoder 不改写后端输出缓冲区，只把最终类别、分数与框保存到自己的对象。NaN、Infinity 或不合法概率会报错，不能把异常张量当成正常业务结果。
+Decoder 读取后端输出，将最终类别、分数和源图框保存到自定义结果中。返回的结果独立于后端缓冲区，后面可以直接用于区域判断、裁剪和绘图。
 
-## 六、CLIP 负责车型候选，规则负责事件
+## 六、联合 CLIP 匹配车型
 
 ### 6.1 提前编码六条车型描述
 
-`prompts.json` 默认只为 COCO 车辆 `2/5/7` 配置候选：passenger-car、suv、delivery-van、pickup、box-truck、bus。下面是配置节选；完整文件仍是候选组数组。
+`prompts.json` 为 COCO 车辆类别 `2/5/7` 配置了六条描述：passenger-car、suv、delivery-van、pickup、box-truck、bus。下面节选其中一组的三条候选，完整文件按候选组数组组织。
 
 ```json
 {
@@ -329,15 +327,15 @@ Decoder 不改写后端输出缓冲区，只把最终类别、分数与框保存
 }
 ```
 
-文本图有 `input_ids` 与 `attention_mask` 两个 INT64 输入，形状 `[候选数,77]`，输出 `[候选数,512]` 的 `text_embedding`。随文 tokenizer 使用配套词表和 BPE，限定可打印 ASCII 英文；超长文本直接报错，不静默截断。需要中文时，应替换并验证对应 tokenizer 与模型。
+文本编码器有 `input_ids` 与 `attention_mask` 两个 INT64 输入，形状为 `[候选数,77]`，输出为 `[候选数,512]` 的 `text_embedding`。随文 tokenizer 使用配套词表和字节对编码（BPE），支持可打印 ASCII 英文，超长输入会报错。中文描述需要更换对应的 tokenizer 和模型。
 
-六条候选只编码一次。编码后释放文本 Session，保留自己的归一化特征，再加载图像 Encoder，避免每个目标都重新处理文本。
+六条候选在启动时编码一次，缓存归一化后的特征，然后释放文本 Session。之后每张截图只运行检测和图像编码，减少重复的文本推理。
 
-### 6.2 只给需要的目标准备 ROI Batch
+### 6.2 将区域内车辆组成 ROI Batch
 
-先计算区域归属，只有**命中区域且存在候选组**的目标才进入 CLIP。庭院人员仍会参与区域规则，只是默认不做车型语义匹配。
+检测完成后，先计算区域归属，再把**命中区域且有候选组**的目标送入 CLIP。这样道路中关注区外的车辆可以跳过图像编码，庭院人员则直接参与区域计数。
 
-原图在推理阶段解码一次，检测框每侧扩展默认 `0.06` 的边距并裁到图内。多个源图 ROI 一起准备成 CLIP 的 `[B,3,224,224]` 输入：
+推理阶段每张原图解码一次，目标框每侧默认扩展 `0.06` 的边距，再裁到图内。多个 ROI 一起组成 CLIP 的 `[B,3,224,224]` 输入：
 
 ```csharp
 // regions 来自命中区域的车辆源图框。
@@ -346,31 +344,29 @@ ImageEmbeddings embeddings = await imageRunner.RunAsync(
     cancellationToken: cancellationToken);
 ```
 
-`--batch` 范围 `1—16`，默认 4；尾批使用实际数量，不重复填充。`--max-rois 16` 限制单图进入语义阶段的目标数；其余检测保留，并记录跳过原因。
+`--batch` 支持 `1—16`，默认 4，最后一批按实际数量输入。`--max-rois 16` 限制单张图进入 CLIP 的目标数，超出部分仍保留检测结果，并记录跳过原因。
 
-本次六图默认运行的 CLIP 批次为道路首图 `[2]`、末图 `[1]`，其他图为空。这来自当前输入的实际目标数。示例调用模型动态 Batch，也可以用 `--batch 1` 顺序分批。
+这六张图中，道路首图有两个 ROI，组成一个 Batch；末图有一个 ROI，按 Batch=1 运行，其余图没有进入 CLIP 的目标。可以改用 `--batch 1`，将首图的两个 ROI 分开推理。
 
-### 6.3 匹配分数与事件状态分别解释
+### 6.3 怎样看车型匹配结果
 
 图像与文本的 512 维特征先 L2 归一化，用点积计算余弦相似度，再在当前候选组内计算 Softmax 分数。
 
 | 字段 | 含义 |
 | --- | --- |
-| `Detection.Score` | NanoDet 闭集类别的检测分数 |
+| `Detection.Score` | NanoDet 对当前类别的检测分数 |
 | `Cosine` | ROI 与候选文本的余弦相似度 |
 | `CandidateScore` | 当前组内的相对匹配分数，改变候选会改变它 |
-| `Margin` / `RequiresReview` | Top-1 与 Top-2 分差及语义歧义提示，默认分差阈值 0.1 |
+| `Margin` / `RequiresReview` | Top-1 与 Top-2 分差，以及是否需要额外查看候选，默认分差阈值 0.1 |
 | `Events[].Status` | 区域规则触发后统一为 `pending-human-review` |
 
-**所有区域事件都待人工复核。** `RequiresReview=False` 只表示候选分差没有触发额外提示，不表示车型真实，也不表示事件已经处理。
+CLIP 会在给定的六条描述中选出最相近的候选，因此候选的写法和覆盖范围会影响结果。Top-1 与 Top-2 太接近时，`RequiresReview` 会标记出来，方便重点查看。区域事件统一保存为 `pending-human-review`，车型候选作为复核时的补充信息。
 
-CLIP 是候选集检索，不是自由描述，不给 NanoDet 增加新检测类别，也不是经过本场景标注验证的车型分类器。它在这里的工程价值是补充检索线索，而不是替代区域判断或人工结论。
+## 七、复用会话并保存结果
 
-## 七、会话复用与业务输出
+### 7.1 多张截图共用模型会话
 
-### 7.1 多张图复用会话，原图按张释放
-
-检测与图像 Runner 在截图循环外创建，文本特征提前缓存。每张图执行“检测→区域→必要 ROI 编码→报告”，完成所有 `await` 后再释放该张原图。
+检测和图像 Runner 放在截图循环外创建，文本特征提前缓存。循环中依次执行检测、区域判断、ROI 编码和报告生成。
 
 ![六张截图复用检测和图像会话，文本特征缓存，各张原图和每批输入按生命周期释放](assets/07-custom-visual/lifecycle.png)
 
@@ -380,13 +376,13 @@ CLIP 是候选集检索，不是自由描述，不给 NanoDet 增加新检测类
 | 文本 Session | 候选编码函数拥有，编码完成后释放 |
 | 已解码原图 | 当前截图拥有，所有 ROI 调用与输出完成后释放 |
 | `PreparedVisualInput` | 返回后由 Runner 接管，该次推理与解码后释放 |
-| 文本特征、检测与报告 | 自有托管数据，不持有已释放 Mat 或后端缓冲区 |
+| 文本特征、检测与报告 | 独立的托管数据，由应用继续使用 |
 
-绘图工具会另读原图保存叠框与 ROI；它不参与模型输入准备。阶段间存在数据依赖，本例顺序 `await`；异步入口不会自动创建 Session 池或跨帧流水线。
+检测、区域判断和 CLIP 之间有数据依赖，代码按顺序 `await`，等当前图的调用全部结束后再释放图像。保存检测图和 ROI 时，绘图工具会另外读取原图。常驻服务中，可以把 Runner 和文本特征放到服务生命周期内复用。
 
-`Ctrl+C` 请求取消后，等待当前调用返回并释放资源，退出码为 `2`；普通错误为 `1`，正常完成为 `0`。常驻服务可把 Runner 与候选特征放到服务生命周期中。
+运行中按 `Ctrl+C` 可以取消，程序会等待当前调用返回后释放资源。正常完成、运行错误和取消的退出码分别为 `0`、`1`、`2`。
 
-### 7.2 输出是一组可以交接的业务文件
+### 7.2 生成报告与复核页面
 
 ```text
 results/ort-cpu/
@@ -403,19 +399,19 @@ results/ort-cpu/
   courtyard-00/...
 ```
 
-单图 `scene.json` 包含相机、多边形、来源时间、配置、完整检测、区域成员、CLIP Top-3 与事件。`roi-XX.jpg` 是实际源图裁剪，不是已经中心裁剪后的 224×224 输入张量。没有进入语义阶段的目标会记录 `outside-zones`、`no-prompt-group` 或 `max-rois-limit`。
+单图 `scene.json` 保存相机、区域配置、来源时间、完整检测、区域成员、CLIP Top-3 和事件。`roi-XX.jpg` 保存从源图裁出的目标区域，方便查看车型匹配的输入内容。跳过 CLIP 的目标会记录 `outside-zones`、`no-prompt-group` 或 `max-rois-limit`。
 
-CSV 采用 UTF-8 BOM 和带引号字段，方便表格软件打开；HTML 直接链接相同目录下的证据。复核台是静态页面，可以筛选与查看，审核结果回写或告警通知需要业务应用自行接入。
+CSV 使用 UTF-8 BOM 和带引号字段，可以用表格软件打开；HTML 页面可以按相机和事件筛选截图，查看区域统计，并打开对应的检测图、ROI 和 JSON 报告。
 
 ![实际程序生成的 HTML 巡检复核台，六张截图、区域统计、候选结果与证据链接](assets/07-custom-visual/review-dashboard.jpg)
 
-这里共用 `scene.jpg` 作为对应截图中事件的证据，并用目标 ID 关联区域成员。事件有稳定的截图/区域 ID，方便业务系统定位；这不是对物理事件做跨帧合并的 ID。
+同一截图中的事件共用 `scene.jpg`，每条事件保存截图 ID、区域 ID 和当前图内的目标 ID。后续接入业务系统时，可以根据这些字段定位到图像和对应目标。
 
 ## 八、在 Windows 与 Ubuntu 实际运行
 
 ### 8.1 Windows 命令
 
-先下载模型，在随文工程目录运行。六张输入和默认配置已经随源码提供：
+下载好模型后，在随文工程目录运行下面的命令，分别使用 ORT CPU 和 OpenVINO CPU 处理六张截图：
 
 ```powershell
 dotnet restore
@@ -430,11 +426,11 @@ dotnet run -c Release --no-build -- --backend openvino `
   --batch 4 --out results
 ```
 
-完成后打开 `results/ort-cpu/index.html` 或 `results/openvino/index.html`。选择相机、勾选“只看待复核截图”，可以减少逐张翻图的工作。
+完成后打开 `results/ort-cpu/index.html` 或 `results/openvino/index.html`。选择相机，或者勾选“只看待复核截图”，就能筛选对应结果。
 
 ### 8.2 Ubuntu 22.04 命令
 
-同一份业务源码在 Ubuntu x64 构建时选择 Linux 原生包。除 .NET 10 SDK 外，还需要原生包依赖的系统库。
+Ubuntu x64 使用同一份源码，构建时会选择 Linux 原生包。安装 .NET 10 SDK 和原生包所需的系统库后，执行：
 
 ```bash
 dotnet restore
@@ -451,11 +447,11 @@ dotnet bin/Release/net10.0/CustomVisual.dll \
   --prompts prompts.json --batch 4 --out results
 ```
 
-Ubuntu OpenCV 入口为 `libJYPPX.OpenCV.Native.so`，OpenVINO C 入口为 `libopenvino_c.so`。若提示找不到库，先检查原生文件与 `LD_LIBRARY_PATH`，不要复制 Windows DLL 过去。
+Ubuntu 的 OpenCV 入口为 `libJYPPX.OpenCV.Native.so`，OpenVINO C 入口为 `libopenvino_c.so`。如果提示找不到库，先检查输出目录中的原生文件，以及 `LD_LIBRARY_PATH` 是否包含对应目录。
 
 ### 8.3 两套设备、两个 CPU 后端的结果
 
-四组运行使用相同三个模型、六张截图、六条车型候选与默认阈值。两套环境均编译通过，0 警告、0 错误；以下结果只说明本文工程的运行范围。
+我分别在 Windows 和 Ubuntu 上运行了这套工程，两个系统都测试了 ORT CPU 和 OpenVINO CPU。四组使用相同的三个模型、六张截图、六条车型候选及默认阈值，构建均为 0 警告、0 错误。
 
 | 项目 | Windows 设备 | Ubuntu 设备 |
 | --- | --- | --- |
@@ -472,7 +468,7 @@ Ubuntu OpenCV 入口为 `libJYPPX.OpenCV.Native.so`，OpenVINO C 入口为 `libo
 | Ubuntu | ORT CPU | 6 | 40 | 3 | 4 |
 | Ubuntu | OpenVINO CPU | 6 | 40 | 3 | 4 |
 
-**40 是六张截图的检测观测总和，包含非业务类别和误报，不是 40 个独立人车。** 四组的区域计数、事件成员与三条车型 Top-1 一致，浮点分数可能有差异；没有做推理速度排名，也没有把结果扩展到其他后端。
+表中检测数按六张截图累计，同一目标可能出现在多张图中，非业务类别和误报也计入其中。四组的区域计数、事件成员和三条车型 Top-1 一致，浮点分数有细微差异。
 
 ![Windows 六图实跑汇总：道路区域车辆与庭院人员，保留实际检测和候选结果](assets/07-custom-visual/windows-result.png)
 
@@ -487,21 +483,21 @@ Ubuntu OpenCV 入口为 `libJYPPX.OpenCV.Native.so`，OpenVINO C 入口为 `libo
 | courtyard-04 | 12 | 6 | 0 | 1 |
 | courtyard-08 | 12 | 6 | 0 | 1 |
 
-道路首图两辆区域内车辆分别匹配到 `passenger-car` 和 `box-truck`，末图匹配到 `suv`。它们是给复核人员的候选线索，不能当作已标定的车型真值。
+道路首图两辆区域内车辆的 Top-1 分别为 `passenger-car` 和 `box-truck`，末图为 `suv`。打开对应的 ROI 图片，可以对照查看匹配结果。
 
-下面展示 Ubuntu 实际运行报告中的对应图像和区域统计，同一业务代码复用 ORT、OpenVINO 两条 CPU 路径：
+下面是 Ubuntu 上生成的检测图和区域统计，使用的配置与 Windows 相同：
 
 ![Ubuntu 六图运行结果与区域规则统计，三模型链路均实际运行](assets/07-custom-visual/ubuntu-result.png)
 
-### 8.4 真实画面也暴露了需要复核的地方
+### 8.4 从运行结果看，还有哪些地方需要调整
 
-道路远处车辆很小，整图缩到 416 后会漏检；道路首图的支架区域还出现了 `train` 误报。它保留在完整检测报告中，但因类别与区域规则不匹配，不进入本例车辆计数。
+从道路结果可以看到，远处车辆较小，整图缩到 416 后出现了漏检。首图的支架附近还出现了一处 `train` 误报，因类别不匹配，被区域规则过滤掉了。这类远处小目标，可以进一步尝试更大输入尺寸的模型或切片检测。
 
-庭院中，路锥和标牌附近有部分低分 person 误报，其中一些进入区域统计。因此表中的“6”是模型观测数，不能直接称为真实人数。把阈值提高可以抑制部分误报，也可能漏掉遮挡目标；要用于现场，应补充标注数据并联合调整模型、输入尺寸、规则和阈值。
+庭院的路锥和标牌附近有部分低分 `person` 误报，其中一些进入了区域计数。因此表中的人数是模型检测结果，还需要结合原图复核。提高阈值能减少部分误报，但也可能漏掉遮挡目标，实际使用时要根据现场标注数据调整模型和阈值。
 
-这正是本例保留原图、目标 ID、规则配置与人工复核清单的原因。单看“模型正常运行”或候选分数较高，不足以保证业务结论正确。
+这组公开截图主要用于演示完整流程，准确率还需要在实际场景的标注集上评估。复核页面中保留了原图、检测框和区域成员，调试时可以直接追查是哪一个目标触发了事件。
 
-## 九、换到自己的项目时，哪些地方需要改
+## 九、换成自己的模型和巡检场景
 
 | 需求或现象 | 先检查 | 修改位置 |
 | --- | --- | --- |
@@ -512,17 +508,15 @@ Ubuntu OpenCV 入口为 `libJYPPX.OpenCV.Native.so`，OpenVINO C 入口为 `libo
 | CLIP 高分但候选不合适 | 候选覆盖、ROI 上下文、中心裁剪 | `prompts.json` 和 CLIP 前处理，用标注数据验证 |
 | 目标多，语义开销大 | 是否只处理必要 ROI | `--batch`、`--max-rois`，复用会话和文本特征 |
 | 原生库加载失败 | OS、架构、文件部署、Linux 搜索路径 | 匹配的运行时包与输出目录 |
-| 想统计停留、越线、去重人数 | 是否有连续帧、跟踪 ID 和时间状态 | 增加跟踪与时序规则，不能累加当前截图计数冒充 |
+| 想统计停留、越线、去重人数 | 连续帧、跟踪 ID 和时间状态 | 增加目标跟踪与时序规则 |
 
-原始 NanoDet 图可能提示 initializer 同时列在 graph inputs 中，这是旧导出格式警告，不等于推理失败。模型图优化要与结果回归分开，本教程直接使用原始公开图。
+当前工程按截图进行巡检。如果要接入连续视频，可以在此基础上增加视频解码、目标跟踪和事件去重，再根据轨迹计算停留时长或越线。HTML 用于本地查看，审核结果回写和告警通知则接到自己的业务服务中。
 
-本例仍为快照巡检：不做跨帧跟踪、事件去重、停留时长或越线统计；没有真实接入 RTSP，也没有把静态 HTML 当作多用户告警系统。后续可以在相同模型接口外增加这些业务能力。
+## 十、总结
 
-## 十、从自定义模型走到完整任务
+本篇通过 NanoDet 和 CLIP，完成了一个多模型联合的区域巡检示例。NanoDet 找到人和车，区域规则负责计数与事件判断，CLIP 补充车型候选，最后把结果保存为图片、CSV、JSON 和 HTML 页面。
 
-这篇把模型接入放到一个完整应用中：NanoDet 负责定位，区域规则给出明确的触发依据，CLIP 提供候选检索线索，最后用图片、CSV、JSON 与 HTML 把结果交给人或后续程序。
-
-对于自己的模型，可以保留这套应用编排，替换模型定义与 Decoder；对于自己的现场，则重点修改区域、候选与规则。下一篇继续展开 **Batch、独立 Session 池和异步预取**，处理图片批量和连续输入时的调度与资源管理。
+接入自己的模型时，可以参考这里的 Builder、前处理和 Decoder 写法；用于自己的现场时，先调整相机区域、候选描述和触发规则。下一篇继续介绍 **Batch、独立 Session 池和异步预取**，看看在批量图片和连续输入中怎样安排推理任务。
 
 ```text
 DeploySharp 项目：
