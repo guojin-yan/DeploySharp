@@ -1,0 +1,16 @@
+{
+  "MinimumTextConfidence": 0.8,
+  "Candidates": [
+    { "Key": "running-shoe", "Text": "a product photo of a running shoe." },
+    { "Key": "wristwatch", "Text": "a product photo of a wristwatch." },
+    { "Key": "instant-camera", "Text": "a product photo of an instant camera." },
+    { "Key": "backpack", "Text": "a product photo of a backpack." },
+    { "Key": "water-bottle", "Text": "a product photo of a water bottle." },
+    { "Key": "headphones", "Text": "a product photo of headphones." }
+  ],
+  "Items": [
+    { "Id": "shoe-001", "Title": "运动鞋素材", "Image": "demo-inputs/running-shoe.jpg", "ExpectedCategory": "running-shoe" },
+    { "Id": "watch-001", "Title": "腕表素材", "Image": "demo-inputs/wristwatch.jpg", "ExpectedCategory": "wristwatch" },
+    { "Id": "camera-001", "Title": "相机素材", "Image": "demo-inputs/instant-camera.jpg", "ExpectedCategory": "instant-camera" }
+  ]
+}

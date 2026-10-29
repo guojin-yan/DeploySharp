@@ -1,0 +1,6 @@
+{
+  "Pages": [
+    { "Id": "news", "Title": "报刊资料", "Image": "demo-inputs/news-page.png", "Kind": "auto" },
+    { "Id": "expenses", "Title": "费用表格", "Image": "demo-inputs/expense-table.jpg", "Kind": "auto" }
+  ]
+}

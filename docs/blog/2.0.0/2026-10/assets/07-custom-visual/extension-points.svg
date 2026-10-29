@@ -1,28 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="800" viewBox="0 0 1440 800" role="img" aria-labelledby="title desc">
-  <title id="title">两种扩展需求，选择不同的接入起点</title><desc id="desc">现有模型只改变前处理，可以复制并覆盖 Profile；新输出结构或业务结果，通过自定义模型定义组合输入、预处理器和 Decoder。两条路径复用后端执行能力。</desc>
-  <defs><marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1L9 5L1 9Z" fill="#37a58d"/></marker></defs>
-  <rect width="1440" height="800" rx="22" fill="#f4f7fb"/>
-  <g font-family="Segoe UI, Microsoft YaHei, sans-serif" fill="#173047">
-    <text x="48" y="65" font-size="35" font-weight="700">先判断：调整已有模型，还是接入新的输出？</text>
-    <text x="48" y="109" font-size="22" fill="#586e83">更换前处理参数与编写新 Decoder，是两个不同层次的扩展。</text>
-    <rect x="60" y="166" width="626" height="346" rx="21" fill="#e2edf7" stroke="#b8cfdf"/>
-    <rect x="754" y="166" width="626" height="346" rx="21" fill="#e1f4ec" stroke="#a4d5c1"/>
-    <text x="89" y="214" font-size="28" font-weight="700">已有输入输出与 Decoder</text>
-    <text x="89" y="267" font-size="23">只改尺寸、几何、颜色、归一化</text>
-    <path d="M370 287V331" stroke="#37a58d" stroke-width="3" marker-end="url(#a)"/>
-    <text x="89" y="378" font-size="24" font-weight="650">profile.WithPreprocessing(...)</text>
-    <text x="89" y="430" font-size="23">保留模型与解码，创建配置副本</text>
-    <text x="89" y="476" font-size="21" fill="#586e83">参数仍需符合训练与导出的输入约定</text>
-    <text x="783" y="214" font-size="28" font-weight="700">新的输出结构或业务结果</text>
-    <text x="783" y="267" font-size="23">声明输入输出，实现自己的前后处理</text>
-    <path d="M1066 287V331" stroke="#37a58d" stroke-width="3" marker-end="url(#a)"/>
-    <text x="783" y="378" font-size="24" font-weight="650">VisualModelDefinitionBuilder</text>
-    <text x="783" y="430" font-size="23">TInput → 预处理器 → Decoder → TResult</text>
-    <text x="783" y="476" font-size="21" fill="#586e83">本文接入 NanoDet，联合 CLIP 生成场景报告</text>
-    <g fill="none" stroke="#37a58d" stroke-width="3" marker-end="url(#a)"><path d="M370 518V565H718V597"/><path d="M1066 518V565H726"/></g>
-    <rect x="155" y="614" width="1130" height="92" rx="18" fill="#173c50"/>
-    <text x="720" y="653" text-anchor="middle" font-size="26" font-weight="650" fill="#e4f3f1">复用模型加载、Session、推理执行与生命周期</text>
-    <text x="720" y="686" text-anchor="middle" font-size="21" fill="#b6d6df">后端是否能执行该 ONNX，仍取决于实际算子与运行时</text>
-    <text x="60" y="759" font-size="22" fill="#586e83">业务项目编写扩展代码即可；本篇使用正式 NuGet，不修改 DeploySharp 或后端源码。</text>
-  </g>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="700" viewBox="0 0 1440 700" role="img" aria-labelledby="title desc"><title id="title">单个新模型的四个接入点</title><desc id="desc">自定义输入经过前处理进入后端推理，输出由自定义解码器转成自己的结果。Builder 组合这些组件。</desc><defs><marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1L9 5L1 9Z" fill="#329b8b"/></marker></defs><rect width="1440" height="700" rx="24" fill="#f3f7fb"/><g font-family="Segoe UI, Microsoft YaHei, sans-serif" fill="#17354a"><text x="48" y="72" font-size="36" font-weight="700">新模型的差异，留在自己的工程中</text><text x="48" y="119" font-size="24" fill="#607b8d">Builder 连接输入、张量准备、推理后端和结果解码。</text>
+<g stroke="#b7cdd8" stroke-width="2"><rect x="48" y="210" width="283" height="250" rx="24" fill="#e5edf8"/><rect x="397" y="210" width="283" height="250" rx="24" fill="#dff1eb"/><rect x="746" y="210" width="283" height="250" rx="24" fill="#e5edf8"/><rect x="1095" y="210" width="297" height="250" rx="24" fill="#fcf0df"/></g>
+<text x="78" y="264" font-size="29" font-weight="700">自己的输入</text><text x="78" y="326" font-size="24">OpenCV 图像对象</text><text x="78" y="371" font-size="24">原图尺寸与所有权</text><text x="78" y="420" font-size="27" fill="#64839c">TInput</text>
+<text x="425" y="264" font-size="29" font-weight="700">前处理</text><text x="425" y="326" font-size="24">几何 / 颜色 / 归一化</text><text x="425" y="371" font-size="24">Tensor + Transform</text><text x="425" y="420" font-size="27" fill="#318c75">[1,3,416,416]</text>
+<text x="773" y="264" font-size="29" font-weight="700">推理后端</text><text x="773" y="326" font-size="24">ORT / OpenVINO</text><text x="773" y="371" font-size="24">执行 NanoDet ONNX</text><text x="773" y="420" font-size="27" fill="#64839c">六个输出张量</text>
+<text x="1122" y="264" font-size="29" font-weight="700">自己的 Decoder</text><text x="1122" y="326" font-size="24">DFL / 源图框 / NMS</text><text x="1122" y="371" font-size="24">类别、分数、坐标</text><text x="1122" y="420" font-size="27" fill="#ad7546">TResult</text>
+<g stroke="#329b8b" stroke-width="4" marker-end="url(#a)"><path d="M342 334H382"/><path d="M691 334H731"/><path d="M1040 334H1080"/></g><rect x="48" y="525" width="1344" height="110" rx="20" fill="#173c50"/><text x="80" y="568" font-size="26" fill="#e7f4f6">VisualModelDefinitionBuilder&lt;OpenCvDecodedRoiImage, ObjectDetections&gt;</text><text x="80" y="610" font-size="23" fill="#b4d6df">应用维护图像与 Runner；Runner 释放每次前处理返回的推理输入。</text></g></svg>

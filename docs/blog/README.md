@@ -4,7 +4,8 @@
 
 | 基于版本 | 系列入口 | 当前状态 |
 | --- | --- | --- |
-| 2.0.0 | [2.0.0 系列](2.0.0/README.md) | 第 01—07 篇主稿完成；02 展示 Windows YOLO26 五条执行路径，03—04 展示跨平台 OCR 与离线部署，05 展示四类视觉任务，06 展示页面区域 OCR 与表格 HTML，07 自定义接入 NanoDet-Plus 并联合 CLIP，使用六张固定视角截图完成车辆与人员区域巡检、事件证据和 HTML 复核台，在 Windows/Ubuntu 的 ORT、OpenVINO CPU 实跑；均有正式 NuGet 可运行代码，尚未向博客平台发表 |
+| 2.0.0 | [基础教程](2.0.0/README.md) | 01—07 已成稿：发布介绍、YOLO26、OCR、部署、视觉多任务、PP-Structure、自定义模型；附正式 NuGet 可运行工程，尚未向博客平台发表 |
+| 2.0.0 | [多模型应用实战](2.0.0/applications/README.md) | 01—03 已成稿：园区巡检、文档归档、商品图片整理；Windows/Ubuntu 的 ORT、OpenVINO CPU 实跑，尚未向博客平台发表 |
 
 ## 目录与命名
 
@@ -19,9 +20,19 @@ blog/
         NN-article-slug/
       examples/
         NN-example-slug/
+    applications/
+      README.md
+      YYYY-MM/
+        YYYY-MM-DD-NN-application-slug.md
+        assets/
+          NN-application-slug/
+        examples/
+          NN-application-slug/
 ```
 
 `YYYY-MM-DD` 使用主稿实际创建日期，`NN` 为系列编号，`article-slug` 为稳定的英文主题名。图片随文章所在月份保存，按文章编号和主题分目录；正文使用相对路径引用。正文及配图在开始写作时创建，不预建空文件。
+
+基础教程与应用实战独立编号。基础教程讲模型和接口的用法；应用实战围绕一个完整任务组合多个模型，并提供结果查看与业务接入方法。
 
 `examples/` 只保存随文提供给读者的可运行代码。原始测试日志、开发审计和生成的 Engine 不放入博客目录；示例的 `bin/obj/results/models` 等本地产物不提交。
 
