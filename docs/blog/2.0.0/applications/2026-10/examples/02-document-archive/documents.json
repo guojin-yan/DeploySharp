@@ -1,6 +1,14 @@
 {
+  "MinimumTextConfidence": 0.8,
   "Pages": [
-    { "Id": "news", "Title": "报刊资料", "Image": "demo-inputs/news-page.png", "Kind": "auto" },
-    { "Id": "expenses", "Title": "费用表格", "Image": "demo-inputs/expense-table.jpg", "Kind": "auto" }
+    { "Id": "news", "DocumentId": "press", "Title": "多栏报刊", "Image": "demo-inputs/news-page.png", "Kind": "auto" },
+    { "Id": "layout", "DocumentId": "press", "Title": "复杂图文版面", "Image": "demo-inputs/layout.jpg", "Kind": "auto" },
+    { "Id": "paper", "DocumentId": "research", "Title": "论文页面", "Image": "demo-inputs/demo_paper.png", "Kind": "auto" },
+    { "Id": "formula", "DocumentId": "research", "Title": "公式专页", "Image": "demo-inputs/general_formula_rec_001.png", "Kind": "formula", "AutoOrient": false },
+    { "Id": "expenses", "DocumentId": "business", "Title": "费用表格", "Image": "demo-inputs/expense-table.jpg", "Kind": "auto", "AutoOrient": false, "CellTextMode": "lines" },
+    { "Id": "rotated", "DocumentId": "business", "Title": "倒置扫描页", "Image": "demo-inputs/img_rot180_demo.jpg", "Kind": "text" },
+    { "Id": "scene-1", "DocumentId": "field-records", "Title": "现场文字一", "Image": "demo-inputs/general_ocr_001.png", "Kind": "text", "AutoOrient": false },
+    { "Id": "scene-2", "DocumentId": "field-records", "Title": "现场文字二", "Image": "demo-inputs/general_ocr_002.png", "Kind": "text", "AutoOrient": false },
+    { "Id": "seal", "DocumentId": "business", "Title": "印章文字留档", "Image": "demo-inputs/seal_text_det.png", "Kind": "text", "AutoOrient": false }
   ]
 }

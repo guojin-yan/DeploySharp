@@ -13,7 +13,8 @@ try
 {
     AppOptions options = AppOptions.Parse(args, "documents.json");
     using var backends = new BackendRegistry();
-    if (options.Backend == "ort-cpu") backends.UseOnnxRuntime(); else backends.UseOpenVino();
+    backends.UseOnnxRuntime();
+    if (options.Backend == "openvino") backends.UseOpenVino();
     var request = new BackendRequest(BackendCapabilities.TensorInference,
         options.Backend == "ort-cpu" ? OnnxRuntimeBackendProvider.BackendId : OpenVinoBackendProvider.BackendId,
         options.Backend == "ort-cpu" ? "cpu" : "CPU");

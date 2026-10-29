@@ -1,4 +1,4 @@
-# 商品图片整理
+# 智能素材工厂：RMBG + CLIP + OCR 商品图处理
 
 对应[应用系列第 03 篇](../../2026-10-29-03-product-catalog.md)。正式 NuGet 2.0.0，使用 RMBG 1.4、CLIP 图文双编码器、PP-OCRv5 Mobile，输出透明 PNG、白底图、类别候选、OCR 文字、CSV/JSON 和可搜索静态图册。
 

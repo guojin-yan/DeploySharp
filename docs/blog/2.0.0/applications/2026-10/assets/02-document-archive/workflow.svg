@@ -1,7 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="870" viewBox="0 0 1440 870" role="img" aria-labelledby="title desc"><title id="title">文档归档的模型分流与结果汇合</title><desc id="desc">版面检测后文字区域执行检测识别，表格区域执行分类、单元格检测和结构识别，图像区域保留，全部按页保存。</desc><defs><marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1L9 5L1 9Z" fill="#329b8b"/></marker></defs><rect width="1440" height="870" rx="24" fill="#f3f7fb"/><g font-family="Segoe UI, Microsoft YaHei, sans-serif" fill="#17354a"><text x="48" y="72" font-size="36" font-weight="700">先分区域，再把结果组织回同一页</text><text x="48" y="120" font-size="24" fill="#607b8d">同页共享解码图像，模型会话在多页任务间复用。</text>
-<rect x="48" y="304" width="286" height="228" rx="24" fill="#e4edf7" stroke="#b7cdd8"/><text x="76" y="357" font-size="29" font-weight="700">PP-DocLayout</text><text x="76" y="408" font-size="25">页面 → 版面区域</text><text x="76" y="459" font-size="24">类别 + 源图范围</text>
-<rect x="430" y="183" width="545" height="138" rx="20" fill="#e0f1e9" stroke="#acd1bf"/><text x="458" y="232" font-size="28" font-weight="700">文字：区域 DET + REC</text><text x="458" y="282" font-size="24">文字行、置信度、整页四边形</text>
-<rect x="430" y="368" width="545" height="173" rx="20" fill="#fff1df" stroke="#ddc3a3"/><text x="458" y="417" font-size="28" font-weight="700">表格：分类 → 单元格 + SLANeXt</text><text x="458" y="465" font-size="24">对齐 → 格内 REC → HTML</text><text x="458" y="508" font-size="23" fill="#98734c">对齐失败时保留诊断，进入复核</text>
-<rect x="430" y="588" width="545" height="116" rx="20" fill="#e7edf3" stroke="#b7cdd8"/><text x="458" y="637" font-size="28" font-weight="700">图片等区域：保留原图位置</text><text x="458" y="678" font-size="23">按需增加其他处理器</text>
-<rect x="1080" y="304" width="310" height="250" rx="24" fill="#173c50"/><text x="1110" y="358" fill="#d8f0e9" font-size="29" font-weight="700">归档复核页面</text><text x="1110" y="410" fill="#c0dce3" font-size="24">页码 / 区域 / 来源</text><text x="1110" y="455" fill="#c0dce3" font-size="24">文字 / 表格 / 诊断</text><text x="1110" y="503" fill="#c0dce3" font-size="24">HTML + TXT + JSON</text>
-<g fill="none" stroke="#329b8b" stroke-width="4" marker-end="url(#a)"><path d="M344 397H376V252H414"/><path d="M344 419H414"/><path d="M344 447H376V645H414"/><path d="M988 253H1025V368H1063"/><path d="M988 452H1063"/><path d="M988 645H1025V506H1063"/></g><text x="48" y="802" font-size="25" fill="#607b8d">结果保留整页坐标；归档程序不自动推断报刊阅读顺序或跨页合并表格。</text></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="970" viewBox="0 0 1440 970" role="img" aria-labelledby="title desc">
+<title id="title">智能文档工作台：校正、分流、定位与归档</title><desc id="desc">九张混合页面先处理方向并获取版面，再分别进行OCR、表格和公式识别，结果映射回原图后分组保存并进入复核。</desc>
+<defs><marker id="a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1L9 5L1 9Z" fill="#329b8b"/></marker></defs>
+<rect width="1440" height="970" rx="24" fill="#f3f7fb"/>
+<g font-family="Segoe UI, Microsoft YaHei, sans-serif" fill="#17354a">
+<text x="48" y="70" font-size="36" font-weight="700">整批输入，按内容走不同的模型</text>
+<text x="48" y="119" font-size="24" fill="#607b8d">报刊 / 论文 / 表格 / 倒置页 / 现场图 → 同一个工作台</text>
+<rect x="48" y="161" width="1344" height="123" rx="22" fill="#e4edf7" stroke="#b7cdd8"/>
+<text x="76" y="208" font-size="29" font-weight="700">页面清单 → 文档方向校正 → PP-DocLayout-L 版面分区</text>
+<text x="76" y="253" font-size="23">已知任务可直接 text / table / formula；图像类区域保留位置。</text>
+<rect x="48" y="354" width="428" height="246" rx="22" fill="#e0f1e9" stroke="#acd1bf"/>
+<text x="76" y="406" font-size="30" font-weight="700">文字区域</text>
+<text x="76" y="455" font-size="25">PP-OCRv5 DET + REC</text><text x="76" y="501" font-size="23">区域检测 → 文字行 → 识别</text><text x="76" y="550" font-size="23">文字 / 分数 / 正向页坐标</text>
+<rect x="506" y="354" width="428" height="246" rx="22" fill="#fff1df" stroke="#ddc3a3"/>
+<text x="534" y="406" font-size="30" font-weight="700">表格区域</text>
+<text x="534" y="455" font-size="25">分类 → cell + SLANeXt</text><text x="534" y="501" font-size="23">结构对齐 → 单格或多行 OCR</text><text x="534" y="550" font-size="23">填字 HTML / 失败诊断</text>
+<rect x="964" y="354" width="428" height="246" rx="22" fill="#ece8f5" stroke="#c8bddf"/>
+<text x="992" y="406" font-size="30" font-weight="700">公式区域</text>
+<text x="992" y="455" font-size="25">PP-FormulaNet_plus-S</text><text x="992" y="501" font-size="23">官方 tokenizer → LaTeX</text><text x="992" y="550" font-size="23">裁图 / 解码结果 / 语法检查</text>
+<rect x="48" y="675" width="1344" height="83" rx="19" fill="#dfeef1"/><text x="77" y="726" font-size="27" font-weight="650">正向页 → 原图坐标　　低分 / 空文字 / 结构与公式异常 → 复核清单</text>
+<rect x="48" y="810" width="1344" height="98" rx="22" fill="#173c50"/><text x="78" y="852" fill="#d8f0e9" font-size="29" font-weight="700">可搜索 HTML 工作台 + 分组 Markdown + JSON / CSV</text><text x="78" y="889" fill="#c0dce3" font-size="22">按文档组、状态和文字筛选；点击结果定位原图。</text>
+<g fill="none" stroke="#329b8b" stroke-width="4" marker-end="url(#a)"><path d="M262 296V338"/><path d="M720 296V338"/><path d="M1178 296V338"/><path d="M262 611V658"/><path d="M720 611V658"/><path d="M1178 611V658"/><path d="M720 768V796"/></g></g></svg>

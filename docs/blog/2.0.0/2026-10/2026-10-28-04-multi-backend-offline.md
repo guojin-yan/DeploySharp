@@ -1,4 +1,4 @@
-# DeploySharp 多后端部署：选择推理引擎，准备运行时与离线模型
+# 模型部署不再卡在环境上：DeploySharp 四大推理引擎与 Windows/Linux 离线交付实战
 
 > DeploySharp 2.0.0 系列 · 第 04 篇实战教程，使用正式 NuGet `2.0.0`。
 

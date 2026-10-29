@@ -1,4 +1,4 @@
-# DeploySharp 应用实战一：NanoDet + CLIP 园区车辆与人员巡检
+# DeploySharp 实战：让 AI 看懂园区，NanoDet + CLIP 打造智能巡检台
 
 > DeploySharp 2.0.0 应用系列 · 第 01 篇，使用正式 NuGet `2.0.0`。
 

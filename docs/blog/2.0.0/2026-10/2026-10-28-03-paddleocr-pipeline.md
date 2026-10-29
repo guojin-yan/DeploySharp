@@ -1,4 +1,4 @@
-# 在 C# 中运行 PaddleOCR v4/v5/v6：从文字检测到完整识别结果
+# 让 C# 读懂整张图：DeploySharp 驱动 PaddleOCR v4/v5/v6，打通 OCR 全流程
 
 > DeploySharp 2.0.0 系列 · 第 03 篇实战教程，使用正式 NuGet `2.0.0`。
 

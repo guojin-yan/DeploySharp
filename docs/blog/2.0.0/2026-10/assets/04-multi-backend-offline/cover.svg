@@ -14,7 +14,7 @@
     <text x="149" y="66" text-anchor="middle" font-size="20" font-weight="600" fill="#bad8eb">JYPPX · 开源项目</text>
     <text x="1347" y="66" text-anchor="end" font-size="23" font-weight="600" fill="#a6bfd3">实战教程 / 04</text>
     <text x="54" y="176" font-size="94" font-weight="750" letter-spacing="-3" fill="#f5f8fc">DeploySharp <tspan fill="url(#teal)">2.0.0</tspan></text>
-    <text x="60" y="257" font-size="61" font-weight="750" fill="#f5f8fc">多后端 · 离线部署</text>
+    <text x="60" y="257" font-size="61" font-weight="750" fill="#f5f8fc">四大引擎 · 跨平台交付</text>
     <text x="63" y="307" font-size="28" fill="#b5cadd">选好推理引擎，把应用、模型和运行时一起交付</text>
     <rect x="48" y="350" width="1314" height="314" rx="25" fill="#173048" stroke="#335871" stroke-width="2"/>
     <g filter="url(#shadow)">

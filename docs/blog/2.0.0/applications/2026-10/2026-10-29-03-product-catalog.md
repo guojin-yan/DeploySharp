@@ -1,4 +1,4 @@
-# DeploySharp 应用实战三：去背景 + CLIP + OCR，用 C# 整理商品图片
+# DeploySharp 实战：一张图产出一整套商品素材，RMBG + CLIP + OCR 打造智能素材工厂
 
 > DeploySharp 2.0.0 应用系列 · 第 03 篇，使用正式 NuGet `2.0.0`。
 

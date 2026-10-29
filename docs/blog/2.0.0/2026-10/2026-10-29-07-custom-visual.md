@@ -1,4 +1,4 @@
-# DeploySharp 自定义模型实战：用 C# 接入 NanoDet 的前处理、后处理与结果类
+# 不止于内置模型：用 DeploySharp 接管新模型的前处理、推理与结果解码
 
 > DeploySharp 2.0.0 系列 · 第 07 篇实战教程，使用正式 NuGet `2.0.0`。
 

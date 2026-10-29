@@ -1,4 +1,4 @@
-# 在 C# 中使用 PP-Structure：从页面区域到表格 HTML
+# 让文档不止于文字：DeploySharp + PP-Structure，打通版面分析与表格重建
 
 > DeploySharp 2.0.0 系列 · 第 06 篇实战教程，使用正式 NuGet `2.0.0`。
 

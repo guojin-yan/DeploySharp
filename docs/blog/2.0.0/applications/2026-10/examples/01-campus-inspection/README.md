@@ -1,4 +1,4 @@
-# NanoDet + CLIP：园区车辆与人员巡检
+# 智能巡检台：NanoDet + CLIP 园区事件分析
 
 对应[应用系列第 01 篇](../../2026-10-29-01-campus-inspection.md)。使用正式 NuGet `2.0.0`，自定义 NanoDet-Plus 前后处理和结果类，联合 CLIP 双编码器，处理两组固定视角、六张真实截图，输出区域统计、待复核事件、证据与静态 HTML 复核台。
 

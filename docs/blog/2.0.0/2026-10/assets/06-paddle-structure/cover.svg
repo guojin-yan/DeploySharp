@@ -13,7 +13,7 @@
     <rect x="60" y="42" width="178" height="34" rx="17" fill="#24425b"/><text x="149" y="66" text-anchor="middle" font-size="20" font-weight="600" fill="#b8d8ed">JYPPX · 开源项目</text>
     <text x="1348" y="67" text-anchor="end" font-size="21" font-weight="600" fill="#9eb9cf">实战教程 / 06</text>
     <text x="54" y="177" font-size="94" font-weight="750" letter-spacing="-3" fill="#f5f8fc">DeploySharp <tspan fill="url(#accent)">2.0.0</tspan></text>
-    <text x="60" y="255" font-size="58" font-weight="750" fill="#f5f8fc">在 C# 中还原文档结构</text>
+    <text x="60" y="255" font-size="58" font-weight="750" fill="#f5f8fc">让文档不止于文字</text>
     <text x="63" y="305" font-size="28" fill="#b5cadd">PP-Structure · 页面区域 · OCR · 表格 HTML</text>
     <rect x="48" y="348" width="1314" height="324" rx="26" fill="#142c42" stroke="#375873" stroke-width="2"/>
     <g filter="url(#shadow)">

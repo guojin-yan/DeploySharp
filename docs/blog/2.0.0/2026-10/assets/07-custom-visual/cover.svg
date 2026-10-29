@@ -3,7 +3,7 @@
 <defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#0d2438"/><stop offset="1" stop-color="#163f53"/></linearGradient><filter id="shadow"><feDropShadow dx="0" dy="12" stdDeviation="12" flood-opacity=".25"/></filter><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1L9 5L1 9Z" fill="#57c5b4"/></marker></defs>
 <rect width="1440" height="660" rx="24" fill="url(#bg)"/><g font-family="Segoe UI, Microsoft YaHei, sans-serif">
 <text x="64" y="86" fill="#75d8c8" font-size="25" font-weight="650">DEPLOYSHARP · C# 模型部署实战 07</text>
-<text x="60" y="205" fill="#fff" font-size="65" font-weight="750">自己的模型，</text><text x="60" y="294" fill="#fff" font-size="65" font-weight="750">也能接进来</text>
+<text x="60" y="205" fill="#fff" font-size="65" font-weight="750">新模型，</text><text x="60" y="294" fill="#fff" font-size="65" font-weight="750">自己接进来</text>
 <text x="64" y="361" fill="#c4d9e3" font-size="28">NanoDet · 自定义前处理 · 六输出解码</text>
 <rect x="64" y="410" width="504" height="62" rx="15" fill="#244b60" stroke="#467484"/><text x="87" y="450" fill="#ecf5f7" font-size="25">TInput → Tensor → TResult</text>
 <g filter="url(#shadow)"><rect x="760" y="135" width="520" height="300" rx="25" fill="#e6eef6"/><rect x="760" y="135" width="520" height="48" rx="25" fill="#315b73"/><circle cx="787" cy="159" r="6" fill="#f5ab78"/><circle cx="810" cy="159" r="6" fill="#7bd5b4"/>

@@ -3,4 +3,5 @@ obj/
 models/
 images/
 results/
+results-*/
 input-videos/
