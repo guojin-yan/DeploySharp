@@ -1,6 +1,6 @@
 # DeploySharp 多后端部署：选择推理引擎，准备运行时与离线模型
 
-> DeploySharp 2.0.0 系列 · 第 04 篇实战教程。基于正式版 NuGet `2.0.0`、源码 Tag `v2.0.0`，创建与修订：2026-10-28。
+> DeploySharp 2.0.0 系列 · 第 04 篇实战教程，使用正式 NuGet `2.0.0`。
 
 ![DeploySharp 2.0.0：多后端与离线部署，选好引擎，把应用、模型和运行时一起交付](assets/04-multi-backend-offline/cover.png)
 
@@ -8,7 +8,7 @@
 
 **DeploySharp** 是一个面向 **C#/.NET 开发者**的开源模型部署框架，由「椒颜皮皮虾」开发，项目源码遵循 **Apache License 2.0**。它基于 **ONNX Runtime、OpenVINO、TensorRT、OpenCV DNN** 等推理引擎，提供模型加载、图像前处理、推理执行和结果后处理接口，方便大家在桌面软件、工业视觉和文档应用中接入模型。
 
-目前，项目已经接入 YOLO 等目标检测模型，以及分类、分割、关键点、旋转框、异常检测和背景移除等视觉任务；同时提供 **PP-OCRv4/v5/v6、PP-Structure 文档处理**和部分图文、本地语言模型的使用入口。常用模型可以复用配套处理，自有模型可以配置输入、缩放、颜色与归一化，进一步自定义输出解码和结果类型。
+项目已经接入目标检测、分类、分割、关键点、旋转框、异常检测和背景移除等视觉任务，也提供 **PP-OCRv4/v5/v6、PP-Structure 文档处理**和部分图文、本地语言模型的使用入口。常用模型有配套前后处理，自有模型可以通过扩展接口接入。
 
 **项目地址：**
 
@@ -22,15 +22,13 @@ https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV2.0
 https://www.nuget.org/packages?q=JYPPX.DeploySharp
 ```
 
-2.0.0 正式版的主要发布验证范围是 Windows 10/11 x64。本系列也提供 Ubuntu 22.04 x64 的具体运行案例；每个模型、后端和原生运行库的组合分别记录，不用单个案例代替全部平台的验证。
-
 ## 二、2.0 新特性与本篇部署实战
 
 ### 2.1 从开发机运行，走到目标设备运行
 
-第二篇已经用 YOLO26 完成检测和多后端对照，第三篇把 PaddleOCR 的 DET、裁剪、CLS、REC 串成了完整流程。接下来经常遇到的问题就是：**我的电脑上能跑，换一台电脑应该带哪些文件？目标机没有网络，还能不能运行？**
+前两篇实战已经完成 YOLO26 检测和 PaddleOCR。开发机上运行之后，接下来就要把程序交给目标设备，准备模型、运行库和配置，并让它在离线环境中运行。
 
-这与 2.0 的几个设计有关：
+2.0 版本把这些组件分开管理，部署时可以按需组合：
 
 | 新版能力 | 交付应用时怎样使用 |
 | --- | --- |
@@ -39,13 +37,13 @@ https://www.nuget.org/packages?q=JYPPX.DeploySharp
 | 本地模型与按需获取并存 | 自有模型直接用路径；公开模型可先下载、再缓存和离线复用 |
 | 配置与任务流程可组合 | 把模型、类别、输入输出和业务参数一起交付，减少换机后的手工改代码 |
 
-支持的 TensorRT 路径还提供 CUDA 前后处理；Batch、独立 Session 池、异步预取、ROI 和大图切片，可以在部署路径跑通后再加入。本篇先把运行环境和交付目录讲清楚。
+本篇先完成运行环境和目录交付。Batch、独立 Session 池、异步预取、ROI 和大图切片，可以在此基础上继续加入。
 
 ### 2.2 本篇会完成什么
 
-我们会先整理 **ORT CPU / ORT CUDA / OpenVINO / OpenCV DNN / TensorRT** 的选型和依赖，再把一个 YOLO26 程序发布成完整目录，分别在 **Windows 和 Ubuntu** 运行。最后补充 PaddleOCR 单模型的在线准备与严格离线缓存。
+下面先介绍 **ORT CPU / ORT CUDA / OpenVINO / OpenCV DNN / TensorRT** 的依赖和使用场景，再把一个 YOLO26 程序发布成完整目录，分别在 **Windows 和 Ubuntu** 运行，最后介绍 PaddleOCR 模型的在线下载和离线缓存。
 
-**主案例使用 ORT CPU，便于先完成一次可迁移交付。** 多后端部分会给出安装组合、关键切换方式和已有真实运行范围；GPU Engine、驱动与运行库的准备也会单独说明。主程序直接加载本地模型与图片。
+主案例使用 **ORT CPU**，直接加载本地模型和图片；GPU 应用则在相同交付流程上增加对应的驱动、运行库和 Engine。
 
 ## 三、先选模型和设备，再选推理后端
 
@@ -57,7 +55,7 @@ https://www.nuget.org/packages?q=JYPPX.DeploySharp
 
 ![模型资产、DeploySharp 托管组件、原生推理引擎与设备之间的加载和调用关系](assets/04-multi-backend-offline/deployment-layers.png)
 
-这里有两个容易混淆的名称：**.NET Runtime** 负责运行 C# 应用；**原生推理 runtime** 提供 OpenCV、ORT、OpenVINO、TensorRT 等计算能力。后面使用的 .NET 自包含发布会带上前者；后者仍要通过 NuGet 原生包或厂商文件配套部署。
+**.NET Runtime** 负责运行 C# 应用，**原生运行库**提供 OpenCV、ORT、OpenVINO、TensorRT 等计算能力。后面的自包含发布会带上 .NET Runtime，图像和推理原生库则通过 NuGet 包或厂商文件一起部署。
 
 ### 3.2 按实际场景选择
 
@@ -69,13 +67,11 @@ https://www.nuget.org/packages?q=JYPPX.DeploySharp
 | 已经依赖 OpenCV，模型图可以被 DNN 导入 | OpenCV DNN CPU | OpenCV 原生库、实际输出合同及 Shape/importer 兼容性 |
 | NVIDIA GPU，需要进一步调优 | TensorRT | 匹配的 bridge、TensorRT/CUDA/cuDNN、输入 Profile 和目标机 Engine |
 
-把上表变成一张决策图后，可以看到后端选择不是“哪个名字更快”的单选题，而是设备、模型合同和交付方式共同决定的组合。
+选型时先看目标设备，再确认模型的输入输出、算子和动态尺寸是否能被后端处理，最后比较速度与部署成本。选择过程如下：
 
 ![DeploySharp 多后端选择决策图：从设备、模型和交付目标选择 ORT、OpenVINO、OpenCV DNN 或 TensorRT](assets/04-multi-backend-offline/backend-choice.png)
 
-**先确认精确模型，再评估后端。** 相同的 ONNX 后缀，不代表所有引擎都能接受其中的算子、动态 Shape、数据类型和辅助输入。OpenCV DNN 某个图无法导入，也不意味着换一个阈值就能解决。
-
-第二篇在 Windows 上已运行 **YOLO26n + ORT CPU / ORT CUDA / OpenVINO / OpenCV DNN / TensorRT**；第三篇在 Ubuntu 上已运行 **PP-OCRv5 Mobile 完整流水线 + ORT CPU / OpenVINO / OpenCV DNN / TensorRT**。这些结果可以帮助选择起点，具体模型仍以验证矩阵为准：
+第二篇在 Windows 上运行了 **YOLO26n + ORT CPU / ORT CUDA / OpenVINO / OpenCV DNN / TensorRT**；第三篇在 Ubuntu 上运行了 **PP-OCRv5 Mobile 完整流水线 + ORT CPU / OpenVINO / OpenCV DNN / TensorRT**。可以先参考这两组配置，其他模型的具体状态见验证矩阵：
 
 ```text
 模型支持指南：
@@ -89,7 +85,7 @@ https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/docs/model-backen
 
 ### 4.1 图像输入部分先保持一致
 
-下面各组以 **Windows x64 视觉应用**为例。新建项目时先准备公共图像部分，再选择一种推理组合；不要把每组 ORT CPU/GPU 原生包都加入同一个输出目录。
+下面以 **Windows x64 视觉应用**为例。先安装公共图像组件，再从后续几节选择一组推理依赖。ORT CPU 和 GPU 原生包分别使用独立输出目录，避免同名库冲突。
 
 ```powershell
 dotnet add package JYPPX.DeploySharp.Visual.OpenCV --version 2.0.0
@@ -119,7 +115,7 @@ var request = new BackendRequest(BackendCapabilities.TensorInference,
 
 ### 4.3 NVIDIA GPU：ONNX Runtime CUDA
 
-Windows CUDA 13 环境可选择以下运行时组合，还需与原生包相匹配的驱动、CUDA 和 cuDNN：
+下面是 Windows CUDA 13 的安装组合，还需配套的驱动、CUDA 和 cuDNN。本系列实测使用的是下文的 CUDA 12 组合：
 
 ```powershell
 dotnet add package JYPPX.DeploySharp.Backend.OnnxRuntime --version 2.0.0
@@ -136,7 +132,7 @@ var request = new BackendRequest(BackendCapabilities.TensorInference,
     OnnxRuntimeBackendProvider.BackendId, "cuda");
 ```
 
-**已有 CUDA 12 环境时，选择同版本的 CUDA 12 原生发行包。** 第二篇的 RTX 3060 Laptop、驱动 `576.02`，实际使用 Managed `1.28.0` 加官方 `onnxruntime-win-x64-gpu_cuda12-1.28.0.zip`，配套 CUDA `12.9` 与 cuDNN `9.22.0`，已完成 YOLO26 推理。
+已有 CUDA 12 环境时，可以使用对应的官方原生发行包。第二篇在 RTX 3060 Laptop、驱动 `576.02` 上，使用 Managed `1.28.0` 加 `onnxruntime-win-x64-gpu_cuda12-1.28.0.zip`，配套 CUDA `12.9` 和 cuDNN `9.22.0`，完成了 YOLO26 推理。
 
 这种方式使用下面的托管组合，再部署官方包中的三份 ORT 原生 DLL；它与上面的 `Gpu.Windows` 原生来源二选一：
 
@@ -158,7 +154,7 @@ onnxruntime_providers_cuda.dll
 https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/docs/blog/2.0.0/2026-10/2026-10-28-02-yolo26-quickstart.md
 ```
 
-CUDA 主版本要同时看原生包和驱动，不能只看 C# 包版本。本例不把 CUDA 12 的成功结果扩大为本机已通过 CUDA 13。三份 ORT DLL 应来自同一个发行包，输出目录也应独立，避免旧 CPU 或另一套 Provider 文件参与加载。
+选择 CUDA 主版本时，同时核对原生发行包和驱动要求。三份 ORT DLL 使用同一发行包中的文件，并与其他 CPU/GPU 输出目录分开。
 
 ### 4.4 CPU 的另一种选择：OpenVINO
 
@@ -178,7 +174,7 @@ var request = new BackendRequest(BackendCapabilities.TensorInference,
     OpenVinoBackendProvider.BackendId, "CPU");
 ```
 
-这一例仍加载 ONNX，前后处理沿用匹配 Profile。当前适配器的这个设备入口是 CPU；不能仅根据 OpenVINO 官方引擎具备 GPU/NPU 能力，就把当前 C# 适配路径写成已经验证这些设备。
+这一组加载 ONNX，前后处理沿用对应 Profile，当前适配器使用 CPU 设备入口。
 
 ### 4.5 共用 OpenCV 图像库：OpenCV DNN
 
@@ -190,18 +186,18 @@ dotnet add package JYPPX.DeploySharp.Backend.OpenCV --version 2.0.0
 
 DNN 后端还需要模型输入输出合同。例如第二篇的 YOLO26n，声明 Float32 `images: [1,3,640,640]` 与 `output0: [1,-1,6]`，再使用 `UseOpenCvDnn(...)` 注册，请求 `OpenCvDnnBackendProvider.BackendId` 和 `"cpu"`。完整代码已经放在第二篇后端工程中。
 
-图片能被 OpenCV 读取，只能证明图像组件可用；DNN 网络仍要单独检查导入与执行。动态宽度 OCR、辅助输入或不同 opset 的图，需要按具体模型验证。
+OpenCV DNN 对动态宽度、辅助输入和不同 opset 的支持存在差异，部署前先运行对应模型，确认网络导入和输出结果。
 
 ### 4.6 NVIDIA GPU 调优：TensorRT
 
-Windows TensorRT 10.11 这条已经验证的组合，需要：
+Windows TensorRT 10.11 安装以下组件：
 
 ```powershell
 dotnet add package JYPPX.DeploySharp.Backend.TensorRT --version 2.0.0
 dotnet add package JYPPX.TensorRT.CSharp.API.Runtime.win-x64.trt10.11.cuda12.9.cudnn9.22.Bridge --version 4.0.0
 ```
 
-继续准备 **NVIDIA 驱动、TensorRT `10.11.0.33`、CUDA `12.9` 和 cuDNN `9.22.0`**。bridge 是托管 API 与厂商运行库之间的桥接组件，它不会代替这些 NVIDIA 库。需要 CUDA 图像前后处理时，再按任务增加 `JYPPX.DeploySharp.Visual.TensorRT 2.0.0`；只使用 TensorRT 执行模型时，不必为了读图安装这个包。
+然后准备 **NVIDIA 驱动、TensorRT `10.11.0.33`、CUDA `12.9` 和 cuDNN `9.22.0`**。bridge 将托管 API 连接到这些厂商库。需要 CUDA 图像前后处理时，再按任务增加 `JYPPX.DeploySharp.Visual.TensorRT 2.0.0`；普通图像读取仍使用 OpenCV 组件。
 
 与 ONNX 直接加载不同，TensorRT 通常先在目标 GPU 上从 ONNX 构建 Engine。第二篇的构建代码使用 `TensorRtOnnxEngineBuilder`，同时把 **Profile 与 ModelArtifact 的格式都设为 `tensorrt-engine`**，并请求 TensorRT 后端的 `cuda` 设备。
 
@@ -212,11 +208,11 @@ dotnet add package JYPPX.TensorRT.CSharp.API.Runtime.win-x64.trt10.11.cuda12.9.c
 | ONNX 源模型 | 保留用于目标机转换，所有 external data 一起准备 |
 | Engine 与动态输入 Profile | 在目标 GPU 和对应运行时上构建，覆盖实际 Batch、尺寸与宽度范围 |
 | bridge + TensorRT/CUDA/cuDNN | 版本、系统、架构成套匹配；路径指向实际包含 DLL / `.so` 的目录 |
-| NVIDIA 驱动 | 目标机安装并确认设备可用，不能把开发机驱动目录当普通 DLL 复制 |
+| NVIDIA 驱动 | 在目标机安装，确认设备及所选 CUDA 版本可用 |
 
-Engine 的兼容性受构建选项、GPU 与 TensorRT 等条件影响。本文的普通缓存没有启用跨设备兼容承诺，换设备或运行时后应重新构建；Windows TensorRT 10 的 Engine 也不交给 Ubuntu TensorRT 11 直接使用。
+Engine 与构建时的 GPU、TensorRT 和输入配置有关，换设备或运行时后重新构建。本系列分别在 Windows TensorRT 10 和 Ubuntu TensorRT 11 环境生成各自的 Engine。
 
-两份已运行的后端工程可分别作为起点，前者是 Windows YOLO26，后者是 Ubuntu OCR。**以上切换片段说明初始化差异；不要只给下文的 CPU 程序装一个新包，就认为已经更换了引擎。**
+上面介绍了各后端的安装和初始化。完整工程可以参考 Windows YOLO26 和 Ubuntu OCR 两个示例，其中包含后端注册、设备选择和模型格式配置：
 
 ```text
 Windows YOLO26 后端对照工程：
@@ -259,7 +255,7 @@ curl -fL 'https://github.com/guojin-yan/DeploySharp/releases/download/models-vis
 curl -fL 'https://github.com/guojin-yan/DeploySharp/releases/download/test-assets.1/bus.jpg' -o images/bus.jpg
 ```
 
-**已有模型和图片，直接复制进目录即可。** 后面的推理程序不会联网下载。测试图片只是示例输入，实际应用可以改成自己的图片、相机帧或业务数据。
+已有本地模型和图片时，直接复制到目录中即可。后面的程序从本地路径加载，可以通过参数换成自己的输入。
 
 ### 5.2 用配置文件记录模型约定
 
@@ -281,7 +277,7 @@ curl -fL 'https://github.com/guojin-yan/DeploySharp/releases/download/test-asset
 
 本文模型是 COCO 80 类的 YOLO26n 端到端检测导出，输入为 Float32 NCHW `1×3×640×640`，RGB、Letterbox、填充值 `114`、像素除以 `255`；输出 `[1,N,6]`，每行依次是 `x1/y1/x2/y2/score/class_id`，解码时不重复执行 NMS。
 
-`ClassNamesPath` 为 `null` 时使用 COCO 标签。使用自己的同结构模型时，可以将它改为 `"models/classes.txt"`，每行填写一个类别，保持训练索引顺序。模型尺寸、张量名和阈值也按实际导出配置修改。输出结构或预处理方式不同，则需同时替换对应 Profile，不能只给文件改名。
+`ClassNamesPath` 为 `null` 时使用 COCO 标签。使用自己的同结构模型时，将它改为 `"models/classes.txt"`，每行填写一个类别，保持训练索引顺序，再按导出配置调整尺寸、张量名和阈值。输出结构或前处理不同的模型，需要同时替换对应 Profile。
 
 最终源码目录如下：
 
@@ -297,7 +293,7 @@ OfflineInference/
     bus.jpg
 ```
 
-这个目录在开发机上看起来只是几个文件，发布后还会多出 .NET 和 native 依赖。下面的目录图把“应该一起复制什么”与“目标机启动时先后加载什么”画出来，避免只复制 EXE、DLL 或 ONNX 后得到难以判断的缺失错误。
+发布时，.NET 和原生依赖会一起进入输出目录。下图展示完整目录结构及启动时的加载关系，交付时按这个结构整体复制：
 
 ![DeploySharp 离线交付目录结构：可执行文件、native、模型、图片、配置和结果目录应一起迁移](assets/04-multi-backend-offline/directory-tree.png)
 
@@ -348,9 +344,9 @@ OfflineInference/
 </Project>
 ```
 
-这里重点看两处：**`CopyToPublishDirectory` 会把模型、图片和配置复制到发布目录**；Linux 的 OpenCV 包使用发行版专用目录，项目额外把整组 `.so` 复制到 `native/opencv/`，避免发布后仍依赖开发机的 NuGet 缓存。使用 `GeneratePathProperty` 获取包目录，也能适应自定义 `NUGET_PACKAGES`。
+`CopyToPublishDirectory` 将模型、图片和配置带入发布目录。Linux OpenCV 包中的整组 `.so` 另行复制到 `native/opencv/`。`GeneratePathProperty` 用于获取包路径，也适用于自定义 `NUGET_PACKAGES` 的环境。
 
-`IsPackable` 等设置用于把它作为应用工程管理。此案例没有设置单文件发布或裁剪，先保留清楚的依赖目录，方便定位原生加载问题。
+这里按普通目录发布，保留独立的原生库和模型文件，方便替换模型与排查加载问题。
 
 ### 6.2 主程序：路径从应用目录解析，推理直接用本地文件
 
@@ -477,11 +473,11 @@ internal sealed class DeploymentConfig
 }
 ```
 
-**`AppContext.BaseDirectory` 是程序所在目录，`Environment.CurrentDirectory` 是启动时的工作目录。** 从快捷方式、计划任务或其他文件夹启动时，后者可能变化。这里把配置、模型、图片和默认输出都按程序目录解析，因此迁移整个目录后仍能找到文件。
+`AppContext.BaseDirectory` 是程序所在目录，`Environment.CurrentDirectory` 是启动时的工作目录。从快捷方式或计划任务启动时，工作目录可能变化，因此这里统一按程序目录解析配置、模型、图片和默认输出路径。
 
 三个可选参数依次是 **图片、模型、输出目录**。相对路径仍按程序目录解析，绝对路径直接使用。例如把输出参数指向一个有写权限的目录，就不必向安装目录写文件。自定义类别文件通过 JSON 指定。
 
-`using` 管理输入、OpenCV 图像、pipeline 与后端注册表；输入在同步推理完成后释放，pipeline 最后释放 Session。本例另外读一次原图用于绘制，重点展示交付流程；高吞吐图像复用将在后续专题展开。
+输入、OpenCV 图像、pipeline 和后端注册表通过 `using` 释放，输入在推理结束后释放，pipeline 最后释放 Session。绘图时另外读取一次原图。
 
 ## 七、发布为完整目录，再交给目标设备
 
@@ -508,7 +504,7 @@ dotnet publish -c Release -r win-x64 -p:DeploymentRid=win-x64 `
 & .\publish\win-x64\OfflineInference.exe
 ```
 
-发布目录中除了 `OfflineInference.exe`，还会有应用 DLL、`.deps.json`、`.runtimeconfig.json`、.NET 文件、DeploySharp 与第三方组件，以及 `models/images/deploysharp.json`。**复制整个目录，保留其中的子目录结构。** 目标机执行 EXE 即可，不需要带源码，也不执行 `dotnet run` 或 `dotnet restore`。
+发布目录包含 `OfflineInference.exe`、应用 DLL、.NET 运行时、DeploySharp 和第三方组件，以及模型、图片和配置。**将整个目录复制到目标机，保留子目录结构，直接运行 EXE。**
 
 例如已经进入复制后的程序目录，想使用自己的图片、模型和输出位置：
 
@@ -516,7 +512,7 @@ dotnet publish -c Release -r win-x64 -p:DeploymentRid=win-x64 `
 .\OfflineInference.exe .\images\my-image.jpg .\models\best.onnx .\results
 ```
 
-这些相对路径按 EXE 所在目录解析。部署到不可写的安装目录时，第三个参数传入实际可写的绝对目录。若 OpenCV 或 ORT 报告缺少 MSVC 等系统依赖，应按具体异常安装对应 x64 运行库；自包含 .NET 不会替代它们。
+相对路径按 EXE 所在目录解析。安装目录不可写时，第三个参数传入有写权限的绝对路径。如果 OpenCV 或 ORT 提示缺少 MSVC 等系统依赖，再按异常安装对应的 x64 运行库。
 
 ### 7.3 Ubuntu 22.04 x64：同一份代码，发布另一套 native
 
@@ -526,7 +522,7 @@ dotnet publish -c Release -r win-x64 -p:DeploymentRid=win-x64 `
 dotnet publish -c Release -r linux-x64 -p:DeploymentRid=linux-x64 --self-contained true -p:PublishSingleFile=false -p:PublishTrimmed=false -o ./publish/linux-x64
 ```
 
-从 Windows 交叉发布时，`DeploymentRid=linux-x64` 也会传给 NuGet 还原，确保选择 Linux OpenCV 包；不要沿用 Windows 包，再把 Windows DLL 放到 Ubuntu 上。
+`DeploymentRid=linux-x64` 同时参与 NuGet 还原，让 Windows 交叉发布时也能选择 Linux OpenCV 包。
 
 把 `publish/linux-x64` 的**全部内容**传到目标机。进入该目录后，在 Bash 中运行：
 
@@ -536,7 +532,7 @@ app_dir="$(pwd)"
 LD_LIBRARY_PATH="$app_dir/native/opencv" "$app_dir/OfflineInference"
 ```
 
-发布目录已包含 `.NET`、ORT 的 Linux 原生库和 OpenCV `.so`。这里为本次进程设置 OpenCV 依赖搜索路径，不引用目标机的 NuGet 缓存，也不修改全局系统环境。已有其他必需库目录时，再按实际后端合并到搜索路径中。
+发布目录已包含 .NET、ORT Linux 原生库和 OpenCV `.so`。启动时为当前进程设置 OpenCV 搜索路径；使用其他后端时，再合并对应的库目录。
 
 Ubuntu 系统本身的动态加载器、glibc、libstdc++ 等依赖仍需具备。遇到加载问题，可以检查：
 
@@ -544,7 +540,7 @@ Ubuntu 系统本身的动态加载器、glibc、libstdc++ 等依赖仍需具备�
 LD_LIBRARY_PATH="$app_dir/native/opencv" ldd "$app_dir/native/opencv/libJYPPX.OpenCV.Native.so"
 ```
 
-`ldd` 用来找出缺少的系统或同目录依赖；只复制一个桥接 `.so`，可能仍然缺少其他 OpenCV 模块。本例按包中的 native 目录成组复制。`chmod` 用于恢复从 Windows 传输后可能丢失的执行权限。
+`ldd` 输出中的 `not found` 可以定位缺失依赖。OpenCV 按 native 目录成组复制，`chmod` 则恢复文件传输后可能丢失的执行权限。
 
 ### 7.4 换成 GPU 应用，交付时还要加什么
 
@@ -556,7 +552,7 @@ LD_LIBRARY_PATH="$app_dir/native/opencv" ldd "$app_dir/native/opencv/libJYPPX.Op
 | TensorRT | bridge、TensorRT/CUDA/cuDNN、目标机驱动；匹配 Engine，或 ONNX 与目标机转换流程 |
 | TensorRT CUDA 前后处理 | 对应 Visual.TensorRT 组件及其任务支持条件，并保留实际使用的输入与缓冲配置 |
 
-发布工具可以复制项目已经声明的文件，不会自动发现开发机上所有 PATH 依赖。先明确每个后端的文件来源，再在目标机运行一张真实输入，是比“整个安装目录都拷过去”更清楚的交付方式。
+`dotnet publish` 复制项目中声明的文件。依赖开发机 PATH 的厂商库，需要另外声明为发布资产，或者在目标机安装并设置搜索路径。
 
 ## 八、实际运行：Windows 与 Ubuntu 的可迁移目录
 
@@ -574,9 +570,9 @@ LD_LIBRARY_PATH="$app_dir/native/opencv" ldd "$app_dir/native/opencv/libJYPPX.Op
 | 图像 runtime | OpenCV `5.0.0` Windows x64 | OpenCV `5.0.0` Ubuntu 22.04 x64 |
 | 模型与输入 | YOLO26n、`640×640` 输入；`bus.jpg` 原图 `810×1080` | 相同模型与图片 |
 
-我分别从**程序目录之外**启动，检查配置和模型仍能正确定位；结果 JSON 中的 `runtimeDirectory` 指向各自发布目录，表明运行的是随包发布的 .NET。Ubuntu 原有共享运行时版本不决定这次自包含程序的 .NET 版本。
+我分别从**程序目录之外**启动，两套程序都能找到配置和模型。JSON 中的 `runtimeDirectory` 指向各自发布目录，运行的是随包携带的 .NET。
 
-两台设备都已有操作系统原生依赖，本次验证交付目录、模型路径与真实推理，不把它写成未经测试的全新系统安装结果。也没有重新对全部后端做性能排名；已有多后端计时在第二、第三篇中保留完整条件。
+两台设备已具备原生库所需的系统依赖。新设备部署时，可以按前面的 `ldd` 或加载异常补齐缺失项。
 
 ### 8.2 输出与结果图
 
@@ -592,7 +588,7 @@ framework=.NET 10.0.12
 
 ![本篇离线发布案例的实际 YOLO26 输出，bus.jpg 中检测到四个行人和一辆公交车](assets/04-multi-backend-offline/offline-result.jpg)
 
-JSON 保留框、类别、分数、实际模型路径、运行环境和程序目录，可以随业务日志一起保存。不同设备之间的结果仍需要按具体模型核对，本次相同数量与类别说明这条交付路径已运行，不代替完整数据集精度评测。
+JSON 保存了框、类别、分数、模型路径、运行环境和程序目录，可以随业务日志一起保留，方便定位设备上的实际配置。
 
 ## 九、模型较多时：在线准备与严格离线缓存
 
@@ -607,13 +603,13 @@ JSON 保留框、类别、分数、实际模型路径、运行环境和程序目
 | `ModelFactoryClient` | 依据模型目录快照选择工件，获取对应 ModelPack 并复用缓存 |
 | `PaddleOcrReleaseClient` | 面向 `models-paddleocr` Release，按需下载独立 PP-OCR / PP-Structure 模型及配套文件 |
 
-内置模型目录是随包提供的快照，不等于 GitHub Release 新增的所有资产会自动成为其中的条目。PaddleOCR 的独立 Release 有自己的目录与下载入口，两类客户端的缓存结构也不同。
+`ModelFactoryClient` 使用随包提供的模型目录快照，`PaddleOcrReleaseClient` 使用 PaddleOCR Release 的专用目录。两类入口各有对应的缓存结构，按所用客户端管理即可。
 
-**自己的模型不需要先登记到官方目录中。** 直接通过本地路径和匹配的 Profile 使用即可。下载器返回的是文件路径，不会自动替你创建 OCR Profile、推理 Session 或安装 native runtime。
+下载客户端负责准备文件并返回本地路径，应用再用对应 Profile 和后端创建推理会话。自有模型则继续按前面的本地路径方式加载。
 
 ### 9.2 一个可以直接运行的 PaddleOCR 缓存示例
 
-创建单独的控制台工程并添加下载组件。这一例只准备文件，因此不需要图像 runtime、CUDA、Python 或 PaddlePaddle：
+创建一个单独的控制台工程，只安装下载组件：
 
 ```shell
 dotnet new console -n ModelCache -f net10.0
@@ -685,15 +681,15 @@ https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV2.0/docs/blog/2.0.0/2
 
 ### 9.3 缓存怎样带到离线设备
 
-下面是这个客户端的两阶段关系。离线模式命中缓存后返回路径，缺少文件或元数据则报告缓存未命中，不会偷偷切回下载。
+客户端先在线准备缓存，离线时直接返回本地路径；缺少文件或元数据则报告缓存未命中。处理过程如下：
 
 ![PaddleOCR 按模型 ID 在线下载，保留完整缓存目录，离线命中返回路径、缺失报错的流程](assets/04-multi-backend-offline/model-cache.png)
 
-准备离线交付时，复制**整个 `model-cache` 根目录**，保留 `.deploysharp-paddleocr/models-paddleocr/` 下的模型、字典与目录元数据。只从里面拿出一个 ONNX，虽然仍可直接用文件路径推理，但不能把它当作完整客户端缓存。
+离线交付时，复制**整个 `model-cache` 根目录**，保留 `.deploysharp-paddleocr/models-paddleocr/` 下的模型、字典和目录元数据，客户端需要这些信息定位缓存。
 
-目标机上的缓存程序也应先发布，再复制对应可执行目录。若目标机有 .NET Runtime，可以运行发布的框架依赖 DLL；没有时，和主案例一样按目标 RID 自包含发布。**`dotnet run` 是联网准备环境中的开发命令，不是离线目标机必须执行的步骤。**
+缓存程序也按第七节发布后交付。目标机已安装 .NET Runtime 时，可以用框架依赖发布；否则选择对应 RID 的自包含发布，直接启动可执行文件。
 
-我还用空目录测试了 `--offline`：程序返回 `model-factory.offline-cache-miss`，没有补下模型。应用可以把该错误转成“请先准备所选模型”的提示，既有已配置的模型也可以继续直接按路径加载。
+用空目录运行 `--offline` 时，程序返回 `model-factory.offline-cache-miss`。应用可以据此提示用户先准备所选模型，或选择已有的本地文件。
 
 ## 十、换机失败时，按哪个方向检查
 
@@ -704,19 +700,19 @@ https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV2.0/docs/blog/2.0.0/2
 | 编译通过，启动找不到 OpenCV/ORT DLL | 原生包、x64、发布子目录与同目录依赖 | 复制完整发布目录；根据异常检查实际缺失文件 |
 | 自包含程序仍提示找不到入口文件 | 是否只复制了 DLL/EXE、RID 是否正确 | 使用对应系统的整个发布目录，Windows 执行 EXE，Linux 恢复可执行权限 |
 | 从快捷方式启动后找不到模型 | 相对路径是否依赖工作目录 | 按 `AppContext.BaseDirectory` 解析，或在配置中填写实际绝对路径 |
-| 可以加载模型，框或文字却不对 | 模型的输入输出、颜色、缩放、字典或类别是否配套 | 先复现相同输入，再核对 Profile；不要只改模型文件名 |
+| 可以加载模型，框或文字却不对 | 模型的输入输出、颜色、缩放、字典或类别是否配套 | 对照示例输入，核对模型与 Profile |
 | ORT CUDA 初始化失败或报错 801 | 原生包的 CUDA 主版本、驱动、CUDA/cuDNN 与文件搜索路径 | 使用与设备匹配的完整官方发行包；不混放 CPU/CUDA 12/CUDA 13 文件 |
-| OpenCV DNN 报导入或动态 Shape 错误 | 精确导出图、opset、输入合同和 importer | 使用已验证导出，或选另一个已验证后端；不要把图像 runtime 通过当作 DNN 通过 |
+| OpenCV DNN 报导入或动态 Shape 错误 | 导出图、opset、输入规格和 importer | 使用兼容的模型导出，或选择支持该模型的其他后端 |
 | TensorRT 反序列化失败或动态尺寸超范围 | Engine 与目标设备/版本、输入 Profile | 在目标环境重新构建，检查真实 Batch 和所有动态维度 |
 | Linux 报 `.so` 或版本化依赖缺失 | `native/opencv` 是否完整、`LD_LIBRARY_PATH`、系统库 | 用 `ldd` 查缺失项，补齐实际依赖，保持整组 `.so` |
 | 离线缓存未命中 | 缓存根目录、元数据、所选模型 ID 与文件是否完整 | 在联网准备端补齐后重新复制，或直接使用已有本地模型路径 |
 | 结果无法写出 | 程序安装目录是否可写 | 第三个参数指定应用有权限的输出目录 |
 
-把这些现象按加载顺序分层，排障时就不必把“缺少 DLL”“模型输入不匹配”和“输出目录不可写”混成一种问题。下面这张图可以作为换机后的快速检查顺序。
+排障时按加载顺序检查：发布目录、原生库、模型输入输出，再到设备和输出权限。下图可以作为快速参考：
 
 ![DeploySharp 换机排障分层：从发布目录、托管层、native、模型合同到设备和输出权限逐层检查](assets/04-multi-backend-offline/troubleshooting-layers.png)
 
-后端选择是启动配置的一部分。若业务允许降级，应由应用在启动时明确选择并记录最终设备；本篇不会在 CUDA 或 TensorRT 失败后静默运行 CPU，再把结果写成 GPU 成功。
+后端和设备在启动时选择，并写入日志。业务需要 CPU 降级时，也在启动逻辑中处理，记录最终使用的设备，方便排查现场问题。
 
 ### 10.2 从教程运行走向业务部署
 
@@ -743,9 +739,9 @@ https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/docs/articles/mod
 
 ## 十一、总结与后续
 
-这一篇从后端选择走到了应用交付：先按任务与设备选择引擎，再配套托管组件、原生库和模型；通过自包含发布，把同一份 YOLO26 CPU 程序分别交给 Windows 与 Ubuntu 运行。模型较多时，可以再用下载组件在线准备，并在目标机严格读取本地缓存。
+本篇介绍了五种后端的安装组合，并将同一份 YOLO26 CPU 程序发布为 Windows 和 Ubuntu 自包含目录。模型较多时，可以用 ModelFactory 在线准备文件，再将完整缓存带到离线设备。
 
-大家可以先用随文工程生成一套目录，再替换自己的模型和输入。已有本地模型直接加载；使用 GPU 时，再按对应后端准备运行库、设备与 Engine。这样，环境选择、模型配置和业务代码就能逐步理清。
+大家可以先用随文工程生成发布目录，再替换自己的模型和输入。部署到 GPU 时，在对应后端工程中补齐运行库和 Engine，沿用相同的目录管理与发布方式。
 
 下一篇继续回到视觉任务，介绍**分类、分割、关键点与旋转框**：根据任务选模型、配置前处理，读取不同的结果类型，并把它们正确展示到原图上。
 
