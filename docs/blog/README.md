@@ -4,7 +4,7 @@
 
 | 基于版本 | 系列入口 | 当前状态 |
 | --- | --- | --- |
-| 2.0.0 | [2.0.0 系列](2.0.0/README.md) | 第 01—06 篇主稿完成；02 包含 Windows YOLO26 五条执行路径，03 包含 Windows/Ubuntu OCR 与 Ubuntu 四后端对照，04 包含 Windows/Ubuntu 自包含离线推理与模型缓存，05 包含 Windows ORT CPU 分类、分割、Pose 与 OBB 四组真实结果，06 包含 Windows ORT/OpenVINO CPU 页面区域 OCR 与有线表格 HTML；均有正式 NuGet 可运行代码，尚未向博客平台发表 |
+| 2.0.0 | [2.0.0 系列](2.0.0/README.md) | 第 01—06 篇主稿完成；02 包含 Windows YOLO26 五条执行路径，03 包含 Windows/Ubuntu OCR 与 Ubuntu 四后端对照，04 包含 Windows/Ubuntu 自包含离线推理与模型缓存，05 包含 Windows ORT CPU 分类、分割、Pose 与 OBB 四组真实结果，06 包含 Windows/Ubuntu 的 ORT、OpenVINO CPU 页面区域 OCR 与有线表格 HTML；均有正式 NuGet 可运行代码，尚未向博客平台发表 |
 
 ## 目录与命名
 

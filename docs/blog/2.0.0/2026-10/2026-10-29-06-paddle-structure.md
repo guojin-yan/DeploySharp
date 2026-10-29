@@ -64,20 +64,20 @@ https://www.nuget.org/packages?q=JYPPX.DeploySharp
 
 ### 3.1 本次实际验证环境
 
-| 项目 | 本次环境 |
-| --- | --- |
-| 操作系统 | Windows 11 x64，`10.0.26200` |
-| CPU | AMD Ryzen 7 5800H，8 核 16 线程 |
-| .NET | SDK `10.0.401`，运行时 `10.0.12`，目标框架 `net10.0` |
-| DeploySharp | 正式 NuGet `2.0.0`，示例没有引用本地源码项目 |
-| ORT | `Microsoft.ML.OnnxRuntime 1.28.0`，CPU |
-| OpenVINO | Windows runtime `2026.2.1`，CPU |
-| 图像组件 | JYPPX OpenCV Windows x64 runtime `5.0.0` |
-| 调度 | 文档模型 Batch=1；REC 上限 16；单 Session，区域按顺序执行 |
+| 项目 | Windows 实测 | Ubuntu 实测 |
+| --- | --- | --- |
+| 操作系统 | Windows 11 x64，`10.0.26200` | Ubuntu `22.04.5 LTS` x86_64 |
+| CPU | AMD Ryzen 7 5800H，8 核 16 线程 | Intel Core i7-1165G7，4 核 8 线程 |
+| .NET | SDK `10.0.401`，运行时 `10.0.12` | SDK `10.0.301`，运行时 `10.0.9` |
+| DeploySharp | 正式 NuGet `2.0.0`，`net10.0` | 同一份 C# 源码与正式 NuGet `2.0.0` |
+| ORT | `Microsoft.ML.OnnxRuntime 1.28.0`，CPU | 同版本，CPU |
+| OpenVINO | Windows runtime `2026.2.1`，CPU | Ubuntu runtime `2026.3.1`，CPU |
+| 图像组件 | JYPPX OpenCV Windows x64 runtime `5.0.0` | JYPPX OpenCV Ubuntu 22.04 x64 runtime `5.0.0` |
+| 调度 | 文档模型 Batch=1；REC 上限 16；单 Session，区域按顺序执行 | 相同配置 |
 
-本文验证的是两张图片、两个 CPU 后端的完整功能路径，没有进行预热、重复采样和性能排名。页面流水线按区域逐次执行 DET，是便于接入业务的示例配置，不能据此代表整页一次 OCR 或并发调度的最优速度。
+本文在两个系统上分别验证了两张图片、两个 CPU 后端的完整功能路径，没有进行预热、重复采样和性能排名。页面流水线按区域逐次执行 DET，是便于接入业务的示例配置，不能据此代表整页一次 OCR 或并发调度的最优速度。
 
-### 3.2 只用 ONNX Runtime CPU
+### 3.2 Windows：只用 ONNX Runtime CPU
 
 先创建一个 x64 控制台工程，然后安装图像层和 ORT 后端：
 
@@ -93,7 +93,7 @@ dotnet add package Microsoft.ML.OnnxRuntime --version 1.28.0
 
 在 `.csproj` 的 `PropertyGroup` 中增加 `<PlatformTarget>x64</PlatformTarget>`。Visual、Core 等依赖会自动引入，无须为版面、表格分类、单元格和结构识别各安装一个任务包。
 
-### 3.3 需要 OpenVINO，或者想切换两个后端
+### 3.3 Windows：需要 OpenVINO，或者想切换两个后端
 
 OpenVINO 场景保留公共图像层，选择 OpenVINO 后端和原生运行时。**随文完整工程同时引用 ORT 和 OpenVINO**，所以在上面的基础上再安装：
 
@@ -106,9 +106,22 @@ dotnet add package OpenVINO.runtime.win --version 2026.2.1
 
 下面这张图说明每一层的职责。**OpenCV 在这里负责读图、裁剪和绘制，模型推理分别由 ORT 或 OpenVINO 完成。**
 
-![公共图像层之下分别安装 ORT CPU 或 OpenVINO CPU 后端与原生运行时，完整示例同时保留两组用于切换](assets/06-paddle-structure/package-stack.png)
+![公共图像层与 ORT、OpenVINO 后端的安装选择，原生运行时按 Windows 或 Ubuntu 分别选择](assets/06-paddle-structure/package-stack.png)
 
-这些原生包针对 Windows x64。Linux 需要换成对应运行时；本篇没有在 Linux 上重跑这组 PP-Structure 案例。
+### 3.4 Ubuntu：保留 C# 代码，选择 Linux 原生包
+
+**同一个随文工程可以直接在 Ubuntu 22.04 x64 构建。** 托管层和 ORT 包不变，图像层与 OpenVINO 选择各自的 Linux 运行时：
+
+| 职责 | Windows 包 | Ubuntu 包 |
+| --- | --- | --- |
+| 图像原生库 | `JYPPX.OpenCV.runtime.win-x64 5.0.0` | `JYPPX.OpenCV.runtime.ubuntu.22.04-x64 5.0.0` |
+| OpenVINO 原生库 | `OpenVINO.runtime.win 2026.2.1` | `OpenVINO.runtime.ubuntu.22-x86_64 2026.3.1` |
+
+随文 `.csproj` 根据当前系统选择包；显式传入 `RuntimeIdentifier` 时按该值选择，当前配置覆盖 `win-x64` 和 `linux-x64`。这里的 Linux 包针对 **Ubuntu 22.04 x64**，不应直接当作所有 Linux 发行版的通用安装组合。
+
+工程还通过 MSBuild 将包里的 `.so` 复制到本地输出目录：OpenCV 放在 `native/opencv`，OpenVINO 放在 `native/openvino`。运行前设置本进程的 `LD_LIBRARY_PATH` 即可，后面给出完整 Bash 命令；读者不用查找或修改 NuGet 缓存里的文件。
+
+如果从空工程开始，建议采用随文的完整 `.csproj`，它同时包含条件选包与原生文件复制配置。仅执行 `dotnet add package` 并不能替代这部分部署设置。两套系统安装 .NET SDK 10 即可，不要求 SDK 小版本与本次设备完全相同。
 
 ## 四、准备模型、图片与随文源码
 
@@ -144,6 +157,14 @@ $base = 'https://github.com/guojin-yan/DeploySharp/releases/download/models-padd
 Invoke-WebRequest "$base/pp-doclayout-l.onnx" -OutFile models/pp-doclayout-l.onnx
 ```
 
+Ubuntu 的 Bash 对应写法：
+
+```bash
+mkdir -p models images
+model_base='https://github.com/guojin-yan/DeploySharp/releases/download/models-paddleocr'
+curl -fL "$model_base/pp-doclayout-l.onnx" -o models/pp-doclayout-l.onnx
+```
+
 其他模型同样按表格中的文件名下载。也可以使用自己的本地 ONNX：示例直接从 `models` 路径加载，**不要求读者计算模型或图片摘要**。更换模型时要同步核对 Profile、类别、张量名和预处理，不能只把任意文件改成同名。
 
 ### 4.2 使用官方公开示例图
@@ -167,6 +188,16 @@ Invoke-WebRequest 'https://paddle-model-ecology.bj.bcebos.com/paddlex/imgs/demo_
   -OutFile images/table_recognition.jpg
 ```
 
+Ubuntu 使用同样的两张输入：
+
+```bash
+mkdir -p images
+curl -fL 'https://paddle-model-ecology.bj.bcebos.com/paddlex/imgs/demo_image/pp_structure_v3_demo.png' \
+  -o images/pp_structure_v3_demo.png
+curl -fL 'https://paddle-model-ecology.bj.bcebos.com/paddlex/imgs/demo_image/table_recognition.jpg' \
+  -o images/table_recognition.jpg
+```
+
 换成自己的图片时只需修改命令中的输入路径。PDF 应先使用 PDF 渲染组件转成页面图，再逐页处理；本例不直接读取 PDF。
 
 ### 4.3 完整代码在哪里
@@ -179,7 +210,7 @@ https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV2.0/docs/blog/2.0.0/2
 
 ```text
 06-paddle-structure/
-  PaddleStructure.csproj     # 正式 NuGet 2.0.0，含两个后端
+  PaddleStructure.csproj     # 正式 NuGet 2.0.0，按系统选择原生包，含两个后端
   Program.cs                # 命令、取消、退出码
   StructureDemo.cs          # 模型、两条任务路径、结果保存与绘图
   PageRoiOcrInput.cs         # 共享原图的区域 DET + REC 输入适配器
@@ -292,7 +323,7 @@ var textResult = result.GetRequired<PaddleDocumentTextResult>(
 
 ### 6.4 真实文字只节选，完整内容写入文件
 
-此次两种后端均得到 **30 个文字区域、142 行文字**。下面展示 ORT 的文字行框及前 8 行输出，其余内容由程序保存，不在文章中全部展开。
+此次 Windows、Ubuntu 的两种后端均得到 **30 个文字区域、142 行文字**。下面展示 Windows ORT 的文字行框及前 8 行输出，其余内容由程序保存，不在文章中全部展开。
 
 ![真实区域 OCR：142 行文字的原图框与 8 行输出节选，完整文字和坐标保存到文件](assets/06-paddle-structure/region-ocr-result.png)
 
@@ -399,7 +430,7 @@ Structure warnings: table-cell-geometry-outside-source:12/13
 
 ## 八、直接运行，并找到完整结果
 
-### 8.1 四条实际执行命令
+### 8.1 Windows：四条实际执行命令
 
 进入完整随文工程目录，按前面的文件名准备 `models` 和 `images`，执行：
 
@@ -426,7 +457,40 @@ dotnet run -c Release --no-build -- table images/my-cropped-table.jpg models ort
 
 程序支持 `Ctrl+C` 取消；成功退出码为 `0`，取消为 `2`，其他失败为 `1`。表格对齐失败时会保留诊断和结构展示文件，但不会输出冒充成功的文字表格。
 
-### 8.2 输出目录与用途
+### 8.2 Ubuntu：同一份源码运行两种 CPU 后端
+
+在 Ubuntu 22.04 x64 安装 .NET SDK 10，进入随文工程目录，准备相同的模型与图片。先构建，再把输出目录中的两组原生库加入**当前终端进程**的搜索路径：
+
+```bash
+dotnet --info
+dotnet restore
+dotnet build -c Release --no-restore
+
+export LD_LIBRARY_PATH="$PWD/bin/Release/net10.0/native/opencv:$PWD/bin/Release/net10.0/native/openvino:${LD_LIBRARY_PATH:-}"
+
+dotnet run -c Release --no-build -- page images/pp_structure_v3_demo.png models ort-cpu
+dotnet run -c Release --no-build -- table images/table_recognition.jpg models ort-cpu
+dotnet run -c Release --no-build -- page images/pp_structure_v3_demo.png models openvino
+dotnet run -c Release --no-build -- table images/table_recognition.jpg models openvino
+```
+
+如果按用户目录安装了 SDK，终端提示找不到 `dotnet`，先执行 `export PATH="$HOME/.dotnet:$PATH"`。上述原生库路径基于本例的 `Release/net10.0` 输出；改变构建目录或交付目录时也要相应调整，部署到服务时将搜索路径配置在服务进程中。
+
+这四条命令已在前述 Ubuntu 设备实际执行成功。下面节选自 ORT CPU 的控制台输出；OpenVINO 的计数和对齐结果相同：
+
+```text
+page: backend=ort-cpu; layout_regions=31; ocr_blocks=30; text_lines=142
+table: backend=ort-cpu; type=wired; rows=4; cells=13; alignment=True
+Structure warnings: table-cell-geometry-outside-source:12/13
+```
+
+下面的结果汇总图使用 **Ubuntu 实际生成的文字行框图与单元格框图**，并展示保存结果中的文字和 HTML 片段。它不是桌面截图，图中结果没有手工改字。
+
+![Ubuntu 22.04 上 PP-Structure 的真实结果汇总：ORT 与 OpenVINO CPU 都完成页面 OCR 和表格 HTML，文字与 Windows 基线逐项一致](assets/06-paddle-structure/ubuntu-result.png)
+
+两个系统运行相同的 C# 源码，只切换原生运行时。此次 Ubuntu 使用 OpenVINO `2026.3.1`，Windows 为 `2026.2.1`；这里只记录功能结果，不据此判断平台或后端的速度优劣。
+
+### 8.3 输出目录与用途
 
 ```text
 results/
@@ -450,14 +514,16 @@ results/
 
 再次运行同一个后端和模式会覆盖该目录下的同名结果。想保留多张图的结果，可以为每个输入生成独立输出子目录；文章示例不自动做批量归档。
 
-### 8.3 本次验证范围
+### 8.4 本次验证范围
 
-| 后端 | 页面版面 / 文字区域 / 文字行 | 有线表格行 / 格子 | HTML 填充 | 结构框警告 |
+| 系统与后端 | 页面版面 / 文字区域 / 文字行 | 有线表格行 / 格子 | HTML 填充 | 结构框警告 |
 | --- | --- | --- | --- | --- |
-| ORT CPU `1.28.0` | 31 / 30 / 142 | 4 / 13 | 对齐通过并填充 | 12/13 框越界 |
-| OpenVINO CPU `2026.2.1` | 31 / 30 / 142 | 4 / 13 | 使用兼容图，对齐通过并填充 | 12/13 框越界 |
+| Windows · ORT CPU `1.28.0` | 31 / 30 / 142 | 4 / 13 | 对齐通过并填充 | 12/13 框越界 |
+| Windows · OpenVINO CPU `2026.2.1` | 31 / 30 / 142 | 4 / 13 | 使用兼容图，对齐通过并填充 | 12/13 框越界 |
+| Ubuntu · ORT CPU `1.28.0` | 31 / 30 / 142 | 4 / 13 | 对齐通过并填充 | 12/13 框越界 |
+| Ubuntu · OpenVINO CPU `2026.3.1` | 31 / 30 / 142 | 4 / 13 | 使用兼容图，对齐通过并填充 | 12/13 框越界 |
 
-对本次保存结果逐项比较，两个后端的 **142 行 OCR 字符串和 13 个单元格字符串相同**；未将坐标、置信度或浮点张量宣称为逐位一致。这只反映这两个输入的功能结果，不代表所有模型、所有输入的后端精度相同。
+对本次保存结果逐项比较，四组的 **142 行 OCR 字符串和 13 个单元格字符串均与 Windows ORT CPU 基线相同**；未将坐标、置信度或浮点张量宣称为逐位一致。这只反映这两个输入的功能结果，不代表所有模型、所有输入的后端精度相同。
 
 本次没有跑 TensorRT、OpenCV DNN、无线表格、方向矫正或其他文档任务，也没有进行 CER/WER、TEDS 等数据集评测。需要判断更大范围的支持状态，查看仓库矩阵：
 
@@ -475,9 +541,20 @@ https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/docs/model-backen
 | 提示缺少输入张量，或者框错位 | 是否用了正确 Profile 和文档预处理适配器 | 同步 `image/im_shape/scale_factor`，检查缩放与坐标变换 |
 | 版面类别明显不对 | 模型与标签顺序 | L/M/S 的 23 类不能随意套给其他标签体系 |
 | 一个段落只识别出零碎文字 | 是否把多行版面块直接交给 REC | 改为区域内 DET + REC，检查输入清晰度和缩放 |
+| Ubuntu 提示无法加载 OpenCV 或 OpenVINO `.so` | 系统架构、选包、输出文件和进程搜索路径 | 使用完整 `.csproj`，检查 `native` 目录与 `LD_LIBRARY_PATH`，再用 `ldd` 查缺失依赖 |
+| 构建出现 `NETSDK1206` | OpenCV 包中的发行版 RID `ubuntu.22.04-x64` | .NET 8+ 不默认选择该 RID；本例显式复制原生文件，继续确认输出和加载结果 |
 | OpenVINO 导入 SLANeXt 失败 | 是否实际加载了兼容 ONNX | 使用 Release 中的对应兼容图，勿只重命名原图 |
 | `alignment.Succeeded == false` | `alignment.json` 的诊断和 `cells.jpg` | 检查漏框、重复框、跨行结构与行几何，不盲目填充 |
 | 表格可以显示，但格内文字有误 | 原图、字典、裁剪、REC 结果 | 多行格改走 DET + REC；关键字段增加规则与复核 |
+
+本次 Ubuntu 构建出现了上表中的 `NETSDK1206` 警告，随后通过显式部署原生库跑通四条路径，没有将警告隐藏。需要排查 Linux 动态依赖时，可在工程目录执行：
+
+```bash
+ldd bin/Release/net10.0/native/opencv/libJYPPX.OpenCV.Native.so
+ldd bin/Release/net10.0/native/openvino/libopenvino_c.so
+```
+
+重点查找 `not found`，按缺失项补齐该系统的依赖；同时确认原生库与进程架构相同。本次两个入口的 `ldd` 检查均未发现缺失依赖。Windows DLL 不能代替 Linux `.so`，切换系统后也应重新构建对应输出目录。
 
 ### 9.2 生命周期、坐标和业务结果
 

@@ -8,7 +8,7 @@
     <rect x="60" y="169" width="1320" height="118" rx="19" fill="#e2edf7" stroke="#b8cfdf"/>
     <text x="85" y="209" font-size="25" font-weight="650">两种场景共用</text>
     <text x="85" y="256" font-size="24">JYPPX.DeploySharp.Visual.OpenCV 2.0.0</text>
-    <text x="796" y="256" font-size="23">JYPPX.OpenCV.runtime.win-x64 5.0.0</text>
+    <text x="796" y="256" font-size="23">OpenCV 5.0.0 · 按 Windows / Ubuntu 选包</text>
     <g stroke="#37a58d" stroke-width="3" marker-end="url(#a)"><path d="M380 292V334"/><path d="M1055 292V334"/></g>
     <rect x="60" y="347" width="643" height="231" rx="20" fill="#e1f4ec" stroke="#a4d5c1"/>
     <rect x="737" y="347" width="643" height="231" rx="20" fill="#fff1df" stroke="#e1c9a9"/>
@@ -19,8 +19,8 @@
     <text x="763" y="393" font-size="28" font-weight="700">场景 B · OpenVINO CPU</text>
     <text x="763" y="443" font-size="23">JYPPX.DeploySharp.Backend.OpenVINO</text>
     <text x="763" y="482" font-size="23">2.0.0</text>
-    <text x="763" y="533" font-size="23">OpenVINO.runtime.win 2026.2.1</text>
+    <text x="763" y="533" font-size="23">Windows 2026.2.1 / Ubuntu 2026.3.1</text>
     <text x="60" y="638" font-size="23">随文工程同时引用 A / B，方便对照；只用 ORT 的项目保留公共层 + A 即可。</text>
-    <text x="60" y="683" font-size="22" fill="#586e83">本文在 Windows x64 验证。Linux 需要替换原生运行时包，不能直接沿用 win-x64 包。</text>
+    <text x="60" y="683" font-size="22" fill="#586e83">本文分别在 Windows x64、Ubuntu 22.04 x64 实跑；Linux 使用 .so，不能沿用 Windows DLL。</text>
   </g>
 </svg>

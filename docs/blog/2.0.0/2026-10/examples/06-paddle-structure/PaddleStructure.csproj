@@ -10,13 +10,34 @@
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <IsPackable>false</IsPackable>
+    <DeploymentRid Condition="'$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</DeploymentRid>
+    <DeploymentRid Condition="'$(DeploymentRid)' == '' and '$(OS)' == 'Windows_NT'">win-x64</DeploymentRid>
+    <DeploymentRid Condition="'$(DeploymentRid)' == '' and $([MSBuild]::IsOSPlatform('Linux'))">linux-x64</DeploymentRid>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="JYPPX.DeploySharp.Visual.OpenCV" Version="2.0.0" />
     <PackageReference Include="JYPPX.DeploySharp.Backend.OnnxRuntime" Version="2.0.0" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.28.0" />
-    <PackageReference Include="JYPPX.OpenCV.runtime.win-x64" Version="5.0.0" />
+    <PackageReference Include="JYPPX.OpenCV.runtime.win-x64" Version="5.0.0" Condition="'$(DeploymentRid)' == 'win-x64'" />
+    <PackageReference Include="JYPPX.OpenCV.runtime.ubuntu.22.04-x64" Version="5.0.0" Condition="'$(DeploymentRid)' == 'linux-x64'" GeneratePathProperty="true" />
     <PackageReference Include="JYPPX.DeploySharp.Backend.OpenVINO" Version="2.0.0" />
-    <PackageReference Include="OpenVINO.runtime.win" Version="2026.2.1" />
+    <PackageReference Include="OpenVINO.runtime.win" Version="2026.2.1" Condition="'$(DeploymentRid)' == 'win-x64'" />
+    <PackageReference Include="OpenVINO.runtime.ubuntu.22-x86_64" Version="2026.3.1" Condition="'$(DeploymentRid)' == 'linux-x64'" GeneratePathProperty="true" />
   </ItemGroup>
+  <!-- Include distro-specific and versioned .so files in a known local directory. -->
+  <ItemGroup Condition="'$(DeploymentRid)' == 'linux-x64'">
+    <Content Include="$(PkgJYPPX_OpenCV_runtime_ubuntu_22_04-x64)/runtimes/ubuntu.22.04-x64/native/*">
+      <Link>native/opencv/%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="$(PkgOpenVINO_runtime_ubuntu_22-x86_64)/runtimes/linux-x64/native/*">
+      <Link>native/openvino/%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+  <Target Name="ValidateDeploymentRid" BeforeTargets="PrepareForBuild">
+    <Error Condition="'$(DeploymentRid)' != 'win-x64' and '$(DeploymentRid)' != 'linux-x64'" Text="This example configures Windows x64 and Ubuntu 22.04 x64 native runtimes." />
+  </Target>
 </Project>
