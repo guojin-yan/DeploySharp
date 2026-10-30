@@ -4,6 +4,7 @@ using System.Text.Json;
 using JYPPX.DeploySharp;
 using JYPPX.DeploySharp.Backends.OnnxRuntime;
 using JYPPX.DeploySharp.Backends.OpenVINO;
+using JYPPX.DeploySharp.Backends.TensorRT;
 using JYPPX.DeploySharp.Models;
 using JYPPX.DeploySharp.Registry;
 using JYPPX.DeploySharp.Results.Vision;
@@ -28,6 +29,10 @@ string ffmpeg = Option("--ffmpeg", "ffmpeg"), ffprobe = Option("--ffprobe", "ffp
 int frameLimit = Number("--frames", 48, 1000000), window = Number("--window", 12, 64);
 int repeats = Number("--repeats", 3, 100), threads = Number("--threads", 2, 128);
 int batch = Number("--batch", 4, 16);
+int trtApi = Number("--trt-api", OperatingSystem.IsWindows() ? 10 : 11, 11);
+if (trtApi is not (10 or 11)) throw new ArgumentException("--trt-api must be 10 or 11, matching the installed native runtime and bridge.");
+string enginePath = Path.GetFullPath(Option("--engine",
+    Path.ChangeExtension(modelPath, $".{(OperatingSystem.IsWindows() ? "win" : "linux")}-trt{trtApi}-fp32-b{batch}.engine")));
 if (!File.Exists(modelPath)) throw new FileNotFoundException("Download the ONNX model first.", modelPath);
 using var stop = new CancellationTokenSource();
 if (args.Contains("--cancel-after")) stop.CancelAfter(Number("--cancel-after", 1000, 600000));
@@ -60,10 +65,18 @@ async Task Execute(CancellationToken token)
     using var backends = new BackendRegistry();
     BackendId backendId;
     string device;
+    string format = "onnx", loadPath = modelPath;
     if (backend == "ort-cpu")
     {
         backends.UseOnnxRuntime(new OnnxRuntimeOptions(intraOpThreads: threads, interOpThreads: 1));
         backendId = OnnxRuntimeBackendProvider.BackendId; device = "cpu";
+    }
+    else if (backend == "ort-cuda")
+    {
+        backends.UseOnnxRuntime(new OnnxRuntimeOptions(intraOpThreads: threads, interOpThreads: 1,
+            executionProvider: OnnxRuntimeExecutionProvider.Cuda,
+            cudaProviderOptions: new Dictionary<string, string> { ["use_tf32"] = "0" }));
+        backendId = OnnxRuntimeBackendProvider.BackendId; device = "cuda";
     }
     else if (backend == "openvino")
     {
@@ -71,11 +84,30 @@ async Task Execute(CancellationToken token)
             streams: 1, inferenceThreads: threads, requestCount: 1));
         backendId = OpenVinoBackendProvider.BackendId; device = "CPU";
     }
-    else throw new ArgumentException("Use --backend ort-cpu or openvino.");
+    else if (backend == "tensorrt")
+    {
+        var api = (TensorRtApiVersion)trtApi;
+        if (!File.Exists(enginePath))
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(enginePath)!);
+            Console.WriteLine("Building local FP32 engine (outside measurements): " + enginePath);
+            new TensorRtOnnxEngineBuilder().Build(new ModelArtifact(new ModelId("blog/yolo26-video"), "onnx", modelPath),
+                enginePath, new TensorRtOnnxEngineBuildOptions(apiVersion: api,
+                    precision: trtApi == 10 ? TensorRtOnnxEnginePrecision.Float32 : TensorRtOnnxEnginePrecision.RuntimeDefault,
+                    disableTf32: true, optimizationLevel: 3,
+                    inputProfiles: dynamicBatch ? new[] { new TensorRtOnnxInputProfile("images",
+                        new TensorShape(1, 3, 640, 640), new TensorShape(batch, 3, 640, 640),
+                        new TensorShape(batch, 3, 640, 640)) } : null));
+        }
+        backends.UseTensorRT(new TensorRtBackendOptions(api));
+        backendId = TensorRtBackendProvider.BackendId; device = "cuda";
+        format = "tensorrt-engine"; loadPath = enginePath;
+    }
+    else throw new ArgumentException("Use --backend ort-cpu, ort-cuda, openvino or tensorrt.");
 
     var id = new ModelId("blog/yolo26-video");
     var size = new VisualSize(640, 640);
-    var profile = new VisualModelProfile("blog.yolo26.video", id, VisualTaskId.ObjectDetection, "1", "onnx",
+    var profile = new VisualModelProfile("blog.yolo26.video", id, VisualTaskId.ObjectDetection, "1", format,
         new VisualInputBinding("images", TensorElementType.Float32, new TensorShape(dynamicBatch ? -1 : 1, 3, 640, 640),
             VisualTensorLayout.Nchw, maximumBatch: dynamicBatch ? batch : 1),
         new[] { new VisualOutputBinding("output0", TensorElementType.Float32, new TensorShape(dynamicBatch ? -1 : 1, -1, 6)) },
@@ -86,13 +118,14 @@ async Task Execute(CancellationToken token)
             VisualNormalizationOptions.Scale(255f), paddingColor: new VisualRgbColor(114, 114, 114)));
     var profiles = new VisualProfileRegistry(); profiles.Register(profile); profiles.Freeze();
     var request = new BackendRequest(BackendCapabilities.TensorInference, backendId, device);
-    var selection = profiles.Select(new ModelArtifact(id, "onnx", modelPath), backends, request, VisualTaskId.ObjectDetection);
+    var selection = profiles.Select(new ModelArtifact(id, format, loadPath), backends, request, VisualTaskId.ObjectDetection);
     var modes = new List<Mode> { new("serial", 1, 0, 1), new("pool-2", 2, 0, 1),
         new("prefetch-1", 1, 2, 1), new("prefetch-2", 2, 2, 1) };
     if (dynamicBatch) modes.Add(new("batch-" + batch, 1, 0, batch));
     else Console.WriteLine("True model Batch skipped: this ONNX has fixed batch=1. Session pool and prefetch remain available.");
 
     var summaries = new List<object>();
+    string[] gpuBefore = device == "cuda" ? GpuSnapshot() : Array.Empty<string>();
     IReadOnlyList<FrameResult>? reference = null;
     foreach (Mode mode in modes)
     {
@@ -122,12 +155,17 @@ async Task Execute(CancellationToken token)
             totalMs = times, medianTotalMs = median, fpsAtMedianTotal = frameLimit * 1000 / median,
             windowP50Ms = Percentile(windowTimes, .5), windowP95Ms = Percentile(windowTimes, .95),
             frames = last.Count, detections = last.Sum(x => x.Detections.Count), exactWithSerial = exact, parity,
-            peakPreparedInputs = preparer.Peak, activeInputsAfterRun = preparer.Active });
-        if (mode.Batch == 1 && !exact) throw new InvalidDataException("Session/prefetch results differ from serial. Inspect frames.json before using the timings.");
-        if (!parity.Equivalent) throw new InvalidDataException("Batch results exceed the stated parity tolerances. Inspect frames.json.");
+            peakPreparedInputs = preparer.Peak, activeInputsAfterRun = preparer.Active,
+            gpuAfterMode = device == "cuda" ? GpuSnapshot() : Array.Empty<string>() });
+        if (!parity.Equivalent) throw new InvalidDataException("Results exceed the stated parity tolerances. Inspect frames.json before using the timings.");
     }
     var report = new { createdAt = DateTimeOffset.Now, backend, device, threadsPerSession = threads,
-        model = Path.GetFileName(modelPath), dynamicBatch, frameLimit, window, repeats, warmupWindows = 2,
+        model = Path.GetFileName(modelPath), format, artifact = Path.GetFileName(loadPath), dynamicBatch, frameLimit, window, repeats, warmupWindows = 2,
+        precision = backend is "ort-cuda" or "tensorrt" ? "FP32; TF32 disabled" : "Backend default",
+        tensorRtApi = backend == "tensorrt" ? trtApi : (int?)null,
+        tensorRtBatchProfile = backend == "tensorrt" && dynamicBatch ? new { minimum = 1, optimum = batch, maximum = batch } : null,
+        ortNativeVersion = Ort.OrtEnv.Instance().GetVersionString(),
+        ortAvailableProviders = Ort.OrtEnv.Instance().GetAvailableProviders(), gpuBefore,
         protocol = "Timed: raw BGR pipe reads (including decoder wait), input preparation, scheduler, inference, decode and result projection. Excluded: ffprobe/process creation, model load, warmup, drawing, JSON writes. FFmpeg uses 1 decoder thread. Window percentiles are completion times, not single-frame latency.",
         environment = new { os = RuntimeInformation.OSDescription, architecture = RuntimeInformation.ProcessArchitecture.ToString(),
             runtime = RuntimeInformation.FrameworkDescription, logicalProcessors = Environment.ProcessorCount }, modes = summaries };
@@ -235,6 +273,22 @@ static void SavePreview(Frame frame, DetectionResult result, string path)
     if (!ImageCodecs.ImWrite(path, image)) throw new IOException("Cannot save " + path);
 }
 static JsonSerializerOptions JsonOptions() => new() { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+static string[] GpuSnapshot()
+{
+    try
+    {
+        var start = new ProcessStartInfo("nvidia-smi") { RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false };
+        start.ArgumentList.Add("--query-gpu=name,driver_version,pstate,clocks.current.graphics,clocks.current.memory,power.draw,memory.used,utilization.gpu");
+        start.ArgumentList.Add("--format=csv,noheader");
+        using var process = Process.Start(start)!;
+        Task<string> stdout = process.StandardOutput.ReadToEndAsync(), stderr = process.StandardError.ReadToEndAsync();
+        if (!process.WaitForExit(3000)) { process.Kill(entireProcessTree: true); process.WaitForExit(); return new[] { "nvidia-smi timed out" }; }
+        return (process.ExitCode == 0 ? stdout.GetAwaiter().GetResult() : stderr.GetAwaiter().GetResult())
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+    }
+    catch (Exception e) when (e is System.ComponentModel.Win32Exception or InvalidOperationException)
+    { return new[] { "GPU telemetry unavailable: " + e.Message }; }
+}
 static double Percentile(IEnumerable<double> values, double p) { double[] sorted = values.Order().ToArray(); return sorted[(int)Math.Ceiling(p * sorted.Length) - 1]; }
 static Parity Compare(IReadOnlyList<FrameResult> baseline, IReadOnlyList<FrameResult> actual)
 {

@@ -14,17 +14,43 @@
     <DeploymentRid Condition="'$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</DeploymentRid>
     <DeploymentRid Condition="'$(DeploymentRid)' == '' and '$(OS)' == 'Windows_NT'">win-x64</DeploymentRid>
     <DeploymentRid Condition="'$(DeploymentRid)' == '' and $([MSBuild]::IsOSPlatform('Linux'))">linux-x64</DeploymentRid>
+    <UseCuda Condition="'$(OrtCuda12NativeDir)' != ''">true</UseCuda>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="JYPPX.DeploySharp.Visual.OpenCV" Version="2.0.0" />
     <PackageReference Include="JYPPX.DeploySharp.Backend.OnnxRuntime" Version="2.0.0" />
-    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.28.0" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.28.0" Condition="'$(UseCuda)' != 'true'" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" Version="1.28.0" Condition="'$(OrtCuda12NativeDir)' != ''" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Gpu.Windows" Version="1.28.0" Condition="'$(UseCuda)' == 'true' and '$(OrtCuda12NativeDir)' == '' and '$(DeploymentRid)' == 'win-x64'" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Gpu.Linux" Version="1.28.0" Condition="'$(UseCuda)' == 'true' and '$(OrtCuda12NativeDir)' == '' and '$(DeploymentRid)' == 'linux-x64'" />
     <PackageReference Include="JYPPX.DeploySharp.Backend.OpenVINO" Version="2.0.0" />
+    <PackageReference Include="JYPPX.DeploySharp.Backend.TensorRT" Version="2.0.0" />
+    <PackageReference Include="JYPPX.TensorRT.CSharp.API.Runtime.win-x64.trt10.11.cuda12.9.cudnn9.22.Bridge" Version="4.0.0" Condition="'$(DeploymentRid)' == 'win-x64'" />
+    <PackageReference Include="JYPPX.TensorRT.CSharp.API.Runtime.linux-x64.ubuntu22.04.trt11.0.cuda12.9.cudnn9.22.Bridge" Version="4.0.0" Condition="'$(DeploymentRid)' == 'linux-x64'" />
     <PackageReference Include="JYPPX.OpenCV.runtime.win-x64" Version="5.0.0" Condition="'$(DeploymentRid)' == 'win-x64'" />
     <PackageReference Include="JYPPX.OpenCV.runtime.ubuntu.22.04-x64" Version="5.0.0" Condition="'$(DeploymentRid)' == 'linux-x64'" GeneratePathProperty="true" />
     <PackageReference Include="OpenVINO.runtime.win" Version="2026.2.1" Condition="'$(DeploymentRid)' == 'win-x64'" />
     <PackageReference Include="OpenVINO.runtime.ubuntu.22-x86_64" Version="2026.3.1" Condition="'$(DeploymentRid)' == 'linux-x64'" GeneratePathProperty="true" />
   </ItemGroup>
+  <!-- An explicit CUDA 12 distribution replaces the CPU/CUDA 13 native package as a complete set. -->
+  <ItemGroup Condition="'$(OrtCuda12NativeDir)' != '' and '$(DeploymentRid)' == 'win-x64'">
+    <Content Include="$(OrtCuda12NativeDir)/onnxruntime.dll;$(OrtCuda12NativeDir)/onnxruntime_providers_shared.dll;$(OrtCuda12NativeDir)/onnxruntime_providers_cuda.dll">
+      <Link>%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup Condition="'$(OrtCuda12NativeDir)' != '' and '$(DeploymentRid)' == 'linux-x64'">
+    <Content Include="$(OrtCuda12NativeDir)/libonnxruntime.so*;$(OrtCuda12NativeDir)/libonnxruntime_providers_shared.so;$(OrtCuda12NativeDir)/libonnxruntime_providers_cuda.so">
+      <Link>%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+  <Target Name="ValidateOrtCuda12Native" BeforeTargets="PrepareForBuild" Condition="'$(OrtCuda12NativeDir)' != ''">
+    <Error Condition="'$(DeploymentRid)' == 'win-x64' and (!Exists('$(OrtCuda12NativeDir)/onnxruntime.dll') or !Exists('$(OrtCuda12NativeDir)/onnxruntime_providers_shared.dll') or !Exists('$(OrtCuda12NativeDir)/onnxruntime_providers_cuda.dll'))" Text="OrtCuda12NativeDir must contain all three Windows ORT 1.28.0 CUDA 12 DLLs." />
+    <Error Condition="'$(DeploymentRid)' == 'linux-x64' and (!Exists('$(OrtCuda12NativeDir)/libonnxruntime.so') or !Exists('$(OrtCuda12NativeDir)/libonnxruntime_providers_shared.so') or !Exists('$(OrtCuda12NativeDir)/libonnxruntime_providers_cuda.so'))" Text="OrtCuda12NativeDir must contain the complete Linux ORT 1.28.0 CUDA 12 lib directory, including symlinks." />
+  </Target>
   <ItemGroup Condition="'$(DeploymentRid)' == 'linux-x64'">
     <Content Include="$(PkgJYPPX_OpenCV_runtime_ubuntu_22_04-x64)/runtimes/ubuntu.22.04-x64/native/*">
       <Link>native/opencv/%(Filename)%(Extension)</Link>

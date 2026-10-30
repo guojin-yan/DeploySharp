@@ -1,6 +1,6 @@
 # 从单帧到并发流水线：DeploySharp 批量与视频推理实战
 
-> 基于 DeploySharp 2.0.0 正式 NuGet；库源码 Tag：`v2.0.0`；创建日期：2026-10-30。
+> 基于 DeploySharp 2.0.0 正式 NuGet；库源码 Tag：`v2.0.0`；创建日期：2026-10-30；同日补充 ORT CUDA 与 TensorRT 对照。
 
 ![DeploySharp 批量与视频推理：连续帧进入有界队列，由多个独立 Session 处理，再按源顺序返回](assets/08-batch-video-inference/cover.png)
 
@@ -24,7 +24,7 @@ https://www.nuget.org/profiles/JYPPX
 https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/docs/model-backend-verification-matrix.md
 ```
 
-前面几篇已经介绍了模型安装、后端切换和自定义前后处理。这次用 YOLO26n 处理一段真实视频，分别运行串行、Session 池、异步预取和真正的模型 Batch，看看连续帧任务应该怎样组织。
+前面几篇已经介绍了模型安装、后端切换和自定义前后处理。这次用 YOLO26n 处理一段真实视频，在 Windows、Ubuntu 上分别使用 ORT CPU、OpenVINO CPU、ORT CUDA 和 TensorRT，运行串行、Session 池、异步预取和真正的模型 Batch，看看连续帧任务应该怎样组织。
 
 ## 二、Batch、Session 池和预取，各自解决什么问题
 
@@ -106,7 +106,44 @@ dotnet add package JYPPX.DeploySharp.Backend.OpenVINO --version 2.0.0
 
 对应的包安装在运行所在系统，Linux 原生文件复制配置同样已经包含在随文工程中。只用 ORT 时，可以移除 OpenVINO 包、注册分支及原生复制项。
 
-### 3.4 视频解码使用 FFmpeg
+### 3.4 ONNX Runtime CUDA
+
+ORT 适配器不变，原生运行库换成 GPU 版本。已有 CUDA 12 环境时，使用 **Managed 1.28.0 + 官方同版本 CUDA 12 发行包**；CPU 原生包不再同时安装。本次两台机器使用 CUDA 12.9、cuDNN 9.22。
+
+| 系统 | 官方原生发行包 |
+| --- | --- |
+| Windows x64 | `onnxruntime-win-x64-gpu_cuda12-1.28.0.zip` |
+| Ubuntu x64 | `onnxruntime-linux-x64-gpu_cuda12-1.28.0.tgz` |
+
+```text
+官方下载：
+https://github.com/microsoft/onnxruntime/releases/tag/v1.28.0
+```
+
+随文工程接受 `OrtCuda12NativeDir`，指向发行包的 `lib` 目录，会选择 Managed 包并复制整套 ORT、shared、CUDA 原生库。Windows 是三个 DLL；Linux 还保留 `libonnxruntime.so` 的版本文件和符号链接。第六节给出两种系统的完整命令。
+
+如果目标机已经匹配 CUDA 13，也可以使用 `-p:UseCuda=true`，由工程选择 `Microsoft.ML.OnnxRuntime.Gpu.Windows` 或 `Gpu.Linux 1.28.0`。这两个 NuGet 的原生文件使用 CUDA 13，与本次实测组合不同。不能只替换一个 provider 文件，也不能把 1.23 的原生库和 1.28 的 Managed 混在一起。
+
+### 3.5 TensorRT：托管接口、Bridge 和 NVIDIA 环境
+
+```powershell
+dotnet add package JYPPX.DeploySharp.Backend.TensorRT --version 2.0.0
+```
+
+Bridge 选择与目标机 TensorRT 主版本匹配的包，完整工程已按系统配置：
+
+| 本例环境 | Bridge 包，版本均为 `4.0.0` |
+| --- | --- |
+| Windows，TensorRT 10.11 / CUDA 12.9 | `JYPPX.TensorRT.CSharp.API.Runtime.win-x64.trt10.11.cuda12.9.cudnn9.22.Bridge` |
+| Ubuntu 22.04，TensorRT 11.0 / CUDA 12.9 | `JYPPX.TensorRT.CSharp.API.Runtime.linux-x64.ubuntu22.04.trt11.0.cuda12.9.cudnn9.22.Bridge` |
+
+Bridge 不包含 CUDA、cuDNN 和 TensorRT 本体，需要目标机已有对应环境。程序通过 `--trt-api 10` 或 `11` 选择 API，Windows 默认 10，Linux 默认 11；更换主版本时，也要更换 Bridge。
+
+所有后端仍共用 CPU 图像准备和结果解码。GPU 执行路径是：CPU 准备张量 → 上传输入 → GPU 模型推理 → 回读输出 → CPU Decoder。预取在应用层重叠准备与推理，本篇没有启用专用 CUDA 图像前处理或零拷贝。
+
+![相同的视频准备与结果解码，中间分别接入 ORT CUDA Provider 和 TensorRT Engine；动态 Engine 允许 Batch 1 到 4](assets/08-batch-video-inference/gpu-path.png)
+
+### 3.6 视频解码使用 FFmpeg
 
 推理引擎不负责读取 MP4、AVI。这里使用 FFmpeg 输出 BGR 原始像素，OpenCV 负责缩放和绘图，避免依赖 OpenCV 原生包是否编入某个视频编解码器。
 
@@ -340,6 +377,28 @@ dotnet run -c Release -- `
   --output results/openvino
 ```
 
+GPU 使用独立输出目录，避免上一次 CPU 构建留下的 DLL 被继续加载。假设官方 CUDA 12 压缩包已经解压到 `runtime/`，并已安装对应 NVIDIA 环境：
+
+```powershell
+$ortLib = (Resolve-Path 'runtime/onnxruntime-win-x64-gpu_cuda12-1.28.0/lib').Path
+dotnet publish -c Release "-p:OrtCuda12NativeDir=$ortLib" -o bin/cuda12
+
+$env:JYPPX_TENSORRT_ROOT = '你的 TensorRT 10.11 安装目录'
+$env:JYPPX_CUDA_ROOT = '你的 CUDA 12.9 安装目录'
+$env:JYPPX_CUDNN_ROOT = '你的 cuDNN 9.22 安装目录'
+$env:PATH = "$env:JYPPX_TENSORRT_ROOT\lib;$env:JYPPX_CUDA_ROOT\bin;$env:JYPPX_CUDNN_ROOT\bin;$env:PATH"
+
+dotnet bin/cuda12/BatchVideo.dll `
+  --model models/yolo26n-dynamic.onnx --video videos/vtest.avi `
+  --backend ort-cuda --threads 2 --output results/ort-cuda
+
+dotnet bin/cuda12/BatchVideo.dll `
+  --model models/yolo26n-dynamic.onnx --video videos/vtest.avi `
+  --backend tensorrt --trt-api 10 --batch 4 --output results/tensorrt
+```
+
+第一次使用 TensorRT 会在计时外转换模型。默认 Engine 名包含系统、TensorRT API、FP32 和 Batch 上限，也可以用 `--engine models/local-b4.engine` 指定路径。更换模型、显卡、原生版本或 Batch 配置时，使用新路径重新构建，Engine 不跨设备分发。
+
 ### 6.2 Ubuntu 22.04
 
 先构建，并把原生目录加入动态库搜索路径：
@@ -364,7 +423,44 @@ dotnet bin/Release/net10.0/BatchVideo.dll \
 
 首次还原可能出现 `NETSDK1206`，原因是 OpenCV 包采用发行版 RID。本工程通过 `.csproj` 显式复制原生文件，仍需保留上面的搜索路径配置。
 
-### 6.3 输出与结果校验
+GPU 版本先取得官方 CUDA 12 原生库，再发布到独立目录：
+
+```bash
+mkdir -p runtime
+curl -fL -o runtime/ort-cuda12.tgz \
+  https://github.com/microsoft/onnxruntime/releases/download/v1.28.0/onnxruntime-linux-x64-gpu_cuda12-1.28.0.tgz
+tar -xzf runtime/ort-cuda12.tgz -C runtime
+dotnet publish -c Release \
+  -p:OrtCuda12NativeDir="$PWD/runtime/onnxruntime-linux-x64-gpu_cuda12-1.28.0/lib" \
+  -o bin/cuda12
+export LD_LIBRARY_PATH="$PWD/bin/cuda12:$PWD/bin/cuda12/native/opencv:$PWD/bin/cuda12/native/openvino:/usr/local/cuda-12.9/lib64:${LD_LIBRARY_PATH:-}"
+
+dotnet bin/cuda12/BatchVideo.dll \
+  --model models/yolo26n-dynamic.onnx --video videos/vtest.avi \
+  --backend ort-cuda --threads 2 --output results/ort-cuda
+
+dotnet bin/cuda12/BatchVideo.dll \
+  --model models/yolo26n-dynamic.onnx --video videos/vtest.avi \
+  --backend tensorrt --trt-api 11 --batch 4 --output results/tensorrt
+```
+
+本次 Linux 的 TensorRT、cuDNN 已由系统动态加载器找到。使用其他安装位置时，将实际包含 `.so` 的目录加入 `LD_LIBRARY_PATH`。
+
+### 6.3 动态 Batch Engine 怎样配置
+
+`--batch 4` 对应 TensorRT 的范围是 **min=1、opt=4、max=4**，空间尺寸固定为 640×640。一个 Engine 同时接受串行的 Batch=1、测试中的 Batch=4，以及不足四帧的尾批。
+
+```csharp
+var inputProfile = new TensorRtOnnxInputProfile(
+    "images",
+    new TensorShape(1, 3, 640, 640),
+    new TensorShape(4, 3, 640, 640),
+    new TensorShape(4, 3, 640, 640));
+```
+
+Engine 使用 FP32，关闭 TF32，构建优化等级为 3。TensorRT 10 通过 `Float32` 构建策略配置；TensorRT 11 使用强类型网络，由 FP32 ONNX 决定类型，同时显式关闭 TF32。构建和首次 Session 初始化均不计入性能表。
+
+### 6.4 输出与结果校验
 
 ```text
 results/ort-cpu/
@@ -380,13 +476,17 @@ results/ort-cpu/
   batch-4/frames.json
 ```
 
-程序检查帧数与编号，报告保留每种模式最后一轮的逐帧结果。同后端的 Session 池和预取结果逐值比较串行结果；Batch 按同帧、同类别、最高 IoU 配对，要求没有未配对项、IoU 至少 0.99、分数差不超过 0.001。超过容差直接报错，不继续把该组数字当成有效性能结果。
+程序检查帧数与编号，报告保留每种模式最后一轮的逐帧结果。每种模式先记录是否与同后端串行结果逐值相同，再按同帧、同类别、最高 IoU 配对，要求没有未配对项、IoU 至少 0.99、分数差不超过 0.001。GPU 的 Batch 或独立上下文可能出现微小浮点差异，因此是否通过以这组容差为准，`exactWithSerial` 仍保留实际值。超过容差直接报错，不继续把该组数字当成有效性能结果。
 
-本次四组环境的五种模式均返回 48 帧、298 次目标观测，最后一轮结果与各自后端的串行结果逐值一致，包括 Batch=4。窗口退出后活动输入均为 0。另外用 Windows ORT CPU 检查了五帧输入形成 `4+1` 尾批，以及定时取消后的资源退出。
+本次八组后端环境、每组五种模式，共 40 组配置，均返回 48 帧、298 次目标观测。38 组与各自后端串行结果逐值一致；两台设备的 ORT CUDA Batch=4 存在微小浮点差异，最低 IoU 约 0.999995，最大分数差约 0.0000154，均通过同一组容差。所有窗口退出后活动输入均为 0。
+
+另外用 Windows ORT CPU 和 TensorRT 检查了五帧输入形成 `4+1` 尾批；ORT CPU 还检查了定时取消后的资源退出。这些补充检查不混入性能表。
 
 ![Windows 实际推理输出：同一视频第 0、12、24、36 帧，框和类别由 YOLO26n 检测结果绘制](assets/08-batch-video-inference/windows-results.png)
 
 ![Ubuntu 实际推理输出及同后端五种调度方式的逐帧结果校验](assets/08-batch-video-inference/ubuntu-results.png)
+
+![Windows RTX 3060 Laptop 与 Ubuntu RTX 2060 的 ORT CUDA、TensorRT 真实检测画面，四组后端均完成逐帧匹配](assets/08-batch-video-inference/gpu-results.png)
 
 这里展示的是每帧目标观测，同一个人可以在多帧出现；没有引入跟踪器，不能用它直接统计去重人数，也没有将检测输出当作人工标注准确率。
 
@@ -394,7 +494,7 @@ results/ort-cpu/
 
 ### 7.1 测什么
 
-四组后端测试均使用本次导出的同一个动态 ONNX、同一视频前 48 帧、同一前后处理与阈值。OpenVINO 配置为 CPU、Latency、单 stream、单 request；ORT 为 CPU、inter-op 1。每个 Session 的推理线程数均为 2。
+所有后端测试均使用本次导出的同一个动态 ONNX、同一视频前 48 帧、同一前后处理与阈值；TensorRT 在各自设备从该 ONNX 构建 Engine。OpenVINO 配置为 CPU、Latency、单 stream、单 request；ORT 使用 inter-op 1，CPU 推理线程数为 2，CUDA 分支也保留这项主机线程设置。它不限制 GPU kernel 的线程数。
 
 每种模式先预热两个完整的 12 帧窗口，再测量 3 轮。每轮重新打开视频，包含 4 个窗口。表中的吞吐按三轮总耗时的中位数计算；窗口 P50/P95 从 12 个窗口样本计算，采用最近秩法。
 
@@ -410,12 +510,19 @@ FFmpeg 采用单解码线程，通过有界管道输出像素；像素格式转�
 | --- | --- | --- |
 | 系统 | Windows 11，Build 26200，x64 | Ubuntu 22.04.5，Linux 6.8，x64 |
 | CPU | AMD Ryzen 7 5800H，8 核 16 线程 | Intel Core i7-1165G7，4 核 8 线程 |
+| NVIDIA GPU / 显存 | RTX 3060 Laptop / 6 GiB | RTX 2060 / 6 GiB |
+| NVIDIA 驱动 | 576.02 | 580.178.04 |
 | .NET SDK / Runtime | 10.0.401 / 10.0.12 | 10.0.301 / 10.0.9 |
 | ORT / OpenCV | 1.28.0 / 5.0.0 | 1.28.0 / 5.0.0 |
 | OpenVINO 原生包 | 2026.2.1 | 2026.3.1 |
+| ORT CUDA 原生来源 | 官方 1.28.0 CUDA 12 发行包 | 官方 1.28.0 CUDA 12 发行包 |
+| CUDA / cuDNN | 12.9 / 9.22.0 | 12.9 / 9.22.0 |
+| TensorRT | 10.11.0.33，FP32 | 11.0.0.114，强类型 FP32 |
 | FFmpeg | Gyan essentials 9.0.2 | static 7.0.2 |
 
-使用默认频率调度，未锁频，也未做系统后台任务隔离。本次是教程对照测试，数字不作为设备性能上限；不同后端的精度策略也没有另做统一标定。
+本轮未修改锁频和功耗设置，也未做系统后台任务隔离。ORT CUDA 和 TensorRT 均关闭 TF32，TensorRT 两种主版本使用相同的 FP32 ONNX，但优化器与执行策略仍可能不同。表中数字是具名设备上的完整视频流程记录，不作为设备性能上限。
+
+程序在计时外记录 GPU 快照，另以 500ms 周期采集频率、功耗与利用率。Windows 推理后的快照显示核心约 1327～2002MHz、显存 7000MHz；Ubuntu 两个 GPU 后端推理后约 1005MHz、显存 5500MHz。Ubuntu 空闲时会回到 P8、300MHz，不能把空闲频率当作推理频率，也不能只凭一次 P0 判断已经达到最高性能。
 
 ### 7.3 Windows 实测
 
@@ -431,8 +538,18 @@ FFmpeg 采用单解码线程，通过有界管道输出像素；像素格式转�
 | OpenVINO CPU | 1 Session + 预取 2 | 14.78 | 801.60 | 962.00 |
 | OpenVINO CPU | 2 Sessions + 预取 2 | 24.65 | 487.50 | 572.98 |
 | OpenVINO CPU | Batch=4，1 Session | 14.55 | 801.31 | 956.31 |
+| ORT CUDA，TF32 关闭 | 串行 | 60.67 | 188.53 | 250.51 |
+| ORT CUDA，TF32 关闭 | Session 池 ×2 | 62.80 | 171.43 | 270.26 |
+| ORT CUDA，TF32 关闭 | 1 Session + 预取 2 | 73.25 | 150.31 | 242.44 |
+| ORT CUDA，TF32 关闭 | 2 Sessions + 预取 2 | 82.89 | 133.42 | 190.57 |
+| ORT CUDA，TF32 关闭 | Batch=4，1 Session | 111.97 | 91.64 | 159.75 |
+| TensorRT FP32，TF32 关闭 | 串行 | 95.84 | 113.16 | 196.25 |
+| TensorRT FP32，TF32 关闭 | Session 池 ×2 | 100.28 | 104.45 | 171.65 |
+| TensorRT FP32，TF32 关闭 | 1 Session + 预取 2 | 101.20 | 106.62 | 179.00 |
+| TensorRT FP32，TF32 关闭 | 2 Sessions + 预取 2 | 124.17 | 80.31 | 162.96 |
+| TensorRT FP32，TF32 关闭 | Batch=4，1 Session | 138.09 | 73.51 | 155.97 |
 
-这台机器上，ORT 的双 Session 提高了吞吐；额外预取的收益不明显。OpenVINO 的双 Session 配合预取更合适。Batch=4 没有带来更高吞吐，不必为了用 Batch 而强行增大批次。
+这台机器上，两个 CPU 后端使用 Batch=4 都没有提高吞吐；GPU 则得到相反结果。ORT CUDA 从串行的 60.67 FPS 提升到 Batch=4 的 111.97 FPS，TensorRT 从 95.84 FPS 提升到 138.09 FPS。预取也能发挥作用：TensorRT 的双 Session 加预取达到 124.17 FPS，高于只增加 Session 的 100.28 FPS。
 
 ### 7.4 Ubuntu 实测
 
@@ -448,8 +565,20 @@ FFmpeg 采用单解码线程，通过有界管道输出像素；像素格式转�
 | OpenVINO CPU | 1 Session + 预取 2 | 27.85 | 429.85 | 438.71 |
 | OpenVINO CPU | 2 Sessions + 预取 2 | 27.29 | 438.38 | 447.96 |
 | OpenVINO CPU | Batch=4，1 Session | 26.17 | 457.08 | 464.93 |
+| ORT CUDA，TF32 关闭 | 串行 | 83.86 | 139.37 | 195.31 |
+| ORT CUDA，TF32 关闭 | Session 池 ×2 | 93.12 | 123.29 | 195.10 |
+| ORT CUDA，TF32 关闭 | 1 Session + 预取 2 | 92.27 | 128.76 | 168.52 |
+| ORT CUDA，TF32 关闭 | 2 Sessions + 预取 2 | 103.69 | 112.67 | 142.22 |
+| ORT CUDA，TF32 关闭 | Batch=4，1 Session | 106.75 | 109.28 | 124.60 |
+| TensorRT FP32，TF32 关闭 | 串行 | 82.18 | 145.81 | 152.94 |
+| TensorRT FP32，TF32 关闭 | Session 池 ×2 | 96.55 | 122.78 | 134.71 |
+| TensorRT FP32，TF32 关闭 | 1 Session + 预取 2 | 87.08 | 136.45 | 146.23 |
+| TensorRT FP32，TF32 关闭 | 2 Sessions + 预取 2 | 101.52 | 117.17 | 124.50 |
+| TensorRT FP32，TF32 关闭 | Batch=4，1 Session | 107.58 | 108.54 | 127.65 |
 
-Ubuntu 上 ORT 的双 Session 仍然有效，但 OpenVINO 的单 Session 已经接近这些配置的吞吐水平，增加 Session 或 Batch 没有继续提升。这也是为什么配置应在实际设备上确定，不能直接照搬另一台机器的组合。
+Ubuntu 上 ORT CPU 的双 Session 仍然有效，但 OpenVINO CPU 的单 Session 已经接近这些配置的吞吐水平。ORT CUDA 的 Batch=4 达到 106.75 FPS，与 TensorRT 的 107.58 FPS 接近；两者都高于各自的单帧串行配置。这组完整流程还包含 CPU 解码、前后处理和数据传输，不能由吞吐接近推断两个后端的纯模型计算速度相同。
+
+![Windows 与 Ubuntu 的 ORT CUDA、TensorRT 五种调度方式吞吐对比，图中数值来自完整视频流程实测](assets/08-batch-video-inference/gpu-throughput.png)
 
 预取还有一项可直接观察的收益：本次运行中，两个 Session 的预取方式最多同时租用 4 份输入，预先准备整个窗口的方式为 12 份。
 
@@ -479,6 +608,9 @@ Ubuntu 上 ORT 的双 Session 仍然有效，但 OpenVINO 的单 Session 已经�
 | 输出结构报错 | 是否忘记显式 `nms=False`，或换成原始 Head、分割、Pose 等不同输出 |
 | FFmpeg 无法启动 | `ffmpeg`、`ffprobe` 是否在 PATH，或通过参数给出正确路径 |
 | Linux 找不到 `.so` | 原生复制目录、`LD_LIBRARY_PATH` 和 Ubuntu 版本是否匹配 |
+| ORT 提示 CUDA 未启用 | 是否加载旧的 CPU DLL；使用匹配的完整 GPU 原生库和独立输出目录 |
+| CUDA provider 加载失败 | ORT 的 CUDA 主版本、驱动、cuDNN 与依赖搜索路径是否匹配 |
+| TensorRT 构建或加载失败 | Bridge、`--trt-api` 与安装版本是否匹配；Engine 是否由当前设备生成 |
 | Session 增加后更慢 | 总线程数、模型内存、CPU 争用；先对比 1、2 个 Session |
 | 画面与检测结果错位 | 是否反复覆盖同一 Mat/数组，或忽略结果与输入的顺序对应 |
 
