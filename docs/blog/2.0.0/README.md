@@ -2,7 +2,7 @@
 
 本系列面向使用 C#/.NET 部署模型的开发者，围绕“安装与模型获取 → 完成任务 → 配置和扩展 → 并发与区域处理 → 性能验证”展开。基于 [DeploySharp 2.0.0](https://github.com/guojin-yan/DeploySharp/releases/tag/v2.0.0)，源码 Tag 为 `v2.0.0`，对应提交 `f07ed7f7d7e2e53ccb443e1517f34ebfc4f743c6`。
 
-基础教程第 01—07 篇与应用实战第 01—03 篇已成稿，均未向博客平台发表。基础教程讲清接口与模型用法，应用实战将多个模型组合成可运行的业务程序；两组文章独立编号，随文工程使用正式 NuGet `2.0.0`。
+基础教程第 01—08 篇与应用实战第 01—03 篇已成稿，均未向博客平台发表。基础教程讲清接口与模型用法，应用实战将多个模型组合成可运行的业务程序；两组文章独立编号，随文工程使用正式 NuGet `2.0.0`。
 
 ## 基础教程
 
@@ -15,13 +15,13 @@
 | 05 | [一套 C# 接口，解锁四类视觉任务：DeploySharp 分类、分割、关键点与旋转框实战](2026-10/2026-10-29-05-visual-multitask.md) | 主稿完成：Windows ORT CPU 四任务实跑，配置预处理与结果类型，输出源图叠色、二值掩码、有效骨架、旋转四边形与 JSON |
 | 06 | [让文档不止于文字：DeploySharp + PP-Structure，打通版面分析与表格重建](2026-10/2026-10-29-06-paddle-structure.md) | 主稿完成：Windows/Ubuntu 的 ORT、OpenVINO CPU 跑通多栏页面区域 DET+REC、有线表格分类、单元格检测、SLANeXt 对齐与 HTML 填充，附共享原图输入适配器、Linux 运行命令和真实结果 |
 | 07 | [不止于内置模型：用 DeploySharp 接管新模型的前处理、推理与结果解码](2026-10/2026-10-29-07-custom-visual.md) | 主稿完成：单模型六输出解码、RGB/Letterbox/归一化、DFL、NMS、自定义结果；Windows/Ubuntu 的 ORT、OpenVINO CPU 实跑 |
-| 08 | DeploySharp 批量与视频推理：Batch、Session 池和异步预取 | 拟写：选择调度方式，管理并发、输入所有权、取消和资源释放 |
+| 08 | [从单帧到并发流水线：DeploySharp 批量与视频推理实战](2026-10/2026-10-30-08-batch-video-inference.md) | 主稿完成：真实视频、有界窗口、动态 Batch、独立 Session 池、异步预取与缓冲租约；Windows/Ubuntu 的 ORT、OpenVINO CPU 共 20 组调度配置，逐帧一致性、吞吐和窗口耗时对照 |
 | 09 | DeploySharp ROI 实战：配置检测区域、过滤结果与还原坐标 | 拟写：保存区域配置，执行区域任务并将结果映射到原图 |
 | 10 | 使用 DeploySharp 处理大图：滑动窗口、重叠切片与结果合并 | 拟写：规划切片、完成检测、合并跨窗口重复结果并检查边缘目标 |
 | 11 | DeploySharp TensorRT 优化实战：Engine、CUDA 前后处理与数据复用 | 拟写：在支持的模型路径上构建 Engine、减少传输并测量实际收益 |
 | 12 | DeploySharp 2.0.0 性能实测：不同设备和后端应该怎样比较 | 拟写：阅读和复现具名设备结果，区分延迟、吞吐与完整流水线时间 |
 
-随文源代码位于 `2026-10/examples/`，配图位于 `2026-10/assets/`。第二篇包含 Windows YOLO26 五条执行路径，第三篇包含 Ubuntu v5 Mobile 四后端完整 OCR。具体设备、模型和输出以各篇实测章节为准。
+随文源代码位于 `2026-10/examples/`，配图位于 `2026-10/assets/`。第二篇包含 Windows YOLO26 五条执行路径，第三篇包含 Ubuntu v5 Mobile 四后端完整 OCR，第八篇在 Windows/Ubuntu 对照两种 CPU 后端的五种连续帧调度方式。具体设备、模型和输出以各篇实测章节为准。
 
 ## 多模型应用实战
 
