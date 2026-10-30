@@ -492,6 +492,10 @@ results/ort-cpu/
 
 ## 七、性能实测：先看口径，再选配置
 
+> **测试说明**：本次使用的两台设备性能有限，测试时还有多个其他任务同时运行，CPU/GPU 资源并未独占。这一轮主要验证示例程序在不同系统和后端下能否正常运行，下面的数据仅记录当时的表现，不代表最佳性能。
+>
+> 欢迎大家在自己的电脑上运行随文示例，实测不同 Batch、Session 数量和预取配置的效果，选择适合自己设备的组合。
+
 ### 7.1 测什么
 
 所有后端测试均使用本次导出的同一个动态 ONNX、同一视频前 48 帧、同一前后处理与阈值；TensorRT 在各自设备从该 ONNX 构建 Engine。OpenVINO 配置为 CPU、Latency、单 stream、单 request；ORT 使用 inter-op 1，CPU 推理线程数为 2，CUDA 分支也保留这项主机线程设置。它不限制 GPU kernel 的线程数。
@@ -549,7 +553,7 @@ FFmpeg 采用单解码线程，通过有界管道输出像素；像素格式转�
 | TensorRT FP32，TF32 关闭 | 2 Sessions + 预取 2 | 124.17 | 80.31 | 162.96 |
 | TensorRT FP32，TF32 关闭 | Batch=4，1 Session | 138.09 | 73.51 | 155.97 |
 
-这台机器上，两个 CPU 后端使用 Batch=4 都没有提高吞吐；GPU 则得到相反结果。ORT CUDA 从串行的 60.67 FPS 提升到 Batch=4 的 111.97 FPS，TensorRT 从 95.84 FPS 提升到 138.09 FPS。预取也能发挥作用：TensorRT 的双 Session 加预取达到 124.17 FPS，高于只增加 Session 的 100.28 FPS。
+本次 Windows 记录中，两个 CPU 后端的 Batch=4 吞吐均低于串行，两个 GPU 后端则高于串行。ORT CUDA 的串行和 Batch=4 分别为 60.67 FPS、111.97 FPS，TensorRT 分别为 95.84 FPS、138.09 FPS。TensorRT 的双 Session 加预取为 124.17 FPS，只使用双 Session 为 100.28 FPS。由于后台还有其他任务，这些差异不能直接作为独占设备上的加速比。
 
 ### 7.4 Ubuntu 实测
 
@@ -576,7 +580,7 @@ FFmpeg 采用单解码线程，通过有界管道输出像素；像素格式转�
 | TensorRT FP32，TF32 关闭 | 2 Sessions + 预取 2 | 101.52 | 117.17 | 124.50 |
 | TensorRT FP32，TF32 关闭 | Batch=4，1 Session | 107.58 | 108.54 | 127.65 |
 
-Ubuntu 上 ORT CPU 的双 Session 仍然有效，但 OpenVINO CPU 的单 Session 已经接近这些配置的吞吐水平。ORT CUDA 的 Batch=4 达到 106.75 FPS，与 TensorRT 的 107.58 FPS 接近；两者都高于各自的单帧串行配置。这组完整流程还包含 CPU 解码、前后处理和数据传输，不能由吞吐接近推断两个后端的纯模型计算速度相同。
+本次 Ubuntu 记录中，ORT CPU 的双 Session 吞吐高于串行，OpenVINO CPU 的五种配置则较接近。ORT CUDA 的 Batch=4 为 106.75 FPS，TensorRT 为 107.58 FPS，均高于各自的单帧串行记录。这组完整流程还包含 CPU 解码、前后处理和数据传输，也受后台任务影响，不能由吞吐接近推断两个后端的纯模型计算速度相同。
 
 ![Windows 与 Ubuntu 的 ORT CUDA、TensorRT 五种调度方式吞吐对比，图中数值来自完整视频流程实测](assets/08-batch-video-inference/gpu-throughput.png)
 
