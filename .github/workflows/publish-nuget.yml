@@ -29,6 +29,7 @@ jobs:
     permissions:
       contents: write
       packages: write
+      id-token: write
     env:
       PACKAGE_VERSION: ${{ inputs.package_version }}
       PUBLISH_REQUESTED: ${{ inputs.publish }}
@@ -45,8 +46,6 @@ jobs:
 
       - name: Validate version and prepare configuration
         shell: pwsh
-        env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
         run: |
           $ErrorActionPreference = 'Stop'
           if ($env:GITHUB_REPOSITORY -ne 'guojin-yan/DeploySharp') { throw 'Publication is configured for guojin-yan/DeploySharp.' }
@@ -55,7 +54,6 @@ jobs:
           if ($env:PACKAGE_VERSION -ne $baseline.packageVersion) { throw 'Update and review the version, package baseline, and release evidence together before running this workflow.' }
           $arguments = @{ PackageVersion = $env:PACKAGE_VERSION; OutputDirectory = (Join-Path $env:RUNNER_TEMP 'deploysharp-release-config') }
           if ($env:PUBLISH_REQUESTED -eq 'true') {
-            if ([string]::IsNullOrWhiteSpace($env:NUGET_API_KEY)) { throw 'NUGET_API_KEY repository secret is missing.' }
             $arguments.PublicationAuthorized = $true
             $arguments.Approver = $env:GITHUB_ACTOR
             $arguments.ApprovalReference = "$env:GITHUB_SERVER_URL/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID"
@@ -142,6 +140,13 @@ jobs:
             ${{ runner.temp }}/deploysharp-release-config
           retention-days: 14
 
+      - name: Authenticate to NuGet.org with Trusted Publishing
+        if: ${{ inputs.publish }}
+        id: nuget_login
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1
+        with:
+          user: GuojinYan
+
       - name: Stage stable GitHub Release
         if: ${{ inputs.publish && !contains(inputs.package_version, '-') }}
         shell: pwsh
@@ -161,8 +166,9 @@ jobs:
         if: ${{ inputs.publish }}
         shell: pwsh
         env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+          NUGET_API_KEY: ${{ steps.nuget_login.outputs.NUGET_API_KEY }}
         run: |
+          if ([string]::IsNullOrWhiteSpace($env:NUGET_API_KEY)) { throw 'NuGet Trusted Publishing did not return a temporary API key. Check the NuGet account and trusted publishing policy.' }
           $output = Join-Path $env:RUNNER_TEMP 'deploysharp-packages'
           foreach ($package in Get-ChildItem $output -Filter '*.nupkg' | Sort-Object Name) {
             dotnet nuget push $package.FullName --api-key $env:NUGET_API_KEY --source https://api.nuget.org/v3/index.json --no-symbols --skip-duplicate --timeout 300

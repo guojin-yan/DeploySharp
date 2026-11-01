@@ -24,4 +24,27 @@ foreach ($package in $baseline.packages) {
 
 `Invoke-ReleaseEvidenceNegativeTests.ps1` 默认执行全部异常场景；定位单项问题时可用 `-Scenario sourcelink-drift,api-signature` 选择场景，并为每次运行指定新的仓库外工作目录。
 
-NuGet 使用 Repository Secret `NUGET_API_KEY`；GitHub 两个渠道使用工作流 `GITHUB_TOKEN` 的 `contents: write` 与 `packages: write` 权限。现有 GitHub Package 必须允许本仓库工作流写入。包签名默认可选；如维护者主动切换为 `required`，必须配置证书并完成签名后才能通过检查。第三方依赖元数据属于信息记录，不引入模型许可证审批或非商业用途限制。
+## NuGet Trusted Publishing 配置
+
+NuGet.org 发布使用 GitHub Actions OIDC，不再读取 Repository Secret `NUGET_API_KEY`。在 [nuget.org](https://www.nuget.org/) 登录拥有这些包的账户，从用户名菜单进入 **Trusted Publishing**，创建 GitHub 信任策略：
+
+| 字段 | 填写内容 |
+| --- | --- |
+| 策略名称（如页面要求） | `DeploySharp-GitHub-Actions` |
+| 策略所有者 / Owner | `GuojinYan`，即现有包的 NuGet 所有者 |
+| Repository Owner | `guojin-yan` |
+| Repository | `DeploySharp` |
+| Workflow File | `publish-nuget.yml`，只填文件名 |
+| Environment | 留空，当前发布作业未配置 GitHub Environment |
+| 包范围 / Glob Pattern | `JYPPX.DeploySharp.*`，覆盖当前 14 个包 |
+| 发布权限 / Scopes | 发布新包及现有包的新版本；不需要取消列出权限 |
+
+工作流中的 `user: GuojinYan` 是 NuGet 用户名，不是 GitHub 用户名或邮箱。上述策略可覆盖预览版与正式版，无需为每个包、每个版本分别创建。若转移包所有者或更改工作流文件名、GitHub Environment，需要同步调整策略与工作流。
+
+发布作业拥有 `id-token: write` 权限。构建、测试和包检查通过后，官方 `NuGet/login`（固定到 v1 的提交）才交换短期发布凭据，供随后的 `.nupkg` 和 `.snupkg` 推送使用。凭据有效期为一小时，不存入 Repository Secrets 或制品。`publish=false` 会跳过登录和全部发布步骤，仍可在尚未创建策略时运行验证。
+
+创建策略后不需要添加新的 GitHub Secret 或 Variable；旧 `NUGET_API_KEY` 已不再使用，可在确认没有其他消费者后删除。策略配置完成本身不会触发发布；后续明确发布时再手动选择 `publish=true`。当前 `2.0.0` 已发布，下一版本需先更新并审阅版本、包基线与发布说明，不能用相同版本覆盖已发布的包。
+
+GitHub Packages 和 GitHub Release 继续使用工作流 `GITHUB_TOKEN` 的 `contents: write` 与 `packages: write` 权限。现有 GitHub Package 必须允许本仓库工作流写入。包签名默认可选；如维护者主动切换为 `required`，必须配置证书并完成签名后才能通过检查。第三方依赖元数据属于信息记录，不引入模型许可证审批或非商业用途限制。
+
+参考：[NuGet Trusted Publishing 官方说明](https://learn.microsoft.com/nuget/nuget-org/trusted-publishing)、[NuGet/login](https://github.com/NuGet/login)。
