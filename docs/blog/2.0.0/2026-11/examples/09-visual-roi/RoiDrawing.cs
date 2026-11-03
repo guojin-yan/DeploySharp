@@ -18,7 +18,8 @@ internal static class RoiDrawing
             Scalar color = roi.InclusionMode == RoiInclusionMode.Exclude ? new Scalar(85, 100, 245)
                 : roi.ExecutionMode == RoiExecutionMode.CropAndInfer ? new Scalar(245, 175, 80) : new Scalar(150, 225, 70);
             var points = geometry.Points;
-            for (int i = 0; i < points.Count; i++)
+            if (geometry is MaskRoiGeometry mask) ShadeMask(image, mask);
+            else for (int i = 0; i < points.Count; i++)
             {
                 var p = points[i]; var q = points[(i + 1) % points.Count];
                 Drawing.Line(image, new Point((int)p.X, (int)p.Y), new Point((int)q.X, (int)q.Y), color, thickness);
@@ -34,6 +35,21 @@ internal static class RoiDrawing
         }
         Label(image, $"{detections.Count} detections | snapshot {snapshot.Version}", 14, image.Rows - 18, new Scalar(255, 255, 255), font);
         if (!ImageCodecs.ImWrite(path, image)) throw new IOException("Cannot save " + path);
+    }
+
+    private static unsafe void ShadeMask(Mat image, MaskRoiGeometry mask)
+    {
+        byte[] values = mask.ToArray();
+        int stride = checked((int)image.Step.ToUInt64());
+        byte* data = (byte*)image.Data;
+        for (int y = 0; y < image.Rows; y++) for (int x = 0; x < image.Cols; x++)
+        {
+            if (values[y * image.Cols + x] == 0) continue;
+            byte* pixel = data + y * stride + x * 3;
+            pixel[0] = (byte)(pixel[0] * .7f + 245 * .3f);
+            pixel[1] = (byte)(pixel[1] * .7f + 175 * .3f);
+            pixel[2] = (byte)(pixel[2] * .7f + 80 * .3f);
+        }
     }
 
     private static void Label(Mat image, string text, int x, int y, Scalar color, double font)

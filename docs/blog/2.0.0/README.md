@@ -16,7 +16,7 @@
 | 06 | [让文档不止于文字：DeploySharp + PP-Structure，打通版面分析与表格重建](2026-10/2026-10-29-06-paddle-structure.md) | 主稿完成：Windows/Ubuntu 的 ORT、OpenVINO CPU 跑通多栏页面区域 DET+REC、有线表格分类、单元格检测、SLANeXt 对齐与 HTML 填充，附共享原图输入适配器、Linux 运行命令和真实结果 |
 | 07 | [不止于内置模型：用 DeploySharp 接管新模型的前处理、推理与结果解码](2026-10/2026-10-29-07-custom-visual.md) | 主稿完成：单模型六输出解码、RGB/Letterbox/归一化、DFL、NMS、自定义结果；Windows/Ubuntu 的 ORT、OpenVINO CPU 实跑 |
 | 08 | [从单帧到并发流水线：DeploySharp 批量与视频推理实战](2026-10/2026-10-30-08-batch-video-inference.md) | 主稿完成：真实视频、有界窗口、动态 Batch、独立 Session 池、异步预取与缓冲租约；Windows/Ubuntu 的 ORT CPU、OpenVINO CPU、ORT CUDA、TensorRT 共 40 组调度配置，附 GPU 安装、动态 Engine、逐帧一致性、吞吐和窗口耗时对照 |
-| 09 | [让检测只盯关键区域：DeploySharp ROI 工程实战](2026-11/2026-11-03-09-visual-roi.md) | 主稿完成：四张道路/庭院截图、JSON 区域配置、包含/排除规则、全图过滤、裁剪推理、原图坐标合并与快照更新；Windows/Ubuntu 的 ORT CPU、ORT CUDA、OpenVINO、OpenCV DNN、TensorRT 十条路径实跑 |
+| 09 | [让检测只盯关键区域：DeploySharp ROI 工程实战](2026-11/2026-11-03-09-visual-roi.md) | 主稿完成：四张道路/庭院截图、四种 ROI 几何与显式透视、配置热更新、过滤与坐标合并；Windows/Ubuntu 十条路径实跑，另有 Ubuntu 五后端 5+50 性能对照、分配记录与功能覆盖表 |
 | 10 | 使用 DeploySharp 处理大图：滑动窗口、重叠切片与结果合并 | 拟写：规划切片、完成检测、合并跨窗口重复结果并检查边缘目标 |
 | 11 | DeploySharp TensorRT 优化实战：Engine、CUDA 前后处理与数据复用 | 拟写：在支持的模型路径上构建 Engine、减少传输并测量实际收益 |
 | 12 | DeploySharp 2.0.0 性能实测：不同设备和后端应该怎样比较 | 拟写：阅读和复现具名设备结果，区分延迟、吞吐与完整流水线时间 |

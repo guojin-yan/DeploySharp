@@ -91,6 +91,7 @@ else throw new ArgumentException("Use --backend ort-cpu, ort-cuda, openvino, ope
 var size = new VisualSize(640, 640);
 var preprocessing = new VisualPreprocessingOptions(size, VisualResizeMode.Letterbox, VisualColorOrder.Rgb,
     VisualNormalizationOptions.Scale(255f), paddingColor: new VisualRgbColor(114, 114, 114));
+var cvOptions = preprocessing.ToOpenCvOptions();
 var profile = new VisualModelProfile("blog.yolo26.roi", id, VisualTaskId.ObjectDetection, "1", format,
     new VisualInputBinding("images", TensorElementType.Float32, new TensorShape(1, 3, 640, 640), VisualTensorLayout.Nchw),
     new[] { new VisualOutputBinding("output0", TensorElementType.Float32, new TensorShape(1, 300, 6)) },
@@ -105,6 +106,19 @@ var factory = new OpenCvVisualInputFactory();
 var runner = new VisualRoiRunner(pipeline);
 var store = new RoiConfigurationStore(args.Contains("--rebind-normalized"));
 var jsonOptions = new JsonSerializerOptions { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+
+if (args.Contains("--benchmark"))
+{
+    await RoiBenchmark.RunAsync(pipeline, files, configs, output, cvOptions,
+        int.Parse(Option("--warmup", "5")), int.Parse(Option("--iterations", "50")),
+        new { backend, device, sessions, threads, model, artifact, format, trtApi, sourceRevision = Option("--revision", "unspecified") }, token);
+    return;
+}
+if (args.Contains("--geometry-demo"))
+{
+    await RoiGeometryShowcase.RunAsync(pipeline, files, output, cvOptions, token);
+    return;
+}
 
 do
 {
@@ -126,12 +140,12 @@ do
 
         var whole = new RectangleRoiGeometry(new RectangleF(0, 0, decoded.SourceSize.Width, decoded.SourceSize.Height));
         DetectionResult full;
-        using (var input = decoded.PrepareRectangle(whole, "images", preprocessing.ToOpenCvOptions(), token))
+        using (var input = decoded.PrepareRectangle(whole, "images", cvOptions, token))
             full = (DetectionResult)pipeline.Run(input).Value;
         RoiDetectionResult filtered = VisualRoiDetectionFilter.Filter(full, filterSnapshot, VisualTaskId.ObjectDetection);
 
         RoiInferenceBatchResult batch = await runner.RunCropAsync(cropSnapshot,
-            (_, geometry, ct) => Task.FromResult(decoded.Prepare(geometry, "images", preprocessing.ToOpenCvOptions(), ct)),
+            (_, geometry, ct) => Task.FromResult(decoded.Prepare(geometry, "images", cvOptions, ct)),
             new RoiExecutionOptions(maximumRois: 8, prefetch: 2, maximumPreparedPixels: 16_000_000,
                 mergeMode: RoiResultMergeMode.ClassAwareNms), cancellationToken: token);
         RoiMergedDetectionResult merged = new RoiDetectionResultMerger().Merge(batch, iouThreshold: .45f);

@@ -5,7 +5,7 @@
 ## 安装
 
 ```xml
-<PackageReference Include="JYPPX.DeploySharp.Visual" Version="2.0.0-alpha.1" />
+<PackageReference Include="JYPPX.DeploySharp.Visual" Version="2.0.0" />
 ```
 
 `DeploySharp.Visual` 支持仓库声明的目标框架；内置 JSON 能力在 `net46`/`net461` 之外的目标框架中可用（这两个旧目标没有兼容的 `System.Text.Json` 资产）。JSON 只负责 ROI 快照的版本化序列化、容量限制和原子替换，不负责图像解码、模型推理或后端选择。
@@ -51,6 +51,10 @@
 矩形使用 `x`、`y`、`width`、`height`；旋转矩形使用 `centerX`、`centerY`、`width`、`height`、`angleDegrees`；多边形使用由 `{ "x": ..., "y": ... }` 对象组成的有序 `points`；Mask 使用 `width`、`height` 和 Base64 编码的 `valuesBase64`。矩形采用半开区间（右边界和下边界不属于 ROI），多边形边界按包含处理，确保检测框或关键点恰好落在边界上时结果稳定；非有限坐标始终不命中。`SourcePixels` Mask 的尺寸必须与 `source` 完全一致；`TileLocal` Mask 的尺寸必须与整数切片一致，`World` Mask 保留其世界栅格尺寸，并在显式坐标上下文中栅格化到源图。
 
 Normalized ROI 可以把相同配置复用于不同分辨率的相机：几何坐标按源图宽高缩放到像素空间。ModelInput ROI 需要调用方提供真实的 `VisualInputFrame` 和可逆变换，不能在尚未确定预处理方式时仅凭 JSON 猜测源坐标。TileLocal 和 World 坐标需要应用提供额外的投影上下文，当前 JSON 包不会静默转换它们。
+
+归一化配置也需要绑定当前源图尺寸的快照；源图分辨率改变时应重新建立或替换快照。`margin` 为源图像素，2.0.0 仅支持矩形和旋转矩形扩边；多边形、Mask 扩边应由调用方生成新几何。
+
+四种几何的真实模型输入、原图结果、全图过滤与裁剪路线可参考 [ROI 工程实战](../blog/2.0.0/2026-11/2026-11-03-09-visual-roi.md)及其正式 NuGet 示例。性能应区分结果过滤、ROI 调度和额外模型输入次数；本例的五后端过滤增量见[设备性能实测](device-performance-benchmarks.md#yolo26n-roi-过滤增量正式-nuget-200)。
 
 ## 保存与加载
 
