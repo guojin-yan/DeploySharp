@@ -1,0 +1,133 @@
+{
+  "schemaVersion": "1.0",
+  "source": {
+    "width": 1920,
+    "height": 1080
+  },
+  "version": 1,
+  "rois": [
+    {
+      "id": "road-zone",
+      "name": "道路车辆区",
+      "enabled": true,
+      "coordinateSpace": "Normalized",
+      "inclusionMode": "Include",
+      "executionMode": "FilterResults",
+      "hitTestMode": "IntersectionOverResult",
+      "hitThreshold": 0.55,
+      "taskFilter": [
+        "object-detection"
+      ],
+      "classFilter": [
+        2,
+        3,
+        5,
+        7
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "points": [
+          {
+            "x": 0,
+            "y": 1
+          },
+          {
+            "x": 0.35,
+            "y": 0.28
+          },
+          {
+            "x": 0.48,
+            "y": 0.28
+          },
+          {
+            "x": 1,
+            "y": 0.78
+          },
+          {
+            "x": 1,
+            "y": 1
+          }
+        ]
+      },
+      "priority": 0,
+      "margin": 0,
+      "tags": [],
+      "metadata": {}
+    },
+    {
+      "id": "far-field",
+      "name": "远端观察排除区",
+      "enabled": true,
+      "coordinateSpace": "Normalized",
+      "inclusionMode": "Exclude",
+      "executionMode": "FilterResults",
+      "hitTestMode": "CenterPoint",
+      "geometry": {
+        "type": "Rectangle",
+        "x": 0.32,
+        "y": 0.15,
+        "width": 0.25,
+        "height": 0.19
+      },
+      "priority": 0,
+      "hitThreshold": 0.5,
+      "margin": 0,
+      "taskFilter": [
+        "object-detection"
+      ],
+      "classFilter": [],
+      "tags": [],
+      "metadata": {}
+    },
+    {
+      "id": "west-crop",
+      "name": "西侧推理窗口",
+      "enabled": true,
+      "coordinateSpace": "Normalized",
+      "inclusionMode": "Include",
+      "executionMode": "CropAndInfer",
+      "geometry": {
+        "type": "Rectangle",
+        "x": 0.14,
+        "y": 0.28,
+        "width": 0.42,
+        "height": 0.62
+      },
+      "priority": 0,
+      "hitTestMode": "CenterPoint",
+      "hitThreshold": 0.5,
+      "margin": 0,
+      "taskFilter": [
+        "object-detection"
+      ],
+      "classFilter": [],
+      "tags": [],
+      "metadata": {}
+    },
+    {
+      "id": "east-crop",
+      "name": "东侧推理窗口",
+      "enabled": true,
+      "coordinateSpace": "Normalized",
+      "inclusionMode": "Include",
+      "executionMode": "CropAndInfer",
+      "geometry": {
+        "type": "Rectangle",
+        "x": 0.36,
+        "y": 0.28,
+        "width": 0.55,
+        "height": 0.62
+      },
+      "priority": 0,
+      "hitTestMode": "CenterPoint",
+      "hitThreshold": 0.5,
+      "margin": 0,
+      "taskFilter": [
+        "object-detection"
+      ],
+      "classFilter": [],
+      "tags": [],
+      "metadata": {}
+    }
+  ]
+}

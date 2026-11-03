@@ -1,0 +1,134 @@
+{
+  "schemaVersion": "1.0",
+  "source": {
+    "width": 768,
+    "height": 576
+  },
+  "version": 1,
+  "rois": [
+    {
+      "id": "walkway",
+      "name": "人员通行区",
+      "enabled": true,
+      "coordinateSpace": "Normalized",
+      "inclusionMode": "Include",
+      "executionMode": "FilterResults",
+      "hitTestMode": "IntersectionOverResult",
+      "hitThreshold": 0.5,
+      "taskFilter": [
+        "object-detection"
+      ],
+      "classFilter": [
+        0
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "points": [
+          {
+            "x": 0,
+            "y": 0.22
+          },
+          {
+            "x": 0.45,
+            "y": 0.24
+          },
+          {
+            "x": 0.98,
+            "y": 0.15
+          },
+          {
+            "x": 1,
+            "y": 0.75
+          },
+          {
+            "x": 0.48,
+            "y": 0.54
+          },
+          {
+            "x": 0,
+            "y": 0.39
+          }
+        ]
+      },
+      "priority": 0,
+      "margin": 0,
+      "tags": [],
+      "metadata": {}
+    },
+    {
+      "id": "edge-ignore",
+      "name": "右侧边缘排除区",
+      "enabled": true,
+      "coordinateSpace": "Normalized",
+      "inclusionMode": "Exclude",
+      "executionMode": "FilterResults",
+      "hitTestMode": "CenterPoint",
+      "geometry": {
+        "type": "Rectangle",
+        "x": 0.94,
+        "y": 0.16,
+        "width": 0.06,
+        "height": 0.65
+      },
+      "priority": 0,
+      "hitThreshold": 0.5,
+      "margin": 0,
+      "taskFilter": [
+        "object-detection"
+      ],
+      "classFilter": [],
+      "tags": [],
+      "metadata": {}
+    },
+    {
+      "id": "left-crop",
+      "name": "左侧推理窗口",
+      "enabled": true,
+      "coordinateSpace": "Normalized",
+      "inclusionMode": "Include",
+      "executionMode": "CropAndInfer",
+      "geometry": {
+        "type": "Rectangle",
+        "x": 0.05,
+        "y": 0.2,
+        "width": 0.64,
+        "height": 0.57
+      },
+      "priority": 0,
+      "hitTestMode": "CenterPoint",
+      "hitThreshold": 0.5,
+      "margin": 0,
+      "taskFilter": [
+        "object-detection"
+      ],
+      "classFilter": [],
+      "tags": [],
+      "metadata": {}
+    },
+    {
+      "id": "right-crop",
+      "name": "右侧推理窗口",
+      "enabled": true,
+      "coordinateSpace": "Normalized",
+      "inclusionMode": "Include",
+      "executionMode": "CropAndInfer",
+      "geometry": {
+        "type": "Rectangle",
+        "x": 0.4,
+        "y": 0.15,
+        "width": 0.6,
+        "height": 0.65
+      },
+      "priority": 0,
+      "hitTestMode": "CenterPoint",
+      "hitThreshold": 0.5,
+      "margin": 0,
+      "taskFilter": [
+        "object-detection"
+      ],
+      "classFilter": [],
+      "tags": [],
+      "metadata": {}
+    }
+  ]
+}

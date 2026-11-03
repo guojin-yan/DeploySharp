@@ -4,7 +4,7 @@
 
 | 基于版本 | 系列入口 | 当前状态 |
 | --- | --- | --- |
-| 2.0.0 | [基础教程](2.0.0/README.md) | 01—08 已成稿：发布介绍、YOLO26、OCR、部署、视觉多任务、PP-Structure、自定义模型、批量与视频并发；附正式 NuGet 可运行工程，第 08 篇含 Windows/Ubuntu 四条 CPU/GPU 路径共 40 组对照，尚未向博客平台发表 |
+| 2.0.0 | [基础教程](2.0.0/README.md) | 01—09 已成稿：发布介绍、YOLO26、OCR、部署、视觉多任务、PP-Structure、自定义模型、批量与视频并发、ROI；附正式 NuGet 工程，09 包含 Windows/Ubuntu 五条后端路径的区域配置、过滤、裁剪与坐标合并，尚未向博客平台发表 |
 | 2.0.0 | [多模型应用实战](2.0.0/applications/README.md) | 01—03 已成稿：智能巡检台、智能文档工作台、智能素材工厂；Windows/Ubuntu 实跑 ORT、OpenVINO CPU，文档公式固定 ORT CPU，尚未发表 |
 
 ## 目录与命名
