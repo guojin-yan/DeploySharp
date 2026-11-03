@@ -1,0 +1,114 @@
+{
+  "schemaVersion": "2.0",
+  "modelId": "rf-detr/segment/nano",
+  "name": "RF-DETR Seg Nano",
+  "family": "rf-detr",
+  "task": "instance-segmentation",
+  "modelVersion": "1.11.2",
+  "exporter": {
+    "name": "rfdetr.export",
+    "version": "1.11.2-opset17",
+    "sourceRevision": "7433d5919d0f7e72cc6cb78663e0a731afd499e0"
+  },
+  "source": {
+    "sourceUrl": "https://github.com/roboflow/rf-detr/tree/7433d5919d0f7e72cc6cb78663e0a731afd499e0",
+    "projectUrl": "https://github.com/roboflow/rf-detr",
+    "revision": "7433d5919d0f7e72cc6cb78663e0a731afd499e0",
+    "author": "Roboflow",
+    "licenseExpression": "Apache-2.0",
+    "licenseFile": "LICENSE.rf-detr.txt",
+    "redistributionAllowed": true
+  },
+  "generatedAt": "2026-11-03T11:16:41.131727+00:00",
+  "profileId": "portable.rfdetrseg.rf-detr/segment/nano",
+  "inputs": [
+    {
+      "name": "input",
+      "elementType": "float32",
+      "shape": [
+        1,
+        3,
+        312,
+        312
+      ]
+    }
+  ],
+  "outputs": [
+    {
+      "name": "dets",
+      "elementType": "float32",
+      "shape": [
+        1,
+        100,
+        4
+      ]
+    },
+    {
+      "name": "labels",
+      "elementType": "float32",
+      "shape": [
+        1,
+        100,
+        91
+      ]
+    },
+    {
+      "name": "masks",
+      "elementType": "float32",
+      "shape": [
+        1,
+        100,
+        78,
+        78
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "artifactId": "onnx.fp32",
+      "format": "onnx",
+      "locationKind": "file",
+      "entrypoint": "model.onnx",
+      "compatibleBackends": [
+        "onnxruntime",
+        "openvino"
+      ],
+      "files": [
+        {
+          "relativePath": "model.onnx",
+          "sha256": "d94ae1a747c01894a30af7cabc434c5262b6c627172d79708761ac8ad528b15e",
+          "size": 122825605,
+          "mediaType": "application/onnx",
+          "role": "model"
+        },
+        {
+          "relativePath": "rfdetr.json",
+          "sha256": "b8046ce9f030e1cde0edfda7998b3afa775d8cc13b014694c22cb00359bab218",
+          "size": 2653,
+          "mediaType": "application/json",
+          "role": "configuration"
+        },
+        {
+          "relativePath": "LICENSE.rf-detr.txt",
+          "sha256": "8cabf52c61130fc97a7e5da5e3685ccf44841c0c53d6f881189369b136603cca",
+          "size": 11345,
+          "mediaType": "text/plain",
+          "role": "license"
+        }
+      ],
+      "precision": "fp32",
+      "quantization": "none",
+      "opset": 17,
+      "portable": true,
+      "extensions": {
+        "deploysharp.validation-status": "local-export-unverified",
+        "deploysharp.preprocessing-version": "rfdetr-float-resize-imagenet-v1",
+        "deploysharp.postprocessing-version": "rfdetr-mask-logit-bilinear-v1"
+      }
+    }
+  ],
+  "extensions": {
+    "deploysharp.publication-status": "unpublished-local",
+    "deploysharp.downloadable": "false"
+  }
+}

@@ -6,15 +6,29 @@ Artifact variants: onnx.fp32
 
 ## Complete case workflow
 
-Catalog selection and segmentation package verification; complete image inference requires detector workflow inputs. The case stages are: select the immutable catalog entry, verify the ModelPack and asset identities, prepare the declared input, create the compatible backend session, decode the task result, and write an owned output.
+This published artifact has a fixed 432×432 input, 200 queries and mask port `4245`. The current-source RF-DETR project loads the local ONNX, verifies its size/SHA-256, prepares a real image, runs the built-in segmentation decoder and saves JSON, an overlay and each instance mask. It uses the original 90 foreground-column/no-object contract with numeric class labels.
 
 Run:
+
+```powershell
+dotnet run --project samples/06-models/rf-detr/RfDetrInference.csproj -c Release -p:DeploySharpPaddleOcrCuda12=true -- --contract eng/models/rf-detr/legacy-segment.json --model ../models/rf-detr-segment.model.onnx --backend ort --output ../results/rf-detr/legacy-segment
+```
+
+Use `--image <path>` to replace the default integrity-checked `bus.jpg`. The local file must match SHA-256 `6156aaff01ea0da0a007b29157fa34bf512d99d9e6a872cad70ae28cd08d6a35` (131,311,092 bytes). The sample performs that check automatically. This exact local workflow was run on ORT CPU and saved six instances on the default image; it is distinct from the new 312×312 [Seg Nano 1.11.2 local case](../../local-cases/rf-detr--segment--nano/README.md).
+
+To obtain the existing public artifact through ModelFactory, install it into a verified cache and pass the returned package's `bundle/model.onnx` path to `--model`:
+
+```powershell
+dotnet run --project tools/DeploySharp.ModelFactory.Cli -- install --model-id rf-detr/segment --backend onnxruntime --format onnx --preview --cache ../models/model-factory
+```
+
+Catalog inspection remains available independently:
 
 ```powershell
 dotnet run --project samples/06-models/catalog-workflow/ModelFactoryCatalogInspection.csproj -c Release -- --model-id rf-detr/segment
 ```
 
-See `samples/06-models/catalog-workflow/ModelFactoryCatalogInspection.csproj` for catalog verification; runtime support is tracked in the backend verification record below.
+See the [shared RF-DETR sample](../../rf-detr/README.md) for native runtime setup and saved result formats. Runtime support is tracked separately below.
 
 ## Verification record
 

@@ -86,6 +86,29 @@ namespace DeploySharp.Visual.Tests
         }
 
         [TestMethod]
+        public void RfDetrSegmentationRestoresPaddedBoxesAndRoiMasksTogether()
+        {
+            var profile = PortableDetectorProfiles.CreateRFDETRSeg(new ModelId("tests/rfdetr-roi"), Options(17, new VisualSize(4, 4), new[] { "object" }, topK: 1, rfDetrQueryCount: 1)).VisualProfile;
+            var outputs = new InferenceOutputs(new[]
+            {
+                new NamedTensor("dets", new Tensor<float>(new TensorShape(1, 1, 4), new[] { .5f, .5f, 1f, 1f })),
+                new NamedTensor("labels", new Tensor<float>(new TensorShape(1, 1, 1), new[] { 2f })),
+                new NamedTensor("masks", new Tensor<float>(new TensorShape(1, 1, 2, 2), new[] { 4f, 4f, 4f, 4f }))
+            });
+            var source = new VisualSize(10, 8);
+            var model = new VisualSize(4, 4);
+            using var roi = new PreparedVisualInput("input", new Tensor<float>(new TensorShape(1, 3, 4, 4), new float[48]), source, model, 1, VisualTensorLayout.Nchw,
+                new ImageTransform(ImageTransformKind.Custom, source, model, 2, 2, -4, -2));
+            var result = (InstanceSegmentationResult)profile.Decoder.Decode(new VisualDecodeContext(roi, profile, outputs, CancellationToken.None));
+            Assert.AreEqual(new RectangleF(2, 1, 2, 2), result.Instances[0].BoundingBox);
+            Assert.AreEqual(4, result.Instances[0].Mask.ForegroundPixelCount);
+            using var padded = new PreparedVisualInput("input", roi.Tensor, new VisualSize(4, 2), model, 1, VisualTensorLayout.Nchw, ImageTransform.Letterbox(new VisualSize(4, 2), model));
+            result = (InstanceSegmentationResult)profile.Decoder.Decode(new VisualDecodeContext(padded, profile, outputs, CancellationToken.None));
+            Assert.AreEqual(new RectangleF(0, 0, 4, 2), result.Instances[0].BoundingBox);
+            Assert.AreEqual(8, result.Instances[0].Mask.ForegroundPixelCount);
+        }
+
+        [TestMethod]
         public void RfDetrOfficialProfileUsesEveryClassColumnAndStableLowercaseId()
         {
             PortableDetectorProfile profile = PortableDetectorProfiles.CreateRFDETR(new ModelId("tests/rfdetr-official"), Options(17, new VisualSize(2, 2), new[] { "zero", "one" }, topK: 1));

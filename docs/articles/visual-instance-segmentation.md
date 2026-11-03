@@ -2,6 +2,8 @@
 
 DeploySharp.Visual 提供 Direct mask 和 Prototype/系数两种后端无关的实例分割 decoder。输入是 PreparedVisualInput，图像适配器和推理后端按需安装。
 
+RF-DETR 复用 `PortableDetectorProfiles.CreateRFDETRSeg`；当前源码补齐 1.11.2 Seg Nano 的浮点前处理、真实图片案例及官方参考校验。它使用 raw query 与 mask logit 合同，具体配置和与旧公开 Segment 工件的区别见 [RF-DETR 教程](visual-rf-detr.md)。新增输入工厂尚未发布到 NuGet。
+
 ## 输出合同
 
 | 类型 | 必需输出 | 支持布局 | 重建方式 |

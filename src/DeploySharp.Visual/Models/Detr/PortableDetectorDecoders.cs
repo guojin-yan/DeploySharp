@@ -400,6 +400,15 @@ namespace JYPPX.DeploySharp.Visual.Models.Detr
         private static RectangleF DecodeBox(float[] values, int offset, VisualDecodeContext context)
         {
             for (int index = 0; index < 4; index++) PortableDetectorDecoder.ValidateFinite(values[offset + index], context, context.Profile.ProfileId);
+            // Raw RF-DETR boxes describe the model canvas. Preserve the established direct-resize arithmetic,
+            // but restore padding/crop offsets for configured geometry and source-space ROI inputs.
+            if (context.Input.Transform.Kind != ImageTransformKind.Resize)
+            {
+                float modelWidth = values[offset + 2] * context.Input.ModelSize.Width;
+                float modelHeight = values[offset + 3] * context.Input.ModelSize.Height;
+                var modelBox = new RectangleF(values[offset] * context.Input.ModelSize.Width - modelWidth / 2f, values[offset + 1] * context.Input.ModelSize.Height - modelHeight / 2f, modelWidth, modelHeight);
+                return context.Input.Transform.ClipToSource(context.Input.Transform.ToSource(modelBox));
+            }
             float cx = values[offset] * context.Input.SourceSize.Width;
             float cy = values[offset + 1] * context.Input.SourceSize.Height;
             float width = values[offset + 2] * context.Input.SourceSize.Width;

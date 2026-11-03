@@ -1,0 +1,6 @@
+rfdetr[onnx]==1.11.2
+transformers==5.3.0
+supervision==0.31.3
+onnx==1.20.1
+onnxruntime==1.23.2
+onnxsim==0.7.3

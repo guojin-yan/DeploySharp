@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <DeploySharpPaddleOcrCuda12>true</DeploySharpPaddleOcrCuda12>
+    <CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Managed" VersionOverride="1.23.2" NoWarn="NU1605" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Gpu.Windows" VersionOverride="1.23.2" NoWarn="NU1605" />
+    <PackageReference Include="JYPPX.OpenCV.runtime.win-x64" />
+    <PackageReference Include="OpenVINO.runtime.win" />
+    <PackageReference Include="JYPPX.TensorRT.CSharp.API.Runtime.win-x64.trt10.11.cuda12.9.cudnn9.22.Bridge" />
+    <ProjectReference Include="../../../src/DeploySharp.Visual.OpenCV/DeploySharp.Visual.OpenCV.csproj" />
+    <ProjectReference Include="../../../src/DeploySharp.ModelPack.Json/DeploySharp.ModelPack.Json.csproj" />
+    <ProjectReference Include="../../../src/DeploySharp.Backend.OnnxRuntime/DeploySharp.Backend.OnnxRuntime.csproj" AdditionalProperties="DeploySharpPaddleOcrCuda12=true" />
+    <ProjectReference Include="../../../src/DeploySharp.Backend.OpenVINO/DeploySharp.Backend.OpenVINO.csproj" />
+    <ProjectReference Include="../../../src/DeploySharp.Backend.OpenCV/DeploySharp.Backend.OpenCV.csproj" />
+    <ProjectReference Include="../../../src/DeploySharp.Backend.TensorRT/DeploySharp.Backend.TensorRT.csproj" />
+    <Compile Include="../release-inference/TestImageResolver.cs" Link="TestImageResolver.cs" />
+  </ItemGroup>
+</Project>

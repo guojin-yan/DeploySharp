@@ -44,6 +44,8 @@
     href: visual-yolo-multitask.md
   - name: 通用检测器与 RT-DETR
     href: visual-portable-detectors.md
+  - name: RF-DETR 分割与关键点
+    href: visual-rf-detr.md
   - name: 语义分割
     href: visual-semantic-segmentation.md
   - name: 实例分割

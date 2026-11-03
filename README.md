@@ -192,6 +192,8 @@ The table lists public model assets by task. "Backend verified" means that at le
 
 Use the [model support guide](docs/articles/model-support.md) for the detailed current and planned scope, the [official catalog](docs/articles/model-catalog.md) for immutable assets, and the [model/backend matrix](docs/model-backend-verification-matrix.md) for exact runtime evidence. PaddleOCR and PP-Structure assets are individually downloadable from [`models-paddleocr`](https://github.com/guojin-yan/DeploySharp/releases/tag/models-paddleocr).
 
+**New in current source; not yet published:** RF-DETR 1.11.2 Keypoint Preview (COCO-17 person keypoints), plus Seg Nano instance segmentation with float preprocessing, local ModelPacks and runnable cases. Both exact artifacts passed ORT CPU/CUDA, OpenVINO CPU and TensorRT validation. Export official weights and load them locally; DeploySharp Release downloads are pending. See the [RF-DETR guide](docs/articles/visual-rf-detr.md).
+
 
 ## 🧪 Example Series
 

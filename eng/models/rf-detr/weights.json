@@ -1,0 +1,14 @@
+{
+  "keypoint-preview": {
+    "file": "rf-detr-keypoint-preview-xlarge.pth",
+    "url": "https://repo.roboflow.com/rfdetr/rf-detr-keypoint-preview-xlarge.pth",
+    "size": 163696618,
+    "sha256": "2b70ddf51d2b9e026b340030c7d9bd2cdca2532d081ec16fce8d1695b0ce6d98"
+  },
+  "segment-nano": {
+    "file": "rf-detr-seg-n-ft.pth",
+    "url": "https://repo.roboflow.com/rfdetr/rf-detr-seg-n-ft.pth",
+    "size": 134545398,
+    "sha256": "a44613a4ecd6b5ba61a62002c600b0b6cb7a9da2936a45317ec4b62c635fb99b"
+  }
+}

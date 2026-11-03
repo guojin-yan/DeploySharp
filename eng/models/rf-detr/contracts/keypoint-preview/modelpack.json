@@ -1,0 +1,114 @@
+{
+  "schemaVersion": "2.0",
+  "modelId": "rf-detr/keypoint-preview",
+  "name": "RF-DETR Keypoint Preview",
+  "family": "rf-detr",
+  "task": "pose-estimation",
+  "modelVersion": "1.11.2",
+  "exporter": {
+    "name": "rfdetr.export",
+    "version": "1.11.2-opset17",
+    "sourceRevision": "7433d5919d0f7e72cc6cb78663e0a731afd499e0"
+  },
+  "source": {
+    "sourceUrl": "https://github.com/roboflow/rf-detr/tree/7433d5919d0f7e72cc6cb78663e0a731afd499e0",
+    "projectUrl": "https://github.com/roboflow/rf-detr",
+    "revision": "7433d5919d0f7e72cc6cb78663e0a731afd499e0",
+    "author": "Roboflow",
+    "licenseExpression": "Apache-2.0",
+    "licenseFile": "LICENSE.rf-detr.txt",
+    "redistributionAllowed": true
+  },
+  "generatedAt": "2026-11-03T11:16:40.550028+00:00",
+  "profileId": "rfdetr.keypoint-preview.rf-detr/keypoint-preview",
+  "inputs": [
+    {
+      "name": "input",
+      "elementType": "float32",
+      "shape": [
+        1,
+        3,
+        576,
+        576
+      ]
+    }
+  ],
+  "outputs": [
+    {
+      "name": "dets",
+      "elementType": "float32",
+      "shape": [
+        1,
+        100,
+        4
+      ]
+    },
+    {
+      "name": "labels",
+      "elementType": "float32",
+      "shape": [
+        1,
+        100,
+        2
+      ]
+    },
+    {
+      "name": "keypoints",
+      "elementType": "float32",
+      "shape": [
+        1,
+        100,
+        34,
+        8
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "artifactId": "onnx.fp32",
+      "format": "onnx",
+      "locationKind": "file",
+      "entrypoint": "model.onnx",
+      "compatibleBackends": [
+        "onnxruntime",
+        "openvino"
+      ],
+      "files": [
+        {
+          "relativePath": "model.onnx",
+          "sha256": "8597197b492e6b8e73a025bd199bf8e630827ffc11cddf4cf559ea5c15e8a19c",
+          "size": 145069161,
+          "mediaType": "application/onnx",
+          "role": "model"
+        },
+        {
+          "relativePath": "rfdetr.json",
+          "sha256": "72c2386067e5917828acf9c1f6641623515ed07d7ff734a67c2a8c36ff986189",
+          "size": 1381,
+          "mediaType": "application/json",
+          "role": "configuration"
+        },
+        {
+          "relativePath": "LICENSE.rf-detr.txt",
+          "sha256": "8cabf52c61130fc97a7e5da5e3685ccf44841c0c53d6f881189369b136603cca",
+          "size": 11345,
+          "mediaType": "text/plain",
+          "role": "license"
+        }
+      ],
+      "precision": "fp32",
+      "quantization": "none",
+      "opset": 17,
+      "portable": true,
+      "extensions": {
+        "deploysharp.validation-status": "local-export-unverified",
+        "deploysharp.preprocessing-version": "rfdetr-float-resize-imagenet-v1",
+        "deploysharp.postprocessing-version": "rfdetr-keypoint-trace-v1"
+      }
+    }
+  ],
+  "extensions": {
+    "deploysharp.publication-status": "unpublished-local",
+    "deploysharp.downloadable": "false"
+  }
+}

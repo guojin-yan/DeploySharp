@@ -50,6 +50,17 @@
 
 ModelFactory 主目录目前包含 42 条 `preview` 记录。`preview` 是发布通道状态，不表示模型缺少运行证据；目录字段 `compatibleBackends` 也只表示工件声明的候选适配器。是否完成真实推理必须读取本页和验证矩阵。
 
+## 当前源码新增：RF-DETR 1.11.2
+
+以下能力尚未发布 NuGet 或 DeploySharp 模型 Release，通过官方权重导出和本地 ModelPack 加载；不计入上述 42 条公开下载记录。
+
+| 模型与任务 | 内置入口 | 当前交付 |
+| --- | --- | --- |
+| RF-DETR Keypoint Preview，人体 COCO-17 | `RFDETRKeypointProfiles.CreatePreview`、`RFDETRKeypointDecoder` | 新增源码支持；576×576、100 Query、固定 Batch=1，真实后端与官方参考已验证 |
+| RF-DETR Seg Nano，实例分割 | 既有 `CreateRFDETRSeg` + 新 `RFDETRInputFactory` | 补齐 312×312、100 Query 精确工件的本地交付、真实案例和后端验证 |
+
+两者的 ORT CPU/CUDA、OpenVINO CPU、TensorRT FP32 已通过；OpenCV DNN 5.0 导入失败。其它分割变体和微调权重不继承该结论。使用与下载见 [RF-DETR 教程](visual-rf-detr.md)，精确哈希、容差和运行时见[对应矩阵](../model-backend-verification-matrix.md#rf-detr-1112-本地工件)。原 `rf-detr/detect` 和 `rf-detr/segment` 的公开资产与状态保留。
+
 ## PP-OCR v4、v5 与 v6
 
 `PaddleOcrModelCatalog` 登记 17 个核心模型合同，并由 `PaddleOcrReleaseArtifacts` 映射到 `models-paddleocr` 中可单独下载的 ONNX 与字典资产。下列精确工件已在矩阵记录真实后端证据。

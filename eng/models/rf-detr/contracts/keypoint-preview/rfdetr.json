@@ -1,0 +1,73 @@
+{
+  "modelId": "rf-detr/keypoint-preview",
+  "task": "keypoint",
+  "variant": "preview",
+  "upstreamVersion": "1.11.2",
+  "upstreamCommit": "7433d5919d0f7e72cc6cb78663e0a731afd499e0",
+  "model": {
+    "path": "model.onnx",
+    "size": 145069161,
+    "sha256": "8597197b492e6b8e73a025bd199bf8e630827ffc11cddf4cf559ea5c15e8a19c"
+  },
+  "image": {
+    "path": "bus.jpg",
+    "size": 487438,
+    "sha256": "33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c"
+  },
+  "sourceSize": [
+    810,
+    1080
+  ],
+  "modelSize": 576,
+  "queryCount": 100,
+  "labels": [
+    "background",
+    "person"
+  ],
+  "opset": 17,
+  "inputName": "input",
+  "outputs": [
+    {
+      "name": "dets",
+      "shape": [
+        1,
+        100,
+        4
+      ],
+      "file": "dets.f32"
+    },
+    {
+      "name": "labels",
+      "shape": [
+        1,
+        100,
+        2
+      ],
+      "file": "labels.f32"
+    },
+    {
+      "name": "keypoints",
+      "shape": [
+        1,
+        100,
+        34,
+        8
+      ],
+      "file": "keypoints.f32"
+    }
+  ],
+  "threshold": 0.4,
+  "runtime": {
+    "torch": "2.10.0",
+    "onnx": "1.20.1",
+    "onnxruntime": "1.23.2",
+    "rfdetr": "1.11.2"
+  },
+  "weights": [
+    {
+      "path": "rf-detr-keypoint-preview-xlarge.pth",
+      "size": 163696618,
+      "sha256": "2b70ddf51d2b9e026b340030c7d9bd2cdca2532d081ec16fce8d1695b0ce6d98"
+    }
+  ]
+}

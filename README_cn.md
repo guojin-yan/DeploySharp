@@ -191,6 +191,8 @@ Console.WriteLine(outputs.Count);
 
 当前支持范围和未来计划见[模型支持指南](docs/articles/model-support.md)，不可变资产见[官方模型目录](docs/articles/model-catalog.md)，精确运行证据见[模型/后端验证矩阵](docs/model-backend-verification-matrix.md)。PaddleOCR 与 PP-Structure 模型可从 [`models-paddleocr`](https://github.com/guojin-yan/DeploySharp/releases/tag/models-paddleocr) 按资产单独下载。
 
+**当前源码/未发布版本新增：** RF-DETR 1.11.2 Keypoint Preview（COCO-17 人体关键点），并补齐 Seg Nano 实例分割的浮点前处理、本地 ModelPack 与真实案例。两者已验证 ORT CPU/CUDA、OpenVINO CPU 和 TensorRT；模型目前从官方权重导出并本地加载，DeploySharp Release 下载待发布。见 [RF-DETR 教程](docs/articles/visual-rf-detr.md)。
+
 
 ## 🧪 示例系列
 

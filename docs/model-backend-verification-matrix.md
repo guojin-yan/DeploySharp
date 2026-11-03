@@ -65,6 +65,50 @@ PaddleOCR-VL-1.6 使用四图 ONNX Bundle；TensorRT 使用带独立 Prefill 图
 
 **ORT CUDA 补充验证：** `yolo/v26/detect/n` 的同一公开 ONNX 工件已在 Windows 11 x64、RTX 3060 Laptop、驱动 `576.02`、Managed `1.28.0` + 官方 CUDA 12 原生发行包 `1.28.0`、CUDA `12.9` / cuDNN `9.22` 上通过。输入为 `bus.jpg`、640×640 Letterbox，关闭 TF32；5 个检测框的类别和顺序与 CPU 一致，最大分数差小于 `0.000002`，最大坐标差小于 `0.001` 像素，并由 ORT Profiling 核实 CUDA 节点执行。部署命令和计时见 [YOLO26 教程第 8.4 节](blog/2.0.0/2026-10/2026-10-28-02-yolo26-quickstart.md#84-在-windows-上切换后端结果是否一致)。此项独立于上表的 ORT CPU 列，不表示其它模型或 CUDA 13 组合已验证。
 
+## RF-DETR 1.11.2 本地工件
+
+当前源码/未发布版本新增 Keypoint Preview，并补齐 Seg Nano 的实例分割案例。两份 ONNX 均由官方 `rfdetr==1.11.2`（提交 `7433d5919d0f7e72cc6cb78663e0a731afd499e0`）以 opset 17、FP32、固定 Batch=1 导出。官方权重可下载并导出为本地 ModelPack；DeploySharp Release 和 ModelFactory 自动下载尚未发布。此表独立于上面的旧 `rf-detr/detect`、`rf-detr/segment` 公共工件。
+
+| 本地模型 ID | ORT CPU | ORT CUDA | OpenVINO CPU | OpenCV DNN CPU | TensorRT CUDA |
+| --- | :---: | :---: | :---: | :---: | :---: |
+| `rf-detr/keypoint-preview` | ✓ | ✓ | ✓ | ✗ | ✓ |
+| `rf-detr/segment/nano` | ✓ | ✓ | ✓ | ✗ | ✓ |
+
+| 工件 | ONNX 字节数 | SHA-256 |
+| --- | ---: | --- |
+| Keypoint Preview | 145,069,161 | `8597197b492e6b8e73a025bd199bf8e630827ffc11cddf4cf559ea5c15e8a19c` |
+| Seg Nano | 122,825,605 | `d94ae1a747c01894a30af7cabc434c5262b6c627172d79708761ac8ad528b15e` |
+
+Keypoint 输入 `input [1,3,576,576]`，输出 `dets [1,100,4]`、`labels [1,100,2]`、`keypoints [1,100,34,8]`；Seg Nano 输入 `[1,3,312,312]`，输出 `dets [1,100,4]`、`labels [1,100,91]`、`masks [1,100,78,78]`。全为 float32。完整合同、标签、权重身份和部署文件清单见 [Keypoint 元数据](https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/eng/models/rf-detr/contracts/keypoint-preview/rfdetr.json)、[Seg Nano 元数据](https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/eng/models/rf-detr/contracts/segment-nano/rfdetr.json) 与[下载/导出工具](https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/eng/models/rf-detr/README.md)。
+
+验证于 2026-11-03，Windows x64、.NET SDK 10.0.401、AMD Ryzen 7 5800H、NVIDIA RTX 3060 Laptop 6 GB（sm_86）、驱动 576.02。ORT Managed/native 为 1.23.2（CPU 与 CUDA provider 分别执行），CUDA 12.9、cuDNN 9.22，CUDA provider 显式关闭 TF32；OpenVINO wrapper 3.3.1/native 2026.2.1 CPU；OpenCV wrapper/native 5.0.0；TensorRT wrapper/bridge 4.0.0、TensorRT 10.11.0.33。TensorRT Engine 在该设备上由库的 Builder 生成，FP32、禁用 TF32、workspace 256 MiB、optimization level 0、静态输入，无动态 Shape Profile。
+
+输入为现有 `bus.jpg`，810×1080、487,438 字节，SHA-256 `33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c`。`RFDETRInputFactory` 与官方 RGB→float/255→bilinear Resize（antialias=false）→ImageNet normalize 的输入逐值一致。官方参考由 PyTorch 2.10.0 CPU、torchvision 0.25.0 与 RF-DETR `PostProcess` 生成；ONNX raw 基线为 ORT CPU 1.23.2。关键点启用默认 trace-alpha 0.2，实例阈值均为严格 `>0.4`，不附加 NMS。
+
+每个后端均检查原始输出的精确 shape、float32 和有限值；raw 容差为 `absError <= 0.001 + 0.001 * abs(reference)`，密集 mask logit 的绝对项为 `0.01`。Keypoint 所有后端的最大 raw 关键点误差不超过 `0.000651`；Seg Nano 的最大 raw mask 误差为 OpenVINO `0.002929`、CUDA `0.003928`、TensorRT `0.007186`，未跳过这些数值检查。最终结果还独立与官方参考对照：数量和类别精确匹配，分数绝对误差 ≤0.002、框/关键点坐标误差 ≤1 像素、mask 像素不一致比例 ≤0.0001（0.01%）。
+
+| 模型 / 后端 | 实例数 | 最大分数误差 | 最大坐标误差（像素） | mask 不一致比例 |
+| --- | ---: | ---: | ---: | ---: |
+| Keypoint / ORT CPU | 4 | 1.20e-6 | 0.000245 | — |
+| Keypoint / ORT CUDA | 4 | 1.35e-6 | 0.000733 | — |
+| Keypoint / OpenVINO | 4 | 2.57e-6 | 0.000245 | — |
+| Keypoint / TensorRT | 4 | 2.15e-6 | 0.000428 | — |
+| Seg Nano / ORT CPU | 5 | 5.37e-7 | 0.000123 | 2.29e-7 |
+| Seg Nano / ORT CUDA | 5 | 2.39e-7 | 0.000123 | 2.29e-7 |
+| Seg Nano / OpenVINO | 5 | 1.79e-7 | 0.000123 | 2.29e-7 |
+| Seg Nano / TensorRT | 5 | 4.18e-7 | 0.000138 | 0 |
+
+两个模型在 ORT CPU 上另以两个独立原生 Session、三份输入检查有序 `RunManyAsync` 与预取消；这不是模型 Batch=2。关键点 Letterbox/ROI 回映射与 Include/Exclude 过滤、分割 ROI 框及 mask 的几何合同已有针对性测试。图像案例保存 JSON、骨架或掩码叠加图以及逐实例 mask；此为固定图 parity，不是数据集准确率、吞吐或性能上限。
+
+OpenCV DNN 在创建 Session/导入 `/transformer/Greater` 时失败，原始诊断为 `All inputs should have equal types`，`CV_32SC1` 与 `CV_32FC1` 不一致；未执行到推理或解码。保留此精确 importer 限制，替代路径为上表已验证后端。其它 Seg 尺寸、微调权重、动态 Batch、FP16/INT8 和其它设备未验证。
+
+复现先运行[导出工具](https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/eng/models/rf-detr/README.md)，然后从仓库根目录执行；换 `--backend cuda|openvino|opencv|tensorrt` 验证其它后端，原生环境设置及 Engine 复用见[案例说明](https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/samples/06-models/rf-detr/README.md)：
+
+```powershell
+dotnet run --project samples/06-models/rf-detr/RfDetrInference.csproj -c Release -p:DeploySharpPaddleOcrCuda12=true -- --contract ../models/rf-detr-1.11.2/keypoint/rfdetr.json --backend ort --output ../results/rf-detr/keypoint --validate ../models/rf-detr-1.11.2/keypoint --concurrency 2
+dotnet run --project samples/06-models/rf-detr/RfDetrInference.csproj -c Release -p:DeploySharpPaddleOcrCuda12=true -- --contract ../models/rf-detr-1.11.2/segment-nano/rfdetr.json --backend ort --output ../results/rf-detr/segment-nano --validate ../models/rf-detr-1.11.2/segment-nano --concurrency 2
+```
+
 ## PP-OCR 全版本发布工件
 
 本表绑定 `PaddleOcrReleaseArtifacts` 登记的 `models-paddleocr` ONNX、字典和 SHA-256，由 `PaddleOcrReleaseClient` 获取。它与主目录中的同名 Preview 是不同的下载路径。

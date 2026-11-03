@@ -1,0 +1,162 @@
+{
+  "modelId": "rf-detr/segment/nano",
+  "task": "segment",
+  "variant": "nano",
+  "upstreamVersion": "1.11.2",
+  "upstreamCommit": "7433d5919d0f7e72cc6cb78663e0a731afd499e0",
+  "model": {
+    "path": "model.onnx",
+    "size": 122825605,
+    "sha256": "d94ae1a747c01894a30af7cabc434c5262b6c627172d79708761ac8ad528b15e"
+  },
+  "image": {
+    "path": "bus.jpg",
+    "size": 487438,
+    "sha256": "33b198a1d2839bb9ac4c65d61f9e852196793cae9a0781360859425f6022b69c"
+  },
+  "sourceSize": [
+    810,
+    1080
+  ],
+  "modelSize": 312,
+  "queryCount": 100,
+  "labels": [
+    "N/A-0",
+    "person",
+    "bicycle",
+    "car",
+    "motorcycle",
+    "airplane",
+    "bus",
+    "train",
+    "truck",
+    "boat",
+    "traffic light",
+    "fire hydrant",
+    "N/A-12",
+    "stop sign",
+    "parking meter",
+    "bench",
+    "bird",
+    "cat",
+    "dog",
+    "horse",
+    "sheep",
+    "cow",
+    "elephant",
+    "bear",
+    "zebra",
+    "giraffe",
+    "N/A-26",
+    "backpack",
+    "umbrella",
+    "N/A-29",
+    "N/A-30",
+    "handbag",
+    "tie",
+    "suitcase",
+    "frisbee",
+    "skis",
+    "snowboard",
+    "sports ball",
+    "kite",
+    "baseball bat",
+    "baseball glove",
+    "skateboard",
+    "surfboard",
+    "tennis racket",
+    "bottle",
+    "N/A-45",
+    "wine glass",
+    "cup",
+    "fork",
+    "knife",
+    "spoon",
+    "bowl",
+    "banana",
+    "apple",
+    "sandwich",
+    "orange",
+    "broccoli",
+    "carrot",
+    "hot dog",
+    "pizza",
+    "donut",
+    "cake",
+    "chair",
+    "couch",
+    "potted plant",
+    "bed",
+    "N/A-66",
+    "dining table",
+    "N/A-68",
+    "N/A-69",
+    "toilet",
+    "N/A-71",
+    "tv",
+    "laptop",
+    "mouse",
+    "remote",
+    "keyboard",
+    "cell phone",
+    "microwave",
+    "oven",
+    "toaster",
+    "sink",
+    "refrigerator",
+    "N/A-83",
+    "book",
+    "clock",
+    "vase",
+    "scissors",
+    "teddy bear",
+    "hair drier",
+    "toothbrush"
+  ],
+  "opset": 17,
+  "inputName": "input",
+  "outputs": [
+    {
+      "name": "dets",
+      "shape": [
+        1,
+        100,
+        4
+      ],
+      "file": "dets.f32"
+    },
+    {
+      "name": "labels",
+      "shape": [
+        1,
+        100,
+        91
+      ],
+      "file": "labels.f32"
+    },
+    {
+      "name": "masks",
+      "shape": [
+        1,
+        100,
+        78,
+        78
+      ],
+      "file": "masks.f32"
+    }
+  ],
+  "threshold": 0.4,
+  "runtime": {
+    "torch": "2.10.0",
+    "onnx": "1.20.1",
+    "onnxruntime": "1.23.2",
+    "rfdetr": "1.11.2"
+  },
+  "weights": [
+    {
+      "path": "rf-detr-seg-nano.pt",
+      "size": 134545398,
+      "sha256": "a44613a4ecd6b5ba61a62002c600b0b6cb7a9da2936a45317ec4b62c635fb99b"
+    }
+  ]
+}

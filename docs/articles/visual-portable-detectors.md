@@ -2,13 +2,15 @@
 
 DeploySharp 为 DEIMv2、RF-DETR、Paddle RT-DETR、RT-DETRv2 和 PP-YOLOE 提供显式的检测 Profile 与解码器。不同导出图的输入、辅助张量和输出布局并不相同，不能把一个模型的配置复制给另一个模型。
 
+RF-DETR 1.11.2 的实例分割与 Keypoint Preview、官方浮点前处理和当前源码案例见 [RF-DETR 教程](visual-rf-detr.md)。Keypoint Preview 需要其专用 Profile/Decoder，任务结果为 `PoseEstimationResult`。
+
 ## 合同要点
 
 | 模型族 | 常见输入 | 输出/后处理 |
 | --- | --- | --- |
 | DEIMv2 | `images`、必要时 `orig_target_sizes` | 已解码 boxes、scores、labels。 |
 | Paddle RT-DETR | `images`、`im_shape`、`scale_factor` | 已解码向量或 raw query，按实际导出图选择 Decoder。 |
-| RF-DETR | `images` 及查询/尺寸辅助输入 | 查询、类别和可选 mask，需绑定确切端口。 |
+| RF-DETR | 本仓库工件为 `input`，无额外尺寸输入 | 原始 `dets/labels`，分割另有 mask，关键点另有 `keypoints`；需绑定确切端口。 |
 | PP-YOLOE | `image` 和尺度辅助输入 | 检测行或 Paddle 已解码输出。 |
 
 预处理产生的尺寸、比例和原图坐标只能来自同一个 `PreparedVisualInput` 合同。解码器负责阈值、坐标还原和 NMS，并拒绝缺失或类型不匹配的辅助输入。

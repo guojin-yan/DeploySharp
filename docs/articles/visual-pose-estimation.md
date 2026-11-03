@@ -2,6 +2,8 @@
 
 DeploySharp.Visual 支持 Direct keypoint、Heatmap 和符合 Profile 合同的 YOLO-Pose 输出。关键点数量、组件语义、坐标空间、可见性和拓扑必须显式声明。
 
+当前源码/未发布版本另新增 RF-DETR 1.11.2 Keypoint Preview：使用 `RFDETRKeypointProfiles.CreatePreview`、`RFDETRInputFactory` 与内置 precision-trace 分数融合，不能直接套用通用 DirectPose。真实图片案例、COCO-17 合同和后端范围见 [RF-DETR 教程](visual-rf-detr.md)。
+
 ## Direct decoder
 
 ~~~csharp

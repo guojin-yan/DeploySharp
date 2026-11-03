@@ -1,9 +1,10 @@
 # Model workflows / 模型工作流
 
-This module is split into two complete workflows:
+This module includes the following workflows:
 
 - catalog-workflow: loads the official catalog, selects every artifact with explicit backend/format/precision/quantization filters, and prints a model/task/artifact matrix. Pass --model-id to run one model case.
 - release-inference: downloads and verifies a published ModelPack through ModelFactory, creates the Visual profile, prepares an image with OpenCV, runs ONNX Runtime CPU inference, decodes the result, and writes a PGM mask. It currently provides independent runnable cases for PaDiM, BRIA RMBG 1.4, and BRIA RMBG 2.0 fp32/dynamic-int8.
+- [rf-detr](rf-detr/README.md): current-source, unpublished RF-DETR 1.11.2 Keypoint Preview and Seg Nano inference, official-reference validation, and saved pose/mask results. Per-model instructions are under `local-cases/` while DeploySharp Release downloads are pending; the existing public Segment case also runs through this project.
 
 When `--image` is omitted, release-inference downloads and verifies the default `bus.jpg` from the dedicated `test-assets.1` Release. Pass `--image <image>` to use a custom input.
 
