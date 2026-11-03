@@ -1,32 +1,59 @@
 ---
 name: deploysharp-model-onboarding
-description: Add or update a DeploySharp model family, task profile, decoder, catalog entry, sample, and support evidence. Use when integrating model files or enabling a new model task; do not use for backend-only fixes or ordinary application code.
+description: Add or upgrade built-in DeploySharp model support, including preprocessing, decoding, Batch, model delivery, runnable cases, backend evidence, and user documentation. 用于新增模型、升级模型版本和补齐内置支持；不用于单纯后端修复或只调用已有模型的应用。
 ---
 
-# DeploySharp Model Onboarding
+# DeploySharp 内置模型接入
 
-Integrate a model as an explicit, reproducible contract. Do not infer support from a model name, an ONNX load, or a nearby model variant.
+目标是让用户通过公开接口完成真实任务。模型名称、ONNX 导入成功、合同测试或一次下载，都不能单独证明已经支持。
 
-## Start From Repository Facts
+实施前读取 [接入位置与交付清单](references/integration-checklist.md)。按本次模型选择相关目录和命令，不要求执行无关模型的全量验证。
 
-1. Read the relevant task implementation under `src/DeploySharp.Visual` or the owning feature project.
-2. Read `docs/articles/visual-custom-model.md`, `docs/articles/model-support.md`, and the exact rows in `docs/model-backend-verification-matrix.md`.
-3. Reuse an existing profile, preprocessor, decoder, result type, and lifecycle pattern when the tensor contract matches. Add a new abstraction only when the task semantics differ.
+## 1. 先界定精确模型与改动范围
 
-## Required Contract
+- 核对 Git 根目录、已有修改、项目目标框架及当前包版本。新会话只接管本任务，不顺带改动文章、封面、应用或其它模型。
+- 确定模型完整名称、变体、版本、任务、工件格式和已有本地文件；优先复用已有文件。用户未提供文件时，可从官方渠道获取并转换，不必为了普通下载再次申请权限。
+- 阅读相邻模型实现、`docs/articles/visual-custom-model.md`、`docs/articles/model-support.md` 和精确后端矩阵。先判断是现有合同的新配置，还是确需新的预处理、Decoder 或流水线。
+- 仅在模型选择、任务输出或缺失资产确实无法从现有信息确定时询问用户；多个问题逐个询问，同时推进不依赖答案的工作。
+- 需要分阶段时，在仓库外已有计划目录维护一份简短任务清单，持续更新完成项和阻断；不把开发过程文档放进 `docs/articles/`。
 
-Capture the exact model ID, revision, format, input/output names, element types, fixed/dynamic dimensions, preprocessing, output layout, labels/tokenizer, coordinate space, thresholds, batch limits, and sidecars. Keep resize, color, normalization, padding, and layout configurable when the model permits it; preserve the official defaults.
+## 2. 先确认合同，再实现内置入口
 
-For custom user models, expose public composition points for preprocessing, inference inputs, decoder, and result types. Fail on ambiguous input/output binding instead of selecting the first port.
+- 明确模型 ID/revision、所有输入输出名称、元素类型、rank、固定/动态维度、布局、辅助输入、输出语义、类别、Tokenizer/字典及 external data。多图 Bundle 还需说明各阶段依赖、状态和停止条件。
+- 对照官方处理器确认缩放、颜色、归一化、插值、补边、坐标空间和阈值。支持已有 `Resize/Letterbox/CenterCrop` 等配置入口，保留官方默认值；模型不允许的组合应显式拒绝，不承诺任意预处理都有相同精度。
+- 优先复用 Profile、结果类、预处理与 Decoder。任务语义确实不同时才新增抽象；图像库适配留在 `Visual.OpenCV`，CUDA 专用实现留在 `Visual.TensorRT`，模型语义不塞进通用后端。
+- 提供可发现的公共 Profile/Builder/流水线入口，不能只在示例中私有实现。用户仍应能替换前处理、解码和自定义结果；按名称绑定端口，遇到歧义应报错。
+- 保留已有模型的默认行为与公共 API 兼容性；确需修改共享预处理或 Decoder 时，补查受影响旧模型，避免为了新模型回归其它任务。
+- 核对几何回映射、输出所有权、Dispose、取消与失败路径。模型不支持的任务或输入形状应尽早给出可操作的错误。
 
-## Assets And Catalog
+## 3. 批量、并发、区域与开销
 
-- Keep large weights and generated engines out of Git.
-- Describe downloadable artifacts through ModelPack and the catalog under `eng/model-catalog` or the owning model manifest.
-- Record size and SHA-256 for every required graph, external-data file, dictionary, tokenizer, label file, or processor sidecar.
-- TensorRT engines are device/runtime/profile specific and are not portable model assets.
-- Downloading or publishing Release assets is an external mutation and requires the user's explicit request.
+- 分开验证模型 Batch 与独立 Session 池。工件支持 Batch 时，预处理、辅助输入、Decoder 和逐图坐标都要匹配，并检查尾批；固定 Batch=1 应明确限制，不能用循环或 Session 池冒充真 Batch。
+- 复用通用批量/异步调度接口；有状态模型明确 Session 独占和状态复位规则，不强行并发。多推理器使用独立原生实例，不靠同一阻塞对象伪造并行。
+- 视觉任务按语义接入已有 ROI、坐标投影和结果合并；检测任务再检查滑动窗口。没有对应投影器或任务不适用时说明范围，不自动扩展成新模块。
+- 复用缓冲、图像解码及变换元数据，避免像素反复编解码、完整张量重复复制和热路径大量分配；租用内存在消费完成后归还。CUDA 专用优化按任务需要开展，保留 CPU 路径。
 
-## Completion
+## 4. 模型交付和可运行案例
 
-Add focused contract tests, a realistic sample, and user documentation. Validate at least one exact backend with a real model and input before marking it supported. Use `unverified` when evidence is absent, `unsupported` for an attempted and confirmed blocker, and `supported` only for real execution plus result-contract evidence. Never expand one representative result to an entire family.
+- 大权重、Engine、原始日志和中间结果留在仓库外或忽略目录；保留给使用者复用的转换/下载工具。TensorRT Engine 由当前库在目标设备转换，记录实际 Shape Profile、精度和运行时。
+- 发布模型时复用已有分类 Release，不为每个模型或日期建立新 Release，也不覆盖不可变同名资产。只有已获得相应发布授权才上传；尚未发布时支持本地路径，并如实标记下载待完成。
+- ModelPack/目录必须包含真实大小和 SHA-256，覆盖每个模型图、外部权重、字典、Tokenizer 和其它必需文件。不额外建立许可证审计审批流程，保留现有结构要求的真实上游信息。
+- 模型下载、加载、Profile 选择、结果解码和演示入口同步实现。每个公开模型 ID 有独立案例说明，可共享执行工程，但命令必须真正运行该模型，不能只查目录。
+- 案例先演示直接加载本地模型，并说明如何替换模型和输入；有公开目录时再提供自动下载路径。保留库内完整性校验，不要求读者手工计算模型或图片哈希。
+- 使用有实际意义的输入，生成可查看、可保存的结果；测试图片尽量复用已有测试资产，未指定图片时给出可用默认值。
+
+## 5. 验证和支持状态
+
+- 为新增的张量合同、解码算法、坐标、有效/无效输入和资源生命周期添加必要测试；复用已有覆盖，不编写只重复实现的测试。
+- 至少完成一个精确后端的真实模型执行与结果校验，才能标为“已验证”。优先用官方 Predictor/处理器或已有可靠输出比对；跨后端一致性不等于数据集准确率。
+- ONNX 视觉模型检查当前可用的 ORT CPU、ORT CUDA、OpenVINO、TensorRT 和 OpenCV DNN；其它格式选择适用后端。记录运行时与真实设备，不静默 CPU fallback。缺环境、未测试、部分完成和确认不支持分别记录。
+- 使用现有矩阵符号：`✓` 真实推理及结果解码通过；`△` 仅部分合同/组件证据；`✗` 实际尝试后当前组合无法完成；`—` 未验证或不适用，并在必要时说明是哪一种。不能把代表变体的结果复制给整个家族。
+- 第三方 importer 的已确认限制保留错误及替代路径，无法合理修复时标记不支持。特别是 OpenCV DNN，不因上游问题无限扩大本次接入范围。
+- 涉及耗时或优化时读取性能技能：区分初始化与热运行、阶段与总耗时、延迟与吞吐，记录预热、样本、P50/P95 和后台负载；设备繁忙时只作功能运行记录，不宣称性能上限。
+
+## 6. 文档与完成报告
+
+- 同步任务使用教程、模型支持指南、精确后端矩阵、案例 README；新增公开模型名称时同步中英文主页，新增文章时登记导航。涉及目录时由源数据生成目录表，不能只手工改生成结果。
+- 新代码尚未发布时，明确“当前源码/未发布版本新增”。不得让 `--version 2.0.0` 的安装步骤引用仅在新源码存在的 API，也不自动改版本或触发发布。
+- 按参考清单执行受影响构建、测试与文档检查；复用仍有效的结果，检查通过后不重复跑无变化的全矩阵。
+- 最终分别说明：内置代码入口、精确模型与文件、实测后端、Batch/异步/ROI 范围、下载是否可用、案例和文档入口、未完成项。只能将有证据的交付项标为完成；提交推送遵循用户已有授权。
