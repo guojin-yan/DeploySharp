@@ -143,6 +143,34 @@ Engine 与 GPU 架构、TensorRT 序列化版本和 profile 绑定；换设备�
 
 两图完整表、实际配图与计时命令见 [ROI 工程实战](../blog/2.0.0/2026-11/2026-11-03-09-visual-roi.md#86-roi-对总时间影响有多大)。[随文工程](../blog/2.0.0/2026-11/examples/09-visual-roi/README.md)的 `--benchmark` 保存全部原始样本、分位数、分配、输入和模型身份，便于在目标设备复测。
 
+### YOLO26n 大图滑窗：正式 NuGet 2.0.0
+
+2026-11-09 在上述 Windows / Ryzen 7 5800H / RTX 3060 Laptop 上运行。专项输入为[第十篇](https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/docs/blog/2.0.0/2026-11/2026-11-09-10-sliding-window.md)的道路图 `traffic.jpg`（1400×788）。640×640 窗口、目标重叠 20%、6 个切片加一次全图补检；模型输入 FP32、Batch 1、单 Session，CPU 推理线程参数为 2，CUDA/TensorRT 关闭 TF32。
+
+每路线 5 次预热、50 次测量，整图与滑窗交错。复用 JPG 字节，计入一次解码、CPU OpenCV 准备、数据传输、完成推理、decoder、坐标合并、全局 NMS 和释放，不含文件 I/O、绘图、观察记录和模型/Engine 创建。运行时为 .NET 10.0.12、ORT 1.28.0 CUDA 12、OpenVINO 2026.2.1、OpenCV 5.0.0、TRT 10.11.0.33 / Bridge 4.0.0、CUDA 12.9、cuDNN 9.22。测量基于 `f1f44d3` 工作树中的新增随文工程；使用正式 NuGet，不使用该提交中的未发布源码替代包。
+
+| 后端 | 整图 P50/P95（ms） | 滑窗＋补检 P50/P95（ms） |
+| --- | ---: | ---: |
+| ORT CPU | 58.183 / 70.348 | 351.884 / 450.996 |
+| ORT CUDA | 18.647 / 27.865 | 77.625 / 102.790 |
+| OpenVINO CPU | 54.627 / 68.100 | 324.148 / 438.493 |
+| OpenCV DNN CPU | 184.339 / 200.861 | 1260.798 / 1424.615 |
+| TensorRT | 15.402 / 17.156 | 54.019 / 58.652 |
+
+整图保留 14 个候选，滑窗原始 69 个、合并后 23 个，各后端逐框容差核对通过。候选增加不代表准确率提高。设备有其他任务运行，未主动锁频；GPU 测前/后采样不能代表全程时钟或显存峰值。ORT CPU 的整图/滑窗平均托管分配约 4.72/33.08 MiB，TRT 约 9.45/66.03 MiB；不包含 native/GPU 分配，也不是驻留内存。两张图的完整表、分配边界和原始样本复测入口见[正文](https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/docs/blog/2.0.0/2026-11/2026-11-09-10-sliding-window.md)及[随文工程](https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV2.0/docs/blog/2.0.0/2026-11/examples/10-sliding-window)。
+
+同一协议在 Ubuntu 22.04.5 / i7-1165G7 / RTX 2060 上复测，仍为道路图 6 切片加补检。运行时为 .NET 10.0.12、ORT 1.28.0 CUDA 12、OpenVINO 2026.3.1、OpenCV 5.0.0、TRT 11.0.0.114 / Bridge 4.0.0，驱动 580.178.04、CUDA Runtime 12.9.79、cuBLAS 12.6.4.1、cuDNN 9.10.2.21。TensorRT Engine 在该设备重新构建。
+
+| 后端 | Ubuntu 整图 P50/P95（ms） | Ubuntu 滑窗＋补检 P50/P95（ms） |
+| --- | ---: | ---: |
+| ORT CPU | 38.478 / 40.585 | 249.633 / 264.208 |
+| ORT CUDA | 13.774 / 14.745 | 72.427 / 74.561 |
+| OpenVINO CPU | 34.823 / 36.987 | 222.809 / 238.240 |
+| OpenCV DNN CPU | 67.502 / 82.481 | 470.035 / 513.969 |
+| TensorRT | 12.526 / 13.353 | 65.471 / 68.794 |
+
+Windows/Ubuntu 十条功能路径的原始输出形状、有限值及逐框匹配均通过，坐标容差 0.5 像素、score 容差 0.001。Ubuntu CPU 为 powersave、Turbo 开启，GPU 未主动锁频；CUDA/TRT 测前后采样为 P0、核心 1005 MHz/显存 5500 MHz，不能据此认定全程时钟固定，也不按两台设备结果给硬件排名。
+
 ## Ubuntu 22.04 / i7-1165G7：PP-OCRv6 Small
 
 固定 OCR 输入、16 个区域、batch 1、两个阶段 Session、最大识别宽度 3200；5 次预热、50 次测量，复用已准备输入，不含模型加载和原图解码。GPU 未参与这些行。

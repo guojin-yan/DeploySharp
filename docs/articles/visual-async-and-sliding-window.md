@@ -1,6 +1,6 @@
 # 异步帧流水线与滑动窗口检测
 
-视觉推理常见的两个吞吐瓶颈是：视频逐帧处理时 CPU 准备与设备推理彼此等待，以及大图缩小后小目标信息丢失。DeploySharp 分别提供 `RunPrefetchedAsync` 和 `SlidingWindowDetectionRunner` 解决这两类问题。两者都复用 `VisualPipeline` 的独立 Session 池，并保持结果顺序和有界内存。
+视觉推理常见的两个吞吐瓶颈是：视频逐帧处理时 CPU 准备与设备推理彼此等待，以及大图缩小后小目标信息丢失。DeploySharp 分别提供 `RunPrefetchedAsync` 和 `SlidingWindowDetectionRunner` 处理这两类问题。两者都复用 `VisualPipeline` 的独立 Session 池并限制预取量；帧流水线按输入顺序返回，滑窗结果按全局合并规则返回。
 
 ## 选择正确的接口
 
@@ -100,6 +100,12 @@ foreach (Detection detection in result.Detections.Detections)
 窗口尺寸应接近模型训练或导出时的有效分辨率。建议从 20% 重叠开始：小目标密集时可提高重叠，细长目标可用 `horizontalOverlap` 和 `verticalOverlap` 分别调节。重叠越大，窗口数和推理成本增长越快，因此应设置 `maximumWindows` 防止错误参数造成无界任务。
 
 `includeFullImagePass` 会额外推理一次完整图像，适合避免大目标被切断，但不能替代切片检测。全图结果与切片结果仍会一起执行全局 NMS。类别容易互相遮盖时使用 `ClassAware`；确实需要跨类别去重时再改为 `ClassAgnostic`。
+
+最后一个窗口回贴边缘，实际重叠可能超过设置比例；`overlap=0` 也可能产生尾窗重叠。`maximumWindows` 包含补检，`maximumPreparedPixels` 限制所有源窗口面积之和（包含重叠和补检），两者在准备回调前检查。`maximumDetections` 只限制全局 NMS 后的最终框数，不代表所有原始候选的内存上限。当前合并为 NMS，不包含 NMM、IoS 或加权框融合。
+
+使用 `OpenCvDecodedRoiImage.PrepareRectangle` 时，裁剪与 Letterbox 已记录在完整源图 Transform 中，应选择 `Source`，不要再次增加窗口原点。源图应保留到 `RunAsync` 完成；运行器按 `2 × MaximumConcurrency` 分组并预取下一组，固定 Batch=1 的模型不会因此变成真正的多 Batch。
+
+完整图文案例见[滑动窗口实战](https://github.com/guojin-yan/DeploySharp/blob/DeploySharpV2.0/docs/blog/2.0.0/2026-11/2026-11-09-10-sliding-window.md)，附[正式 NuGet 工程](https://github.com/guojin-yan/DeploySharp/tree/DeploySharpV2.0/docs/blog/2.0.0/2026-11/examples/10-sliding-window)、两张真实输入、整图/切片/补检对照、ROI 内滑窗、结果来源和 `--benchmark` 复测入口。
 
 ## 性能与正确性验证
 
